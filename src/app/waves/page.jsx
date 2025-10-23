@@ -1,5 +1,6 @@
 import FavoritesList from "@/components/modules/Casts/favorites-list";
 import FeaturedCast from "@/components/modules/Casts/featured-cast";
+import FeaturedWave from "@/components/modules/waves/featured-wave";
 
 export default function WavesSection() {
   return (
@@ -17,7 +18,7 @@ export default function WavesSection() {
 
         {/* Right Column - Featured Cast */}
         <div className="lg:col-span-2">
-          <FeaturedCast />
+          <FeaturedWave />
         </div>
       </div>
     </main>
