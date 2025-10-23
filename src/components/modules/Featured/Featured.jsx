@@ -9,8 +9,8 @@ import {
 
 export default function FeaturedSection() {
   return (
-    <section className="py-16 px-6 md:px-16 bg-white">
-      <div className="grid md:grid-cols-2 gap-8 items-center">
+    <section className="py-16 px-6 md:px-16 bg-[#F9FAFB]">
+      <div className="container mx-auto grid md:grid-cols-2 gap-8 items-center">
         {/* Left Image */}
         <div className="relative rounded-2xl overflow-hidden border border-amber-400">
           <div className="relative w-full h-[560px] rounded-2xl overflow-hidden">
@@ -23,13 +23,13 @@ export default function FeaturedSection() {
           </div>
 
           {/* Streaming Badge */}
-          <div className="text-center absolute bottom-4 left-4 bg-white shadow-md rounded-md px-3 py-4 text-sm font-semibold">
+          <div className="text-center absolute bottom-4 left-4  shadow-md rounded-md px-3 py-4 text-sm font-semibold">
             <span className="text-gray-800">259+</span><br />
             <span className="text-gray-500">Streaming</span>
           </div>
 
           {/* Hits Badge */}
-          <div className="text-center absolute top-4 right-4 bg-white shadow-md rounded-md px-6 py-3 text-sm font-semibold">
+          <div className="text-center absolute top-4 right-4  shadow-md rounded-md px-6 py-3 text-sm font-semibold">
             <span className="text-gray-800">100+</span><br />
             <span className="text-gray-500">Hits</span>
           </div>
