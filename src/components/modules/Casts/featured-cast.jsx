@@ -6,7 +6,7 @@ export default function FeaturedCast() {
   return (
     <div className="space-y-9">
       <div>
-        <h2 className="text-black text-2xl font-bold mb-2">Waves</h2>
+        <h2 className="text-black text-2xl font-bold mb-2">Cast</h2>
         <p className="text-muted-foreground">
           Tune into engaging podcast episodes featuring your favorite personalities
         </p>
@@ -14,8 +14,8 @@ export default function FeaturedCast() {
 
       <div className="relative rounded-xl overflow-hidden  shadow-lg">
         {/* Background Image */}
-        <div className="relative h-[600px] w-full">
-          <Image src="/images/thamnail.webp" alt="Saint Social Podcast" fill className="object-cover" />
+        <div className="relative h-[550px] w-full">
+          <Image src="/images/postcast.webp" alt="Saint Social Podcast" fill className="object-cover" />
         </div>
 
         {/* Content Section */}

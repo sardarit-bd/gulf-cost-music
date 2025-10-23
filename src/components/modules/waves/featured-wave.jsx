@@ -16,9 +16,9 @@ export default function FeaturedWave() {
       {/* Main Wave Feature */}
       <div className="relative rounded-xl overflow-hidden shadow-lg">
         {/* Background Image */}
-        <div className="relative h-[500px] w-full">
+        <div className="relative h-[550px] w-full">
           <Image
-            src="/images/waves-banner.webp"
+            src="/images/thamnail.webp"
             alt="Gulf Coast Waves"
             fill
             className="object-cover"
