@@ -6,72 +6,72 @@ export default function ArtistProfile() {
     const { genre, slug } = useParams();
     const router = useRouter();
 
-  const artists = [
-    {
-      id: "drake",
-      name: "Drake",
-      genre: "Rap",
-      followers: "12.5M",
-      image:
-        "https://images.unsplash.com/photo-1606851096605-29e42e7a4232?auto=format&fit=crop&w=900&q=60",
-    },
-    {
-      id: "taylor-swift",
-      name: "Taylor Swift",
-      genre: "Country",
-      followers: "18.2M",
-      image:
-        "https://images.unsplash.com/photo-1614289371518-2cb0b4e84c63?auto=format&fit=crop&w=900&q=60",
-    },
-    {
-      id: "the-weeknd",
-      name: "The Weeknd",
-      genre: "Pop",
-      followers: "20.1M",
-      image:
-        "https://images.unsplash.com/photo-1587049352849-4d31c8e8c6d4?auto=format&fit=crop&w=900&q=60",
-    },
-    {
-      id: "imagine-dragons",
-      name: "Imagine Dragons",
-      genre: "Rock",
-      followers: "10.4M",
-      image:
-        "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=900&q=60",
-    },
-    {
-      id: "miles-davis",
-      name: "Miles Davis",
-      genre: "Jazz",
-      followers: "5.7M",
-      image:
-        "https://images.unsplash.com/photo-1484778540542-46ec1d57a5b7?auto=format&fit=crop&w=900&q=60",
-    },
-    {
-      id: "bob-marley",
-      name: "Bob Marley",
-      genre: "Reggae",
-      followers: "7.9M",
-      image:
-        "https://images.unsplash.com/photo-1528715471579-d1bcf0e68b9b?auto=format&fit=crop&w=900&q=60",
-    },
-    {
-      id: "martin-garrix",
-      name: "Martin Garrix",
-      genre: "EDM",
-      followers: "9.6M",
-      image:
-        "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=900&q=60",
-    },
-    {
-      id: "ludovico-einaudi",
-      name: "Ludovico Einaudi",
-      genre: "Classical",
-      followers: "4.2M",
-      image:
-        "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=900&q=60",
-    },
-  ];
+    const artists = [
+        {
+            id: "drake",
+            name: "Drake",
+            genre: "Rap",
+            followers: "12.5M",
+            image:
+                "https://images.unsplash.com/photo-1606851096605-29e42e7a4232?auto=format&fit=crop&w=900&q=60",
+        },
+        {
+            id: "taylor-swift",
+            name: "Taylor Swift",
+            genre: "Country",
+            followers: "18.2M",
+            image:
+                "https://images.unsplash.com/photo-1614289371518-2cb0b4e84c63?auto=format&fit=crop&w=900&q=60",
+        },
+        {
+            id: "the-weeknd",
+            name: "The Weeknd",
+            genre: "Pop",
+            followers: "20.1M",
+            image:
+                "https://images.unsplash.com/photo-1587049352849-4d31c8e8c6d4?auto=format&fit=crop&w=900&q=60",
+        },
+        {
+            id: "imagine-dragons",
+            name: "Imagine Dragons",
+            genre: "Rock",
+            followers: "10.4M",
+            image:
+                "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=900&q=60",
+        },
+        {
+            id: "miles-davis",
+            name: "Miles Davis",
+            genre: "Jazz",
+            followers: "5.7M",
+            image:
+                "https://images.unsplash.com/photo-1484778540542-46ec1d57a5b7?auto=format&fit=crop&w=900&q=60",
+        },
+        {
+            id: "bob-marley",
+            name: "Bob Marley",
+            genre: "Reggae",
+            followers: "7.9M",
+            image:
+                "https://images.unsplash.com/photo-1528715471579-d1bcf0e68b9b?auto=format&fit=crop&w=900&q=60",
+        },
+        {
+            id: "martin-garrix",
+            name: "Martin Garrix",
+            genre: "EDM",
+            followers: "9.6M",
+            image:
+                "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=900&q=60",
+        },
+        {
+            id: "ludovico-einaudi",
+            name: "Ludovico Einaudi",
+            genre: "Classical",
+            followers: "4.2M",
+            image:
+                "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?auto=format&fit=crop&w=900&q=60",
+        },
+    ];
 
     const artist = artists.find(
         (a) =>
