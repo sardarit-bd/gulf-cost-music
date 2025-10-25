@@ -86,9 +86,8 @@ export default function Header() {
                 <button className="flex items-center gap-1 hover:text-yellow-400 transition py-2">
                   {dropdownData[key].title}
                   <svg
-                    className={`w-4 h-4 transition-transform ${
-                      activeDropdown === key ? "rotate-180" : "rotate-0"
-                    }`}
+                    className={`w-4 h-4 transition-transform ${activeDropdown === key ? "rotate-180" : "rotate-0"
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -105,11 +104,13 @@ export default function Header() {
                 {activeDropdown === key && (
                   <div className="absolute top-full left-0 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-2 z-50">
                     {dropdownData[key].items.map((item, index) => {
-                      // 🔹 Dynamic route for Artists dropdown
+                      // ✅ Single declaration with combined logic
                       const href =
                         key === "artists"
                           ? `/artists/${encodeURIComponent(item)}`
-                          : "#";
+                          : key === "venues"
+                            ? `/venues/${encodeURIComponent(item)}`
+                            : "#";
 
                       return (
                         <Link
@@ -123,6 +124,7 @@ export default function Header() {
                     })}
                   </div>
                 )}
+
               </div>
             ))}
           </nav>
