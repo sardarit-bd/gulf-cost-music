@@ -156,8 +156,8 @@ export default function CalendarBoard() {
                       setDropdownOpen(false);
                     }}
                     className={`w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 transition ${selectedCity === city
-                        ? "bg-yellow-50 font-semibold text-gray-800"
-                        : "text-gray-600"
+                      ? "bg-yellow-50 font-semibold text-gray-800"
+                      : "text-gray-600"
                       }`}
                   >
                     {city}
@@ -218,8 +218,8 @@ export default function CalendarBoard() {
                 key={v}
                 onClick={() => setView(v)}
                 className={`px-3 py-1 rounded-md border text-sm text-gray-600 capitalize transition ${view === v
-                    ? "bg-yellow-300 border-yellow-400"
-                    : "bg-white border-gray-300 hover:bg-yellow-100"
+                  ? "bg-yellow-300 border-yellow-400"
+                  : "bg-white border-gray-300 hover:bg-yellow-100"
                   }`}
               >
                 {v}

@@ -39,16 +39,14 @@ export default function Header() {
   const handleDropdownEnter = (dropdown) => setActiveDropdown(dropdown);
   const handleDropdownLeave = () => setActiveDropdown(null);
 
-  // Scroll effect - change navbar background when scrolling down
+  // scroll effect
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Determine navbar background based on route
+  // navbar background
   const isHeroPage = pathname === "/";
   const navbarBg = isHeroPage
     ? isScrolled
@@ -72,7 +70,7 @@ export default function Header() {
             />
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8 text-white">
             <Link href="/" className="hover:text-yellow-400 transition">
               Home
@@ -106,15 +104,23 @@ export default function Header() {
 
                 {activeDropdown === key && (
                   <div className="absolute top-full left-0 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-2 z-50">
-                    {dropdownData[key].items.map((item, index) => (
-                      <Link
-                        key={index}
-                        href="#"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary transition"
-                      >
-                        {item}
-                      </Link>
-                    ))}
+                    {dropdownData[key].items.map((item, index) => {
+                      // 🔹 Dynamic route for Artists dropdown
+                      const href =
+                        key === "artists"
+                          ? `/artists/${encodeURIComponent(item)}`
+                          : "#";
+
+                      return (
+                        <Link
+                          key={index}
+                          href={href}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-yellow-600 transition"
+                        >
+                          {item}
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -144,7 +150,7 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Toggle */}
           <button
             className="md:hidden text-white"
             onClick={() => setIsOpen(!isOpen)}
