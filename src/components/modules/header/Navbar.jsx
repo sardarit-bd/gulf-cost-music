@@ -110,7 +110,7 @@ export default function Header() {
                           ? `/artists/${encodeURIComponent(item)}`
                           : key === "venues"
                             ? `/venues/${encodeURIComponent(item)}`
-                            : "#";
+                            : "/news/" + encodeURIComponent(item);
 
                       return (
                         <Link
@@ -124,7 +124,6 @@ export default function Header() {
                     })}
                   </div>
                 )}
-
               </div>
             ))}
           </nav>
