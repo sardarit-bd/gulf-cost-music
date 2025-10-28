@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function SignUp() {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -46,16 +48,16 @@ export default function SignUp() {
       if (res.ok) {
         setMessage(data.message || "Registration successful!");
         // Optional: redirect to login after few seconds
-        router.push("/signin");
+        setTimeout(() => {
+          router.push("/signin");
+        }, 1000);
 
         setFormData({
           username: "",
           email: "",
           password: "",
           userType: "Artist",
-        })
-
-
+        });
       } else {
         setMessage(data.message || "Something went wrong!");
       }
@@ -70,7 +72,9 @@ export default function SignUp() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] px-4">
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm">
-        <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">Sign Up</h2>
+        <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">
+          Sign Up
+        </h2>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           {/* Name */}

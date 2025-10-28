@@ -35,11 +35,9 @@ export default function SignIn() {
         localStorage.setItem("token", data.data.token);
         localStorage.setItem("user", JSON.stringify(data.data.user));
 
-        // Optional: redirect after short delay
-        // setTimeout(() => {
-        //   router.push("/dashboard"); // or whatever page you want
-        // }, 1000);
-
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1000);
 
         setEmail("");
         setPassword("");
@@ -90,7 +88,9 @@ export default function SignIn() {
         {message && (
           <p
             className={`text-sm mt-4 ${
-              message.includes("✅") ? "text-green-600" : "text-red-500"
+              message.toLowerCase().includes("success")
+                ? "text-green-600"
+                : "text-red-500"
             }`}
           >
             {message}
