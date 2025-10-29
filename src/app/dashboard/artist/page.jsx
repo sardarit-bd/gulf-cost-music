@@ -1,42 +1,95 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Upload, Save, Trash2, Music2, ImageIcon, LogOut, Home } from "lucide-react";
+import { useSession } from "@/lib/auth";
+import {
+  Upload,
+  Save,
+  Trash2,
+  Music2,
+  ImageIcon,
+  LogOut,
+  Home,
+} from "lucide-react";
 
 export default function ArtistDashboard() {
+  const { user, loading, logout, getCookie } = useSession();
+
   const [activeTab, setActiveTab] = useState("overview");
   const [artist, setArtist] = useState({
-    name: "John Doe",
-    city: "Los Angeles",
-    genre: "Pop",
-    biography:
-      "Dream-pop artist creating soulful and experimental soundscapes for modern listeners.",
+    name: "",
+    city: "",
+    genre: "pop",
+    biography: "",
     photos: [],
     audio: null,
   });
   const [previewImages, setPreviewImages] = useState([]);
   const [audioPreview, setAudioPreview] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
 
   const genreOptions = [
     "Pop",
     "Rock",
-    "Hip-Hop",
-    "R&B",
-    "Jazz",
-    "Classical",
+    "Rap",
     "Country",
-    "Electronic",
-    "Folk",
+    "Jazz",
     "Reggae",
+    "EDM",
+    "Classical",
+    "Other",
   ];
 
+  // Fetch existing artist profile from backend
+  useEffect(() => {
+    if (!user) return;
+    const fetchProfile = async () => {
+      try {
+        const token = getCookie("token");
+
+        const res = await fetch("http://localhost:5000/api/artists/profile/me", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.data?.artist) {
+          const a = data.data.artist;
+          setArtist({
+            name: a.name || "",
+            city: a.city || "",
+            genre: a.genre || "pop",
+            biography: a.biography || "",
+            photos: a.photos || [],
+            audio: a.mp3File || null,
+          });
+
+          // Set previews
+          setPreviewImages(a.photos?.map((p) => p.url) || []);
+          setAudioPreview(a.mp3File?.url || null);
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      }
+    };
+    fetchProfile();
+  }, [user]);
+
+  //  Handle text input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setArtist({ ...artist, [name]: value });
   };
 
+  //  Handle image upload (max 5)
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files).slice(0, 5);
     const urls = files.map((file) => URL.createObjectURL(file));
@@ -51,6 +104,7 @@ export default function ArtistDashboard() {
     setArtist({ ...artist, photos: updatedFiles });
   };
 
+  //  Handle MP3 upload
   const handleAudioUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -60,22 +114,80 @@ export default function ArtistDashboard() {
     }
   };
 
-  const handleSave = () => {
-    alert("Profile updated successfully!");
+  //  Save (POST/PUT to backend)
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setMessage("");
+
+      const token = getCookie("token");
+
+      const formData = new FormData();
+      formData.append("name", artist.name);
+      formData.append("city", artist.city);
+      formData.append("genre", artist.genre.toLowerCase());
+      formData.append("biography", artist.biography);
+      artist.photos.forEach((file) => formData.append("photos", file));
+      if (artist.audio) formData.append("mp3File", artist.audio);
+
+      const res = await fetch("http://localhost:5000/api/artists/profile", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage(" Profile saved successfully!");
+        setActiveTab("overview");
+
+        // reload updated artist
+        if (data.data?.artist) {
+          const a = data.data.artist;
+          setPreviewImages(a.photos?.map((p) => p.url) || []);
+          setAudioPreview(a.mp3File?.url || null);
+        }
+      } else {
+        setMessage(data.message || "❌ Failed to save profile.");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      setMessage("❌ Server error while saving profile.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleLogout = () => {
-    alert("You have been logged out.");
-    // clear tokens or cookies here if using auth
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = "/signin";
   };
+
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-screen text-yellow-400">
+        Loading...
+      </div>
+    );
+
+  if (!user)
+    return (
+      <div className="flex items-center justify-center min-h-screen text-red-500">
+        Unauthorized — please login.
+      </div>
+    );
 
   return (
-    <div className="py-2 px-4 flex justify-center">
-      <div className="container w-full bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-[0_8px_40px_rgba(0,0,0,0.08)] p-8 md:p-12 relative">
+    <div className="py-4 px-4 flex justify-center">
+      <div className="container w-full bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-lg p-8 md:p-12 relative">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-semibold text-[var(--color-primary)]">
-            Artist Profile
+            Artist Dashboard
           </h1>
 
           <div className="flex items-center gap-3">
@@ -99,7 +211,7 @@ export default function ArtistDashboard() {
         </p>
 
         {/* Tabs */}
-        <div className="flex justify-center gap-6 mb-12 border-b border-[var(--color-border)] pb-2">
+        <div className="flex justify-center gap-6 mb-10 border-b border-[var(--color-border)] pb-2">
           {["overview", "edit"].map((tab) => (
             <button
               key={tab}
@@ -115,43 +227,47 @@ export default function ArtistDashboard() {
           ))}
         </div>
 
-        {/* === OVERVIEW TAB === */}
+        {/* Message */}
+        {message && (
+          <div
+            className={`text-center mb-6 font-medium ${
+              message.includes("✅") ? "text-green-500" : "text-red-500"
+            }`}
+          >
+            {message}
+          </div>
+        )}
+
+        {/* === OVERVIEW === */}
         {activeTab === "overview" && (
           <div className="animate-fadeIn space-y-10">
             <div className="grid md:grid-cols-2 gap-10">
               <div className="space-y-4">
                 <div>
-                  <h4 className="text-sm text-[var(--color-muted-foreground)]">
-                    Name
-                  </h4>
+                  <h4 className="text-sm text-gray-400">Name</h4>
                   <p className="text-lg font-medium">{artist.name}</p>
                 </div>
                 <div>
-                  <h4 className="text-sm text-[var(--color-muted-foreground)]">
-                    City
-                  </h4>
+                  <h4 className="text-sm text-gray-400">City</h4>
                   <p className="text-lg font-medium">{artist.city}</p>
                 </div>
                 <div>
-                  <h4 className="text-sm text-[var(--color-muted-foreground)]">
-                    Genre
-                  </h4>
-                  <p className="text-lg font-medium">{artist.genre}</p>
+                  <h4 className="text-sm text-gray-400">Genre</h4>
+                  <p className="text-lg font-medium capitalize">
+                    {artist.genre}
+                  </p>
                 </div>
                 <div>
-                  <h4 className="text-sm text-[var(--color-muted-foreground)]">
-                    Biography
-                  </h4>
-                  <p className="text-[var(--color-foreground)]/90 leading-relaxed">
+                  <h4 className="text-sm text-gray-400">Biography</h4>
+                  <p className="text-gray-300 leading-relaxed">
                     {artist.biography}
                   </p>
                 </div>
               </div>
 
-              {/* Media Section */}
               <div className="space-y-6">
                 <div>
-                  <h4 className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)] mb-2">
+                  <h4 className="flex items-center gap-2 text-sm text-gray-400 mb-2">
                     <ImageIcon size={16} /> Photos
                   </h4>
                   {previewImages.length > 0 ? (
@@ -159,7 +275,7 @@ export default function ArtistDashboard() {
                       {previewImages.map((src, idx) => (
                         <div
                           key={idx}
-                          className="relative aspect-square rounded-[var(--radius-md)] overflow-hidden border border-[var(--color-border)]"
+                          className="relative aspect-square rounded-lg overflow-hidden border border-gray-700"
                         >
                           <Image
                             src={src}
@@ -171,24 +287,22 @@ export default function ArtistDashboard() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-[var(--color-muted-foreground)] italic">
-                      No photos uploaded yet.
-                    </p>
+                    <p className="text-gray-500 italic">No photos uploaded.</p>
                   )}
                 </div>
 
                 <div>
-                  <h4 className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)] mb-2">
+                  <h4 className="flex items-center gap-2 text-sm text-gray-400 mb-2">
                     <Music2 size={16} /> Audio Track
                   </h4>
                   {audioPreview ? (
                     <audio
                       controls
                       src={audioPreview}
-                      className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-card)]"
+                      className="w-full rounded-md border border-gray-700"
                     />
                   ) : (
-                    <p className="text-[var(--color-muted-foreground)] italic">
+                    <p className="text-gray-500 italic">
                       No audio uploaded yet.
                     </p>
                   )}
@@ -204,46 +318,40 @@ export default function ArtistDashboard() {
             <div className="grid md:grid-cols-2 gap-8">
               {/* Name */}
               <div>
-                <label className="block text-sm text-[var(--color-muted-foreground)] mb-1">
-                  Name
-                </label>
+                <label className="block text-sm text-gray-400 mb-1">Name</label>
                 <input
                   name="name"
                   value={artist.name}
                   onChange={handleChange}
                   placeholder="Enter name"
-                  className="w-full px-4 py-2 rounded-[var(--radius-md)] bg-white text-black placeholder-gray-500 border border-[var(--color-border)] focus:ring-2 focus:ring-[var(--color-ring)] focus:outline-none"
+                  className="w-full px-4 py-2 rounded-md bg-white text-black border border-gray-600"
                 />
               </div>
 
               {/* City */}
               <div>
-                <label className="block text-sm text-[var(--color-muted-foreground)] mb-1">
-                  City
-                </label>
+                <label className="block text-sm text-gray-400 mb-1">City</label>
                 <input
                   name="city"
                   value={artist.city}
                   onChange={handleChange}
                   placeholder="Enter city"
-                  className="w-full px-4 py-2 rounded-[var(--radius-md)] bg-white text-black placeholder-gray-500 border border-[var(--color-border)] focus:ring-2 focus:ring-[var(--color-ring)] focus:outline-none"
+                  className="w-full px-4 py-2 rounded-md bg-white text-black border border-gray-600"
                 />
               </div>
 
-              {/* Genre Dropdown */}
+              {/* Genre */}
               <div>
-                <label className="block text-sm text-[var(--color-muted-foreground)] mb-1">
-                  Genre
-                </label>
+                <label className="block text-sm text-gray-400 mb-1">Genre</label>
                 <select
                   name="genre"
                   value={artist.genre}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 rounded-[var(--radius-md)] bg-white text-black border border-[var(--color-border)] focus:ring-2 focus:ring-[var(--color-ring)] focus:outline-none"
+                  className="w-full px-4 py-2 rounded-md bg-white text-black border border-gray-600"
                 >
-                  {genreOptions.map((genre) => (
-                    <option key={genre} value={genre}>
-                      {genre}
+                  {genreOptions.map((g) => (
+                    <option key={g} value={g.toLowerCase()}>
+                      {g}
                     </option>
                   ))}
                 </select>
@@ -251,7 +359,7 @@ export default function ArtistDashboard() {
 
               {/* Biography */}
               <div className="md:col-span-2">
-                <label className="block text-sm text-[var(--color-muted-foreground)] mb-1">
+                <label className="block text-sm text-gray-400 mb-1">
                   Biography
                 </label>
                 <textarea
@@ -260,18 +368,19 @@ export default function ArtistDashboard() {
                   onChange={handleChange}
                   rows={4}
                   placeholder="Write a short biography..."
-                  className="w-full px-4 py-2 rounded-[var(--radius-md)] bg-white text-black placeholder-gray-500 border border-[var(--color-border)] focus:ring-2 focus:ring-[var(--color-ring)] focus:outline-none"
+                  className="w-full px-4 py-2 rounded-md bg-white text-black border border-gray-600"
                 ></textarea>
               </div>
             </div>
 
             {/* Uploads */}
             <div className="grid md:grid-cols-2 gap-8">
+              {/* Photos */}
               <div>
-                <label className="block text-sm text-[var(--color-muted-foreground)] mb-2">
+                <label className="block text-sm text-gray-400 mb-2">
                   Upload Photos (max 5)
                 </label>
-                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-[var(--radius-md)] hover:bg-[var(--color-accent)] hover:text-[var(--color-accent-foreground)] transition">
+                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-black rounded-md hover:bg-yellow-400 transition">
                   <Upload size={16} /> Upload Images
                   <input
                     type="file"
@@ -287,7 +396,7 @@ export default function ArtistDashboard() {
                     {previewImages.map((src, idx) => (
                       <div
                         key={idx}
-                        className="relative aspect-square border border-[var(--color-border)] rounded-[var(--radius-md)] overflow-hidden group"
+                        className="relative aspect-square border border-gray-600 rounded-md overflow-hidden group"
                       >
                         <Image
                           src={src}
@@ -297,7 +406,7 @@ export default function ArtistDashboard() {
                         />
                         <button
                           onClick={() => removeImage(idx)}
-                          className="absolute top-1 right-1 bg-[var(--color-destructive)] text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                          className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
                         >
                           <Trash2 size={12} />
                         </button>
@@ -307,11 +416,12 @@ export default function ArtistDashboard() {
                 )}
               </div>
 
+              {/* Audio */}
               <div>
-                <label className="block text-sm text-[var(--color-muted-foreground)] mb-2">
+                <label className="block text-sm text-gray-400 mb-2">
                   Upload Audio (MP3)
                 </label>
-                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] rounded-[var(--radius-md)] hover:bg-[var(--color-accent)] hover:text-[var(--color-accent-foreground)] transition">
+                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-black rounded-md hover:bg-yellow-400 transition">
                   <Music2 size={16} /> Upload Audio
                   <input
                     type="file"
@@ -325,7 +435,7 @@ export default function ArtistDashboard() {
                   <audio
                     controls
                     src={audioPreview}
-                    className="w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-card)] mt-3"
+                    className="w-full mt-3 rounded-md border border-gray-600"
                   />
                 )}
               </div>
@@ -335,9 +445,14 @@ export default function ArtistDashboard() {
             <div className="flex justify-center mt-10">
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 bg-[var(--color-primary)] text-[var(--color-primary-foreground)] px-10 py-3 rounded-[var(--radius-lg)] font-medium hover:bg-[var(--color-accent)] hover:text-[var(--color-accent-foreground)] shadow-md transition-all"
+                disabled={saving}
+                className={`flex items-center gap-2 px-10 py-3 rounded-lg font-medium shadow-md transition ${
+                  saving
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-yellow-500 hover:bg-yellow-400 text-black"
+                }`}
               >
-                <Save size={18} /> Save Changes
+                <Save size={18} /> {saving ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </div>
