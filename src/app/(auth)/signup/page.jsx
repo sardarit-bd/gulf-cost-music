@@ -92,7 +92,7 @@ export default function SignUp() {
 
       console.log("Final Submission Data:", submissionData);
 
-      const res = await fetch("http://localhost:5000/api/auth/register", {
+      const res = await fetch("https://golf-music-backend-1.onrender.com/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -145,7 +145,7 @@ export default function SignUp() {
     };
 
     try {
-      await fetch("http://localhost:5000/api/auth/send-verification-email", {
+      await fetch("https://golf-music-backend-1.onrender.com/api/auth/send-verification-email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
