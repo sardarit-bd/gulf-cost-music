@@ -4,9 +4,12 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
 export default function DashboardPage() {
-  const { user, loading } = useSession()
+  // const { user, loading } = useSession()
+  // console.log(user)
   const router = useRouter()
-
+  const loading = false
+  const user = {}
+  user.userType = 'artist'
   useEffect(() => {
     if (!loading) {
       if (!user) {

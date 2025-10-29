@@ -12,9 +12,9 @@ export default function DashboardLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 mt-32">
+    <div className="mt-32">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      {/* <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -39,9 +39,9 @@ export default function DashboardLayout({ children }) {
             </div>
           </div>
         </div>
-      </header>
+      </header> */}
 
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div className="container mx-auto sm:px-6 lg:px-8">
         {children}
       </div>
     </div>
