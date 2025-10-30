@@ -19,6 +19,7 @@ export default function Header() {
   const mobileMenuRef = useRef(null);
   const mobileToggleRef = useRef(null);
 
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
@@ -171,6 +172,13 @@ export default function Header() {
       document.body.style.overflow = "unset";
     };
   }, [isOpen]);
+
+
+  const shouldHideHeader = pathname?.startsWith("/dashboard/admin");
+
+    if (shouldHideHeader) {
+    return null;
+  }
 
   return (
     <header
