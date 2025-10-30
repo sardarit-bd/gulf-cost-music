@@ -15,7 +15,7 @@ export default function GenrePage() {
     const fetchArtists = async () => {
       try {
         const res = await fetch(
-          `https://golf-music-backend-1.onrender.com/api/artists?genre=${genre.toLowerCase()}`
+          `http://localhost:5000/api/artists?genre=${genre.toLowerCase()}`
         );
         const data = await res.json();
 

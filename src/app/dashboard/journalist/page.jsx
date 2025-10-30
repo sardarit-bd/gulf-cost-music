@@ -58,7 +58,7 @@ export default function JournalistDashboard() {
     const fetchData = async () => {
       try {
         // Load Profile
-        const profRes = await fetch("https://golf-music-backend-1.onrender.com/api/journalists/profile", {
+        const profRes = await fetch("http://localhost:5000/api/journalists/profile", {
           headers: { Authorization: `Bearer ${token}` },
           credentials: "include",
         });
@@ -75,7 +75,7 @@ export default function JournalistDashboard() {
         }
 
         // Load My News
-        const newsRes = await fetch("https://golf-music-backend-1.onrender.com/api/news/my", {
+        const newsRes = await fetch("http://localhost:5000/api/news/my", {
           headers: { Authorization: `Bearer ${token}` },
           credentials: "include",
         });
@@ -103,7 +103,7 @@ export default function JournalistDashboard() {
       formData.append("bio", journalist.bio);
       formData.append("profilePhoto", file);
 
-      const res = await fetch("https://golf-music-backend-1.onrender.com/api/journalists/profile", {
+      const res = await fetch("http://localhost:5000/api/journalists/profile", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -161,8 +161,8 @@ export default function JournalistDashboard() {
       form.photos.forEach((p) => formData.append("photos", p));
 
       const url = editingNews
-        ? `https://golf-music-backend-1.onrender.com/api/news/${editingNews._id}`
-        : "https://golf-music-backend-1.onrender.com/api/news";
+        ? `http://localhost:5000/api/news/${editingNews._id}`
+        : "http://localhost:5000/api/news";
       const method = editingNews ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -176,7 +176,7 @@ export default function JournalistDashboard() {
       if (res.ok) {
         setMessage(editingNews ? "✅ News updated!" : "✅ News added!");
         // Refresh list
-        const listRes = await fetch("https://golf-music-backend-1.onrender.com/api/news/my", {
+        const listRes = await fetch("http://localhost:5000/api/news/my", {
           headers: { Authorization: `Bearer ${token}` },
           credentials: "include",
         });
@@ -217,7 +217,7 @@ export default function JournalistDashboard() {
     if (!confirm("Delete this news item?")) return;
     try {
       const token = getCookie("token");
-      const res = await fetch(`https://golf-music-backend-1.onrender.com/api/news/${id}`, {
+      const res = await fetch(`http://localhost:5000/api/news/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
         credentials: "include",

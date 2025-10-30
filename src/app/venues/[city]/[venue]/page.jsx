@@ -11,7 +11,7 @@ export default function VenueProfile() {
 
   useEffect(() => {
     const fetchVenue = async () => {
-      const res = await fetch(`https://golf-music-backend-1.onrender.com/api/venues/${venueId}`);
+      const res = await fetch(`http://localhost:5000/api/venues/${venueId}`);
       const data = await res.json();
       if (res.ok) setVenue(data.data.venue);
     };

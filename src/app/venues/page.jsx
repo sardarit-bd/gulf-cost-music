@@ -15,7 +15,7 @@ export default function VenuesPage() {
     const fetchVenues = async () => {
       try {
         const cityParam = selectedCity === "All" ? "" : `?city=${selectedCity}`;
-        const res = await fetch(`https://golf-music-backend-1.onrender.com/api/venues${cityParam}`);
+        const res = await fetch(`http://localhost:5000/api/venues${cityParam}`);
         const data = await res.json();
         if (res.ok) {
           setVenues(data.data.venues || []);

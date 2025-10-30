@@ -11,7 +11,7 @@ export default function CityWiseVenues() {
 
   useEffect(() => {
     const fetchCityVenues = async () => {
-      const res = await fetch(`https://golf-music-backend-1.onrender.com/api/venues?city=${city}`);
+      const res = await fetch(`http://localhost:5000/api/venues?city=${city}`);
       const data = await res.json();
       if (res.ok) setVenues(data.data.venues);
     };
