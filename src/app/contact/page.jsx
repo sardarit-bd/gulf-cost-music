@@ -1,6 +1,46 @@
 "use client";
 
+import React, { useState } from "react";
+import axios from "axios";
+
 export default function ContactSection() {
+  const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setFeedback(null);
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/contact", {
+        email,
+        subject,
+        message,
+      });
+
+      if (res.data.success) {
+        setFeedback({ type: "success", msg: res.data.message });
+        setEmail("");
+        setSubject("");
+        setMessage("");
+      } else {
+        setFeedback({ type: "error", msg: res.data.message || "Something went wrong!" });
+      }
+    } catch (err) {
+      console.error("Contact form submit error:", err);
+      setFeedback({
+        type: "error",
+        msg: err.response?.data?.message || "Server error. Please try again later.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section
       className="flex items-center justify-center px-4 py-16"
@@ -13,13 +53,15 @@ export default function ContactSection() {
           For any inquiries:
         </h2>
 
-        <form className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email Field */}
           <div>
             <input
               type="email"
               placeholder="Email Address"
               className="w-full border border-gray-200 rounded-md p-3 outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 bg-white placeholder:text-gray-400"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
@@ -30,6 +72,8 @@ export default function ContactSection() {
               type="text"
               placeholder="Subject"
               className="w-full border border-gray-200 rounded-md p-3 outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 bg-white placeholder:text-gray-400"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
               required
             />
           </div>
@@ -40,16 +84,34 @@ export default function ContactSection() {
               placeholder="Message"
               rows="5"
               className="w-full border border-gray-200 rounded-md p-3 outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 bg-white resize-none placeholder:text-gray-400"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
               required
             ></textarea>
           </div>
 
+          {/* Feedback message */}
+          {feedback && (
+            <div
+              className={`p-3 rounded-md text-sm font-medium ${
+                feedback.type === "success"
+                  ? "bg-green-100 text-green-700 border border-green-300"
+                  : "bg-red-100 text-red-700 border border-red-300"
+              }`}
+            >
+              {feedback.msg}
+            </div>
+          )}
+
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 rounded-md transition-all shadow-sm hover:shadow-md"
+            disabled={loading}
+            className={`w-full ${
+              loading ? "bg-yellow-300" : "bg-yellow-400 hover:bg-yellow-500"
+            } text-black font-semibold py-3 rounded-md transition-all shadow-sm hover:shadow-md`}
           >
-            Submit
+            {loading ? "Submitting..." : "Submit"}
           </button>
         </form>
       </div>
