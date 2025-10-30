@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import Image from "next/image";
 
@@ -11,6 +11,8 @@ export default function CalendarBoard() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [events, setEvents] = useState([]);
 
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December",
@@ -18,86 +20,48 @@ export default function CalendarBoard() {
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
-  // dummy city data
-  const cityEvents = {
-    Mobile: [
-      {
-        date: 22,
-        title: "Mawa’s Birthday 🎂",
-        color: "bg-red-100 text-red-700",
-        desc: "Celebrate Mawa’s birthday with the whole team!",
-        banner:
-          "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=900&q=60",
-        time: "7:00 PM – 10:00 PM",
-        venue: "Main Hall, Mobile HQ",
-        tag: "Celebration",
-      },
-      {
-        date: 24,
-        title: "Team Meeting 💼",
-        color: "bg-green-100 text-green-700",
-        desc: "Weekly sprint meeting with the development team.",
-        banner:
-          "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=900&q=60",
-        time: "11:00 AM – 12:30 PM",
-        venue: "Conference Room, Mobile HQ",
-        tag: "Meeting",
-      },
-    ],
-    Biloxi: [
-      {
-        date: 18,
-        title: "Marketing Strategy Session 📊",
-        color: "bg-purple-100 text-purple-700",
-        desc: "Quarterly planning for marketing goals and outreach.",
-        banner:
-          "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=60",
-        time: "9:00 AM – 11:00 AM",
-        venue: "Oceanview Office, Biloxi",
-        tag: "Planning",
-      },
-      {
-        date: 26,
-        title: "Product Launch 🚀",
-        color: "bg-blue-100 text-blue-700",
-        desc: "Introducing our new product line to the market.",
-        banner:
-          "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=900&q=60",
-        time: "3:00 PM – 6:00 PM",
-        venue: "Downtown Biloxi Auditorium",
-        tag: "Launch",
-      },
-    ],
-    "New Orleans": [
-      {
-        date: 15,
-        title: "Charity Event ❤️",
-        color: "bg-pink-100 text-pink-700",
-        desc: "Fundraising and awareness for local shelters.",
-        banner:
-          "https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=900&q=60",
-        time: "6:00 PM – 9:00 PM",
-        venue: "City Park Arena, New Orleans",
-        tag: "Charity",
-      },
-    ],
-    Pensacola: [
-      {
-        date: 10,
-        title: "Workshop: Innovation Day ⚙️",
-        color: "bg-orange-100 text-orange-700",
-        desc: "A full-day creative workshop for our R&D team.",
-        banner:
-          "https://images.unsplash.com/photo-1532614338840-ab30cf10ed36?auto=format&fit=crop&w=900&q=60",
-        time: "10:00 AM – 5:00 PM",
-        venue: "Innovation Lab, Pensacola",
-        tag: "Workshop",
-      },
-    ],
-  };
-
+  // === Fetch events from backend ===
   useEffect(() => {
-    setEvents(cityEvents[selectedCity] || []);
+    const fetchEvents = async () => {
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/venues/calendar?city=${selectedCity.toLowerCase()}`
+        );
+        const data = await res.json();
+        console.log(data)
+
+        if (res.ok && data.success) {
+          const formattedEvents = [];
+
+          data.data.venues.forEach((venue) => {
+            venue.shows.forEach((show) => {
+              const eventDate = new Date(show.date);
+              formattedEvents.push({
+                date: eventDate.getDate(),
+                title: show.artist,
+                color: `bg-${venue.colorCode.toLowerCase()}-100 text-${venue.colorCode.toLowerCase()}-700`,
+                time: show.time,
+                venue: venue.venueName,
+                desc: `Performance by ${show.artist} at ${venue.venueName}`,
+                tag: "Show",
+                banner:
+                  "https://images.unsplash.com/photo-1515169067865-5387ec356754?auto=format&fit=crop&w=900&q=60",
+              });
+            });
+          });
+
+          formattedEvents.sort((a, b) => a.date - b.date);
+          setEvents(formattedEvents);
+        } else {
+          setEvents([]);
+        }
+      } catch (error) {
+        console.error("Error fetching calendar data:", error);
+        setEvents([]);
+      }
+    };
+
+    fetchEvents();
   }, [selectedCity]);
 
   // calendar helpers
@@ -136,7 +100,7 @@ export default function CalendarBoard() {
             <h1 className="text-2xl font-bold brandColor">Calendar Board</h1>
           </div>
 
-          {/* custom venue selector */}
+          {/* city dropdown */}
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -148,17 +112,18 @@ export default function CalendarBoard() {
 
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
-                {Object.keys(cityEvents).map((city) => (
+                {["Mobile", "Biloxi", "New Orleans", "Pensacola"].map((city) => (
                   <button
                     key={city}
                     onClick={() => {
                       setSelectedCity(city);
                       setDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 transition ${selectedCity === city
-                      ? "bg-yellow-50 font-semibold text-gray-800"
-                      : "text-gray-600"
-                      }`}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 transition ${
+                      selectedCity === city
+                        ? "bg-yellow-50 font-semibold text-gray-800"
+                        : "text-gray-600"
+                    }`}
                   >
                     {city}
                   </button>
@@ -217,10 +182,11 @@ export default function CalendarBoard() {
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`px-3 py-1 rounded-md border text-sm text-gray-600 capitalize transition ${view === v
-                  ? "bg-yellow-300 border-yellow-400"
-                  : "bg-white border-gray-300 hover:bg-yellow-100"
-                  }`}
+                className={`px-3 py-1 rounded-md border text-sm text-gray-600 capitalize transition ${
+                  view === v
+                    ? "bg-yellow-300 border-yellow-400"
+                    : "bg-white border-gray-300 hover:bg-yellow-100"
+                }`}
               >
                 {v}
               </button>
@@ -228,7 +194,7 @@ export default function CalendarBoard() {
           </div>
         </div>
 
-        {/* ---- Month View ---- */}
+        {/* Month View */}
         {view === "month" && (
           <MonthView
             weekDays={weekDays}
@@ -239,7 +205,7 @@ export default function CalendarBoard() {
           />
         )}
 
-        {/* ---- Week View ---- */}
+        {/* Week View */}
         {view === "week" && (
           <WeekView
             weekDays={getWeekDates()}
@@ -249,7 +215,7 @@ export default function CalendarBoard() {
           />
         )}
 
-        {/* ---- Day View ---- */}
+        {/* Day View */}
         {view === "day" && (
           <DayView
             date={currentDate}
@@ -259,7 +225,7 @@ export default function CalendarBoard() {
           />
         )}
 
-        {/* ---- Modal ---- */}
+        {/* Event Modal */}
         {selectedEvent && (
           <EventModal
             event={selectedEvent}
@@ -274,7 +240,7 @@ export default function CalendarBoard() {
   );
 }
 
-/* ------------ sub-components ------------ */
+/* ------------ Sub-components ------------ */
 
 const MonthView = ({ weekDays, startDay, daysInMonth, events, onSelect }) => (
   <div className="grid grid-cols-7 border border-gray-200 rounded-xl overflow-hidden text-sm">
@@ -298,8 +264,9 @@ const MonthView = ({ weekDays, startDay, daysInMonth, events, onSelect }) => (
         <div
           key={day}
           onClick={() => event && onSelect(event)}
-          className={`relative border h-24 p-2 cursor-pointer hover:bg-yellow-50 transition ${event ? "bg-yellow-50" : "bg-white"
-            }`}
+          className={`relative border h-24 p-2 cursor-pointer hover:bg-yellow-50 transition ${
+            event ? "bg-yellow-50" : "bg-white"
+          }`}
         >
           <span className="absolute top-1 right-2 text-xs text-gray-500 font-medium">
             {day}
@@ -345,8 +312,9 @@ const WeekView = ({ weekDays, hours, events, onSelect }) => (
                 <td
                   key={i}
                   onClick={() => event && onSelect(event)}
-                  className={`border border-gray-200 h-8 hover:bg-yellow-50 transition ${event ? "bg-yellow-50" : ""
-                    }`}
+                  className={`border border-gray-200 h-8 hover:bg-yellow-50 transition ${
+                    event ? "bg-yellow-50" : ""
+                  }`}
                 >
                   {event && (
                     <span className={`text-xs ${event.color.split(" ")[1]}`}>
@@ -387,8 +355,9 @@ const DayView = ({ date, hours, events, onSelect }) => {
               <td className="border px-2 py-1 text-xs">{h}</td>
               <td
                 onClick={() => event && onSelect(event)}
-                className={`border border-gray-200 h-8 hover:bg-yellow-50 transition ${event ? "bg-yellow-50" : ""
-                  }`}
+                className={`border border-gray-200 h-8 hover:bg-yellow-50 transition ${
+                  event ? "bg-yellow-50" : ""
+                }`}
               >
                 {event && h.startsWith("10") && (
                   <span className={`text-xs ${event.color.split(" ")[1]}`}>
@@ -464,8 +433,9 @@ const EventModal = ({ event, city, monthNames, currentDate, onClose }) => (
 const ChevronDownIcon = ({ open }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    className={`w-4 h-4 ml-1 transform transition-transform ${open ? "rotate-180" : ""
-      }`}
+    className={`w-4 h-4 ml-1 transform transition-transform ${
+      open ? "rotate-180" : ""
+    }`}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"

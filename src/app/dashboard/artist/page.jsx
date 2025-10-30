@@ -198,7 +198,7 @@ export default function ArtistDashboard() {
             Artist Dashboard
           </h1>
 
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <Link
               href="/"
               className="flex items-center gap-2 px-4 py-2 rounded-[var(--radius-md)] border border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition"
@@ -211,7 +211,7 @@ export default function ArtistDashboard() {
             >
               <LogOut size={16} /> Logout
             </button>
-          </div>
+          </div> */}
         </div>
 
         <p className="text-center text-[var(--color-muted-foreground)] mb-10">

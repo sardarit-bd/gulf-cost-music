@@ -252,7 +252,7 @@ export default function JournalistDashboard() {
           <h1 className="text-3xl font-semibold text-[var(--color-primary)] flex items-center gap-2">
             <Newspaper size={26} /> Journalist Dashboard
           </h1>
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <Link
               href="/"
               className="flex items-center gap-2 px-4 py-2 rounded-[var(--radius-md)] border border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition"
@@ -265,7 +265,7 @@ export default function JournalistDashboard() {
             >
               <LogOut size={16} /> Logout
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Tabs */}
