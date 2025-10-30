@@ -53,7 +53,7 @@ export default function ArtistDashboard() {
 
       try {
         const res = await fetch(
-          "http://localhost:5000/api/artists/profile/me",
+          "https://golf-music-backend-1.onrender.com/api/artists/profile/me",
           {
             headers: {
               "Content-Type": "application/json",
@@ -138,7 +138,7 @@ export default function ArtistDashboard() {
       artist.photos.forEach((file) => formData.append("photos", file));
       if (artist.audio) formData.append("mp3File", artist.audio);
 
-      const res = await fetch("http://localhost:5000/api/artists/profile", {
+      const res = await fetch("https://golf-music-backend-1.onrender.com/api/artists/profile", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

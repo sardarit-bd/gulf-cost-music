@@ -44,7 +44,7 @@ export default function ProfilePage() {
         return;
       }
 
-      const response = await fetch("http://localhost:5000/api/auth/me", {
+      const response = await fetch("https://golf-music-backend-1.onrender.com/api/auth/me", {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -78,7 +78,7 @@ export default function ProfilePage() {
       // Fetch profile data based on user type
       switch (userData.userType) {
         case "artist":
-          const artistResponse = await fetch(`http://localhost:5000/api/artists/${userData._id}`, {
+          const artistResponse = await fetch(`https://golf-music-backend-1.onrender.com/api/artists/${userData._id}`, {
             headers: { "Authorization": `Bearer ${token}` }
           });
           if (artistResponse.ok) {
@@ -87,7 +87,7 @@ export default function ProfilePage() {
           break;
 
         case "venue":
-          const venueResponse = await fetch(`http://localhost:5000/api/venues/${userData._id}`, {
+          const venueResponse = await fetch(`https://golf-music-backend-1.onrender.com/api/venues/${userData._id}`, {
             headers: { "Authorization": `Bearer ${token}` }
           });
           if (venueResponse.ok) {
@@ -168,7 +168,7 @@ export default function ProfilePage() {
       // Prepare payload based on user type
       switch (role) {
         case "artist":
-          endpoint = "http://localhost:5000/api/artists/profile";
+          endpoint = "https://golf-music-backend-1.onrender.com/api/artists/profile";
           payload = {
             name: formData.name,
             city: formData.city,
@@ -179,7 +179,7 @@ export default function ProfilePage() {
           break;
 
         case "venue":
-          endpoint = "http://localhost:5000/api/venues/profile";
+          endpoint = "https://golf-music-backend-1.onrender.com/api/venues/profile";
           payload = {
             venueName: formData.name,
             city: formData.city,
@@ -191,7 +191,7 @@ export default function ProfilePage() {
           break;
 
         case "journalist":
-          endpoint = "http://localhost:5000/api/news";
+          endpoint = "https://golf-music-backend-1.onrender.com/api/news";
           payload = {
             title: formData.name,
             description: formData.biography,
@@ -247,7 +247,7 @@ export default function ProfilePage() {
     });
 
     try {
-      const response = await fetch("http://localhost:5000/api/upload/photos", {
+      const response = await fetch("https://golf-music-backend-1.onrender.com/api/upload/photos", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -268,7 +268,7 @@ export default function ProfilePage() {
     mp3FormData.append('mp3', formData.mp3);
 
     try {
-      const response = await fetch("http://localhost:5000/api/upload/mp3", {
+      const response = await fetch("https://golf-music-backend-1.onrender.com/api/upload/mp3", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
