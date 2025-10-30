@@ -19,7 +19,7 @@ export default function Page() {
       try {
         const genreParam =
           selectedGenre === "All" ? "" : `?genre=${selectedGenre.toLowerCase()}`;
-        const res = await fetch(`http://localhost:5000/api/artists${genreParam}`);
+        const res = await fetch(`https://golf-music-backend-1.onrender.com/api/artists${genreParam}`);
         const data = await res.json();
         if (res.ok) {
           setArtists(data.data.artists || []);

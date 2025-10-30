@@ -18,7 +18,7 @@ export default function NewsPage() {
         setLoading(true);
         const query =
           selectedCity === "All" ? "" : `?location=${selectedCity.toLowerCase()}`;
-        const res = await fetch(`http://localhost:5000/api/news${query}`);
+        const res = await fetch(`https://golf-music-backend-1.onrender.com/api/news${query}`);
         const data = await res.json();
         console.log(data)
 

@@ -13,7 +13,7 @@ export default function ArtistProfile() {
   useEffect(() => {
     const fetchArtist = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/artists/${artistID}`);
+        const res = await fetch(`https://golf-music-backend-1.onrender.com/api/artists/${artistID}`);
         const data = await res.json();
 
         if (res.ok && data.data?.artist) {

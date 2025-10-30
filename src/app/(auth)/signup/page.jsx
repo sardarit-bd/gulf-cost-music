@@ -71,15 +71,12 @@ export default function SignUp() {
     try {
       const userTypeLower = formData.userType.toLowerCase();
 
-
-
       const submissionData = {
         username: formData.username,
         email: formData.email,
         password: formData.password,
         userType: userTypeLower,
       };
-
 
       if (userTypeLower === "artist") {
         submissionData.genre = formData.genre;
@@ -89,26 +86,26 @@ export default function SignUp() {
         console.log("Adding location:", formData.location);
       }
 
-
       console.log("Final Submission Data:", submissionData);
 
-      const res = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(submissionData),
-      });
+      const res = await fetch(
+        "https://golf-music-backend-1.onrender.com/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(submissionData),
+        }
+      );
 
       const data = await res.json();
       if (res.ok) {
         setMessage(data.message || "Registration successful!");
 
-
         if (userTypeLower !== "fan") {
           await sendVerificationEmail(formData.email, formData.userType);
         }
-
 
         setTimeout(() => {
           router.push("/signin");
@@ -145,17 +142,20 @@ export default function SignUp() {
     };
 
     try {
-      await fetch("http://localhost:5000/api/auth/send-verification-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          message: verificationMessages[userType],
-          userType: userType,
-        }),
-      });
+      await fetch(
+        "https://golf-music-backend-1.onrender.com/api/auth/send-verification-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email,
+            message: verificationMessages[userType],
+            userType: userType,
+          }),
+        }
+      );
     } catch (error) {
       console.error("Error sending verification email:", error);
     }
@@ -256,10 +256,10 @@ export default function SignUp() {
           <p className="text-center text-sm mt-4 text-green-500">{message}</p>
         )}
 
-        {/* Verification Info */}
-        {formData.userType !== "Fan" && (
+        {/* Verification Info ( only after message) */}
+        {message && formData.userType !== "Fan" && (
           <p className="text-center text-xs text-yellow-600 mt-2">
-            Verification email will be sent to your email address
+            Verification email has been sent to your email address.
           </p>
         )}
 
