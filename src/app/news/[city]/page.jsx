@@ -2,62 +2,53 @@
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function CityNewsPage() {
   const { city } = useParams();
   const router = useRouter();
+  const [news, setNews] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const allNews = [
-    {
-      id: "arena-center",
-      title: "Arena Center Grand Opening 🎉",
-      city: "New Orleans",
-      date: "Oct 25, 2025",
-      image:
-        "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=900&q=60",
-      desc: "The brand new Arena Center is now open with a spectacular concert event. Thousands joined the grand opening celebration.",
-    },
-    {
-      id: "biloxi-beach-hall",
-      title: "Biloxi Beach Festival Announced 🌴",
-      city: "Biloxi",
-      date: "Oct 20, 2025",
-      image:
-        "https://images.unsplash.com/photo-1503428593586-e225b39bddfe?auto=format&fit=crop&w=900&q=60",
-      desc: "The annual Biloxi Beach Festival is set to return with a week-long celebration of music, art, and food.",
-    },
-    {
-      id: "mobile-event-hub",
-      title: "Mobile Hub Hosts Live Concert 🎤",
-      city: "Mobile",
-      date: "Oct 18, 2025",
-      image:
-        "https://images.unsplash.com/photo-1541976076758-25a71c4200d1?auto=format&fit=crop&w=900&q=60",
-      desc: "The Mobile Event Hub brings together top artists for a stunning night of performances and live entertainment.",
-    },
-    {
-      id: "pensacola-arena",
-      title: "Pensacola Arena Renovation Complete 🏗️",
-      city: "Pensacola",
-      date: "Oct 15, 2025",
-      image:
-        "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=900&q=60",
-      desc: "After months of renovation, the Pensacola Arena is ready to host large-scale events with upgraded facilities.",
-    },
-  ];
+  useEffect(() => {
+    const fetchCityNews = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(
+          `http://localhost:5000/api/news?location=${city.toLowerCase()}`
+        );
+        const data = await res.json();
+        if (res.ok && data.data?.news) {
+          setNews(data.data.news);
+        } else {
+          setNews([]);
+        }
+      } catch (err) {
+        console.error("Error fetching city news:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const filteredNews = allNews.filter(
-    (n) => n.city.toLowerCase() === city.toLowerCase()
-  );
+    fetchCityNews();
+  }, [city]);
 
-  if (filteredNews.length === 0) {
+  if (loading) {
+    return (
+      <div className="brandBg text-white min-h-screen flex items-center justify-center">
+        <p className="text-lg">Loading {city} news...</p>
+      </div>
+    );
+  }
+
+  if (news.length === 0) {
     return (
       <div className="brandBg text-white min-h-screen flex flex-col justify-center items-center">
         <h1 className="text-3xl font-bold mb-3">
           No news found for {city} 😢
         </h1>
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push("/news")}
           className="px-6 py-2 bg-yellow-400 text-black rounded-md font-medium hover:bg-yellow-500 transition"
         >
           ← Go Back
@@ -71,7 +62,7 @@ export default function CityNewsPage() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold brandColor">
+          <h1 className="text-4xl md:text-5xl font-bold brandColor capitalize">
             {city} News
           </h1>
           <button
@@ -82,16 +73,16 @@ export default function CityNewsPage() {
           </button>
         </div>
 
-        {/* Grid */}
+        {/* News Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filteredNews.map((item) => (
+          {news.map((item) => (
             <div
-              key={item.id}
+              key={item._id}
               className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1 bg-white"
             >
               <div className="relative w-full h-56">
                 <Image
-                  src={item.image}
+                  src={item.photos?.[0]?.url || "/placeholder.jpg"}
                   alt={item.title}
                   fill
                   className="object-cover"
@@ -102,14 +93,16 @@ export default function CityNewsPage() {
                 <h2 className="text-lg font-bold brandColor mb-1">
                   {item.title}
                 </h2>
-                <p className="text-sm text-gray-600 mb-2">{item.city}</p>
+                <p className="text-sm text-gray-600 mb-2 capitalize">
+                  {item.location}
+                </p>
 
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-gray-700">
-                    🗓 {item.date}
+                    🗓 {new Date(item.createdAt).toLocaleDateString()}
                   </span>
                   <Link
-                    href={`/news/${item.city}/${item.id}`}
+                    href={`/news/${item.location}/${item._id}`}
                     className="px-4 py-1 bg-yellow-400 text-sm font-semibold rounded-full hover:bg-yellow-500 transition"
                   >
                     View

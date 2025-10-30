@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -19,19 +19,52 @@ export default function VenueDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
 
   const [venue, setVenue] = useState({
-    name: "Jazz Haven",
-    city: "New Orleans",
-    address: "123 Bourbon Street",
-    seating: "250",
+    name: "",
+    city: "",
+    address: "",
+    seating: "",
     biography:
-      "A historic jazz venue located in the heart of New Orleans, offering nightly live performances and an authentic southern atmosphere.",
-    openHours: "Mon–Sat, 6PM–2AM",
+      "",
+    openHours: "",
     photos: [],
   });
 
   const [previewImages, setPreviewImages] = useState([]);
 
   const cityOptions = ["New Orleans", "Biloxi", "Mobile", "Pensacola"];
+
+useEffect(() => {
+  const fetchVenue = async () => {
+    const token = localStorage.getItem("token");
+    
+    if (!token) return;
+
+    const res = await fetch("http://localhost:5000/api/venues/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+    console.log("Fetched venue data:", data);
+
+    if (res.ok && data.data?.venue) {
+      setVenue({
+        name: data.data.venue.venueName,
+        city: data.data.venue.city,
+        address: data.data.venue.address,
+        seating: data.data.venue.seatingCapacity,
+        biography: data.data.venue.biography,
+        openHours: data.data.venue.openHours,
+        photos: [],
+      });
+      setPreviewImages(data.data.venue.photos?.map((p) => p.url) || []);
+    } else {
+      console.error("Error fetching venue:", data.message);
+    }
+  };
+
+  fetchVenue();
+}, []);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,9 +85,51 @@ export default function VenueDashboard() {
     setVenue({ ...venue, photos: updatedFiles });
   };
 
-  const handleSave = () => {
-    alert("Venue profile saved successfully!");
-  };
+const handleSave = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("❌ You are not logged in.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("venueName", venue.name);
+    formData.append("city", venue.city);
+    formData.append("address", venue.address);
+    formData.append("seatingCapacity", venue.seating);
+    formData.append("biography", venue.biography);
+    formData.append("openHours", venue.openHours);
+    formData.append("openDays", "Mon–Sat"); // optional field
+
+    if (venue.photos && venue.photos.length > 0) {
+      venue.photos.forEach((file) => formData.append("photos", file));
+    }
+
+    const res = await fetch("http://localhost:5000/api/venues/profile", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+      credentials: "include",
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("✅ Venue profile saved successfully!");
+      console.log("Saved Venue:", data.data.venue);
+    } else {
+      alert("❌ " + (data.message || "Failed to save venue profile"));
+      console.error("Error response:", data);
+    }
+  } catch (error) {
+    console.error("Error saving venue:", error);
+    alert("❌ Server error while saving venue.");
+  }
+};
+
 
   const handleLogout = () => {
     alert("You have been logged out.");

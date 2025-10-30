@@ -20,7 +20,7 @@ import { useSession } from "@/lib/auth";
 const cityOptions = ["New Orleans", "Biloxi", "Mobile", "Pensacola"];
 
 export default function JournalistDashboard() {
-  const { user, loading, logout, getCookie } = useSession();
+  const { user, loading, logout } = useSession();
 
   const [activeTab, setActiveTab] = useState("news");
   const [journalist, setJournalist] = useState({
@@ -48,45 +48,81 @@ export default function JournalistDashboard() {
   const [form, setForm] = useState(blankNews);
   const [previewImages, setPreviewImages] = useState([]);
 
-  // 🔹 Load journalist profile + news on mount
+  // Load journalist profile + news on mount
   useEffect(() => {
     if (!user) return;
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    const fetchData = async () => {
+    const fetchProfile = async () => {
       try {
-        // Load Profile
-        const profRes = await fetch("http://localhost:5000/api/journalists/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
-        });
-        const profData = await profRes.json();
-        if (profRes.ok && profData.data?.journalist) {
-          const j = profData.data.journalist;
+        const res = await fetch(
+          "http://localhost:5000/api/journalists/profile",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            credentials: "include",
+          }
+        );
+        const data = await res.json();
+
+        if (res.status === 404) {
+          // 🔹 প্রোফাইল নেই → নতুন করে বানাই
+          const fd = new FormData();
+          fd.append("fullName", user?.username || "");
+          fd.append("bio", "");
+          fd.append("areasOfCoverage", JSON.stringify([]));
+
+          const createRes = await fetch(
+            "http://localhost:5000/api/journalists/profile",
+            {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}` },
+              body: fd,
+              credentials: "include",
+            }
+          );
+
+          if (!createRes.ok) {
+            const msg =
+              (await createRes.json())?.message || "Failed to create profile";
+            setMessage("❌ " + msg);
+            return;
+          }
+          // আবার লোড করি
+          return fetchProfile();
+        }
+
+        if (res.ok && data?.data?.journalist) {
+          const j = data.data.journalist;
           setJournalist({
-            fullName: j.fullName,
+            fullName: j.fullName || "",
             email: j.user?.email || "",
             bio: j.bio || "",
             avatar: j.profilePhoto?.url || null,
           });
           setPreviewAvatar(j.profilePhoto?.url || null);
         }
+      } catch (err) {
+        console.error("Error loading journalist data:", err);
+        setMessage("❌ Failed to load profile");
+      }
+    };
 
-        // Load My News
-        const newsRes = await fetch("http://localhost:5000/api/news/my", {
+    const fetchMyNews = async () => {
+      try {
+        const newsRes = await fetch("http://localhost:5000/api/news/my-news", {
           headers: { Authorization: `Bearer ${token}` },
           credentials: "include",
         });
         const newsData = await newsRes.json();
-        if (newsRes.ok && newsData.data?.news) {
-          setNewsList(newsData.data.news);
-        }
-      } catch (err) {
-        console.error("Error loading journalist data:", err);
+        if (newsRes.ok && newsData.data?.news) setNewsList(newsData.data.news);
+      } catch (e) {
+        console.error("Error loading news:", e);
       }
     };
-    fetchData();
+
+    fetchProfile();
+    fetchMyNews();
   }, [user]);
 
   // 🔹 Avatar Upload
@@ -96,7 +132,7 @@ export default function JournalistDashboard() {
     setPreviewAvatar(URL.createObjectURL(file));
 
     try {
-      const token = getCookie("token");
+      const token = localStorage.getItem("token");
       const formData = new FormData();
       formData.append("fullName", journalist.fullName);
       formData.append("bio", journalist.bio);
@@ -149,7 +185,7 @@ export default function JournalistDashboard() {
     try {
       setSaving(true);
       setMessage("");
-      const token = getCookie("token");
+      const token = localStorage.getItem("token");
 
       const formData = new FormData();
       formData.append("title", form.title);
@@ -215,7 +251,7 @@ export default function JournalistDashboard() {
   const deleteNews = async (id) => {
     if (!confirm("Delete this news item?")) return;
     try {
-      const token = getCookie("token");
+      const token = localStorage.getItem("token");
       const res = await fetch(`http://localhost:5000/api/news/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -234,6 +270,36 @@ export default function JournalistDashboard() {
   const handleLogout = async () => {
     await logout();
     window.location.href = "/signin";
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return setMessage("❌ Not authenticated");
+
+      const fd = new FormData();
+      fd.append("fullName", journalist.fullName || "");
+      fd.append("bio", journalist.bio || "");
+      // চাইলে ইনপুট থেকে array বানিয়ে দাও; আপাতত খালি পাঠালাম
+      fd.append("areasOfCoverage", JSON.stringify([]));
+
+      const res = await fetch("http://localhost:5000/api/journalists/profile", {
+        method: "POST", // createOrUpdateProfile POST-এই কাজ করে
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+        credentials: "include",
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setMessage("✅ Profile saved!");
+      } else {
+        setMessage("❌ " + (data.message || "Failed to save profile"));
+      }
+    } catch (err) {
+      console.error("Save profile error:", err);
+      setMessage("❌ Server error");
+    }
   };
 
   if (loading)
@@ -306,20 +372,32 @@ export default function JournalistDashboard() {
             <div className="flex flex-col items-center text-center">
               <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-yellow-400 mb-4">
                 {previewAvatar ? (
-                  <Image src={previewAvatar} alt="Avatar" fill className="object-cover" />
+                  <Image
+                    src={previewAvatar}
+                    alt="Avatar"
+                    fill
+                    className="object-cover"
+                  />
                 ) : (
                   <User2 className="w-full h-full text-gray-400 p-8" />
                 )}
               </div>
               <label className="cursor-pointer bg-yellow-500 text-black px-4 py-2 rounded-md hover:bg-yellow-400 transition">
                 <Upload size={16} className="inline mr-2" /> Upload Avatar
-                <input type="file" accept="image/*" hidden onChange={handleAvatarUpload} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleAvatarUpload}
+                />
               </label>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-gray-400 mb-1 block">Full Name</label>
+                <label className="text-sm text-gray-400 mb-1 block">
+                  Full Name
+                </label>
                 <input
                   name="fullName"
                   value={journalist.fullName}
@@ -335,10 +413,19 @@ export default function JournalistDashboard() {
                   name="bio"
                   rows={3}
                   value={journalist.bio}
-                  onChange={(e) => setJournalist({ ...journalist, bio: e.target.value })}
+                  onChange={(e) =>
+                    setJournalist({ ...journalist, bio: e.target.value })
+                  }
                   className="w-full px-4 py-2 rounded-md bg-white text-black border border-gray-600"
                 ></textarea>
               </div>
+              <button
+                onClick={handleSaveProfile}
+                className="mt-2 bg-yellow-500 text-black px-5 py-2 rounded-md hover:bg-yellow-400 transition"
+              >
+                <Save className="inline mr-2" size={16} />
+                Save Profile
+              </button>
             </div>
           </div>
         )}
@@ -377,9 +464,12 @@ export default function JournalistDashboard() {
                         </div>
                       </div>
                       <p className="text-sm text-gray-400 mb-1">
-                        {item.date?.split("T")[0]} · {item.location} · {item.credit}
+                        {item.date?.split("T")[0]} · {item.location} ·{" "}
+                        {item.credit}
                       </p>
-                      <p className="text-gray-300 mb-3">{item.description.slice(0, 100)}...</p>
+                      <p className="text-gray-300 mb-3">
+                        {item.description.slice(0, 100)}...
+                      </p>
                       {item.photos?.length > 0 && (
                         <div className="grid grid-cols-5 gap-2">
                           {item.photos.slice(0, 3).map((p, i) => (
@@ -422,7 +512,9 @@ export default function JournalistDashboard() {
           <div className="animate-fadeIn space-y-8">
             <div className="grid md:grid-cols-2 gap-8">
               <div className="md:col-span-2">
-                <label className="text-sm text-gray-400 mb-1 block">Title</label>
+                <label className="text-sm text-gray-400 mb-1 block">
+                  Title
+                </label>
                 <input
                   name="title"
                   value={form.title}
@@ -442,7 +534,9 @@ export default function JournalistDashboard() {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-400 mb-1 block">Location</label>
+                <label className="text-sm text-gray-400 mb-1 block">
+                  Location
+                </label>
                 <select
                   name="location"
                   value={form.location}
@@ -455,7 +549,9 @@ export default function JournalistDashboard() {
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="text-sm text-gray-400 mb-1 block">Credit</label>
+                <label className="text-sm text-gray-400 mb-1 block">
+                  Credit
+                </label>
                 <input
                   name="credit"
                   value={form.credit}
@@ -465,7 +561,9 @@ export default function JournalistDashboard() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="text-sm text-gray-400 mb-1 block">Description</label>
+                <label className="text-sm text-gray-400 mb-1 block">
+                  Description
+                </label>
                 <textarea
                   name="description"
                   value={form.description}
@@ -495,8 +593,16 @@ export default function JournalistDashboard() {
               {previewImages.length > 0 && (
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
                   {previewImages.map((src, i) => (
-                    <div key={i} className="relative aspect-square border border-gray-700 rounded-md overflow-hidden group">
-                      <Image src={src} alt="preview" fill className="object-cover" />
+                    <div
+                      key={i}
+                      className="relative aspect-square border border-gray-700 rounded-md overflow-hidden group"
+                    >
+                      <Image
+                        src={src}
+                        alt="preview"
+                        fill
+                        className="object-cover"
+                      />
                       <button
                         onClick={() => removeImage(i)}
                         className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
