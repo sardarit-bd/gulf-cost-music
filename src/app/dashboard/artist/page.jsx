@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 export default function ArtistDashboard() {
-  const { user, loading, logout, getCookie } = useSession();
+  const { user, loading, logout } = useSession();
 
   const [activeTab, setActiveTab] = useState("overview");
   const [artist, setArtist] = useState({
@@ -43,36 +43,43 @@ export default function ArtistDashboard() {
     "Other",
   ];
 
+  const cityOptions = ["New Orleans", "Biloxi", "Mobile", "Pensacola"];
+
   // Fetch existing artist profile from backend
   useEffect(() => {
-    if (!user) return;
     const fetchProfile = async () => {
-      try {
-        const token = getCookie("token");
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-        const res = await fetch("http://localhost:5000/api/artists/profile/me", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: "include",
-        });
+      try {
+        const res = await fetch(
+          "http://localhost:5000/api/artists/profile/me",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          console.error("Failed to fetch artist:", res.status);
+          return;
+        }
 
         const data = await res.json();
-
-        if (res.ok && data.data?.artist) {
+        if (data.data?.artist) {
           const a = data.data.artist;
           setArtist({
             name: a.name || "",
-            city: a.city || "",
-            genre: a.genre || "pop",
+            city: a.city
+              ? a.city.charAt(0).toUpperCase() + a.city.slice(1).toLowerCase()
+              : "",
+            genre: a.genre ? a.genre.toLowerCase() : "pop",
             biography: a.biography || "",
             photos: a.photos || [],
             audio: a.mp3File || null,
           });
-
-          // Set previews
           setPreviewImages(a.photos?.map((p) => p.url) || []);
           setAudioPreview(a.mp3File?.url || null);
         }
@@ -80,8 +87,9 @@ export default function ArtistDashboard() {
         console.error("Error loading profile:", error);
       }
     };
+
     fetchProfile();
-  }, [user]);
+  }, []);
 
   //  Handle text input changes
   const handleChange = (e) => {
@@ -120,11 +128,11 @@ export default function ArtistDashboard() {
       setSaving(true);
       setMessage("");
 
-      const token = getCookie("token");
+      const token = localStorage.getItem("token");
 
       const formData = new FormData();
       formData.append("name", artist.name);
-      formData.append("city", artist.city);
+      formData.append("city", artist.city.toLowerCase());
       formData.append("genre", artist.genre.toLowerCase());
       formData.append("biography", artist.biography);
       artist.photos.forEach((file) => formData.append("photos", file));
@@ -328,27 +336,36 @@ export default function ArtistDashboard() {
                 />
               </div>
 
-              {/* City */}
+              {/* City Dropdown */}
               <div>
                 <label className="block text-sm text-gray-400 mb-1">City</label>
-                <input
+                <select
                   name="city"
-                  value={artist.city}
+                  value={artist.city.toLowerCase()}
                   onChange={handleChange}
-                  placeholder="Enter city"
                   className="w-full px-4 py-2 rounded-md bg-white text-black border border-gray-600"
-                />
+                >
+                  <option value="">Select City</option>
+                  {cityOptions.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Genre */}
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Genre</label>
+                <label className="block text-sm text-gray-400 mb-1">
+                  Genre
+                </label>
                 <select
                   name="genre"
-                  value={artist.genre}
+                  value={artist.genre.toLowerCase()}
                   onChange={handleChange}
                   className="w-full px-4 py-2 rounded-md bg-white text-black border border-gray-600"
                 >
+                  <option value="">Select Genre</option>
                   {genreOptions.map((g) => (
                     <option key={g} value={g.toLowerCase()}>
                       {g}
