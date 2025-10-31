@@ -384,8 +384,8 @@ const EventModal = ({ event, city, monthNames, currentDate, onClose }) => (
       <div className="w-full h-52 md:h-64 bg-gray-200 overflow-hidden">
         <Image
           src={
-            event.banner ||
-            "https://images.unsplash.com/photo-1515169067865-5387ec356754?auto=format&fit=crop&w=900&q=60"
+            // event.banner ||
+            "https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZXZlbnR8ZW58MHx8MHx8fDA%3D&fm=jpg&q=60&w=3000"
           }
           width={800}
           height={400}

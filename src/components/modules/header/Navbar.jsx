@@ -327,7 +327,7 @@ export default function Header() {
             {isLoggedIn ? (
               <>
                 {/* Dashboard Button */}
-                <Link
+                {/* <Link
                   href={getDashboardLink()}
                   className="bg-yellow-500 text-black px-3 py-2 rounded-lg hover:bg-yellow-400 transition-all duration-200 font-medium text-sm flex items-center gap-2 whitespace-nowrap"
                   onClick={closeAllDropdowns}
@@ -346,7 +346,7 @@ export default function Header() {
                     />
                   </svg>
                   <span className="hidden lg:inline">Dashboard</span>
-                </Link>
+                </Link> */}
 
                 {/* Profile Dropdown */}
                 <div className="relative group">
@@ -384,7 +384,7 @@ export default function Header() {
                     </div>
 
                     <Link
-                      href="/profile"
+                      href={getDashboardLink()}
                       className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors duration-200"
                       onClick={closeAllDropdowns}
                     >
@@ -483,7 +483,7 @@ export default function Header() {
             {/* Mobile Menu Content */}
             <div
               ref={mobileMenuRef}
-              className="lg:hidden fixed h-[100vh] top-16 left-0 right-0 bottom-0 bg-black/95 backdrop-blur-md z-50 flex flex-col overflow-y-auto"
+              className="lg:hidden fixed h-[100vh] top-0 py-16 left-0 right-0 bottom-0 bg-black/95 backdrop-blur-md z-50 flex flex-col overflow-y-auto"
             >
               {/* Close Button */}
               <button

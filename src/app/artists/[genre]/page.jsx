@@ -18,7 +18,6 @@ export default function GenrePage() {
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists?genre=${genre.toLowerCase()}`
         );
         const data = await res.json();
-
         if (res.ok && data.data?.artists) {
           setArtists(data.data.artists);
         } else {

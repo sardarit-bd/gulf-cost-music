@@ -123,6 +123,51 @@ export default function ArtistDashboard() {
     }
   };
 
+  const uploadPhotos = async (token) => {
+    const photoFormData = new FormData();
+    artist.photos.forEach(photo => {
+      photoFormData.append('photos', photo);
+    });
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/upload/photos`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+        body: photoFormData,
+      });
+
+      console.log(response)
+      if (!response.ok) {
+        throw new Error("Photo upload failed");
+      }
+    } catch (error) {
+      console.error("Error uploading photos:", error);
+    }
+  };
+
+  const uploadMP3 = async (token) => {
+    const mp3FormData = new FormData();
+    mp3FormData.append('mp3', artist.audio);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/upload/mp3`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+        body: mp3FormData,
+      });
+      console.log(response)
+      if (!response.ok) {
+        throw new Error("MP3 upload failed");
+      }
+    } catch (error) {
+      console.error("Error uploading MP3:", error);
+    }
+  };
+
   //  Save (POST/PUT to backend)
   const handleSave = async () => {
     try {
@@ -136,8 +181,12 @@ export default function ArtistDashboard() {
       formData.append("city", artist.city.toLowerCase());
       formData.append("genre", artist.genre.toLowerCase());
       formData.append("biography", artist.biography);
+
       artist.photos.forEach((file) => formData.append("photos", file));
       if (artist.audio) formData.append("mp3File", artist.audio);
+
+      uploadMP3(localStorage.getItem('token'))
+      uploadPhotos(localStorage.getItem('token'))
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/profile`, {
         method: "POST",
@@ -339,6 +388,7 @@ export default function ArtistDashboard() {
               </div>
 
               {/* City Dropdown */}
+              {console.log(artist)}
               <div>
                 <label className="block text-sm text-gray-400 mb-1">City</label>
                 <select
@@ -349,7 +399,7 @@ export default function ArtistDashboard() {
                 >
                   <option value="">Select City</option>
                   {cityOptions.map((city) => (
-                    <option key={city} value={city}>
+                    <option key={city} value={city.toLocaleLowerCase()}>
                       {city}
                     </option>
                   ))}
