@@ -182,7 +182,7 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 w-full border-b border-gray-700 z-50 transition-all duration-500 ${navbarBg}`}
+      className={`fixed top-0 w-full z-50 transition-all duration-500 ${navbarBg}`}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-24">
@@ -351,9 +351,7 @@ export default function Header() {
                 {/* Profile Dropdown */}
                 <div className="relative group">
                   <button className="flex items-center gap-2 hover:text-yellow-400 transition-colors duration-200">
-                    <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-black font-bold text-sm">
-                      {user?.username?.charAt(0).toUpperCase() || "U"}
-                    </div>
+                    
                     <span className="hidden lg:inline text-sm max-w-24 truncate">
                       {user?.username || "User"}
                     </span>
@@ -370,6 +368,9 @@ export default function Header() {
                         d="M19 9l-7 7-7-7"
                       />
                     </svg>
+                    <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-black font-bold text-sm">
+                      {user?.username?.charAt(0).toUpperCase() || "U"}
+                    </div>
                   </button>
 
                   {/* Profile Dropdown Menu */}
