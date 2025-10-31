@@ -94,6 +94,7 @@ export default function ArtistDashboard() {
   //  Handle text input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log(name, value)
     setArtist({ ...artist, [name]: value });
   };
 
@@ -148,6 +149,7 @@ export default function ArtistDashboard() {
       });
 
       const data = await res.json();
+      console.log(data)
 
       if (res.ok) {
         setMessage(" Profile saved successfully!");

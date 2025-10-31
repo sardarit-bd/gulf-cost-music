@@ -81,10 +81,8 @@ export default function SignUp() {
 
       if (userTypeLower === "artist") {
         submissionData.genre = formData.genre;
-        console.log("Adding genre:", formData.genre);
       } else if (userTypeLower === "venue" || userTypeLower === "journalist") {
         submissionData.location = formData.location;
-        console.log("Adding location:", formData.location);
       }
 
       console.log("Final Submission Data:", submissionData);
@@ -100,8 +98,10 @@ export default function SignUp() {
         }
       );
 
-      console.log(res)
+      console.log("res", res)
       const data = await res.json();
+      console.log("data", data)
+
       if (res.ok) {
         setMessage(data.message || "Registration successful!");
 
@@ -177,7 +177,7 @@ export default function SignUp() {
           <input
             type="text"
             name="username"
-            placeholder="Name"
+            placeholder="Username"
             value={formData.username}
             onChange={handleChange}
             required

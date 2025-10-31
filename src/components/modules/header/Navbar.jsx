@@ -59,7 +59,7 @@ export default function Header() {
 
     document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("touchstart", handleClickOutside);
-    
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("touchstart", handleClickOutside);
@@ -176,7 +176,7 @@ export default function Header() {
 
   const shouldHideHeader = pathname?.startsWith("/dashboard/admin");
 
-    if (shouldHideHeader) {
+  if (shouldHideHeader) {
     return null;
   }
 
@@ -216,9 +216,8 @@ export default function Header() {
                 <button className="flex items-center gap-1 hover:text-yellow-400 transition-colors duration-200 font-medium text-sm xl:text-base py-2">
                   {dropdownData[key].title}
                   <svg
-                    className={`w-4 h-4 transition-transform ${
-                      activeDropdown === key ? "rotate-180" : "rotate-0"
-                    }`}
+                    className={`w-4 h-4 transition-transform ${activeDropdown === key ? "rotate-180" : "rotate-0"
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -239,8 +238,8 @@ export default function Header() {
                         key === "artists"
                           ? `/artists/${encodeURIComponent(item)}`
                           : key === "venues"
-                          ? `/venues/${encodeURIComponent(item)}`
-                          : `/news/${encodeURIComponent(item)}`;
+                            ? `/venues/${encodeURIComponent(item)}`
+                            : `/news/${encodeURIComponent(item)}`;
 
                       return (
                         <Link
@@ -281,9 +280,8 @@ export default function Header() {
                 >
                   {dropdownData[key].title}
                   <svg
-                    className={`w-3 h-3 transition-transform ${
-                      mobileDropdown === key ? "rotate-180" : "rotate-0"
-                    }`}
+                    className={`w-3 h-3 transition-transform ${mobileDropdown === key ? "rotate-180" : "rotate-0"
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -304,8 +302,8 @@ export default function Header() {
                         key === "artists"
                           ? `/artists/${encodeURIComponent(item)}`
                           : key === "venues"
-                          ? `/venues/${encodeURIComponent(item)}`
-                          : `/news/${encodeURIComponent(item)}`;
+                            ? `/venues/${encodeURIComponent(item)}`
+                            : `/news/${encodeURIComponent(item)}`;
 
                       return (
                         <Link
@@ -477,15 +475,15 @@ export default function Header() {
         {isOpen && (
           <>
             {/* Backdrop */}
-            <div 
-              className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+            <div
+              className="lg:hidden  fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
               onClick={closeMobileMenu}
             />
-            
+
             {/* Mobile Menu Content */}
             <div
               ref={mobileMenuRef}
-              className="lg:hidden fixed top-16 left-0 right-0 bottom-0 bg-black/95 backdrop-blur-md z-50 flex flex-col overflow-y-auto"
+              className="lg:hidden fixed h-[100vh] top-16 left-0 right-0 bottom-0 bg-black/95 backdrop-blur-md z-50 flex flex-col overflow-y-auto"
             >
               {/* Close Button */}
               <button
@@ -526,9 +524,8 @@ export default function Header() {
                     >
                       <span>{dropdownData[key].title}</span>
                       <svg
-                        className={`w-5 h-5 transition-transform ${
-                          mobileDropdown === key ? "rotate-180" : "rotate-0"
-                        }`}
+                        className={`w-5 h-5 transition-transform ${mobileDropdown === key ? "rotate-180" : "rotate-0"
+                          }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -543,17 +540,16 @@ export default function Header() {
                     </button>
 
                     <div
-                      className={`overflow-hidden transition-all duration-300 ${
-                        mobileDropdown === key ? "max-h-96 pb-2" : "max-h-0"
-                      }`}
+                      className={`overflow-hidden transition-all duration-300 ${mobileDropdown === key ? "max-h-96 pb-2" : "max-h-0"
+                        }`}
                     >
                       {dropdownData[key].items.map((item, index) => {
                         const href =
                           key === "artists"
                             ? `/artists/${encodeURIComponent(item)}`
                             : key === "venues"
-                            ? `/venues/${encodeURIComponent(item)}`
-                            : `/news/${encodeURIComponent(item)}`;
+                              ? `/venues/${encodeURIComponent(item)}`
+                              : `/news/${encodeURIComponent(item)}`;
 
                         return (
                           <Link
