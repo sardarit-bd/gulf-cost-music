@@ -31,7 +31,7 @@ const ArtistManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [actionMenu, setActionMenu] = useState(null);
 
-  const API_URL = "http://localhost:5000/api/admin/content?type=artists";
+  const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content?type=artists`;
 
   const fetchArtists = async () => {
     try {
@@ -63,7 +63,7 @@ const ArtistManagement = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/admin/content/artist/${id}/toggle`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content/artist/${id}/toggle`,
         { isActive: !currentStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -78,7 +78,7 @@ const ArtistManagement = () => {
     if (!window.confirm("Are you sure you want to delete this artist profile?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/artists/${id}`, {
+      await axios.delete(`${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchArtists();

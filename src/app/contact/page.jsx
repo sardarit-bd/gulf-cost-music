@@ -16,7 +16,7 @@ export default function ContactSection() {
     setFeedback(null);
 
     try {
-      const res = await axios.post("http://localhost:5000/api/contact", {
+      const res = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/contact`, {
         email,
         subject,
         message,

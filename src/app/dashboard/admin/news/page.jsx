@@ -34,7 +34,7 @@ const NewsManagement = () => {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [actionMenu, setActionMenu] = useState(null);
 
-  const API_URL = "http://localhost:5000/api/admin/content?type=news";
+  const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content?type=news`;
 
   // 🔹 Fetch All News
   const fetchNews = async () => {
@@ -69,7 +69,7 @@ const NewsManagement = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/admin/content/news/${id}/toggle`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content/news/${id}/toggle`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -85,7 +85,7 @@ const NewsManagement = () => {
     if (!window.confirm("Are you sure you want to delete this news item?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/news/${id}`, {
+      await axios.delete(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchNews();

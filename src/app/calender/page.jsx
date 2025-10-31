@@ -11,7 +11,7 @@ export default function CalendarBoard() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [events, setEvents] = useState([]);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -28,7 +28,6 @@ export default function CalendarBoard() {
           `${API_BASE}/api/venues/calendar?city=${selectedCity.toLowerCase()}`
         );
         const data = await res.json();
-        console.log(data)
 
         if (res.ok && data.success) {
           const formattedEvents = [];

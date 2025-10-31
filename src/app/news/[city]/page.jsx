@@ -15,7 +15,7 @@ export default function CityNewsPage() {
       try {
         setLoading(true);
         const res = await fetch(
-          `http://localhost:5000/api/news?location=${city.toLowerCase()}`
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/news?location=${city.toLowerCase()}`
         );
         const data = await res.json();
         if (res.ok && data.data?.news) {

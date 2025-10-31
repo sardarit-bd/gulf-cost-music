@@ -35,7 +35,7 @@ export default function VenueDashboard() {
   });
 
   const cityOptions = ["New Orleans", "Biloxi", "Mobile", "Pensacola"];
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
   // === Fetch Venue Profile ===
   useEffect(() => {

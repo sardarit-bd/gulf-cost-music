@@ -13,7 +13,7 @@ export default function NewsDetailsPage() {
     const fetchSingleNews = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`http://localhost:5000/api/news/${article}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/${article}`);
         const data = await res.json();
         console.log(data)
 

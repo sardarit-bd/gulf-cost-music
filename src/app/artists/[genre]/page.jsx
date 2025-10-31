@@ -15,7 +15,7 @@ export default function GenrePage() {
     const fetchArtists = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/artists?genre=${genre.toLowerCase()}`
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists?genre=${genre.toLowerCase()}`
         );
         const data = await res.json();
 

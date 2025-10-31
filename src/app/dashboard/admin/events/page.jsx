@@ -35,7 +35,7 @@ const EventManagement = () => {
   const [dateFilter, setDateFilter] = useState("");
   const [actionMenu, setActionMenu] = useState(null);
 
-  const API_URL = "http://localhost:5000/api/admin/content?type=events";
+  const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content?type=events`;
 
   // 🔹 Fetch all events
   const fetchEvents = async () => {
@@ -70,7 +70,7 @@ const EventManagement = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/admin/content/event/${id}/toggle`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content/event/${id}/toggle`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -86,7 +86,7 @@ const EventManagement = () => {
     if (!window.confirm("Are you sure you want to delete this event?")) return;
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/events/${id}`, {
+      await axios.delete(`${process.env.NEXT_PUBLIC_BASE_URL}/api/events/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchEvents();

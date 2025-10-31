@@ -34,7 +34,7 @@ const VenueManagement = () => {
   const [cityFilter, setCityFilter] = useState("");
   const [actionMenu, setActionMenu] = useState(null);
 
-  const API_URL = "http://localhost:5000/api/admin/content?type=venues";
+  const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content?type=venues`;
 
   const fetchVenues = async () => {
     try {

@@ -34,7 +34,7 @@ export default function AdminDashboard() {
   const [userStats, setUserStats] = useState([]);
   const [activeTab, setActiveTab] = useState("overview");
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
   useEffect(() => {
     fetchDashboardData();

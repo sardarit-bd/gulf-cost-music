@@ -53,7 +53,7 @@ export default function ArtistDashboard() {
 
       try {
         const res = await fetch(
-          "http://localhost:5000/api/artists/profile/me",
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/profile/me`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -94,6 +94,7 @@ export default function ArtistDashboard() {
   //  Handle text input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log(name, value)
     setArtist({ ...artist, [name]: value });
   };
 
@@ -138,7 +139,7 @@ export default function ArtistDashboard() {
       artist.photos.forEach((file) => formData.append("photos", file));
       if (artist.audio) formData.append("mp3File", artist.audio);
 
-      const res = await fetch("http://localhost:5000/api/artists/profile", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/profile`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -148,6 +149,7 @@ export default function ArtistDashboard() {
       });
 
       const data = await res.json();
+      console.log(data)
 
       if (res.ok) {
         setMessage(" Profile saved successfully!");
