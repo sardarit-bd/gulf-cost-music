@@ -86,7 +86,7 @@ export default function SignIn() {
         </form>
 
         {/* Message */}
-        {message && (
+        {/* {message && (
           <p
             className={`text-sm mt-4 ${
               message.toLowerCase().includes("success")
@@ -96,7 +96,7 @@ export default function SignIn() {
           >
             {message}
           </p>
-        )}
+        )} */}
 
         <div className="mt-4">
           <Link
