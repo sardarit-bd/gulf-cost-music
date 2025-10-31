@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+
 export default function SignUp() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -89,7 +90,7 @@ export default function SignUp() {
       console.log("Final Submission Data:", submissionData);
 
       const res = await fetch(
-        "http://localhost:5000/api/auth/register",
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/register`,
         {
           method: "POST",
           headers: {
@@ -99,6 +100,7 @@ export default function SignUp() {
         }
       );
 
+      console.log(res)
       const data = await res.json();
       if (res.ok) {
         setMessage(data.message || "Registration successful!");
@@ -143,7 +145,7 @@ export default function SignUp() {
 
     try {
       await fetch(
-        "http://localhost:5000/api/auth/send-verification-email",
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/send-verification-email`,
         {
           method: "POST",
           headers: {

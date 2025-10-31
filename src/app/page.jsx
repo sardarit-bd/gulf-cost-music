@@ -12,6 +12,7 @@ import Footer from "./footer/page";
 const HomePage = () => {
   return (
     <main>
+   
       <HeroSection />
       <div className="bg-[#F9FAFB]">
         <FeaturedSection />

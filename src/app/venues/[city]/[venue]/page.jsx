@@ -11,7 +11,7 @@ export default function VenueProfile() {
 
   useEffect(() => {
     const fetchVenue = async () => {
-      const res = await fetch(`http://localhost:5000/api/venues/${venueId}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/${venueId}`);
       const data = await res.json();
       if (res.ok) setVenue(data.data.venue);
     };

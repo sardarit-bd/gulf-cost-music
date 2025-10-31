@@ -35,7 +35,7 @@ const SystemSettingsPage = () => {
   const [activeTab, setActiveTab] = useState("general");
   const [formData, setFormData] = useState({});
 
-  const API_URL = "http://localhost:5000/api/admin/settings";
+  const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/settings`;
 
   // 🔹 Fetch system settings
   const fetchSettings = async () => {

@@ -19,7 +19,7 @@ export default function Page() {
       try {
         const genreParam =
           selectedGenre === "All" ? "" : `?genre=${selectedGenre.toLowerCase()}`;
-        const res = await fetch(`http://localhost:5000/api/artists${genreParam}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/artists${genreParam}`);
         const data = await res.json();
         if (res.ok) {
           setArtists(data.data.artists || []);

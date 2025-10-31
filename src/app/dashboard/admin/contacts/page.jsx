@@ -35,7 +35,7 @@ const ContactManagement = () => {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [actionMenu, setActionMenu] = useState(null);
 
-  const API_URL = "http://localhost:5000/api/admin/contacts";
+  const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/contacts`;
 
   // 🔹 Fetch all contact messages
   const fetchContacts = async () => {
