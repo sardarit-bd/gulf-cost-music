@@ -98,13 +98,10 @@ export default function SignUp() {
           body: JSON.stringify(submissionData),
         }
       );
-
-      console.log("res", res)
-      const data = await res.json();
-      console.log("data", data)
+    const data = await res.json();
 
       if (res.ok) {
-        setMessage(data.message || "Registration successful!");
+        toast.success(data.message || "Registration successful!")
 
         if (userTypeLower !== "fan") {
           await sendVerificationEmail(formData.email, formData.userType);
@@ -162,6 +159,7 @@ export default function SignUp() {
         }
       );
     } catch (error) {
+      toast.error("Error sending verification email.")
       console.error("Error sending verification email:", error);
     }
   };
