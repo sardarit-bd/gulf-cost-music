@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 export default function SignIn() {
   const router = useRouter();
@@ -29,7 +30,7 @@ export default function SignIn() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage(" Login successful!");
+        toast.success("Login successful!");
 
         // Save token & user info in localStorage
         localStorage.setItem("token", data.data.token);
@@ -42,11 +43,11 @@ export default function SignIn() {
         setEmail("");
         setPassword("");
       } else {
-        setMessage(data.message || "Invalid email or password");
+        toast.error(data.message || "Invalid email or password");
       }
     } catch (error) {
       console.error("Login error:", error);
-      setMessage("Server error! Please try again later.");
+      toast.error("Server error! Please try again later.");
     }
 
     setLoading(false);
@@ -85,7 +86,7 @@ export default function SignIn() {
         </form>
 
         {/* Message */}
-        {message && (
+        {/* {message && (
           <p
             className={`text-sm mt-4 ${
               message.toLowerCase().includes("success")
@@ -95,7 +96,7 @@ export default function SignIn() {
           >
             {message}
           </p>
-        )}
+        )} */}
 
         <div className="mt-4">
           <Link
