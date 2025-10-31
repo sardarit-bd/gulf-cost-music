@@ -87,6 +87,30 @@ export default function VenueDashboard() {
     setVenue({ ...venue, photos: updatedFiles });
   };
 
+  const uploadPhotos = async (token) => {
+    const photoFormData = new FormData();
+    venue.photos.forEach(photo => {
+      photoFormData.append('photos', photo);
+    });
+    console.log(token, venue.photos)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/upload/photos`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+        body: photoFormData,
+      });
+
+      console.log(response)
+      if (!response.ok) {
+        throw new Error("Photo upload failed");
+      }
+    } catch (error) {
+      console.error("Error uploading photos:", error);
+    }
+  };
+
   // === Save Venue Profile ===
   const handleSave = async () => {
     try {
@@ -106,6 +130,7 @@ export default function VenueDashboard() {
         venue.photos.forEach((file) => formData.append("photos", file));
       }
 
+      uploadPhotos(localStorage.getItem('token'))
       const res = await fetch(`${API_BASE}/api/venues/profile`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },

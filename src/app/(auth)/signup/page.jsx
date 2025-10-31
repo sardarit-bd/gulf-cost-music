@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 
 export default function SignUp() {
@@ -122,10 +123,12 @@ export default function SignUp() {
           location: "",
         });
       } else {
+        toast.error(data.message || "Something went wrong!")
         setMessage(data.message || "Something went wrong!");
       }
     } catch (error) {
       console.error("Error:", error);
+      toast.error("Server error! Please try again later.")
       setMessage("Server error! Please try again later.");
     }
 
@@ -254,16 +257,16 @@ export default function SignUp() {
         </form>
 
         {/* Message */}
-        {message && (
+        {/* {message && (
           <p className="text-center text-sm mt-4 text-green-500">{message}</p>
-        )}
+        )} */}
 
         {/* Verification Info ( only after message) */}
-        {message && formData.userType !== "Fan" && (
+        {/* {message && formData.userType !== "Fan" && (
           <p className="text-center text-xs text-yellow-600 mt-2">
             Verification email has been sent to your email address.
           </p>
-        )}
+        )} */}
 
         {/* Bottom Link */}
         <p className="text-center text-sm text-gray-700 mt-4">
