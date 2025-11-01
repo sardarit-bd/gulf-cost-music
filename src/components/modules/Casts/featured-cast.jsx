@@ -4,24 +4,47 @@ import Image from "next/image";
 
 export default function FeaturedCast() {
   const [latestCast, setLatestCast] = useState(null);
+  const [loading, setLoading] = useState(true);
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
   useEffect(() => {
     const fetchLatest = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/cast`);
+        const res = await fetch(`${API_BASE}/api/casts`, { cache: "no-store" });
         const data = await res.json();
-        if (res.ok && data.success && data.data.casts?.length > 0) {
-          setLatestCast(data.data.casts[0]);
+        console.log("🎧 Featured Cast Data:", data);
+
+        const casts = data?.data?.casts || [];
+        if (res.ok && data.success && casts.length > 0) {
+          // Sort by creation date (newest first)
+          const sorted = [...casts].sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          );
+          setLatestCast(sorted[0]);
         }
       } catch (err) {
         console.error("Error loading featured cast:", err);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchLatest();
   }, [API_BASE]);
 
-  if (!latestCast) return null;
+  if (loading) {
+    return (
+      <div className="rounded-xl bg-gray-100 animate-pulse h-[550px] w-full" />
+    );
+  }
+
+  if (!latestCast) {
+    return (
+      <div className="text-center text-gray-500">
+        No featured podcast available.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-9">
@@ -33,18 +56,23 @@ export default function FeaturedCast() {
       </div>
 
       <div className="relative rounded-xl overflow-hidden shadow-lg">
+        {/* Podcast Thumbnail */}
         <div className="relative h-[550px] w-full">
           <Image
-            src={latestCast.thumbnail}
+            src={latestCast.thumbnail || "/placeholder.svg"}
             alt={latestCast.title}
             fill
             className="object-cover"
+            priority
           />
         </div>
 
+        {/* Overlay Content */}
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent space-y-4">
           <div>
-            <h3 className="text-xl font-bold text-white mb-2">{latestCast.title}</h3>
+            <h3 className="text-xl font-bold text-white mb-2">
+              {latestCast.title}
+            </h3>
             <div className="flex items-center gap-2 text-cyan-400 text-sm font-semibold">
               <span>🌴</span>
               <span>PODCAST</span>
@@ -57,7 +85,7 @@ export default function FeaturedCast() {
             rel="noopener noreferrer"
             className="block w-full text-center bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-2 rounded-lg transition"
           >
-            Watch on YouTube
+            Watch on YouTube 🎥
           </a>
         </div>
       </div>
