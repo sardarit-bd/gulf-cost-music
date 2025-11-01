@@ -1,5 +1,5 @@
-import FavoritesList from "@/components/modules/Casts/favorites-list"
-import FeaturedCast from "@/components/modules/Casts/featured-cast"
+import FavoritesList from "@/components/modules/casts/favorites-list"
+import FeaturedCast from "@/components/modules/casts/featured-cast"
 
 export default function CastsSection() {
   return (

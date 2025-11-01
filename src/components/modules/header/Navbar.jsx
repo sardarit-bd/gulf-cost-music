@@ -19,7 +19,6 @@ export default function Header() {
   const mobileMenuRef = useRef(null);
   const mobileToggleRef = useRef(null);
 
-
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
@@ -173,7 +172,6 @@ export default function Header() {
     };
   }, [isOpen]);
 
-
   const shouldHideHeader = pathname?.startsWith("/dashboard/admin");
 
   if (shouldHideHeader) {
@@ -216,8 +214,9 @@ export default function Header() {
                 <button className="flex items-center gap-1 hover:text-yellow-400 transition-colors duration-200 font-medium text-sm xl:text-base py-2">
                   {dropdownData[key].title}
                   <svg
-                    className={`w-4 h-4 transition-transform ${activeDropdown === key ? "rotate-180" : "rotate-0"
-                      }`}
+                    className={`w-4 h-4 transition-transform ${
+                      activeDropdown === key ? "rotate-180" : "rotate-0"
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -238,8 +237,8 @@ export default function Header() {
                         key === "artists"
                           ? `/artists/${encodeURIComponent(item)}`
                           : key === "venues"
-                            ? `/venues/${encodeURIComponent(item)}`
-                            : `/news/${encodeURIComponent(item)}`;
+                          ? `/venues/${encodeURIComponent(item)}`
+                          : `/news/${encodeURIComponent(item)}`;
 
                       return (
                         <Link
@@ -256,6 +255,26 @@ export default function Header() {
                 )}
               </div>
             ))}
+
+            {/* New Links: Merch, Casts, Waves */}
+            <Link
+              href="/merch"
+              className="hover:text-yellow-400 transition-colors duration-200 font-medium text-sm xl:text-base"
+            >
+              Merch
+            </Link>
+            <Link
+              href="/casts"
+              className="hover:text-yellow-400 transition-colors duration-200 font-medium text-sm xl:text-base"
+            >
+              Casts
+            </Link>
+            <Link
+              href="/waves"
+              className="hover:text-yellow-400 transition-colors duration-200 font-medium text-sm xl:text-base"
+            >
+              Waves
+            </Link>
           </nav>
 
           {/* Tablet Nav - Show from md to lg breakpoint */}
@@ -280,8 +299,9 @@ export default function Header() {
                 >
                   {dropdownData[key].title}
                   <svg
-                    className={`w-3 h-3 transition-transform ${mobileDropdown === key ? "rotate-180" : "rotate-0"
-                      }`}
+                    className={`w-3 h-3 transition-transform ${
+                      mobileDropdown === key ? "rotate-180" : "rotate-0"
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -302,8 +322,8 @@ export default function Header() {
                         key === "artists"
                           ? `/artists/${encodeURIComponent(item)}`
                           : key === "venues"
-                            ? `/venues/${encodeURIComponent(item)}`
-                            : `/news/${encodeURIComponent(item)}`;
+                          ? `/venues/${encodeURIComponent(item)}`
+                          : `/news/${encodeURIComponent(item)}`;
 
                       return (
                         <Link
@@ -320,38 +340,38 @@ export default function Header() {
                 )}
               </div>
             ))}
+
+            {/* New Links for Tablet: Merch, Casts, Waves */}
+            <Link
+              href="/merch"
+              className="hover:text-yellow-400 transition-colors duration-200 text-sm"
+              onClick={closeAllDropdowns}
+            >
+              Merch
+            </Link>
+            <Link
+              href="/casts"
+              className="hover:text-yellow-400 transition-colors duration-200 text-sm"
+              onClick={closeAllDropdowns}
+            >
+              Casts
+            </Link>
+            <Link
+              href="/waves"
+              className="hover:text-yellow-400 transition-colors duration-200 text-sm"
+              onClick={closeAllDropdowns}
+            >
+              Waves
+            </Link>
           </nav>
 
           {/* Auth Buttons & Dashboard */}
           <div className="hidden md:flex items-center gap-3 text-white">
             {isLoggedIn ? (
               <>
-                {/* Dashboard Button */}
-                {/* <Link
-                  href={getDashboardLink()}
-                  className="bg-yellow-500 text-black px-3 py-2 rounded-lg hover:bg-yellow-400 transition-all duration-200 font-medium text-sm flex items-center gap-2 whitespace-nowrap"
-                  onClick={closeAllDropdowns}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                    />
-                  </svg>
-                  <span className="hidden lg:inline">Dashboard</span>
-                </Link> */}
-
                 {/* Profile Dropdown */}
                 <div className="relative group">
                   <button className="flex items-center gap-2 hover:text-yellow-400 transition-colors duration-200">
-                    
                     <span className="hidden lg:inline text-sm max-w-24 truncate">
                       {user?.username || "User"}
                     </span>
@@ -477,7 +497,7 @@ export default function Header() {
           <>
             {/* Backdrop */}
             <div
-              className="lg:hidden  fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+              className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
               onClick={closeMobileMenu}
             />
 
@@ -525,8 +545,9 @@ export default function Header() {
                     >
                       <span>{dropdownData[key].title}</span>
                       <svg
-                        className={`w-5 h-5 transition-transform ${mobileDropdown === key ? "rotate-180" : "rotate-0"
-                          }`}
+                        className={`w-5 h-5 transition-transform ${
+                          mobileDropdown === key ? "rotate-180" : "rotate-0"
+                        }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -541,16 +562,17 @@ export default function Header() {
                     </button>
 
                     <div
-                      className={`overflow-hidden transition-all duration-300 ${mobileDropdown === key ? "max-h-96 pb-2" : "max-h-0"
-                        }`}
+                      className={`overflow-hidden transition-all duration-300 ${
+                        mobileDropdown === key ? "max-h-96 pb-2" : "max-h-0"
+                      }`}
                     >
                       {dropdownData[key].items.map((item, index) => {
                         const href =
                           key === "artists"
                             ? `/artists/${encodeURIComponent(item)}`
                             : key === "venues"
-                              ? `/venues/${encodeURIComponent(item)}`
-                              : `/news/${encodeURIComponent(item)}`;
+                            ? `/venues/${encodeURIComponent(item)}`
+                            : `/news/${encodeURIComponent(item)}`;
 
                         return (
                           <Link
@@ -566,6 +588,29 @@ export default function Header() {
                     </div>
                   </div>
                 ))}
+
+                {/* New Links for Mobile: Merch, Casts, Waves */}
+                <Link
+                  href="/merch"
+                  className="text-white hover:text-yellow-400 transition-colors duration-200 py-4 px-4 rounded-lg hover:bg-white/5 font-medium text-lg text-left border-b border-gray-700"
+                  onClick={closeMobileMenu}
+                >
+                  Merch
+                </Link>
+                <Link
+                  href="/casts"
+                  className="text-white hover:text-yellow-400 transition-colors duration-200 py-4 px-4 rounded-lg hover:bg-white/5 font-medium text-lg text-left border-b border-gray-700"
+                  onClick={closeMobileMenu}
+                >
+                  Casts
+                </Link>
+                <Link
+                  href="/waves"
+                  className="text-white hover:text-yellow-400 transition-colors duration-200 py-4 px-4 rounded-lg hover:bg-white/5 font-medium text-lg text-left border-b border-gray-700"
+                  onClick={closeMobileMenu}
+                >
+                  Waves
+                </Link>
 
                 {/* Mobile Auth Buttons */}
                 <div className="pt-6 mt-4 border-t border-gray-700">

@@ -1,5 +1,5 @@
-import FavoritesList from "@/components/modules/Casts/favorites-list";
-import FeaturedCast from "@/components/modules/Casts/featured-cast";
+import FavoritesList from "@/components/modules/casts/favorites-list";
+import FeaturedCast from "@/components/modules/casts/featured-cast";
 import FeaturedWave from "@/components/modules/waves/featured-wave";
 
 export default function WavesSection() {

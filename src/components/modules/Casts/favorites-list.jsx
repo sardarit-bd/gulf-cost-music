@@ -1,32 +1,40 @@
 "use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FavoriteItem from "./favorite-item";
 
-const mockFavorites = [
-  { id: 1, title: "John Doe", category: "Pop Music", image: "/images/postcast.webp" },
-  { id: 2, title: "John Doe", category: "Pop Music", image: "/images/postcast.webp" },
-  { id: 3, title: "John Doe", category: "Pop Music", image: "/images/postcast.webp" },
-  { id: 4, title: "John Doe", category: "Pop Music", image: "/images/postcast.webp" },
-  { id: 5, title: "John Doe", category: "Pop Music", image: "/images/postcast.webp" },
-  { id: 6, title: "John Doe", category: "Pop Music", image: "/images/postcast.webp" },
-  { id: 7, title: "John Doe", category: "Pop Music", image: "/images/postcast.webp" },
-  { id: 8, title: "John Doe", category: "Pop Music", image: "/images/postcast.webp" },
-  { id: 9, title: "John Doe", category: "Pop Music", image: "/images/postcast.webp" },
-  { id: 10, title: "John Doe", category: "Pop Music", image: "/images/postcast.webp" },
-];
-
 export default function FavoritesList() {
-  const [favorites] = useState(mockFavorites);
+  const [favorites, setFavorites] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/cast`);
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setFavorites(data.data.casts);
+        } else {
+          setFavorites([]);
+        }
+      } catch (err) {
+        console.error("Error fetching favorites:", err);
+        setFavorites([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFavorites();
+  }, [API_BASE]);
+
+  if (loading) return <p>Loading podcasts...</p>;
 
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-black">Your Favorites</h2>
-
-      {/* Scrollable vertical list */}
       <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
         {favorites.map((favorite) => (
-          <FavoriteItem key={favorite.id} favorite={favorite} />
+          <FavoriteItem key={favorite._id} favorite={favorite} />
         ))}
       </div>
     </div>
