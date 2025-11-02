@@ -3,58 +3,72 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "react-toastify";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function SignIn() {
   const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
+
+    const toastId = toast.loading("Signing you in...");
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
       const data = await res.json();
 
-      if (res.ok) {
-        toast.success("Login successful!");
+      // SUCCESS
+      if (res.ok && data.success) {
+        toast.success(data.message || "Login successful!", { id: toastId });
 
-        // Save token & user info in localStorage
+        // Save token and user
         localStorage.setItem("token", data.data.token);
         localStorage.setItem("user", JSON.stringify(data.data.user));
 
-        setTimeout(() => {
-          window.location.href = "/";
-        }, 1000);
+        // Redirect after short delay
+        setTimeout(() => router.push("/"), 1200);
 
         setEmail("");
         setPassword("");
-      } else {
-        toast.error(data.message || "Invalid email or password");
+      }
+
+      // FIELD VALIDATION ERRORS
+      else if (data.errors && Array.isArray(data.errors)) {
+        toast.dismiss(toastId);
+        data.errors.forEach((err) => {
+          toast.error(`${err.field ? `${err.field}: ` : ""}${err.message}`);
+        });
+      }
+
+      // INVALID CREDENTIALS / GENERIC
+      else {
+        toast.error(data.message || "Invalid email or password", {
+          id: toastId,
+        });
       }
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("Server error! Please try again later.");
+      toast.error("Server error! Please try again later.", { id: toastId });
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
     <main className="flex items-center justify-center min-h-screen bg-gray-50">
+      <Toaster/>
       <div className="bg-white rounded-xl shadow-md p-8 w-full max-w-sm text-center">
         <h2 className="text-xl font-semibold text-gray-800 mb-6">Sign In</h2>
 
@@ -67,6 +81,7 @@ export default function SignIn() {
             required
             className="w-full border border-gray-300 rounded-md px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400"
           />
+
           <input
             type="password"
             placeholder="Password"
@@ -84,19 +99,6 @@ export default function SignIn() {
             {loading ? "Signing In..." : "Sign In"}
           </button>
         </form>
-
-        {/* Message */}
-        {/* {message && (
-          <p
-            className={`text-sm mt-4 ${
-              message.toLowerCase().includes("success")
-                ? "text-green-600"
-                : "text-red-500"
-            }`}
-          >
-            {message}
-          </p>
-        )} */}
 
         <div className="mt-4">
           <Link

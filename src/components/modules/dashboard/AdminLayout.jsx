@@ -3,15 +3,15 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { 
-  BarChart3, 
-  Users, 
-  Music, 
-  Building2, 
-  Newspaper, 
-  Mail, 
-  Settings, 
-  Menu, 
+import {
+  BarChart3,
+  Users,
+  Music,
+  Building2,
+  Newspaper,
+  Mail,
+  Settings,
+  Menu,
   X,
   LogOut,
   User,
@@ -22,7 +22,10 @@ import {
   Bell,
   ChevronDown,
   ChevronRight,
-  Home
+  Home,
+  ShoppingBag,
+  Mic2,
+  Waves
 } from "lucide-react";
 
 export default function AdminLayout({ children }) {
@@ -32,15 +35,15 @@ export default function AdminLayout({ children }) {
   const pathname = usePathname();
 
   const navigation = [
-    { 
-      name: 'Dashboard', 
-      href: '/dashboard/admin', 
+    {
+      name: 'Dashboard',
+      href: '/dashboard/admin',
       icon: BarChart3,
       type: 'single'
     },
-    { 
-      name: 'User Management', 
-      href: '/dashboard/admin/users', 
+    {
+      name: 'User Management',
+      href: '/dashboard/admin/users',
       icon: Users,
       type: 'single'
     },
@@ -50,20 +53,23 @@ export default function AdminLayout({ children }) {
       type: 'group',
       children: [
         { name: 'Artists', href: '/dashboard/admin/artists', icon: Music },
-      { name: 'Venues', href: '/dashboard/admin/venues', icon: Building2 },
-      { name: 'News', href: '/dashboard/admin/news', icon: Newspaper },
-      { name: 'Events', href: '/dashboard/admin/events', icon: Calendar },
+        { name: 'Venues', href: '/dashboard/admin/venues', icon: Building2 },
+        { name: 'News', href: '/dashboard/admin/news', icon: Newspaper },
+        { name: 'Events', href: '/dashboard/admin/events', icon: Calendar },
+        { name: 'Merch', href: '/dashboard/admin/merch', icon: ShoppingBag },
+        { name: 'Casts', href: '/dashboard/admin/Casts', icon: Mic2 },
+        { name: 'Waves', href: '/dashboard/admin/waves', icon: Waves },
       ]
     },
-    { 
-      name: 'Contact Messages', 
-      href: '/dashboard/admin/contacts', 
+    {
+      name: 'Contact Messages',
+      href: '/dashboard/admin/contacts',
       icon: Mail,
       type: 'single'
     },
-    { 
-      name: 'System Settings', 
-      href: '/dashboard/admin/settings', 
+    {
+      name: 'System Settings',
+      href: '/dashboard/admin/settings',
       icon: Settings,
       type: 'single'
     },
@@ -101,36 +107,34 @@ export default function AdminLayout({ children }) {
         <div className="space-y-1">
           <button
             onClick={() => toggleExpanded(item.name)}
-            className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-              isItemActive
-                ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-            }`}
+            className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isItemActive
+              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+              : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+              }`}
           >
             <div className="flex items-center">
               <Icon className="mr-3 h-5 w-5" />
               {item.name}
             </div>
-            <ChevronRight 
-              className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
+            <ChevronRight
+              className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
             />
           </button>
-          
+
           {isExpanded && (
             <div className="ml-4 space-y-1 border-l border-gray-200 pl-2">
               {item.children.map((child) => {
                 const ChildIcon = child.icon;
                 const isChildActive = isActive(child.href);
-                
+
                 return (
                   <Link
                     key={child.name}
                     href={child.href}
-                    className={`flex items-center px-4 py-2 text-sm rounded-lg transition-colors ${
-                      isChildActive
-                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
+                    className={`flex items-center px-4 py-2 text-sm rounded-lg transition-colors ${isChildActive
+                      ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
                     onClick={() => setSidebarOpen(false)}
                   >
                     <ChildIcon className="mr-3 h-4 w-4" />
@@ -147,11 +151,10 @@ export default function AdminLayout({ children }) {
     return (
       <Link
         href={item.href}
-        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-          isActive(item.href)
-            ? 'bg-blue-600 text-white shadow-lg'
-            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-        }`}
+        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isActive(item.href)
+          ? 'bg-blue-600 text-white shadow-lg'
+          : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+          }`}
         onClick={() => setSidebarOpen(false)}
       >
         <Icon className="mr-3 h-5 w-5" />
@@ -163,9 +166,8 @@ export default function AdminLayout({ children }) {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}>
         <div className="flex flex-col h-full">
           {/* Logo Section */}
           <div className="flex items-center justify-between h-16 px-4 bg-white border-b">
@@ -229,7 +231,7 @@ export default function AdminLayout({ children }) {
               >
                 <Menu className="h-6 w-6" />
               </button>
-              
+
               {/* Breadcrumb */}
               <nav className="flex ml-4 lg:ml-6" aria-label="Breadcrumb">
                 <ol className="flex items-center space-x-2">
@@ -320,7 +322,7 @@ export default function AdminLayout({ children }) {
 
       {/* Overlay for mobile */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         ></div>
