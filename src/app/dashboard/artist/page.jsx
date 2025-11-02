@@ -211,11 +211,11 @@ export default function ArtistDashboard() {
           setAudioPreview(a.mp3File?.url || null);
         }
       } else {
-        setMessage(data.message || "❌ Failed to save profile.");
+        setMessage(data.message || "Failed to save profile.");
       }
     } catch (error) {
       console.error("Save error:", error);
-      setMessage("❌ Server error while saving profile.");
+      setMessage("Server error while saving profile.");
     } finally {
       setSaving(false);
     }

@@ -14,7 +14,7 @@ export default function VenuesPage() {
 
   const cities = ["All", "New Orleans", "Biloxi", "Mobile", "Pensacola"];
 
-  // ✅ Fetch all venues from backend
+  //  Fetch all venues from backend
   useEffect(() => {
     const fetchVenues = async () => {
       setLoading(true);
@@ -26,7 +26,7 @@ export default function VenuesPage() {
         const data = await res.json();
 
         if (res.ok) {
-          // ✅ Fallback image if photos missing
+          //  Fallback image if photos missing
           const fixed = (data.data.venues || []).map((v) => ({
             ...v,
             photos:
