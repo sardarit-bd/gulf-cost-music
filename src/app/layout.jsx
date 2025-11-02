@@ -30,24 +30,6 @@ export default function RootLayout({ children }) {
           reverseOrder={false}
           toastOptions={{
             duration: 3000,
-            // style: {
-            //   background: "#333",
-            //   color: "#fff",
-            //   borderRadius: "8px",
-            //   padding: "12px 16px",
-            // },
-            // success: {
-            //   style: {
-            //     background: "#22c55e", 
-            //     color: "white",
-            //   },
-            // },
-            // error: {
-            //   style: {
-            //     background: "#ef4444", 
-            //     color: "white",
-            //   },
-            // },
           }}
         />
 
