@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function Page() {
   const [selectedGenre, setSelectedGenre] = useState("All");
@@ -21,15 +22,21 @@ export default function Page() {
           selectedGenre === "All" ? "" : `?genre=${selectedGenre.toLowerCase()}`;
         const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/artists${genreParam}`);
         const data = await res.json();
-        if (res.ok) {
+
+        if (res.ok && data.success) {
           setArtists(data.data.artists || []);
+        } else {
+          setArtists([]);
+          toast.error(data.message || "Failed to load artists");
         }
       } catch (err) {
         console.error("Error fetching artists:", err);
+        toast.error("Server error! Please try again later.");
       }
     };
     fetchArtists();
   }, [selectedGenre]);
+
 
   const genreColors = {
     Rap: "from-purple-500/80 to-indigo-600/80",
@@ -45,6 +52,7 @@ export default function Page() {
 
   return (
     <section className="brandBg min-h-screen py-14 mt-16 px-6">
+      <Toaster/>
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold brandColor">Artists Gallery</h1>
@@ -58,9 +66,8 @@ export default function Page() {
               <span className="font-medium">{selectedGenre}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`w-4 h-4 ml-1 transform transition-transform ${
-                  dropdownOpen ? "rotate-180" : ""
-                }`}
+                className={`w-4 h-4 ml-1 transform transition-transform ${dropdownOpen ? "rotate-180" : ""
+                  }`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -83,11 +90,10 @@ export default function Page() {
                       setSelectedGenre(g);
                       setDropdownOpen(false);
                     }}
-                    className={`block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 transition ${
-                      selectedGenre === g
+                    className={`block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 transition ${selectedGenre === g
                         ? "bg-yellow-50 font-semibold text-gray-800"
                         : "text-gray-600"
-                    }`}
+                      }`}
                   >
                     {g}
                   </button>
@@ -120,10 +126,9 @@ export default function Page() {
                   className="object-cover"
                 />
                 <div
-                  className={`absolute inset-0 bg-gradient-to-t ${
-                    genreColors[artist.genre?.charAt(0).toUpperCase() + artist.genre?.slice(1)] ||
+                  className={`absolute inset-0 bg-gradient-to-t ${genreColors[artist.genre?.charAt(0).toUpperCase() + artist.genre?.slice(1)] ||
                     "from-gray-700 to-gray-900"
-                  } opacity-70`}
+                    } opacity-70`}
                 ></div>
               </div>
 

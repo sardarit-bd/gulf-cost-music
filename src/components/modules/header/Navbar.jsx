@@ -4,14 +4,15 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [mobileDropdown, setMobileDropdown] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
+  // const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // const [user, setUser] = useState(null);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -19,19 +20,16 @@ export default function Header() {
   const mobileMenuRef = useRef(null);
   const mobileToggleRef = useRef(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-    setIsLoggedIn(!!token);
+  // Get global auth state
+  const { user, logout } = useAuth();
+  const isLoggedIn = !!user;
 
-    if (userData) {
-      try {
-        setUser(JSON.parse(userData));
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-      }
-    }
-  }, []);
+  // Logout handler
+  const handleSignOut = () => {
+    logout();
+    router.push("/signin");
+  };
+
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -65,13 +63,13 @@ export default function Header() {
     };
   }, [isOpen]);
 
-  const handleSignOut = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setIsLoggedIn(false);
-    setUser(null);
-    router.push("/signin");
-  };
+  // const handleSignOut = () => {
+  //   localStorage.removeItem("token");
+  //   localStorage.removeItem("user");
+  //   setIsLoggedIn(false);
+  //   setUser(null);
+  //   router.push("/signin");
+  // };
 
   const getDashboardLink = () => {
     if (!user) return "/signin";

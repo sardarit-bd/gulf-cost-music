@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SignIn() {
+  const { login } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,7 +37,7 @@ export default function SignIn() {
 
         // Save token and user
         localStorage.setItem("token", data.data.token);
-        localStorage.setItem("user", JSON.stringify(data.data.user));
+        login(data.data.user);
 
         // Redirect after short delay
         setTimeout(() => router.push("/"), 1200);
@@ -68,7 +70,7 @@ export default function SignIn() {
 
   return (
     <main className="flex items-center justify-center min-h-screen bg-gray-50">
-      <Toaster/>
+      <Toaster />
       <div className="bg-white rounded-xl shadow-md p-8 w-full max-w-sm text-center">
         <h2 className="text-xl font-semibold text-gray-800 mb-6">Sign In</h2>
 

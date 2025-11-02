@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { 
-  Users, 
-  Music, 
-  Building2, 
-  Newspaper, 
-  Mail, 
+import {
+  Users,
+  Music,
+  Building2,
+  Newspaper,
+  Mail,
   Calendar,
   TrendingUp,
   Eye,
@@ -25,6 +25,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
@@ -44,11 +45,11 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      
+
       const res = await fetch(`${API_BASE}/api/admin/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       const data = await res.json();
 
       if (res.ok && data.success) {
@@ -56,13 +57,22 @@ export default function AdminDashboard() {
         setRecentUsers(data.data.recentUsers || []);
         setUpcomingEvents(data.data.upcomingEvents || []);
         setUserStats(data.data.userStats || []);
+      } else if (res.status === 401) {
+        toast.error("Session expired. Please log in again.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/signin";
+      } else {
+        toast.error(data.message || "Failed to load dashboard data.");
       }
     } catch (error) {
       console.error("Dashboard fetch error:", error);
+      toast.error("Server error! Please try again later.");
     } finally {
       setLoading(false);
     }
   };
+
 
   const quickActions = [
     {
@@ -102,6 +112,7 @@ export default function AdminDashboard() {
   return (
     <AdminLayout>
       <div className="w-full mx-auto">
+        <Toaster/>
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div>
@@ -127,31 +138,31 @@ export default function AdminDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard 
-            icon={Users} 
-            label="Total Users" 
-            value={stats?.totalUsers} 
+          <StatCard
+            icon={Users}
+            label="Total Users"
+            value={stats?.totalUsers}
             change={12}
             color="blue"
           />
-          <StatCard 
-            icon={Music} 
-            label="Artists" 
-            value={stats?.totalArtists} 
+          <StatCard
+            icon={Music}
+            label="Artists"
+            value={stats?.totalArtists}
             change={8}
             color="green"
           />
-          <StatCard 
-            icon={Building2} 
-            label="Venues" 
-            value={stats?.totalVenues} 
+          <StatCard
+            icon={Building2}
+            label="Venues"
+            value={stats?.totalVenues}
             change={5}
             color="purple"
           />
-          <StatCard 
-            icon={Mail} 
-            label="Pending" 
-            value={stats?.pendingContacts} 
+          <StatCard
+            icon={Mail}
+            label="Pending"
+            value={stats?.pendingContacts}
             change={-2}
             color="orange"
           />
@@ -227,7 +238,7 @@ export default function AdminDashboard() {
 const StatCard = ({ icon: Icon, label, value, change, color }) => {
   const colorClasses = {
     blue: "from-blue-500 to-blue-600",
-    green: "from-green-500 to-green-600", 
+    green: "from-green-500 to-green-600",
     purple: "from-purple-500 to-purple-600",
     orange: "from-orange-500 to-orange-600",
   };
@@ -254,11 +265,11 @@ const StatCard = ({ icon: Icon, label, value, change, color }) => {
 
 const QuickActionCard = ({ action }) => {
   const { title, description, icon: Icon, count, color, href } = action;
-  
+
   const colorClasses = {
     blue: "bg-blue-100 text-blue-600",
     green: "bg-green-100 text-green-600",
-    purple: "bg-purple-100 text-purple-600", 
+    purple: "bg-purple-100 text-purple-600",
     orange: "bg-orange-100 text-orange-600",
   };
 
@@ -318,12 +329,11 @@ const RecentUsersTable = ({ users }) => {
                 </div>
               </td>
               <td className="py-3">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                  user.userType === 'admin' ? 'bg-red-100 text-red-800' :
-                  user.userType === 'artist' ? 'bg-purple-100 text-purple-800' :
-                  user.userType === 'venue' ? 'bg-green-100 text-green-800' :
-                  'bg-blue-100 text-blue-800'
-                }`}>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${user.userType === 'admin' ? 'bg-red-100 text-red-800' :
+                    user.userType === 'artist' ? 'bg-purple-100 text-purple-800' :
+                      user.userType === 'venue' ? 'bg-green-100 text-green-800' :
+                        'bg-blue-100 text-blue-800'
+                  }`}>
                   {user.userType}
                 </span>
               </td>
@@ -355,13 +365,13 @@ const RecentUsersTable = ({ users }) => {
 
 const UserDistributionChart = ({ userStats }) => {
   const total = userStats.reduce((sum, stat) => sum + stat.count, 0);
-  
+
   return (
     <div className="space-y-4">
       {userStats.map((stat, index) => {
         const percentage = total > 0 ? (stat.count / total) * 100 : 0;
         const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500'];
-        
+
         return (
           <div key={stat._id} className="space-y-2">
             <div className="flex justify-between text-sm">
@@ -373,7 +383,7 @@ const UserDistributionChart = ({ userStats }) => {
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
+              <div
                 className={`h-2 rounded-full ${colors[index % colors.length]} transition-all duration-500`}
                 style={{ width: `${percentage}%` }}
               ></div>
@@ -381,7 +391,7 @@ const UserDistributionChart = ({ userStats }) => {
           </div>
         );
       })}
-      
+
       {userStats.length === 0 && (
         <div className="text-center py-8 text-gray-500">
           <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
@@ -414,7 +424,7 @@ const UpcomingEventsList = ({ events }) => {
               {event.date ? new Date(event.date).toLocaleDateString() : 'TBA'}
             </span>
           </div>
-          
+
           <div className="flex items-center space-x-4 text-sm text-gray-600">
             <div className="flex items-center space-x-1">
               <Clock className="w-4 h-4" />
