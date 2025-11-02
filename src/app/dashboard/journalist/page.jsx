@@ -24,7 +24,7 @@ const getCookie = (name) => {
 const cityOptions = ["New Orleans", "Biloxi", "Mobile", "Pensacola"];
 
 export default function JournalistDashboard() {
-  const { user, loading, logout } = useSession();
+  const { user, loading } = useSession();
   const [activeTab, setActiveTab] = useState("news");
   const [journalist, setJournalist] = useState({
     fullName: "",
@@ -95,6 +95,35 @@ export default function JournalistDashboard() {
     fetchData();
   }, [user]);
 
+  // === Save Profile ===
+  const handleSaveProfile = async () => {
+    const token = getCookie("token") || localStorage.getItem("token");
+    if (!token) return toast.error("You are not logged in!");
+
+    const toastId = toast.loading("Saving profile...");
+    try {
+      const formData = new FormData();
+      formData.append("fullName", journalist.fullName);
+      formData.append("bio", journalist.bio);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/journalists/profile`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("✅ Profile updated successfully!", { id: toastId });
+      } else {
+        toast.error(data.message || "Failed to save profile", { id: toastId });
+      }
+    } catch (err) {
+      console.error("Profile update error:", err);
+      toast.error("Server error while saving profile", { id: toastId });
+    }
+  };
+
   // === Avatar Upload ===
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
@@ -138,7 +167,6 @@ export default function JournalistDashboard() {
     setForm({ ...form, photos: form.photos.filter((_, idx) => idx !== i) });
   };
 
-  // === Handle Input ===
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -149,6 +177,8 @@ export default function JournalistDashboard() {
       toast.error("Please fill in title and description");
       return;
     }
+
+    const toastId = toast.loading(editingNews ? "Updating news..." : "Publishing news...");
 
     try {
       setSaving(true);
@@ -174,19 +204,20 @@ export default function JournalistDashboard() {
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
-
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.message || "Failed to save news");
 
-      toast.success(editingNews ? "News updated!" : "News created!");
+      toast.success(editingNews ? "News updated!" : "News created!", { id: toastId });
 
-      // Refresh news list
-      const listRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/my`, {
+      // 🔁 Refresh list
+      const listRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/my-news`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const listData = await listRes.json();
       setNewsList(listData.data?.news || []);
+
+      // Reset form
       setActiveTab("news");
       setEditingNews(null);
       setForm({
@@ -200,13 +231,12 @@ export default function JournalistDashboard() {
       setPreviewImages([]);
     } catch (err) {
       console.error("Save news error:", err);
-      toast.error(err.message || "Server error while saving news");
+      toast.error(err.message || "Server error while saving news", { id: toastId });
     } finally {
       setSaving(false);
     }
   };
 
-  // === Edit News ===
   const editNews = (n) => {
     setForm({
       title: n.title,
@@ -221,7 +251,6 @@ export default function JournalistDashboard() {
     setActiveTab("edit");
   };
 
-  // === Delete News ===
   const deleteNews = async (id) => {
     if (!confirm("Are you sure you want to delete this news item?")) return;
     try {
@@ -283,7 +312,7 @@ export default function JournalistDashboard() {
           ))}
         </div>
 
-        {/* PROFILE */}
+        {/* PROFILE TAB */}
         {activeTab === "profile" && (
           <div className="animate-fadeIn max-w-2xl mx-auto space-y-6">
             <div className="flex flex-col items-center text-center">
@@ -309,7 +338,7 @@ export default function JournalistDashboard() {
                   onChange={(e) =>
                     setJournalist({ ...journalist, fullName: e.target.value })
                   }
-                  className="w-full px-4 py-2 rounded-md bg-white text-black border border-gray-600"
+                  className="w-full px-4 py-2 rounded-md bg-gray-500 text-white border border-gray-600"
                 />
               </div>
               <div>
@@ -319,9 +348,18 @@ export default function JournalistDashboard() {
                   rows={3}
                   value={journalist.bio}
                   onChange={(e) => setJournalist({ ...journalist, bio: e.target.value })}
-                  className="w-full px-4 py-2 rounded-md bg-white text-black border border-gray-600"
+                  className="w-full px-4 py-2 rounded-md bg-gray-500 text-white border border-gray-600"
                 ></textarea>
               </div>
+            </div>
+
+            <div className="flex justify-center pt-4">
+              <button
+                onClick={handleSaveProfile}
+                className="flex items-center gap-2 bg-yellow-500 text-black px-6 py-2 rounded-lg hover:bg-yellow-400 transition"
+              >
+                <Save size={16} /> Save Profile
+              </button>
             </div>
           </div>
         )}
@@ -464,7 +502,7 @@ export default function JournalistDashboard() {
                   onChange={handleChange}
                   rows={5}
                   placeholder="Write detailed news content..."
-                  className="w-full px-4 py-2 rounded-md bg-white text-black border border-gray-700"
+                  className="w-full px...py-2 rounded-md bg-white text-black border border-gray-700"
                 ></textarea>
               </div>
             </div>
