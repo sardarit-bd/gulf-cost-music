@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   BarChart3,
@@ -27,12 +27,15 @@ import {
   Mic2,
   Waves
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState([]);
   const pathname = usePathname();
+  const { logout } = useAuth();
+  const router = useRouter();
 
   const navigation = [
     {
@@ -93,8 +96,8 @@ export default function AdminLayout({ children }) {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    window.location.href = '/';
+    logout();
+    router.push("/signin");
   };
 
   const NavItem = ({ item }) => {

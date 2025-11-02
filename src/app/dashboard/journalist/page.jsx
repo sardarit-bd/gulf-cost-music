@@ -2,14 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
-
+import toast, { Toaster } from "react-hot-toast";
 import {
   Upload,
   Save,
   Trash2,
-  Home,
-  LogOut,
   Newspaper,
   Plus,
   Pencil,
@@ -17,11 +14,17 @@ import {
 } from "lucide-react";
 import { useSession } from "@/lib/auth";
 
+// ✅ Utility to get cookie safely
+const getCookie = (name) => {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+  return match ? match[2] : null;
+};
+
 const cityOptions = ["New Orleans", "Biloxi", "Mobile", "Pensacola"];
 
 export default function JournalistDashboard() {
   const { user, loading, logout } = useSession();
-
   const [activeTab, setActiveTab] = useState("news");
   const [journalist, setJournalist] = useState({
     fullName: "",
@@ -30,26 +33,20 @@ export default function JournalistDashboard() {
     avatar: null,
   });
   const [previewAvatar, setPreviewAvatar] = useState(null);
-
   const [newsList, setNewsList] = useState([]);
   const [editingNews, setEditingNews] = useState(null);
-  const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
-
-  const blankNews = {
+  const [form, setForm] = useState({
     title: "",
     date: "",
     location: "New Orleans",
     credit: "",
     description: "",
     photos: [],
-  };
-
-  const [form, setForm] = useState(blankNews);
+  });
   const [previewImages, setPreviewImages] = useState([]);
 
-
-  //  Load journalist profile + news on mount
+  // === Fetch Journalist Profile & News ===
   useEffect(() => {
     if (!user) return;
     const token = localStorage.getItem("token");
@@ -57,47 +54,57 @@ export default function JournalistDashboard() {
 
     const fetchData = async () => {
       try {
-        // Load Profile
-        const profRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/journalists/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
-        });
-        const profData = await profRes.json();
-        if (profRes.ok && profData.data?.journalist) {
-          const j = profData.data.journalist;
+        const [profileRes, newsRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/journalists/profile`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/my-news`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        const [profileData, newsData] = await Promise.all([
+          profileRes.json(),
+          newsRes.json(),
+        ]);
+
+        if (profileRes.ok && profileData.data?.journalist) {
+          const j = profileData.data.journalist;
           setJournalist({
-            fullName: j.fullName,
+            fullName: j.fullName || "",
             email: j.user?.email || "",
             bio: j.bio || "",
             avatar: j.profilePhoto?.url || null,
           });
           setPreviewAvatar(j.profilePhoto?.url || null);
+        } else if (profileData.message) {
+          toast.error(profileData.message);
         }
 
-        // Load My News
-        const newsRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/my`, {
-          headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
-        });
-        const newsData = await newsRes.json();
         if (newsRes.ok && newsData.data?.news) {
           setNewsList(newsData.data.news);
+        } else if (newsData.message) {
+          toast.error(newsData.message);
         }
       } catch (err) {
-        console.error("Error loading journalist data:", err);
+        console.error("Error fetching journalist data:", err);
+        toast.error("Server error while loading dashboard data");
       }
     };
+
     fetchData();
   }, [user]);
 
-  //  Avatar Upload
+  // === Avatar Upload ===
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setPreviewAvatar(URL.createObjectURL(file));
 
     try {
-      const token = getCookie("token");
+      const token = getCookie("token") || localStorage.getItem("token");
+      if (!token) return toast.error("You are not logged in!");
+
       const formData = new FormData();
       formData.append("fullName", journalist.fullName);
       formData.append("bio", journalist.bio);
@@ -107,22 +114,18 @@ export default function JournalistDashboard() {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
-        credentials: "include",
       });
 
       const data = await res.json();
-      if (res.ok) {
-        setMessage("✅ Profile photo updated!");
-      } else {
-        setMessage("❌ Failed to upload profile photo");
-      }
+      if (res.ok) toast.success("Profile photo updated!");
+      else toast.error(data.message || "Failed to upload profile photo");
     } catch (err) {
       console.error("Avatar upload error:", err);
-      setMessage("❌ Error uploading avatar");
+      toast.error("Error uploading avatar");
     }
   };
 
-  //  News Image Upload
+  // === News Image Upload ===
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files).slice(0, 5);
     const urls = files.map((f) => URL.createObjectURL(f));
@@ -135,22 +138,22 @@ export default function JournalistDashboard() {
     setForm({ ...form, photos: form.photos.filter((_, idx) => idx !== i) });
   };
 
-  //  Handle Input Change
+  // === Handle Input ===
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  //  Save News (Create or Update)
+  // === Save / Update News ===
   const handleSaveNews = async () => {
     if (!form.title || !form.description) {
-      alert("Please fill in all required fields");
+      toast.error("Please fill in title and description");
       return;
     }
 
     try {
       setSaving(true);
-      setMessage("");
-      const token = getCookie("token");
+      const token = getCookie("token") || localStorage.getItem("token");
+      if (!token) return toast.error("You are not logged in!");
 
       const formData = new FormData();
       formData.append("title", form.title);
@@ -162,42 +165,48 @@ export default function JournalistDashboard() {
 
       const url = editingNews
         ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/${editingNews._id}`
-        : "${process.env.NEXT_PUBLIC_BASE_URL}/api/news";
+        : `${process.env.NEXT_PUBLIC_BASE_URL}/api/news`;
+
       const method = editingNews ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
-        credentials: "include",
       });
+
       const data = await res.json();
 
-      if (res.ok) {
-        setMessage(editingNews ? "✅ News updated!" : "✅ News added!");
-        // Refresh list
-        const listRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/my`, {
-          headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
-        });
-        const listData = await listRes.json();
-        setNewsList(listData.data?.news || []);
-        setActiveTab("news");
-        setEditingNews(null);
-        setForm(blankNews);
-        setPreviewImages([]);
-      } else {
-        setMessage(data.message || "❌ Failed to save news");
-      }
+      if (!res.ok) throw new Error(data.message || "Failed to save news");
+
+      toast.success(editingNews ? "News updated!" : "News created!");
+
+      // Refresh news list
+      const listRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/my`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const listData = await listRes.json();
+      setNewsList(listData.data?.news || []);
+      setActiveTab("news");
+      setEditingNews(null);
+      setForm({
+        title: "",
+        date: "",
+        location: "New Orleans",
+        credit: "",
+        description: "",
+        photos: [],
+      });
+      setPreviewImages([]);
     } catch (err) {
       console.error("Save news error:", err);
-      setMessage("❌ Server error");
+      toast.error(err.message || "Server error while saving news");
     } finally {
       setSaving(false);
     }
   };
 
-  //  Edit News
+  // === Edit News ===
   const editNews = (n) => {
     setForm({
       title: n.title,
@@ -212,29 +221,25 @@ export default function JournalistDashboard() {
     setActiveTab("edit");
   };
 
-  //  Delete News
+  // === Delete News ===
   const deleteNews = async (id) => {
-    if (!confirm("Delete this news item?")) return;
+    if (!confirm("Are you sure you want to delete this news item?")) return;
     try {
-      const token = getCookie("token");
+      const token = getCookie("token") || localStorage.getItem("token");
       const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
-        credentials: "include",
       });
-      if (res.ok) {
-        setNewsList((prev) => prev.filter((n) => n._id !== id));
-        setMessage(" News deleted!");
-      }
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to delete news");
+
+      setNewsList((prev) => prev.filter((n) => n._id !== id));
+      toast.success("News deleted!");
     } catch (err) {
       console.error("Delete news error:", err);
+      toast.error(err.message || "Server error while deleting news");
     }
-  };
-
-  //  Logout
-  const handleLogout = async () => {
-    await logout();
-    window.location.href = "/signin";
   };
 
   if (loading)
@@ -244,28 +249,15 @@ export default function JournalistDashboard() {
       </div>
     );
 
+  // === UI ===
   return (
     <div className="px-4 flex justify-center">
+      <Toaster />
       <div className="container w-full bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-lg p-8 md:p-12">
-        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-semibold text-[var(--color-primary)] flex items-center gap-2">
             <Newspaper size={26} /> Journalist Dashboard
           </h1>
-          {/* <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="flex items-center gap-2 px-4 py-2 rounded-[var(--radius-md)] border border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-primary)] hover:border-[var(--color-primary)] transition"
-            >
-              <Home size={16} /> Home
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 rounded-[var(--radius-md)] bg-[var(--color-destructive)] text-white hover:opacity-90 transition"
-            >
-              <LogOut size={16} /> Logout
-            </button>
-          </div> */}
         </div>
 
         {/* Tabs */}
@@ -291,17 +283,7 @@ export default function JournalistDashboard() {
           ))}
         </div>
 
-        {message && (
-          <div
-            className={`text-center mb-4 font-medium ${
-              message.includes("✅") ? "text-green-500" : "text-red-400"
-            }`}
-          >
-            {message}
-          </div>
-        )}
-
-        {/* PROFILE TAB */}
+        {/* PROFILE */}
         {activeTab === "profile" && (
           <div className="animate-fadeIn max-w-2xl mx-auto space-y-6">
             <div className="flex flex-col items-center text-center">
@@ -344,7 +326,7 @@ export default function JournalistDashboard() {
           </div>
         )}
 
-        {/* NEWS LIST TAB */}
+        {/* NEWS LIST */}
         {activeTab === "news" && (
           <div className="animate-fadeIn">
             {newsList.length === 0 ? (
@@ -380,7 +362,9 @@ export default function JournalistDashboard() {
                       <p className="text-sm text-gray-400 mb-1">
                         {item.date?.split("T")[0]} · {item.location} · {item.credit}
                       </p>
-                      <p className="text-gray-300 mb-3">{item.description.slice(0, 100)}...</p>
+                      <p className="text-gray-300 mb-3">
+                        {item.description.slice(0, 100)}...
+                      </p>
                       {item.photos?.length > 0 && (
                         <div className="grid grid-cols-5 gap-2">
                           {item.photos.slice(0, 3).map((p, i) => (
@@ -405,7 +389,14 @@ export default function JournalistDashboard() {
             <div className="flex justify-center mt-8">
               <button
                 onClick={() => {
-                  setForm(blankNews);
+                  setForm({
+                    title: "",
+                    date: "",
+                    location: "New Orleans",
+                    credit: "",
+                    description: "",
+                    photos: [],
+                  });
                   setEditingNews(null);
                   setPreviewImages([]);
                   setActiveTab("edit");
@@ -496,7 +487,10 @@ export default function JournalistDashboard() {
               {previewImages.length > 0 && (
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
                   {previewImages.map((src, i) => (
-                    <div key={i} className="relative aspect-square border border-gray-700 rounded-md overflow-hidden group">
+                    <div
+                      key={i}
+                      className="relative aspect-square border border-gray-700 rounded-md overflow-hidden group"
+                    >
                       <Image src={src} alt="preview" fill className="object-cover" />
                       <button
                         onClick={() => removeImage(i)}

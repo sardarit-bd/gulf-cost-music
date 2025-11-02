@@ -10,7 +10,7 @@ export default function VenuesPage() {
 
   const cities = ["All", "New Orleans", "Biloxi", "Mobile", "Pensacola"];
 
-  // ✅ Fetch all venues from backend
+  // Fetch all venues from backend
   useEffect(() => {
     const fetchVenues = async () => {
       try {

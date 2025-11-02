@@ -2,13 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { 
-  Calendar, 
-  Eye, 
-  Power, 
-  Trash2, 
-  MapPin, 
-  Search, 
+import {
+  Calendar,
+  Eye,
+  Power,
+  Trash2,
+  MapPin,
+  Search,
   Filter,
   MoreVertical,
   Edit,
@@ -24,6 +24,7 @@ import {
   Star
 } from "lucide-react";
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import toast, { Toaster } from "react-hot-toast";
 
 const EventManagement = () => {
   const [events, setEvents] = useState([]);
@@ -37,43 +38,49 @@ const EventManagement = () => {
 
   const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content?type=events`;
 
-  // 🔹 Fetch all events
-  const fetchEvents = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      
-      const params = new URLSearchParams({
-        page,
-        limit: 10,
-        ...(search && { search }),
-        ...(statusFilter !== "all" && { status: statusFilter }),
-        ...(dateFilter && { date: dateFilter })
-      });
+  //  Fetch all events
+const fetchEvents = async () => {
+  setLoading(true);
+  try {
+    const token = localStorage.getItem("token");
+    const params = new URLSearchParams({
+      page,
+      limit: 10,
+      ...(search && { search }),
+      ...(statusFilter !== "all" && { status: statusFilter }),
+      ...(dateFilter && { date: dateFilter }),
+    });
 
-      const { data } = await axios.get(`${API_URL}&${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    const { data } = await axios.get(`${API_URL}&${params.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
+    if (data.success) {
       setEvents(data.data.content);
       setPages(data.data.pagination.pages);
-    } catch (err) {
-      console.error("Fetch events error:", err);
-    } finally {
-      setLoading(false);
+    } else {
+      toast.error(data.message || "Failed to fetch events");
     }
-  };
+  } catch (err) {
+    console.error("Fetch events error:", err);
+    toast.error("Server error while fetching events");
+  } finally {
+    setLoading(false);
+  }
+};
 
-  // 🔹 Toggle event status (Active/Inactive)
+
+  // Toggle event status (Active/Inactive)
   const toggleEventStatus = async (id, isActive) => {
     if (!window.confirm(`Are you sure you want to ${isActive ? "deactivate" : "activate"} this event?`)) return;
     try {
       const token = localStorage.getItem("token");
       await axios.put(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content/event/${id}/toggle`,
-        {},
+        { isActive: !isActive },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      toast.success(`Event ${isActive ? "deactivated" : "activated"} successfully`);
       fetchEvents();
       setActionMenu(null);
     } catch (err) {
@@ -81,7 +88,7 @@ const EventManagement = () => {
     }
   };
 
-  // 🔹 Delete event
+  // Delete event
   const deleteEvent = async (id) => {
     if (!window.confirm("Are you sure you want to delete this event?")) return;
     try {
@@ -116,7 +123,7 @@ const EventManagement = () => {
     if (!eventDate) return 'upcoming';
     const now = new Date();
     const event = new Date(eventDate);
-    
+
     if (event < now) return 'past';
     if (event > new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)) return 'upcoming';
     return 'soon';
@@ -125,8 +132,8 @@ const EventManagement = () => {
   const formatEventDate = (dateString) => {
     if (!dateString) return 'TBA';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
       year: 'numeric'
     });
@@ -140,6 +147,7 @@ const EventManagement = () => {
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50 p-6">
+        <Toaster/>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
@@ -163,7 +171,7 @@ const EventManagement = () => {
                 <Plus className="w-4 h-4" />
                 <span>Add Event</span>
               </button>
-              <button 
+              <button
                 onClick={fetchEvents}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
               >
@@ -175,31 +183,31 @@ const EventManagement = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard 
-              icon={Calendar} 
-              label="Total Events" 
-              value={events.length} 
+            <StatCard
+              icon={Calendar}
+              label="Total Events"
+              value={events.length}
               change={22}
               color="green"
             />
-            <StatCard 
-              icon={Ticket} 
-              label="Active Events" 
-              value={events.filter(e => e.isActive).length} 
+            <StatCard
+              icon={Ticket}
+              label="Active Events"
+              value={events.filter(e => e.isActive).length}
               change={15}
               color="blue"
             />
-            <StatCard 
-              icon={Clock} 
-              label="Upcoming" 
-              value={events.filter(e => getDateStatus(e.date) === 'upcoming').length} 
+            <StatCard
+              icon={Clock}
+              label="Upcoming"
+              value={events.filter(e => getDateStatus(e.date) === 'upcoming').length}
               change={8}
               color="purple"
             />
-            <StatCard 
-              icon={TrendingUp} 
-              label="This Month" 
-              value={Math.floor(events.length * 0.3)} 
+            <StatCard
+              icon={TrendingUp}
+              label="This Month"
+              value={Math.floor(events.length * 0.3)}
               change={30}
               color="orange"
             />
@@ -311,8 +319,8 @@ const EventManagement = () => {
                       events.map((event) => {
                         const dateStatus = getDateStatus(event.date);
                         return (
-                          <tr 
-                            key={event._id} 
+                          <tr
+                            key={event._id}
                             className="hover:bg-gray-50 transition-colors group"
                           >
                             <td className="px-6 py-4">
@@ -365,12 +373,11 @@ const EventManagement = () => {
                                     {formatEventTime(event.time)}
                                   </div>
                                 )}
-                                <div className={`text-xs font-medium ${
-                                  dateStatus === 'past' ? 'text-red-600' :
-                                  dateStatus === 'soon' ? 'text-orange-600' : 'text-green-600'
-                                }`}>
+                                <div className={`text-xs font-medium ${dateStatus === 'past' ? 'text-red-600' :
+                                    dateStatus === 'soon' ? 'text-orange-600' : 'text-green-600'
+                                  }`}>
                                   {dateStatus === 'past' ? 'Event Ended' :
-                                   dateStatus === 'soon' ? 'Coming Soon' : 'Upcoming'}
+                                    dateStatus === 'soon' ? 'Coming Soon' : 'Upcoming'}
                                 </div>
                               </div>
                             </td>
@@ -401,11 +408,10 @@ const EventManagement = () => {
 
                                 <button
                                   onClick={() => toggleEventStatus(event._id, event.isActive)}
-                                  className={`p-2 rounded-lg transition-colors ${
-                                    event.isActive
+                                  className={`p-2 rounded-lg transition-colors ${event.isActive
                                       ? "bg-orange-100 text-orange-600 hover:bg-orange-200"
                                       : "bg-green-100 text-green-600 hover:bg-green-200"
-                                  }`}
+                                    }`}
                                   title={event.isActive ? "Deactivate" : "Activate"}
                                 >
                                   <Power className="w-4 h-4" />
@@ -418,7 +424,7 @@ const EventManagement = () => {
                                   >
                                     <MoreVertical className="w-4 h-4" />
                                   </button>
-                                  
+
                                   {actionMenu === event._id && (
                                     <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border py-1 z-10">
                                       <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
@@ -456,7 +462,7 @@ const EventManagement = () => {
                             <p className="text-lg font-medium text-gray-900 mb-2">No events found</p>
                             <p className="text-sm">
                               {search || statusFilter !== "all" || dateFilter
-                                ? "Try adjusting your search filters" 
+                                ? "Try adjusting your search filters"
                                 : "Get started by creating your first event"
                               }
                             </p>
@@ -490,11 +496,10 @@ const EventManagement = () => {
                         <button
                           key={pageNumber}
                           onClick={() => setPage(pageNumber)}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            page === pageNumber
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${page === pageNumber
                               ? "bg-green-600 text-white shadow-sm"
                               : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                          }`}
+                            }`}
                         >
                           {pageNumber}
                         </button>

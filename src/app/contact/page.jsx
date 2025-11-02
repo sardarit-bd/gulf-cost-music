@@ -59,7 +59,7 @@ export default function ContactSection() {
             <input
               type="email"
               placeholder="Email Address"
-              className="w-full border border-gray-200 rounded-md p-3 outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 bg-white placeholder:text-gray-400"
+              className="text-gray-500 w-full border border-gray-200 rounded-md p-3 outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 bg-white placeholder:text-gray-400"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -71,7 +71,7 @@ export default function ContactSection() {
             <input
               type="text"
               placeholder="Subject"
-              className="w-full border border-gray-200 rounded-md p-3 outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 bg-white placeholder:text-gray-400"
+              className="text-gray-500 w-full border border-gray-200 rounded-md p-3 outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 bg-white placeholder:text-gray-400"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               required
@@ -83,7 +83,7 @@ export default function ContactSection() {
             <textarea
               placeholder="Message"
               rows="5"
-              className="w-full border border-gray-200 rounded-md p-3 outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 bg-white resize-none placeholder:text-gray-400"
+              className="text-gray-500 w-full border border-gray-200 rounded-md p-3 outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 bg-white resize-none placeholder:text-gray-400"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               required

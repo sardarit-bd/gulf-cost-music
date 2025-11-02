@@ -2,37 +2,49 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function NewsPage() {
   const [selectedCity, setSelectedCity] = useState("All");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [newsData, setNewsData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const cities = ["All", "New Orleans", "Biloxi", "Mobile", "Pensacola"];
 
-  // ✅ Fetch data from backend
+  // Fetch data from backend
   useEffect(() => {
     const fetchNews = async () => {
       try {
         setLoading(true);
+        setErrorMsg("");
         const query =
           selectedCity === "All" ? "" : `?location=${selectedCity.toLowerCase()}`;
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news${query}`);
-        const data = await res.json();
-       
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/news${query}`
+        );
 
-        if (res.ok && data.data?.news) {
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to fetch news");
+        }
+
+        if (data.success && data.data?.news?.length > 0) {
           setNewsData(data.data.news);
         } else {
           setNewsData([]);
         }
       } catch (err) {
         console.error("Error fetching news:", err);
+        setErrorMsg(err.message || "Failed to load news");
+        toast.error(err.message || "Failed to load news");
       } finally {
         setLoading(false);
       }
     };
+
     fetchNews();
   }, [selectedCity]);
 
@@ -45,6 +57,7 @@ export default function NewsPage() {
 
   return (
     <section className="brandBg min-h-screen py-14 mt-16 px-6">
+      <Toaster />
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-wrap justify-between items-center mb-10">
@@ -100,11 +113,30 @@ export default function NewsPage() {
           </div>
         </div>
 
-        {loading ? (
-          <p className="text-gray-300 italic">Loading news...</p>
-        ) : newsData.length === 0 ? (
-          <p className="text-gray-300 italic">No news available.</p>
-        ) : (
+        {/* Loader */}
+        {loading && (
+          <div className="text-gray-300 italic animate-pulse">
+            Loading latest {selectedCity === "All" ? "news" : `${selectedCity} news`}...
+          </div>
+        )}
+
+        {/* Error */}
+        {!loading && errorMsg && (
+          <div className="bg-red-100 text-red-800 px-4 py-3 rounded-md mb-6 text-sm">
+            ⚠️ {errorMsg}
+          </div>
+        )}
+
+        {/* No news found */}
+        {!loading && !errorMsg && newsData.length === 0 && (
+          <p className="text-gray-300 italic">
+            No news available for{" "}
+            <span className="font-semibold text-white">{selectedCity}</span>.
+          </p>
+        )}
+
+        {/* News Grid */}
+        {!loading && newsData.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {newsData.map((item) => (
               <div
@@ -113,7 +145,10 @@ export default function NewsPage() {
               >
                 <div className="relative w-full h-56">
                   <Image
-                    src={item.photos?.[0]?.url || "/placeholder.jpg"}
+                    src={
+                      item.photos?.[0]?.url ||
+                      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
+                    }
                     alt={item.title}
                     fill
                     className="object-cover"
@@ -126,7 +161,7 @@ export default function NewsPage() {
                 </div>
 
                 <div className="p-5 text-left">
-                  <h2 className="text-lg font-bold brandColor mb-1">
+                  <h2 className="text-lg font-bold brandColor mb-1 line-clamp-2">
                     {item.title}
                   </h2>
                   <p className="text-sm text-gray-600 mb-2 capitalize">
@@ -134,7 +169,7 @@ export default function NewsPage() {
                   </p>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold text-gray-700">
-                      🗓 {new Date(item.createdAt).toLocaleDateString()}
+                      {new Date(item.createdAt).toLocaleDateString()}
                     </span>
                     <Link
                       href={`/news/${item.location}/${item._id}`}
