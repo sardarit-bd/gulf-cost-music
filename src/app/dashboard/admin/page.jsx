@@ -25,7 +25,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
