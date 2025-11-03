@@ -173,7 +173,7 @@ export default function AdminDashboard() {
           {/* Left Column */}
           <div className="xl:col-span-2 space-y-8">
             {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Quick Actions</h2>
                 <MoreVertical className="w-5 h-5 text-gray-400 cursor-pointer" />
@@ -186,7 +186,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Recent Users */}
-            <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="bg-white rounded-xl shadow-sm border-gray-300 border p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Recent Users</h2>
                 <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
@@ -200,13 +200,13 @@ export default function AdminDashboard() {
           {/* Right Column */}
           <div className="space-y-8">
             {/* User Distribution */}
-            <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">User Distribution</h2>
               <UserDistributionChart userStats={userStats} />
             </div>
 
             {/* Upcoming Events */}
-            <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Upcoming Events</h2>
                 <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
@@ -217,7 +217,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* System Status */}
-            <div className="bg-white rounded-xl shadow-sm border p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">System Status</h2>
               <div className="space-y-3">
                 <StatusItem label="API" status="operational" />
@@ -247,7 +247,7 @@ const StatCard = ({ icon: Icon, label, value, change, color }) => {
   const changeIcon = change >= 0 ? "↗" : "↘";
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <div className={`p-3 rounded-xl bg-gradient-to-r ${colorClasses[color]}`}>
           <Icon className="w-6 h-6 text-white" />

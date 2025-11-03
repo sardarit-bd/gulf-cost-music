@@ -563,7 +563,7 @@ const StatCard = ({ icon: Icon, label, value, change, color }) => {
   const changeIcon = change >= 0 ? "↗" : "↘";
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <div className={`p-3 rounded-xl bg-gradient-to-r ${colorClasses[color]}`}>
           <Icon className="w-6 h-6 text-white" />
