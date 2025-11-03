@@ -209,7 +209,7 @@ export default function CastPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, title: e.target.value })
                     }
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="text-gray-500 bg-gray-100 w-full border rounded-lg px-3 py-2"
                     required
                   />
                 </div>
@@ -225,7 +225,7 @@ export default function CastPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, youtubeUrl: e.target.value })
                     }
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="text-gray-500 bg-gray-100 w-full border rounded-lg px-3 py-2"
                     required
                   />
                 </div>
@@ -241,7 +241,7 @@ export default function CastPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, thumbnail: e.target.value })
                     }
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="text-gray-500 bg-gray-100 w-full border rounded-lg px-3 py-2"
                   />
                 </div>
 
@@ -256,7 +256,7 @@ export default function CastPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
-                    className="w-full border rounded-lg px-3 py-2"
+                    className="text-gray-500 bg-gray-100 w-full border rounded-lg px-3 py-2"
                   ></textarea>
                 </div>
 
@@ -317,7 +317,7 @@ export default function CastPage() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {casts.map((cast) => (
                       <tr key={cast._id}>
-                        <td className="px-6 py-4">{cast.title}</td>
+                        <td className="px-6 py-4 text-gray-500">{cast.title}</td>
                         <td className="px-6 py-4 text-blue-600">
                           <a
                             href={cast.youtubeUrl}

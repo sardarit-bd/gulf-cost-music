@@ -279,18 +279,18 @@ export default function AdminMerchPage() {
                                     <input
                                         type="text"
                                         placeholder="Search by product name or category..."
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                        className="text-gray-500 w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
                                 </div>
                             </div>
                             <div className="w-full lg:w-48">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="text-gray-500 block text-sm font-medium text-gray-700 mb-2">
                                     Category
                                 </label>
                                 <select
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                                    className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                                     onChange={(e) => {
                                         setSearchTerm(e.target.value);
                                         toast.success(`Filtered by ${e.target.value || 'all categories'}`);
@@ -338,7 +338,7 @@ export default function AdminMerchPage() {
                                             name="name"
                                             value={formData.name}
                                             onChange={handleChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                                            className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
                                             required
                                         />
                                     </div>
@@ -353,7 +353,7 @@ export default function AdminMerchPage() {
                                             value={formData.price}
                                             onChange={handleChange}
                                             placeholder="$20.00"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                                            className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
                                             required
                                         />
                                     </div>
@@ -368,7 +368,7 @@ export default function AdminMerchPage() {
                                             value={formData.image}
                                             onChange={handleChange}
                                             placeholder="https://example.com/image.png"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                                            className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
                                         />
                                     </div>
 
@@ -382,7 +382,7 @@ export default function AdminMerchPage() {
                                             value={formData.printifyId}
                                             onChange={handleChange}
                                             placeholder="65ae5df1234567"
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                                            className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
                                         />
                                     </div>
                                 </div>
