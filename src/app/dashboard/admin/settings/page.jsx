@@ -467,7 +467,7 @@ const SystemSettingsPage = () => {
 // Stat Card Component
 const StatCard = ({ icon: Icon, label, value, status }) => {
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <div className={`p-3 rounded-xl ${
           status ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
