@@ -42,13 +42,13 @@ export default function VenueProfile() {
           className="object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-        <div className="absolute bottom-10 left-10">
-          <h1 className="text-5xl font-bold brandColor">{venue.venueName}</h1>
+        <div className="container relative mx-auto h-full flex flex-col md:flex-row md:items-end md:justify-start justify-end bottom-10 left-10">
+          <h1 className="md:text-5xl text-3xl font-bold text-[var(--primary)]">{venue.venueName}</h1>
           <p className="text-gray-300 mt-2">{venue.city}</p>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-12 md:py-16">
+      <div className="container mx-auto px-6 py-12 md:py-16">
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl p-8 md:p-12 border border-white/10">
           <p className="text-lg text-gray-300 leading-relaxed">
             {venue.biography}

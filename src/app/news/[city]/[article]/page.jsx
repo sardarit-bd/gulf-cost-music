@@ -1,4 +1,5 @@
 "use client";
+
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -7,38 +8,19 @@ export default function NewsDetailsPage() {
   const { city, article } = useParams();
   const router = useRouter();
   const [news, setNews] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSingleNews = async () => {
       try {
-        setLoading(true);
         const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/${article}`);
         const data = await res.json();
-        console.log(data)
-
-        if (res.ok && data.data?.news) {
-          setNews(data.data.news);
-        } else {
-          setNews(null);
-        }
+        if (res.ok && data.data?.news) setNews(data.data.news);
       } catch (err) {
         console.error("Error fetching news:", err);
-      } finally {
-        setLoading(false);
       }
     };
-
     fetchSingleNews();
   }, [article]);
-
-  if (loading) {
-    return (
-      <div className="brandBg text-white min-h-screen flex items-center justify-center">
-        <p className="text-lg">Loading news...</p>
-      </div>
-    );
-  }
 
   if (!news) {
     return (
@@ -55,66 +37,58 @@ export default function NewsDetailsPage() {
   }
 
   return (
-    <section className="brandBg min-h-screen py-16 px-6 mt-12">
-      <div className="max-w-5xl mx-auto bg-white text-black rounded-2xl shadow-2xl overflow-hidden">
-        {/* Image Banner */}
-        <div className="relative w-full h-80 bg-gray-300">
-          <Image
-            src={news.photos?.[0]?.url || "/placeholder.jpg"}
-            alt={news.title}
-            fill
-            className="object-cover"
-          />
+    <section className="brandBg min-h-screen text-white mt-12">
+      {/* ===== Header Banner ===== */}
+      <div className="relative w-full h-[400px] md:h-[500px] overflow-hidden">
+        <Image
+          src={news.photos?.[0]?.url || "/placeholder.jpg"}
+          alt={news.title}
+          fill
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+        <div className="container relative mx-auto h-full flex flex-col md:flex-row md:items-end md:justify-start justify-end bottom-10 left-10">
+          <div>
+            <h1 className="md:text-5xl text-3xl font-bold text-[var(--primary)]">
+              {news.title}
+            </h1>
+            <p className="text-gray-300 mt-2 capitalize">
+              {news.location} • {new Date(news.createdAt).toLocaleDateString()}
+            </p>
+          </div>
         </div>
+      </div>
 
-        {/* Content */}
-        <div className="p-8 md:p-10 space-y-4">
-          <h1 className="text-3xl font-bold brandColor">{news.title}</h1>
-          <p className="text-gray-500 text-sm capitalize">
-            {news.location} • {new Date(news.createdAt).toLocaleDateString()}
-          </p>
-
-          <p className="text-gray-800 leading-relaxed mt-4 whitespace-pre-line">
+      {/* ===== Main Content ===== */}
+      <div className="container mx-auto px-6 py-12 md:py-16">
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl p-8 md:p-12 border border-white/10">
+          {/* Description */}
+          <p className="text-lg text-gray-300 leading-relaxed whitespace-pre-line">
             {news.description}
           </p>
 
-          {news.credit && (
-            <p className="text-sm text-gray-600 mt-2">
-              <span className="font-semibold">Credit:</span> {news.credit}
-            </p>
-          )}
+          {/* Additional Info */}
+          <div className="flex flex-col sm:flex-row gap-6 text-sm text-gray-300 mt-8">
+            {news.credit && <div>🪶 Credit: {news.credit}</div>}
+            {news.journalist && <div>✍️ Author: {news.journalist.fullName}</div>}
+          </div>
 
-          {news.journalist && (
-            <p className="text-sm text-gray-600">
-              <span className="font-semibold">Author:</span>{" "}
-              {news.journalist.fullName}
-            </p>
-          )}
-
-          {/* Multiple Photos */}
+          {/* Gallery */}
           {news.photos?.length > 1 && (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8">
               {news.photos.slice(1).map((photo, i) => (
-                <div
-                  key={i}
-                  className="relative aspect-square rounded-md overflow-hidden"
-                >
-                  <Image
-                    src={photo.url}
-                    alt={`photo-${i}`}
-                    fill
-                    className="object-cover"
-                  />
+                <div key={i} className="relative aspect-square rounded-md overflow-hidden">
+                  <Image src={photo.url} alt={`photo-${i}`} fill className="object-cover" />
                 </div>
               ))}
             </div>
           )}
 
           {/* Back Button */}
-          <div className="pt-8">
+          <div className="pt-10">
             <button
               onClick={() => router.back()}
-              className="px-6 py-2 bg-yellow-400 text-black rounded-md font-semibold hover:bg-yellow-500 transition"
+              className="px-6 py-3 bg-yellow-400 text-black rounded-full font-semibold hover:bg-yellow-500 hover:scale-105 transition transform"
             >
               ← Back to {city} News
             </button>

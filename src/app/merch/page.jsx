@@ -3,7 +3,7 @@ import React from 'react'
 
 function MerchPage() {
   return (
-    <section>
+    <section className='mt-20'>
       <MerchCard />
     </section>
   )

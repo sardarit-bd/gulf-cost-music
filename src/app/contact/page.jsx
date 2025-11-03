@@ -48,7 +48,7 @@ export default function ContactSection() {
         background: "linear-gradient(to bottom, #f9f9f6 0%, #000000 100%)",
       }}
     >
-      <div className="max-w-7xl w-full bg-[#fefdeb] rounded-md shadow-md p-8 md:p-10">
+      <div className="container mx-auto py-16 px-6 md:px-16 w-full bg-[#fefdeb] rounded-md shadow-md p-8 md:p-10">
         <h2 className="text-center text-lg md:text-xl font-semibold text-black mb-6">
           For any inquiries:
         </h2>
