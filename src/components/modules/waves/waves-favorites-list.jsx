@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import WaveItem from "./wave-item";
 
 
-export default function WavesFavoritesList() {
+export default function WavesFavoritesList({setWave}) {
   const [waves, setWaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
@@ -17,6 +17,7 @@ export default function WavesFavoritesList() {
 
         if (res.ok && data.success && Array.isArray(data.data.waves)) {
           setWaves(data.data.waves);
+          setWave(data.data.waves[0])
         } else {
           console.warn("⚠️ No valid wave data found");
           setWaves([]);
@@ -44,7 +45,9 @@ export default function WavesFavoritesList() {
 
       <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
         {waves.map((wave) => (
-          <WaveItem key={wave._id} wave={wave} />
+          <div onClick={() => setWave(wave)}>
+            <WaveItem key={wave._id} wave={wave} />
+          </div>
         ))}
       </div>
     </div>
