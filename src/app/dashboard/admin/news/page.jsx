@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { 
@@ -20,9 +19,83 @@ import {
   Clock,
   Tag,
   Plus,
-  BarChart3
+  BarChart3,
+  Save,
+  X,
+  MapPin,
+  PenTool,
+  Image
 } from "lucide-react";
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import toast, { Toaster } from 'react-hot-toast';
+
+// Confirmation Modal Component
+const ConfirmationModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  title, 
+  message, 
+  confirmText, 
+  cancelText = "Cancel",
+  type = "warning" 
+}) => {
+  if (!isOpen) return null;
+
+  const getIcon = () => {
+    switch (type) {
+      case "warning":
+        return <Power className="w-6 h-6 text-orange-500" />;
+      case "danger":
+        return <Trash2 className="w-6 h-6 text-red-500" />;
+      case "success":
+        return <Power className="w-6 h-6 text-green-500" />;
+      default:
+        return <Power className="w-6 h-6 text-orange-500" />;
+    }
+  };
+
+  const getButtonColor = () => {
+    switch (type) {
+      case "warning":
+        return "bg-orange-600 hover:bg-orange-700";
+      case "danger":
+        return "bg-red-600 hover:bg-red-700";
+      case "success":
+        return "bg-green-600 hover:bg-green-700";
+      default:
+        return "bg-blue-600 hover:bg-blue-700";
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl max-w-md w-full p-6">
+        <div className="flex items-center space-x-3 mb-4">
+          {getIcon()}
+          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        </div>
+        
+        <p className="text-gray-600 mb-6">{message}</p>
+        
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+          >
+            {cancelText}
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`px-4 py-2 text-white rounded-lg transition-colors font-medium ${getButtonColor()}`}
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const NewsManagement = () => {
   const [newsList, setNewsList] = useState([]);
@@ -31,10 +104,42 @@ const NewsManagement = () => {
   const [pages, setPages] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
   const [actionMenu, setActionMenu] = useState(null);
+  const [editingNews, setEditingNews] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [viewingNews, setViewingNews] = useState(null);
+  
+  // Confirmation modal states
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmText: "",
+    type: "warning",
+    onConfirm: null
+  });
 
   const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content?type=news`;
+
+  const showConfirmation = (title, message, confirmText, type, onConfirm) => {
+    setConfirmationModal({
+      isOpen: true,
+      title,
+      message,
+      confirmText,
+      type,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  const closeConfirmation = () => {
+    setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+  };
 
   // 🔹 Fetch All News
   const fetchNews = async () => {
@@ -47,7 +152,7 @@ const NewsManagement = () => {
         limit: 10,
         ...(search && { search }),
         ...(statusFilter !== "all" && { status: statusFilter }),
-        ...(categoryFilter && { category: categoryFilter })
+        ...(locationFilter && { location: locationFilter })
       });
 
       const { data } = await axios.get(`${API_URL}&${params.toString()}`, {
@@ -56,61 +161,166 @@ const NewsManagement = () => {
 
       setNewsList(data.data.content);
       setPages(data.data.pagination.pages);
+      toast.success('News loaded successfully');
     } catch (err) {
       console.error("Fetch news error:", err);
+      toast.error('Failed to load news');
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔹 Toggle News Status (Active/Inactive)
-  const toggleNewsStatus = async (id, isActive) => {
-    if (!window.confirm(`Are you sure you want to ${isActive ? "deactivate" : "activate"} this news?`)) return;
+  // View News Function with Modal
+  const handleViewNews = (newsItem) => {
+    setViewingNews(newsItem);
+  };
+
+  // Toggle News Status (Active/Inactive) with Confirmation
+  const toggleNewsStatus = async (id, isActive, title) => {
+    const action = isActive ? "deactivate" : "activate";
+    
+    showConfirmation(
+      `${isActive ? "Deactivate" : "Activate"} News`,
+      `Are you sure you want to ${action} "${title}"? ${
+        isActive 
+          ? "This news will no longer be visible to users." 
+          : "This news will become visible to users."
+      }`,
+      isActive ? "Deactivate" : "Activate",
+      isActive ? "warning" : "success",
+      async () => {
+        try {
+          const token = localStorage.getItem("token");
+          await axios.put(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/admin/${id}/toggle`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          fetchNews();
+          setActionMenu(null);
+          toast.success(`News ${!isActive ? 'activated' : 'deactivated'} successfully!`);
+        } catch (err) {
+          console.error("Toggle news error:", err);
+          toast.error("Failed to update news status");
+        }
+      }
+    );
+  };
+
+  // Edit News Function
+  const handleEdit = (newsItem) => {
+    setEditingNews(newsItem._id);
+    setFormData({
+      title: newsItem.title || "",
+      description: newsItem.description || "",
+      location: newsItem.location || "",
+      credit: newsItem.credit || "",
+      isActive: newsItem.isActive || false
+    });
+    setActionMenu(null);
+  };
+
+  // Save Edited News - Admin route
+  const handleSave = async (id) => {
+    setSaveLoading(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content/news/${id}/toggle`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/admin/${id}`,
+        formData,
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
       );
-      fetchNews();
-      setActionMenu(null);
+      
+      if (response.data.success) {
+        setEditingNews(null);
+        setFormData({});
+        fetchNews();
+        toast.success("News updated successfully!");
+      }
     } catch (err) {
-      console.error("Toggle news error:", err);
+      console.error("Update news error:", err);
+      if (err.response?.data?.message) {
+        toast.error(`Error: ${err.response.data.message}`);
+      } else {
+        toast.error('Error updating news');
+      }
+    } finally {
+      setSaveLoading(false);
     }
   };
 
-  // 🔹 Delete News
-  const deleteNews = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this news item?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchNews();
-      setActionMenu(null);
-    } catch (err) {
-      console.error("Delete news error:", err);
-    }
+  // Cancel Edit
+  const handleCancel = () => {
+    setEditingNews(null);
+    setFormData({});
+  };
+
+  // Handle Input Change
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Delete News with Confirmation
+  const deleteNews = async (id, title) => {
+    showConfirmation(
+      "Delete News",
+      `Are you sure you want to delete "${title}"? This action cannot be undone and all news data including images will be permanently lost.`,
+      "Delete News",
+      "danger",
+      async () => {
+        try {
+          const token = localStorage.getItem("token");
+          await axios.delete(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/admin/${id}`, 
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          fetchNews();
+          setActionMenu(null);
+          toast.success("News deleted successfully!");
+        } catch (err) {
+          console.error("Delete news error:", err);
+          toast.error("Failed to delete news");
+        }
+      }
+    );
+  };
+
+  // Clear filters
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+    setLocationFilter("");
+    setPage(1);
   };
 
   useEffect(() => {
     fetchNews();
-  }, [page, statusFilter, categoryFilter]);
+  }, [page, statusFilter, locationFilter]);
 
-  // Extract unique categories for filter
-  const categories = [...new Set(newsList.map(news => news.category).filter(Boolean))];
+  // Extract unique locations for filter
+  const locations = [...new Set(newsList.map(item => item.location).filter(Boolean))];
 
-  const getCategoryColor = (category) => {
+  const getLocationColor = (location) => {
     const colors = {
-      'music': 'bg-purple-100 text-purple-800 border-purple-200',
-      'events': 'bg-blue-100 text-blue-800 border-blue-200',
-      'artists': 'bg-pink-100 text-pink-800 border-pink-200',
-      'venues': 'bg-green-100 text-green-800 border-green-200',
-      'industry': 'bg-orange-100 text-orange-800 border-orange-200',
+      'dubai': 'bg-blue-100 text-blue-800 border-blue-200',
+      'abu dhabi': 'bg-green-100 text-green-800 border-green-200',
+      'sharjah': 'bg-purple-100 text-purple-800 border-purple-200',
+      'ajman': 'bg-orange-100 text-orange-800 border-orange-200',
+      'ras al khaimah': 'bg-red-100 text-red-800 border-red-200',
+      'fujairah': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+      'umm al quwain': 'bg-pink-100 text-pink-800 border-pink-200',
     };
-    return colors[category?.toLowerCase()] || 'bg-gray-100 text-gray-800 border-gray-200';
+    return colors[location?.toLowerCase()] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
   const truncateText = (text, maxLength) => {
@@ -118,10 +328,158 @@ const NewsManagement = () => {
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   };
 
+  // News Detail Modal Component
+  const NewsDetailModal = ({ newsItem, onClose }) => {
+    if (!newsItem) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900">News Details</h3>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center text-white">
+                  <Newspaper className="w-8 h-8" />
+                </div>
+                <div>
+                  <h4 className="text-2xl font-bold text-gray-900">{newsItem.title}</h4>
+                  <p className="text-gray-600 flex items-center mt-1">
+                    <PenTool className="w-4 h-4 mr-2" />
+                    By {newsItem.journalist?.fullName || newsItem.journalist?.username}
+                  </p>
+                  <p className="text-gray-600 flex items-center mt-1">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    {newsItem.createdAt ? new Date(newsItem.createdAt).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="font-medium text-gray-700">Location:</label>
+                    <div className="mt-1">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getLocationColor(newsItem.location)}`}>
+                        <MapPin className="w-4 h-4 mr-1" />
+                        {newsItem.location ? newsItem.location.charAt(0).toUpperCase() + newsItem.location.slice(1) : "Not specified"}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="font-medium text-gray-700">Status:</label>
+                    <div className="mt-1">
+                      {newsItem.isActive ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 border border-red-200">
+                          <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                          Inactive
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {newsItem.credit && (
+                    <div>
+                      <label className="font-medium text-gray-700">Credit:</label>
+                      <p className="text-gray-600 mt-1">{newsItem.credit}</p>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <label className="font-medium text-gray-700">Journalist:</label>
+                    <p className="text-gray-600 mt-1 flex items-center">
+                      <User className="w-4 h-4 mr-2" />
+                      {newsItem.journalist?.fullName || newsItem.journalist?.username}
+                    </p>
+                    <p className="text-gray-500 text-sm mt-1 ml-6">
+                      {newsItem.journalist?.email}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="font-medium text-gray-700">Description:</label>
+                <p className="text-gray-600 mt-2 text-sm leading-relaxed whitespace-pre-line">
+                  {newsItem.description}
+                </p>
+              </div>
+
+              {newsItem.photos && newsItem.photos.length > 0 && (
+                <div>
+                  <label className="font-medium text-gray-700">Photos:</label>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {newsItem.photos.map((photo, index) => (
+                      <img
+                        key={index}
+                        src={photo.url}
+                        alt={`News ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
+              <button
+                onClick={() => {
+                  onClose();
+                  handleEdit(newsItem);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                Edit News
+              </button>
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors text-sm font-medium"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
+          {/* React Hot Toast */}
+          <Toaster/>
+
+          {/* Confirmation Modal */}
+          <ConfirmationModal
+            isOpen={confirmationModal.isOpen}
+            onClose={closeConfirmation}
+            onConfirm={confirmationModal.onConfirm}
+            title={confirmationModal.title}
+            message={confirmationModal.message}
+            confirmText={confirmationModal.confirmText}
+            type={confirmationModal.type}
+          />
+
           {/* Header */}
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
             <div>
@@ -136,17 +494,9 @@ const NewsManagement = () => {
               </p>
             </div>
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-              <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium">
-                <Download className="w-4 h-4" />
-                <span>Export</span>
-              </button>
-              <button className="flex items-center space-x-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium">
-                <Plus className="w-4 h-4" />
-                <span>Add News</span>
-              </button>
               <button 
                 onClick={fetchNews}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                className="flex items-center space-x-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Refresh</span>
@@ -197,12 +547,20 @@ const NewsManagement = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Search by title, content, or author..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    placeholder="Search by title, description, or location..."
+                    className="text-gray-500 w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && fetchNews()}
                   />
+                  {search && (
+                    <button
+                      onClick={() => setSearch("")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -211,7 +569,7 @@ const NewsManagement = () => {
                   Status
                 </label>
                 <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -224,25 +582,39 @@ const NewsManagement = () => {
               <div className="flex space-x-2">
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category
+                    Location
                   </label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    value={locationFilter}
+                    onChange={(e) => setLocationFilter(e.target.value)}
                   >
-                    <option value="">All Categories</option>
-                    {categories.map(category => (
-                      <option key={category} value={category}>{category}</option>
+                    <option value="">All Locations</option>
+                    {locations.map(location => (
+                      <option key={location} value={location}>
+                        {location.charAt(0).toUpperCase() + location.slice(1)}
+                      </option>
                     ))}
                   </select>
                 </div>
-                <button
-                  onClick={fetchNews}
-                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors flex items-center space-x-2 self-end"
-                >
-                  <Filter className="w-4 h-4" />
-                </button>
+                <div className="flex space-x-2 self-end">
+                  <button
+                    onClick={fetchNews}
+                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors flex items-center space-x-2"
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span>Apply</span>
+                  </button>
+                  {(search || statusFilter !== "all" || locationFilter) && (
+                    <button
+                      onClick={clearFilters}
+                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium transition-colors flex items-center space-x-2"
+                    >
+                      <X className="w-4 h-4" />
+                      <span>Clear</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -273,7 +645,7 @@ const NewsManagement = () => {
                         Article
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Author & Category
+                        Author & Location
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Date
@@ -295,16 +667,45 @@ const NewsManagement = () => {
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-start space-x-3">
-                              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg flex items-center justify-center text-white flex-shrink-0">
-                                <Newspaper className="w-5 h-5" />
-                              </div>
+                              {news.photos && news.photos.length > 0 ? (
+                                <img
+                                  src={news.photos[0].url}
+                                  alt={news.title}
+                                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg flex items-center justify-center text-white flex-shrink-0">
+                                  <Newspaper className="w-5 h-5" />
+                                </div>
+                              )}
                               <div className="min-w-0 flex-1">
-                                <h3 className="text-sm font-semibold text-gray-900 group-hover:text-orange-700 line-clamp-2">
-                                  {news.title || "Untitled"}
-                                </h3>
-                                <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                                  {truncateText(news.content, 80)}
-                                </p>
+                                {editingNews === news._id ? (
+                                  <div className="space-y-2">
+                                    <input
+                                      type="text"
+                                      value={formData.title || ''}
+                                      onChange={(e) => handleInputChange('title', e.target.value)}
+                                      className="text-gray-500 text-sm font-semibold border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 w-full"
+                                      placeholder="News title"
+                                    />
+                                    <textarea
+                                      value={formData.description || ''}
+                                      onChange={(e) => handleInputChange('description', e.target.value)}
+                                      className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 w-full"
+                                      placeholder="News description"
+                                      rows="2"
+                                    />
+                                  </div>
+                                ) : (
+                                  <>
+                                    <h3 className="text-sm font-semibold text-gray-900 group-hover:text-orange-700 line-clamp-2">
+                                      {news.title || "Untitled"}
+                                    </h3>
+                                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                                      {truncateText(news.description, 80)}
+                                    </p>
+                                  </>
+                                )}
                               </div>
                             </div>
                           </td>
@@ -312,12 +713,20 @@ const NewsManagement = () => {
                             <div className="space-y-2">
                               <div className="flex items-center text-sm text-gray-600">
                                 <User className="w-4 h-4 mr-2 text-gray-400" />
-                                <span>{news.user?.username || "Unknown"}</span>
+                                <span>{news.journalist?.fullName || news.journalist?.username || "Unknown"}</span>
                               </div>
-                              {news.category && (
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getCategoryColor(news.category)}`}>
-                                  <Tag className="w-3 h-3 mr-1" />
-                                  {news.category}
+                              {editingNews === news._id ? (
+                                <input
+                                  type="text"
+                                  value={formData.location || ''}
+                                  onChange={(e) => handleInputChange('location', e.target.value)}
+                                  className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 w-full"
+                                  placeholder="Location"
+                                />
+                              ) : news.location && (
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getLocationColor(news.location)}`}>
+                                  <MapPin className="w-3 h-3 mr-1" />
+                                  {news.location}
                                 </span>
                               )}
                             </div>
@@ -335,7 +744,16 @@ const NewsManagement = () => {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {news.isActive ? (
+                            {editingNews === news._id ? (
+                              <select
+                                value={formData.isActive?.toString() || 'false'}
+                                onChange={(e) => handleInputChange('isActive', e.target.value === 'true')}
+                                className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                              >
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                              </select>
+                            ) : news.isActive ? (
                               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
                                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                                 Published
@@ -349,54 +767,80 @@ const NewsManagement = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex justify-end items-center space-x-2">
-                              <button
-                                onClick={() => window.open(`/news/${news._id}`, "_blank")}
-                                className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-                                title="View Article"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
+                              {editingNews === news._id ? (
+                                <>
+                                  <button
+                                    onClick={() => handleSave(news._id)}
+                                    disabled={saveLoading}
+                                    className="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50"
+                                  >
+                                    {saveLoading ? (
+                                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                    ) : (
+                                      <Save className="w-3 h-3 mr-1" />
+                                    )}
+                                    {saveLoading ? "Saving..." : "Save"}
+                                  </button>
+                                  <button
+                                    onClick={handleCancel}
+                                    disabled={saveLoading}
+                                    className="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                                  >
+                                    <X className="w-3 h-3 mr-1" />
+                                    Cancel
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => handleViewNews(news)}
+                                    className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                                    title="View Article"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </button>
 
-                              <button
-                                onClick={() => toggleNewsStatus(news._id, news.isActive)}
-                                className={`p-2 rounded-lg transition-colors ${
-                                  news.isActive
-                                    ? "bg-orange-100 text-orange-600 hover:bg-orange-200"
-                                    : "bg-green-100 text-green-600 hover:bg-green-200"
-                                }`}
-                                title={news.isActive ? "Unpublish" : "Publish"}
-                              >
-                                <Power className="w-4 h-4" />
-                              </button>
+                                  <button
+                                    onClick={() => toggleNewsStatus(news._id, news.isActive, news.title)}
+                                    className={`p-2 rounded-lg transition-colors ${
+                                      news.isActive
+                                        ? "bg-orange-100 text-orange-600 hover:bg-orange-200"
+                                        : "bg-green-100 text-green-600 hover:bg-green-200"
+                                    }`}
+                                    title={news.isActive ? "Unpublish" : "Publish"}
+                                  >
+                                    <Power className="w-4 h-4" />
+                                  </button>
 
-                              <div className="relative">
-                                <button
-                                  onClick={() => setActionMenu(actionMenu === news._id ? null : news._id)}
-                                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                                >
-                                  <MoreVertical className="w-4 h-4" />
-                                </button>
-                                
-                                {actionMenu === news._id && (
-                                  <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border py-1 z-10">
-                                    <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                                      <Edit className="w-4 h-4 mr-2" />
-                                      Edit Article
-                                    </button>
-                                    <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                                      <BarChart3 className="w-4 h-4 mr-2" />
-                                      View Analytics
-                                    </button>
+                                  <div className="relative">
                                     <button
-                                      onClick={() => deleteNews(news._id)}
-                                      className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                                      onClick={() => setActionMenu(actionMenu === news._id ? null : news._id)}
+                                      className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
                                     >
-                                      <Trash2 className="w-4 h-4 mr-2" />
-                                      Delete Article
+                                      <MoreVertical className="w-4 h-4" />
                                     </button>
+                                    
+                                    {actionMenu === news._id && (
+                                      <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border py-1 z-10">
+                                        <button 
+                                          onClick={() => handleEdit(news)}
+                                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                        >
+                                          <Edit className="w-4 h-4 mr-2" />
+                                          Edit Article
+                                        </button>
+                                        <button
+                                          onClick={() => deleteNews(news._id, news.title)}
+                                          className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                                        >
+                                          <Trash2 className="w-4 h-4 mr-2" />
+                                          Delete Article
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
+                                </>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -408,7 +852,7 @@ const NewsManagement = () => {
                             <Newspaper className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                             <p className="text-lg font-medium text-gray-900 mb-2">No news articles found</p>
                             <p className="text-sm">
-                              {search || statusFilter !== "all" || categoryFilter
+                              {search || statusFilter !== "all" || locationFilter
                                 ? "Try adjusting your search filters" 
                                 : "Get started by creating your first news article"
                               }
@@ -433,9 +877,9 @@ const NewsManagement = () => {
                     <button
                       onClick={() => setPage(Math.max(1, page - 1))}
                       disabled={page === 1}
-                      className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      className="text-gray-500 px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center space-x-2"
                     >
-                      Previous
+                      <span>Previous</span>
                     </button>
                     {Array.from({ length: Math.min(5, pages) }, (_, i) => {
                       const pageNumber = i + 1;
@@ -456,9 +900,9 @@ const NewsManagement = () => {
                     <button
                       onClick={() => setPage(Math.min(pages, page + 1))}
                       disabled={page === pages}
-                      className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      className="text-gray-500 px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center space-x-2"
                     >
-                      Next
+                      <span>Next</span>
                     </button>
                   </div>
                 </div>
@@ -466,6 +910,14 @@ const NewsManagement = () => {
             )}
           </div>
         </div>
+
+        {/* News Detail Modal */}
+        {viewingNews && (
+          <NewsDetailModal 
+            newsItem={viewingNews} 
+            onClose={() => setViewingNews(null)} 
+          />
+        )}
       </div>
     </AdminLayout>
   );

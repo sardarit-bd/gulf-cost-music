@@ -20,9 +20,98 @@ import {
   Star,
   TrendingUp,
   Phone,
-  Globe
+  Globe,
+  Save,
+  X,
+  XCircle,
+  Clock,
+  CalendarDays,
+  AlertTriangle,
+  CheckCircle
 } from "lucide-react";
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+
+// Toast notification component
+const Toast = ({ message, type = "success", onClose }) => {
+  const bgColor = type === "success" ? "bg-green-500" : "bg-red-500";
+  
+  return (
+    <div className={`fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 z-50 animate-in slide-in-from-right-8 duration-300`}>
+      <span>{message}</span>
+      <button onClick={onClose} className="text-white hover:text-gray-200">
+        <XCircle className="w-4 h-4" />
+      </button>
+    </div>
+  );
+};
+
+// Confirmation Modal Component
+const ConfirmationModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  title, 
+  message, 
+  confirmText, 
+  cancelText = "Cancel",
+  type = "warning" 
+}) => {
+  if (!isOpen) return null;
+
+  const getIcon = () => {
+    switch (type) {
+      case "warning":
+        return <AlertTriangle className="w-6 h-6 text-orange-500" />;
+      case "danger":
+        return <AlertTriangle className="w-6 h-6 text-red-500" />;
+      case "success":
+        return <CheckCircle className="w-6 h-6 text-green-500" />;
+      default:
+        return <AlertTriangle className="w-6 h-6 text-orange-500" />;
+    }
+  };
+
+  const getButtonColor = () => {
+    switch (type) {
+      case "warning":
+        return "bg-orange-600 hover:bg-orange-700";
+      case "danger":
+        return "bg-red-600 hover:bg-red-700";
+      case "success":
+        return "bg-green-600 hover:bg-green-700";
+      default:
+        return "bg-blue-600 hover:bg-blue-700";
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl max-w-md w-full p-6">
+        <div className="flex items-center space-x-3 mb-4">
+          {getIcon()}
+          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        </div>
+        
+        <p className="text-gray-600 mb-6">{message}</p>
+        
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+          >
+            {cancelText}
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`px-4 py-2 text-white rounded-lg transition-colors font-medium ${getButtonColor()}`}
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const VenueManagement = () => {
   const [venues, setVenues] = useState([]);
@@ -33,8 +122,46 @@ const VenueManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("");
   const [actionMenu, setActionMenu] = useState(null);
+  const [editingVenue, setEditingVenue] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [viewingVenue, setViewingVenue] = useState(null);
+  
+  // Confirmation modal states
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmText: "",
+    type: "warning",
+    onConfirm: null
+  });
 
   const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content?type=venues`;
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const showConfirmation = (title, message, confirmText, type, onConfirm) => {
+    setConfirmationModal({
+      isOpen: true,
+      title,
+      message,
+      confirmText,
+      type,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  const closeConfirmation = () => {
+    setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+  };
 
   const fetchVenues = async () => {
     try {
@@ -57,39 +184,148 @@ const VenueManagement = () => {
       setPages(data.data.pagination.pages);
     } catch (err) {
       console.error("Fetch venues error:", err);
+      showToast("Failed to fetch venues", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleActive = async (id, currentStatus) => {
-    if (!window.confirm(`Are you sure you want to ${currentStatus ? "deactivate" : "activate"} this venue?`)) return;
+  // View Venue Function with Modal
+  const handleViewVenue = (venue) => {
+    setViewingVenue(venue);
+  };
+
+  // Toggle Active/Inactive Function with Confirmation Modal
+  const toggleActive = async (id, currentStatus, venueName) => {
+    const action = currentStatus ? "deactivate" : "activate";
+    
+    showConfirmation(
+      `${currentStatus ? "Deactivate" : "Activate"} Venue`,
+      `Are you sure you want to ${action} "${venueName}"? ${
+        currentStatus 
+          ? "This venue will no longer be visible to users." 
+          : "This venue will become visible to users."
+      }`,
+      currentStatus ? "Deactivate" : "Activate",
+      currentStatus ? "warning" : "success",
+      async () => {
+        try {
+          const token = localStorage.getItem("token");
+          await axios.put(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/admin/${id}`,
+            { isActive: !currentStatus },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          fetchVenues();
+          setActionMenu(null);
+          showToast(`Venue ${!currentStatus ? 'activated' : 'deactivated'} successfully!`);
+        } catch (err) {
+          console.error("Toggle venue error:", err);
+          showToast("Failed to update venue status", "error");
+        }
+      }
+    );
+  };
+
+  // Edit Venue Function
+  const handleEdit = (venue) => {
+    setEditingVenue(venue._id);
+    setFormData({
+      venueName: venue.venueName || "",
+      city: venue.city || "",
+      address: venue.address || "",
+      seatingCapacity: venue.seatingCapacity || "",
+      biography: venue.biography || "",
+      openHours: venue.openHours || "",
+      openDays: venue.openDays || "",
+      phone: venue.phone || "",
+      website: venue.website || "",
+      isActive: venue.isActive || false
+    });
+    setActionMenu(null);
+  };
+
+  // Save Edited Venue - Admin route ব্যবহার করে
+  const handleSave = async (id) => {
+    setSaveLoading(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.put(
-        `http://localhost:5000/api/admin/content/venue/${id}/toggle`,
-        { isActive: !currentStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/admin/${id}`,
+        formData,
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        }
       );
-      fetchVenues();
-      setActionMenu(null);
+      
+      if (response.data.success) {
+        setEditingVenue(null);
+        setFormData({});
+        fetchVenues();
+        showToast("Venue profile updated successfully!");
+      }
     } catch (err) {
-      console.error("Toggle venue error:", err);
+      console.error("Update venue error:", err);
+      if (err.response?.data?.message) {
+        showToast(`Error: ${err.response.data.message}`, "error");
+      } else {
+        showToast('Error updating venue profile', "error");
+      }
+    } finally {
+      setSaveLoading(false);
     }
   };
 
-  const deleteVenue = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this venue?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/venues/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchVenues();
-      setActionMenu(null);
-    } catch (err) {
-      console.error("Delete venue error:", err);
-    }
+  // Cancel Edit
+  const handleCancel = () => {
+    setEditingVenue(null);
+    setFormData({});
+  };
+
+  // Handle Input Change
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Delete Venue with Confirmation Modal
+  const deleteVenue = async (id, venueName) => {
+    showConfirmation(
+      "Delete Venue",
+      `Are you sure you want to delete "${venueName}"? This action cannot be undone and all venue data will be permanently lost.`,
+      "Delete Venue",
+      "danger",
+      async () => {
+        try {
+          const token = localStorage.getItem("token");
+          await axios.delete(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/admin/${id}`, 
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          fetchVenues();
+          setActionMenu(null);
+          showToast("Venue profile deleted successfully!");
+        } catch (err) {
+          console.error("Delete venue error:", err);
+          showToast("Failed to delete venue profile", "error");
+        }
+      }
+    );
+  };
+
+  // Clear filters
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("all");
+    setCityFilter("");
+    setPage(1);
   };
 
   useEffect(() => {
@@ -106,10 +342,187 @@ const VenueManagement = () => {
     return "bg-gray-100 text-gray-800 border-gray-200";
   };
 
+  // Venue Detail Modal Component
+  const VenueDetailModal = ({ venue, onClose }) => {
+    if (!venue) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Venue Details</h3>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center text-white">
+                  <Building2 className="w-8 h-8" />
+                </div>
+                <div>
+                  <h4 className="text-2xl font-bold text-gray-900">{venue.venueName}</h4>
+                  <p className="text-gray-600 flex items-center mt-1">
+                    <User className="w-4 h-4 mr-2" />
+                    {venue.user?.username}
+                  </p>
+                  <p className="text-gray-600 flex items-center mt-1">
+                    <Mail className="w-4 h-4 mr-2" />
+                    {venue.user?.email}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="font-medium text-gray-700">Location:</label>
+                    <p className="text-gray-600 mt-1 flex items-center">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      {venue.city || "Not specified"}
+                    </p>
+                    {venue.address && (
+                      <p className="text-gray-600 text-sm mt-1 ml-6">{venue.address}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <label className="font-medium text-gray-700">Capacity:</label>
+                    <div className="mt-1">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getCapacityColor(venue.seatingCapacity)}`}>
+                        <Users className="w-4 h-4 mr-1" />
+                        {venue.seatingCapacity || "Not specified"} seats
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="font-medium text-gray-700">Status:</label>
+                    <div className="mt-1">
+                      {venue.isActive ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 border border-green-200">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 border border-red-200">
+                          <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                          Inactive
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="font-medium text-gray-700">Operating Hours:</label>
+                    <p className="text-gray-600 mt-1 flex items-center">
+                      <Clock className="w-4 h-4 mr-2" />
+                      {venue.openHours || "Not specified"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="font-medium text-gray-700">Open Days:</label>
+                    <p className="text-gray-600 mt-1 flex items-center">
+                      <CalendarDays className="w-4 h-4 mr-2" />
+                      {venue.openDays || "Not specified"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="font-medium text-gray-700">Joined:</label>
+                    <p className="text-gray-600 mt-1 flex items-center">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      {venue.createdAt ? new Date(venue.createdAt).toLocaleDateString() : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {venue.phone && (
+                <div>
+                  <label className="font-medium text-gray-700">Phone:</label>
+                  <p className="text-gray-600 mt-1 flex items-center">
+                    <Phone className="w-4 h-4 mr-2" />
+                    {venue.phone}
+                  </p>
+                </div>
+              )}
+
+              {venue.website && (
+                <div>
+                  <label className="font-medium text-gray-700">Website:</label>
+                  <p className="text-gray-600 mt-1">
+                    <a href={venue.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center">
+                      <Globe className="w-4 h-4 mr-2" />
+                      {venue.website}
+                    </a>
+                  </p>
+                </div>
+              )}
+
+              {venue.biography && (
+                <div>
+                  <label className="font-medium text-gray-700">About:</label>
+                  <p className="text-gray-600 mt-2 text-sm leading-relaxed">{venue.biography}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
+              <button
+                onClick={() => {
+                  onClose();
+                  handleEdit(venue);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                Edit Venue
+              </button>
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors text-sm font-medium"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
+          {/* Toast Notification */}
+          {toast && (
+            <Toast 
+              message={toast.message} 
+              type={toast.type} 
+              onClose={() => setToast(null)} 
+            />
+          )}
+
+          {/* Confirmation Modal */}
+          <ConfirmationModal
+            isOpen={confirmationModal.isOpen}
+            onClose={closeConfirmation}
+            onConfirm={confirmationModal.onConfirm}
+            title={confirmationModal.title}
+            message={confirmationModal.message}
+            confirmText={confirmationModal.confirmText}
+            type={confirmationModal.type}
+          />
+
           {/* Header */}
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
             <div>
@@ -124,10 +537,6 @@ const VenueManagement = () => {
               </p>
             </div>
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-              <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium">
-                <Download className="w-4 h-4" />
-                <span>Export</span>
-              </button>
               <button 
                 onClick={fetchVenues}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
@@ -181,12 +590,20 @@ const VenueManagement = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
-                    placeholder="Search by venue name, owner, or city..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Search by venue name, city, or address..."
+                    className="text-gray-500 w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && fetchVenues()}
                   />
+                  {search && (
+                    <button
+                      onClick={() => setSearch("")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -195,7 +612,7 @@ const VenueManagement = () => {
                   Status
                 </label>
                 <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -211,7 +628,7 @@ const VenueManagement = () => {
                     City
                   </label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={cityFilter}
                     onChange={(e) => setCityFilter(e.target.value)}
                   >
@@ -221,12 +638,24 @@ const VenueManagement = () => {
                     ))}
                   </select>
                 </div>
-                <button
-                  onClick={fetchVenues}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center space-x-2 self-end"
-                >
-                  <Filter className="w-4 h-4" />
-                </button>
+                <div className="flex space-x-2 self-end">
+                  <button
+                    onClick={fetchVenues}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center space-x-2"
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span>Apply</span>
+                  </button>
+                  {(search || statusFilter !== "all" || cityFilter) && (
+                    <button
+                      onClick={clearFilters}
+                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium transition-colors flex items-center space-x-2"
+                    >
+                      <X className="w-4 h-4" />
+                      <span>Clear</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -283,57 +712,128 @@ const VenueManagement = () => {
                                 <Building2 className="w-6 h-6" />
                               </div>
                               <div className="ml-4">
-                                <div className="text-sm font-semibold text-gray-900 group-hover:text-blue-700">
-                                  {venue.venueName}
-                                </div>
+                                {editingVenue === venue._id ? (
+                                  <input
+                                    type="text"
+                                    value={formData.venueName || ''}
+                                    onChange={(e) => handleInputChange('venueName', e.target.value)}
+                                    className="text-gray-500 text-sm font-semibold border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-32"
+                                    placeholder="Venue name"
+                                  />
+                                ) : (
+                                  <div className="text-sm font-semibold text-gray-900 group-hover:text-blue-700">
+                                    {venue.venueName}
+                                  </div>
+                                )}
                                 <div className="text-sm text-gray-500 flex items-center mt-1">
                                   <User className="w-3 h-3 mr-1" />
                                   {venue.user?.username}
                                 </div>
+                                <div className="text-sm text-gray-500 flex items-center mt-1">
+                                  <Mail className="w-3 h-3 mr-1" />
+                                  {venue.user?.email}
+                                </div>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="space-y-2">
-                              <div className="flex items-center text-sm text-gray-600">
-                                <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                                <span>{venue.city || "Not specified"}</span>
-                              </div>
-                              {venue.phone && (
-                                <div className="flex items-center text-sm text-gray-600">
-                                  <Phone className="w-3 h-3 mr-2 text-gray-400" />
-                                  <span>{venue.phone}</span>
-                                </div>
-                              )}
-                              {venue.website && (
-                                <div className="flex items-center text-sm text-blue-600">
-                                  <Globe className="w-3 h-3 mr-2" />
-                                  <span className="truncate">Website</span>
-                                </div>
+                              {editingVenue === venue._id ? (
+                                <>
+                                  <input
+                                    type="text"
+                                    value={formData.city || ''}
+                                    onChange={(e) => handleInputChange('city', e.target.value)}
+                                    className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+                                    placeholder="City"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={formData.address || ''}
+                                    onChange={(e) => handleInputChange('address', e.target.value)}
+                                    className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+                                    placeholder="Address"
+                                  />
+                                </>
+                              ) : (
+                                <>
+                                  <div className="flex items-center text-sm text-gray-600">
+                                    <MapPin className="w-4 h-4 mr-2 text-gray-400" />
+                                    <span>{venue.city || "Not specified"}</span>
+                                  </div>
+                                  {venue.address && (
+                                    <div className="text-sm text-gray-500 ml-6">
+                                      {venue.address}
+                                    </div>
+                                  )}
+                                  {venue.phone && (
+                                    <div className="flex items-center text-sm text-gray-600">
+                                      <Phone className="w-3 h-3 mr-2 text-gray-400" />
+                                      <span>{venue.phone}</span>
+                                    </div>
+                                  )}
+                                  {venue.website && (
+                                    <div className="flex items-center text-sm text-blue-600">
+                                      <Globe className="w-3 h-3 mr-2" />
+                                      <span className="truncate">Website</span>
+                                    </div>
+                                  )}
+                                </>
                               )}
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="space-y-2">
-                              {venue.capacity && (
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getCapacityColor(venue.capacity)}`}>
-                                  <Users className="w-3 h-3 mr-1" />
-                                  {venue.capacity} capacity
-                                </span>
+                              {editingVenue === venue._id ? (
+                                <>
+                                  <input
+                                    type="number"
+                                    value={formData.seatingCapacity || ''}
+                                    onChange={(e) => handleInputChange('seatingCapacity', e.target.value)}
+                                    className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+                                    placeholder="Seating Capacity"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={formData.openHours || ''}
+                                    onChange={(e) => handleInputChange('openHours', e.target.value)}
+                                    className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
+                                    placeholder="Open Hours"
+                                  />
+                                </>
+                              ) : (
+                                <>
+                                  {venue.seatingCapacity && (
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getCapacityColor(venue.seatingCapacity)}`}>
+                                      <Users className="w-3 h-3 mr-1" />
+                                      {venue.seatingCapacity} capacity
+                                    </span>
+                                  )}
+                                  {venue.openHours && (
+                                    <div className="flex items-center text-xs text-gray-500">
+                                      <Clock className="w-3 h-3 mr-1" />
+                                      {venue.openHours}
+                                    </div>
+                                  )}
+                                  <div className="flex items-center text-xs text-gray-500">
+                                    <Calendar className="w-3 h-3 mr-1" />
+                                    {venue.createdAt ? new Date(venue.createdAt).toLocaleDateString() : 'N/A'}
+                                  </div>
+                                </>
                               )}
-                              {venue.venueType && (
-                                <div className="text-xs text-gray-500 capitalize">
-                                  {venue.venueType}
-                                </div>
-                              )}
-                              <div className="flex items-center text-xs text-gray-500">
-                                <Calendar className="w-3 h-3 mr-1" />
-                                {venue.createdAt ? new Date(venue.createdAt).toLocaleDateString() : 'N/A'}
-                              </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            {venue.isActive ? (
+                            {editingVenue === venue._id ? (
+                              <select
+                                value={formData.isActive?.toString() || 'false'}
+                                onChange={(e) => handleInputChange('isActive', e.target.value === 'true')}
+                                className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              >
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                              </select>
+                            ) : venue.isActive ? (
                               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
                                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                                 Active
@@ -347,54 +847,80 @@ const VenueManagement = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex justify-end items-center space-x-2">
-                              <button
-                                onClick={() => window.open(`/venue/${venue._id}`, "_blank")}
-                                className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-                                title="View Venue"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
+                              {editingVenue === venue._id ? (
+                                <>
+                                  <button
+                                    onClick={() => handleSave(venue._id)}
+                                    disabled={saveLoading}
+                                    className="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50"
+                                  >
+                                    {saveLoading ? (
+                                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                                    ) : (
+                                      <Save className="w-3 h-3 mr-1" />
+                                    )}
+                                    {saveLoading ? "Saving..." : "Save"}
+                                  </button>
+                                  <button
+                                    onClick={handleCancel}
+                                    disabled={saveLoading}
+                                    className="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                                  >
+                                    <X className="w-3 h-3 mr-1" />
+                                    Cancel
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => handleViewVenue(venue)}
+                                    className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                                    title="View Venue"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </button>
 
-                              <button
-                                onClick={() => toggleActive(venue._id, venue.isActive)}
-                                className={`p-2 rounded-lg transition-colors ${
-                                  venue.isActive
-                                    ? "bg-orange-100 text-orange-600 hover:bg-orange-200"
-                                    : "bg-green-100 text-green-600 hover:bg-green-200"
-                                }`}
-                                title={venue.isActive ? "Deactivate" : "Activate"}
-                              >
-                                <Power className="w-4 h-4" />
-                              </button>
+                                  <button
+                                    onClick={() => toggleActive(venue._id, venue.isActive, venue.venueName)}
+                                    className={`p-2 rounded-lg transition-colors ${
+                                      venue.isActive
+                                        ? "bg-orange-100 text-orange-600 hover:bg-orange-200"
+                                        : "bg-green-100 text-green-600 hover:bg-green-200"
+                                    }`}
+                                    title={venue.isActive ? "Deactivate" : "Activate"}
+                                  >
+                                    <Power className="w-4 h-4" />
+                                  </button>
 
-                              <div className="relative">
-                                <button
-                                  onClick={() => setActionMenu(actionMenu === venue._id ? null : venue._id)}
-                                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                                >
-                                  <MoreVertical className="w-4 h-4" />
-                                </button>
-                                
-                                {actionMenu === venue._id && (
-                                  <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border py-1 z-10">
-                                    <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                                      <Edit className="w-4 h-4 mr-2" />
-                                      Edit Venue
-                                    </button>
-                                    <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                                      <Star className="w-4 h-4 mr-2" />
-                                      Feature Venue
-                                    </button>
+                                  <div className="relative">
                                     <button
-                                      onClick={() => deleteVenue(venue._id)}
-                                      className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                                      onClick={() => setActionMenu(actionMenu === venue._id ? null : venue._id)}
+                                      className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
                                     >
-                                      <Trash2 className="w-4 h-4 mr-2" />
-                                      Delete Venue
+                                      <MoreVertical className="w-4 h-4" />
                                     </button>
+                                    
+                                    {actionMenu === venue._id && (
+                                      <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border py-1 z-10">
+                                        <button 
+                                          onClick={() => handleEdit(venue)}
+                                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                        >
+                                          <Edit className="w-4 h-4 mr-2" />
+                                          Edit Venue
+                                        </button>
+                                        <button
+                                          onClick={() => deleteVenue(venue._id, venue.venueName)}
+                                          className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                                        >
+                                          <Trash2 className="w-4 h-4 mr-2" />
+                                          Delete Venue
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
+                                </>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -431,9 +957,9 @@ const VenueManagement = () => {
                     <button
                       onClick={() => setPage(Math.max(1, page - 1))}
                       disabled={page === 1}
-                      className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      className="text-gray-500 px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center space-x-2"
                     >
-                      Previous
+                      <span>Previous</span>
                     </button>
                     {Array.from({ length: Math.min(5, pages) }, (_, i) => {
                       const pageNumber = i + 1;
@@ -454,9 +980,9 @@ const VenueManagement = () => {
                     <button
                       onClick={() => setPage(Math.min(pages, page + 1))}
                       disabled={page === pages}
-                      className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      className="text-gray-500 px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center space-x-2"
                     >
-                      Next
+                      <span>Next</span>
                     </button>
                   </div>
                 </div>
@@ -464,6 +990,14 @@ const VenueManagement = () => {
             )}
           </div>
         </div>
+
+        {/* Venue Detail Modal */}
+        {viewingVenue && (
+          <VenueDetailModal 
+            venue={viewingVenue} 
+            onClose={() => setViewingVenue(null)} 
+          />
+        )}
       </div>
     </AdminLayout>
   );
