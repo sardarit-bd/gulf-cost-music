@@ -33,8 +33,8 @@ export default function CityWiseVenues() {
   }
 
   return (
-    <section className="brandBg min-h-screen py-14 mt-16 px-6">
-      <div className="max-w-6xl mx-auto">
+    <section className="py-14 mt-20 px-6">
+      <div className="container mx-auto">
         <h1 className="text-4xl md:text-5xl font-bold brandColor capitalize mb-10">
           {city} Venues
         </h1>
@@ -51,7 +51,7 @@ export default function CityWiseVenues() {
                 />
               </div>
               <div className="p-5">
-                <h2 className="text-lg font-bold brandColor mb-1">
+                <h2 className="text-lg font-bold text-[var(--primary)] mb-1">
                   {venue.venueName}
                 </h2>
                 <p className="text-sm text-gray-600 mb-2">{venue.address}</p>

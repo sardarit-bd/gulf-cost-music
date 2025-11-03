@@ -69,8 +69,8 @@ export default function ArtistProfile() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
 
-        <div className="absolute bottom-10 left-10 text-white max-w-xl">
-          <h1 className="text-5xl md:text-6xl font-bold mb-3 brandColor">
+        <div className="container relative mx-auto h-full flex flex-col md:flex-row md:items-end md:justify-start justify-end bottom-10 left-10 text-white">
+          <h1 className="md:text-5xl text-3xl font-bold mb-3 brandColor">
             {artist.name}
           </h1>
           <p className="text-lg text-gray-200 capitalize">{artist.genre} Artist</p>
@@ -78,7 +78,7 @@ export default function ArtistProfile() {
       </div>
 
       {/* ====== Info Section ====== */}
-      <div className="max-w-6xl mx-auto px-6 py-12 md:py-16">
+      <div className="container mx-auto px-6 py-12 md:py-16">
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl p-8 md:p-12 border border-white/10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>

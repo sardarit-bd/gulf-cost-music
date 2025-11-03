@@ -41,8 +41,8 @@ export default function GenrePage() {
     );
 
   return (
-    <section className="brandBg min-h-screen py-14 px-6 mt-16">
-      <div className="max-w-6xl mx-auto">
+    <section className="py-14 px-6 mt-20">
+      <div className="container mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold brandColor capitalize">

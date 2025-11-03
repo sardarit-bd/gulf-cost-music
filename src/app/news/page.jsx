@@ -161,7 +161,7 @@ export default function NewsPage() {
                 </div>
 
                 <div className="p-5 text-left">
-                  <h2 className="text-lg font-bold brandColor mb-1 line-clamp-2">
+                  <h2 className="text-lg font-bold text-[var(--primary)] mb-1 line-clamp-2">
                     {item.title}
                   </h2>
                   <p className="text-sm text-gray-600 mb-2 capitalize">
