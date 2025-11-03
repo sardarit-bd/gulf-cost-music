@@ -3,11 +3,11 @@ import HeroSection from "@/components/modules/home/HeroSection";
 import React from "react";
 import CalendarBoard from "./calender/page";
 import MerchSection from "./merch/page";
-import CastsSection from "./casts/page";
 import ArtistGallery from "./gallery/page";
 import WavesSection from "./waves/page";
 import ContactSection from "./contact/page";
 import Footer from "./footer/page";
+import CastsSection from "./casts/page";
 
 const HomePage = () => {
   return (
