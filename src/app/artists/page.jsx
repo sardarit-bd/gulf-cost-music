@@ -51,9 +51,9 @@ export default function Page() {
   };
 
   return (
-    <section className="brandBg min-h-screen py-14 mt-16 px-6">
+    <section className="py-14 mt-20 px-6">
       <Toaster/>
-      <div className="max-w-6xl mx-auto">
+      <div className="container mx-auto">
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold brandColor">Artists Gallery</h1>
 
@@ -133,7 +133,7 @@ export default function Page() {
               </div>
 
               <div className="p-5 text-left">
-                <h2 className="text-lg font-bold brandColor mb-1">{artist.name}</h2>
+                <h2 className="text-lg font-bold text-[var(--primary)] mb-1">{artist.name}</h2>
                 <p className="text-sm text-gray-600 mb-2 capitalize">{artist.genre}</p>
 
                 <div className="flex items-center justify-between">
