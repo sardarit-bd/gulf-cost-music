@@ -85,12 +85,12 @@ export default function CastPage() {
 
         if (editingItem) {
           await axios.put(
-            `${API_BASE}/api/cast/${editingItem._id}`,
+            `${API_BASE}/api/casts/${editingItem._id}`,
             formData,
             { headers }
           );
         } else {
-          await axios.post(`${API_BASE}/api/cast`, formData, { headers });
+          await axios.post(`${API_BASE}/api/casts`, formData, { headers });
         }
 
         resolve();
@@ -130,7 +130,7 @@ export default function CastPage() {
     const deletePromise = new Promise(async (resolve, reject) => {
       try {
         const headers = { Authorization: `Bearer ${token}` };
-        await axios.delete(`${API_BASE}/api/cast/${id}`, { headers });
+        await axios.delete(`${API_BASE}/api/casts/${id}`, { headers });
         resolve();
       } catch (error) {
         reject(error);
