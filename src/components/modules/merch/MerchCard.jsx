@@ -55,7 +55,7 @@ export default function MerchCard() {
                 key={item._id}
                 className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden"
               >
-                <div className="w-full h-64 flex items-center justify-center bg-gray-50">
+                <div className="w-full h-64 flex items-center justify-center bg-white">
                   <img
                     src={item.image}
                     alt={item.name}
@@ -63,7 +63,7 @@ export default function MerchCard() {
                   />
                 </div>
 
-                <div className="bg-[#F9FAFB] p-4 border-t">
+                <div className="bg-[#F9FAFB] p-4">
                   <h3 className="text-base font-medium text-gray-900">
                     {item.name}
                   </h3>
