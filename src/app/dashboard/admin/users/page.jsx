@@ -314,7 +314,7 @@ const UserManagement = () => {
           </div>
 
           {/* Filters Card */}
-          <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 mb-6">
             <div className="flex flex-col lg:flex-row gap-4 items-end">
               <div className="flex-1 w-full">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -661,7 +661,7 @@ const StatCard = ({ icon: Icon, label, value, color }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <div className={`p-3 rounded-xl bg-gradient-to-r ${colorClasses[color]}`}>
           <Icon className="w-6 h-6 text-white" />
