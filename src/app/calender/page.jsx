@@ -373,7 +373,7 @@ const DayView = ({ date, hours, events, onSelect }) => {
 };
 
 const EventModal = ({ event, city, monthNames, currentDate, onClose }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+  <div className="fixed inset-0 bg-black/40 bg-opacity-20 flex items-center justify-center z-50">
     <div className="bg-white rounded-2xl shadow-2xl w-[95%] max-w-2xl overflow-hidden animate-fadeIn relative">
       <button
         onClick={onClose}
@@ -394,7 +394,7 @@ const EventModal = ({ event, city, monthNames, currentDate, onClose }) => (
         />
       </div>
       <div className="p-6 space-y-4">
-        <h2 className="text-2xl font-bold brandColor">{event.title}</h2>
+        <h2 className="text-2xl font-bold text-[var(--primary)]">{event.title}</h2>
         <p className="text-gray-500 text-sm">
           {monthNames[currentDate.getMonth()]} {event.date},{" "}
           {currentDate.getFullYear()} • {city}
@@ -418,7 +418,7 @@ const EventModal = ({ event, city, monthNames, currentDate, onClose }) => (
         <div className="pt-4">
           <button
             onClick={onClose}
-            className="w-full py-2 rounded-md brandBg text-white font-semibold hover:opacity-90 transition"
+            className="w-full py-2 rounded-md brandBg text-gray-700 font-semibold hover:opacity-90 transition"
           >
             Close
           </button>

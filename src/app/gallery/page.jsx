@@ -39,21 +39,6 @@ export default function ArtistGallery() {
   if (loading)
     return <p className="text-gray-600 animate-pulse">Loading podcasts...</p>;
 
-  // const artists = [
-  //   { id: 1, name: "Vibe Artist 1", image: "/images/fevartistImage.webp" },
-  //   { id: 2, name: "Vibe Artist 2", image: "/images/fevartistImage.webp" },
-  //   { id: 3, name: "Vibe Artist 3", image: "/images/fevartistImage.webp" },
-  //   { id: 4, name: "Vibe Artist 4", image: "/images/fevartistImage.webp" },
-  //   { id: 5, name: "Vibe Artist 5", image: "/images/fevartistImage.webp" },
-  //   { id: 6, name: "Vibe Artist 5", image: "/images/fevartistImage.webp" },
-  //   { id: 7, name: "Vibe Artist 5", image: "/images/fevartistImage.webp" },
-  //   { id: 8, name: "Vibe Artist 5", image: "/images/fevartistImage.webp" },
-  //   { id: 9, name: "Vibe Artist 5", image: "/images/fevartistImage.webp" },
-  //   { id: 10, name: "Vibe Artist 5", image: "/images/fevartistImage.webp" },
-  //   { id: 11, name: "Vibe Artist 5", image: "/images/fevartistImage.webp" },
-  //   { id: 12, name: "Vibe Artist 5", image: "/images/fevartistImage.webp" },
-  // ];
-
   return (
     <section className="bg-gray-50 px-6 md:px-16 text-center mt-10">
       <div className="container mx-auto">
@@ -90,7 +75,6 @@ export default function ArtistGallery() {
           >
             {Artists.map((artist) => (
               <SwiperSlide key={artist?._id}>
-                {console.log(artist)}
                 <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all h-[320px]">
                   <div className="relative">
                     <img
