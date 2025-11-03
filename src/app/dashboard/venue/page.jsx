@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
-import { Save, Trash2, Building2, Clock, ImageIcon } from "lucide-react";
+import { Save, Trash2, Building2, Clock, ImageIcon, Loader2 } from "lucide-react";
 
 export default function VenueDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -19,6 +19,7 @@ export default function VenueDashboard() {
   const [previewImages, setPreviewImages] = useState([]);
   const [newShow, setNewShow] = useState({ artist: "", date: "", time: "" });
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const cityOptions = ["New Orleans", "Biloxi", "Mobile", "Pensacola"];
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
@@ -84,42 +85,61 @@ export default function VenueDashboard() {
   };
 
   // === Save Venue ===
-  const handleSave = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return toast.error("You are not logged in.");
 
-      const formData = new FormData();
-      formData.append("venueName", venue.name);
-      formData.append("city", venue.city);
-      formData.append("address", venue.address);
-      formData.append("seatingCapacity", venue.seating);
-      formData.append("biography", venue.biography);
-      formData.append("openHours", venue.openHours);
-      formData.append("openDays", "Mon–Sat");
+const handleSave = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return toast.error("You are not logged in.");
 
-      if (venue.photos?.length > 0) {
-        venue.photos.forEach((file) => formData.append("photos", file));
-      }
+    const formData = new FormData();
+    formData.append("venueName", venue.name);
+    formData.append("city", venue.city.toLowerCase());
+    formData.append("address", venue.address);
+    formData.append("seatingCapacity", venue.seating);
+    formData.append("biography", venue.biography || "");
+    formData.append("openHours", venue.openHours);
+    formData.append("openDays", "Mon-Sat");
 
-      setLoading(true);
-      const res = await fetch(`${API_BASE}/api/venues/profile`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+    if (venue.photos && venue.photos.length > 0) {
+      venue.photos.forEach((file) => {
+        formData.append("photos", file);
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to save venue.");
-
-      toast.success("Venue profile saved successfully!");
-    } catch (error) {
-      console.error("Save error:", error);
-      toast.error(error.message || "Server error while saving venue.");
-    } finally {
-      setLoading(false);
     }
-  };
+
+    // Debugging
+    console.log('Sending form data with photos:', venue.photos);
+
+    setSaving(true);
+    const saveToast = toast.loading("Saving venue...");
+
+    const res = await fetch(`${API_BASE}/api/venues/profile`, {
+      method: "POST",
+      headers: { 
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await res.json();
+    console.log('Server response:', data);
+
+    toast.dismiss(saveToast);
+    if (!res.ok) throw new Error(data.message || "Failed to save venue.");
+
+    toast.success("Venue profile saved successfully!");
+    
+    // Update local state with new photos
+    if (data.data?.venue?.photos) {
+      setPreviewImages(data.data.venue.photos.map(p => p.url));
+    }
+
+  } catch (error) {
+    console.error("Save error:", error);
+    toast.error(error.message || "Server error while saving venue.");
+  } finally {
+    setSaving(false);
+  }
+};
 
   // === Add Show ===
   const handleAddShow = async (e) => {
@@ -153,7 +173,7 @@ export default function VenueDashboard() {
 
   return (
     <div className="py-16 px-4 flex justify-center">
-      <Toaster />
+      <Toaster position="top-center" reverseOrder={false} />
       <div className="container w-full bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-lg p-8 md:p-12">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-semibold text-[var(--color-primary)] flex items-center gap-2">
@@ -200,6 +220,7 @@ export default function VenueDashboard() {
             removeImage={removeImage}
             previewImages={previewImages}
             handleSave={handleSave}
+            saving={saving}
           />
         )}
         {activeTab === "addshow" && (
@@ -256,6 +277,7 @@ const EditProfileTab = ({
   removeImage,
   previewImages,
   handleSave,
+  saving,
 }) => (
   <div className="animate-fadeIn space-y-10">
     <div className="grid md:grid-cols-2 gap-8">
@@ -320,9 +342,20 @@ const EditProfileTab = ({
     <div className="flex justify-center mt-10">
       <button
         onClick={handleSave}
-        className="flex items-center gap-2 bg-yellow-500 text-white px-10 py-3 rounded-md font-medium hover:bg-yellow-600 transition"
+        disabled={saving}
+        className={`flex items-center gap-2 bg-yellow-500 text-white px-10 py-3 rounded-md font-medium hover:bg-yellow-600 transition ${
+          saving ? "opacity-70 cursor-not-allowed" : ""
+        }`}
       >
-        <Save size={18} /> Save Changes
+        {saving ? (
+          <>
+            <Loader2 size={18} className="animate-spin" /> Saving...
+          </>
+        ) : (
+          <>
+            <Save size={18} /> Save Changes
+          </>
+        )}
       </button>
     </div>
   </div>
@@ -382,7 +415,7 @@ const Input = ({ label, name, value, onChange, type = "text" }) => (
       type={type}
       value={value}
       onChange={onChange}
-      className="bg-gray-500 w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-yellow-400 outline-none"
+      className="bg-gray-600 w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-yellow-400 outline-none"
       required
     />
   </div>
@@ -408,7 +441,7 @@ const Select = ({ label, name, value, options, onChange }) => (
       name={name}
       value={value}
       onChange={onChange}
-      className="w-full px-4 py-2 rounded-md border border-gray-300 bg-gray-500 focus:ring-2 focus:ring-yellow-400 outline-none"
+      className="bg-gray-500 w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-yellow-400 outline-none"
     >
       {options.map((opt) => (
         <option key={opt}>{opt}</option>
