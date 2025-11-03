@@ -41,6 +41,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "yourcdn.com",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.pixabay.com",
+      },
     ],
   },
 };
