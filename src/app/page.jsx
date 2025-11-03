@@ -7,7 +7,7 @@ import ArtistGallery from "./gallery/page";
 import WavesSection from "./waves/page";
 import ContactSection from "./contact/page";
 import Footer from "./footer/page";
-import CastsSection from "./casts/page";
+// import CastsSection from "./casts/page";
 
 const HomePage = () => {
   return (
@@ -18,7 +18,7 @@ const HomePage = () => {
         <FeaturedSection />
         <CalendarBoard />
         <MerchSection />
-        <CastsSection />
+        {/* <CastsSection /> */}
         <ArtistGallery />
         <WavesSection/>
         <ContactSection/>
