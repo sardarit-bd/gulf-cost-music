@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function ArtistProfile() {
-  const { genre, artist:artistID } = useParams();
+  const { genre, artist: artistID } = useParams();
   const router = useRouter();
   const [artist, setArtist] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -67,13 +67,31 @@ export default function ArtistProfile() {
           priority
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/70 to-transparent"></div>
 
         <div className="container relative mx-auto h-full flex flex-col md:flex-row md:items-end md:justify-start justify-end bottom-10 left-10 text-white">
-          <h1 className="md:text-5xl text-3xl font-bold mb-3 brandColor">
-            {artist.name}
-          </h1>
-          <p className="text-lg text-gray-200 capitalize">{artist.genre} Artist</p>
+
+
+          <div className="flex items-end gap-3">
+            <div className="border-3 border-yellow-400 w-[170px] rounded-md  h-[200px]">
+              <Image
+                src={artist.photos?.[0]?.url || "/default.jpg"}
+                alt={artist.name}
+                width={1000}
+                height={1000}
+                className="object-cover h-full w-full"
+              />
+            </div>
+            <div>
+              <h1 className="md:text-5xl text-3xl font-bold mb-3 brandColor">
+                {artist.name}
+              </h1>
+              <p className="text-lg text-gray-200 capitalize">{artist.genre} Artist</p>
+            </div>
+          </div>
+
+
+
         </div>
       </div>
 
