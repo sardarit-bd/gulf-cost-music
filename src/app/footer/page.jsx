@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube, FaWhatsapp } from "react-icons/fa";
 import { MdEmail, MdPhone, MdLocationOn } from "react-icons/md";
 
@@ -41,23 +42,21 @@ export default function Footer() {
           <h3 className="text-lg font-semibold mb-4">Connect With Us</h3>
           <ul className="space-y-3 text-gray-300">
             <li className="flex items-center gap-2">
-              <MdPhone className="text-yellow-400" /> +880 1713 738679
+              <MdPhone className="text-yellow-400 text-xl" /> 2519994651
             </li>
             <li className="flex items-center gap-2">
-              <MdEmail className="text-yellow-400" /> thegulfcoastmusic@gmail.com
-            </li>
-            <li className="flex items-center gap-2">
-              <MdLocationOn className="text-yellow-400" /> Chandash, Mohadevpur, Naogaon
+              <MdEmail className="text-yellow-400 text-xl" /> thegulfcoastmusic@gmail.com
             </li>
           </ul>
 
           {/* Social Icons */}
           <div className="flex items-center gap-4 mt-4 text-xl">
-            <FaFacebookF className="hover:text-yellow-400 cursor-pointer transition" />
-            <FaTwitter className="hover:text-yellow-400 cursor-pointer transition" />
-            <FaInstagram className="hover:text-yellow-400 cursor-pointer transition" />
-            <FaYoutube className="hover:text-yellow-400 cursor-pointer transition" />
-            <FaWhatsapp className="hover:text-yellow-400 cursor-pointer transition" />
+            <Link href={'https://www.instagram.com/gulfcoastmusic/'}>
+              <FaInstagram className="text-2xl hover:text-yellow-400 cursor-pointer transition" />
+            </Link>
+           <Link href={'https://www.youtube.com/@TheGulfCoastMusic'}>
+              <FaYoutube className="text-2xl hover:text-yellow-400 cursor-pointer transition" />
+           </Link>
           </div>
         </div>
       </div>

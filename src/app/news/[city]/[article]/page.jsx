@@ -1,7 +1,7 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function NewsDetailsPage() {
@@ -46,15 +46,26 @@ export default function NewsDetailsPage() {
           fill
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/70 to-transparent"></div>
         <div className="container relative mx-auto h-full flex flex-col md:flex-row md:items-end md:justify-start justify-end bottom-10 left-10">
-          <div>
-            <h1 className="md:text-5xl text-3xl font-bold text-[var(--primary)]">
-              {news.title}
-            </h1>
-            <p className="text-gray-300 mt-2 capitalize">
-              {news.location} • {new Date(news.createdAt).toLocaleDateString()}
-            </p>
+          <div className="flex gap-3 items-end">
+            <div className="border-3 border-yellow-400 w-[170px] rounded-md  h-[200px]">
+              <Image
+                src={news.photos?.[0]?.url || "/placeholder.jpg"}
+                alt={news.title}
+                width={1000}
+                height={1000}
+                className="object-cover h-full w-full"
+              />
+            </div>
+            <div>
+              <h1 className="md:text-5xl text-3xl font-bold text-[var(--primary)]">
+                {news.title}
+              </h1>
+              <p className="text-gray-300 mt-2 capitalize">
+                {news.location} • {new Date(news.createdAt).toLocaleDateString()}
+              </p>
+            </div>
           </div>
         </div>
       </div>
