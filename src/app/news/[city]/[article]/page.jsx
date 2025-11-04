@@ -14,7 +14,13 @@ export default function NewsDetailsPage() {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/${article}`);
         const data = await res.json();
-        if (res.ok && data.data?.news) setNews(data.data.news);
+        console.log("this is new data:", data)
+
+        if (res.ok && data.data?.news) {
+          setNews(data.data.news);
+        } else {
+          setNews(null);
+        }
       } catch (err) {
         console.error("Error fetching news:", err);
       }
