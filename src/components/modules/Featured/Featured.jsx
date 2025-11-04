@@ -2,9 +2,9 @@
 import Image from "next/image";
 import {
   FaCalendarAlt,
-  FaUserFriends,
   FaMapMarkerAlt,
   FaTicketAlt,
+  FaUserFriends,
 } from "react-icons/fa";
 
 export default function FeaturedSection() {
@@ -53,7 +53,7 @@ export default function FeaturedSection() {
 
           <ul className="space-y-3">
             <li className="flex items-start">
-              <FaCalendarAlt className="w-5 h-5 text-green-600 mt-1 mr-2" />
+              <FaCalendarAlt className="w-5 h-5 text-yellow-400 mt-1 mr-2" />
               <span className="text-gray-500">
                 <b className="text-black">Live Event Calendar</b> → Browse shows
                 by date, genre, and location.
@@ -61,7 +61,7 @@ export default function FeaturedSection() {
             </li>
 
             <li className="flex items-start">
-              <FaUserFriends className="w-5 h-5 text-green-600 mt-1 mr-2" />
+              <FaUserFriends className="w-5 h-5 text-yellow-400 mt-1 mr-2" />
               <span className="text-gray-500">
                 <b className="text-black">Featured Artists</b> → Discover
                 talented musicians shaping the Gulf Coast sound.
@@ -69,7 +69,7 @@ export default function FeaturedSection() {
             </li>
 
             <li className="flex items-start">
-              <FaMapMarkerAlt className="w-5 h-5 text-green-600 mt-1 mr-2" />
+              <FaMapMarkerAlt className="w-5 h-5 text-yellow-400 mt-1 mr-2" />
               <span className="text-gray-500">
                 <b className="text-black">Top Venues</b> → Explore iconic spots
                 where music comes alive.
@@ -77,7 +77,7 @@ export default function FeaturedSection() {
             </li>
 
             <li className="flex items-start">
-              <FaTicketAlt className="w-5 h-5 text-green-600 mt-1 mr-2" />
+              <FaTicketAlt className="w-5 h-5 text-yellow-400 mt-1 mr-2" />
               <span className="text-gray-500">
                 <b className="text-black">Easy Ticket Access</b> → One-click
                 links to buy tickets online.

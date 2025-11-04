@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function NewsPage() {
@@ -55,6 +55,10 @@ export default function NewsPage() {
     pensacola: "from-yellow-400/80 to-amber-600/80",
   };
 
+
+  console.log(newsData);
+
+
   return (
     <section className="brandBg min-h-screen py-14 mt-16 px-6">
       <Toaster />
@@ -74,9 +78,8 @@ export default function NewsPage() {
               <span className="font-medium">{selectedCity}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`w-4 h-4 ml-1 transform transition-transform ${
-                  dropdownOpen ? "rotate-180" : ""
-                }`}
+                className={`w-4 h-4 ml-1 transform transition-transform ${dropdownOpen ? "rotate-180" : ""
+                  }`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -99,11 +102,10 @@ export default function NewsPage() {
                       setSelectedCity(c);
                       setDropdownOpen(false);
                     }}
-                    className={`block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 transition ${
-                      selectedCity === c
+                    className={`block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 transition ${selectedCity === c
                         ? "bg-yellow-50 font-semibold text-gray-800"
                         : "text-gray-600"
-                    }`}
+                      }`}
                   >
                     {c}
                   </button>
@@ -154,14 +156,13 @@ export default function NewsPage() {
                     className="object-cover"
                   />
                   <div
-                    className={`absolute inset-0 bg-gradient-to-t ${
-                      cityColors[item.location] || "from-gray-700 to-gray-900"
-                    } opacity-70`}
+                    className={`absolute inset-0 bg-gradient-to-t ${cityColors[item.location] || "from-gray-700 to-gray-900"
+                      } opacity-70`}
                   ></div>
                 </div>
 
                 <div className="p-5 text-left">
-                  <h2 className="text-lg font-bold brandColor mb-1 line-clamp-2">
+                  <h2 className="text-lg font-bold text-[var(--primary)] mb-1 line-clamp-2">
                     {item.title}
                   </h2>
                   <p className="text-sm text-gray-600 mb-2 capitalize">

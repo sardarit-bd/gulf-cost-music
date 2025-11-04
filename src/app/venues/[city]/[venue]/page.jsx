@@ -1,7 +1,7 @@
 "use client";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 
 export default function VenueProfile() {
   const { city, venue: venueId } = useParams();
@@ -41,14 +41,28 @@ export default function VenueProfile() {
           fill
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-        <div className="absolute bottom-10 left-10">
-          <h1 className="text-5xl font-bold brandColor">{venue.venueName}</h1>
-          <p className="text-gray-300 mt-2">{venue.city}</p>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/70 to-transparent"></div>
+        <div className="container relative mx-auto h-full flex flex-col md:flex-row md:items-end md:justify-start justify-end bottom-10 left-10">
+          <div className="flex gap-3 items-end">
+            <div className="border-3 border-yellow-400 w-[170px] rounded-md  h-[200px]">
+              <Image
+                src={venue.photos?.[0]?.url || "/default.jpg"}
+                alt={venue.venueName}
+                width={1000}
+                height={1000}
+                className="object-cover h-full w-full"
+              />
+            </div>
+            <div>
+              <h1 className="md:text-5xl text-3xl font-bold text-[var(--primary)]">{venue.venueName}</h1>
+              <p className="text-gray-300 mt-2">{venue.city}</p>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-12 md:py-16">
+      <div className="container mx-auto px-6 py-12 md:py-16">
         <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl p-8 md:p-12 border border-white/10">
           <p className="text-lg text-gray-300 leading-relaxed">
             {venue.biography}

@@ -1,33 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 import {
   BarChart3,
-  Users,
-  Music,
-  Building2,
-  Newspaper,
-  Mail,
-  Settings,
-  Menu,
-  X,
-  LogOut,
-  User,
-  Shield,
-  Calendar,
-  FileText,
-  Search,
   Bell,
+  Building2,
+  Calendar,
   ChevronDown,
   ChevronRight,
+  FileText,
   Home,
-  ShoppingBag,
+  LogOut,
+  Mail,
+  Menu,
   Mic2,
-  Waves
+  Music,
+  Newspaper,
+  Search,
+  Settings,
+  ShoppingBag,
+  User,
+  Users,
+  Waves,
+  X
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import logo from "../../../../public/images/logo.png";
 
 export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -176,12 +177,14 @@ export default function AdminLayout({ children }) {
           <div className="flex items-center justify-between h-16 px-4 bg-white border-b">
             <div className="flex items-center">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Music className="h-5 w-5 text-white" />
+                <div className="w-20 h-12 bg-gradient-to-r from-gray-700 to-gray-700 rounded-lg flex items-center justify-center">
+                  <Link href="/">
+                    <Image src={logo} alt="Logo" width={50} height={40} />
+                  </Link>
                 </div>
                 <div>
                   <span className="text-lg font-bold text-gray-900">Gulf Coast</span>
-                  <span className="block text-xs text-gray-500 -mt-1">Music Admin</span>
+                  <span className="block text-xs text-gray-500 -mt-1">Gulf Coast Admin</span>
                 </div>
               </div>
             </div>
