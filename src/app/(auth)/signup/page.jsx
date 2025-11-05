@@ -141,7 +141,7 @@ export default function SignUp() {
 
   return (
     <div className="min-h-screen flex items-center mt-10 justify-center bg-[#F9FAFB] px-4">
-        <Toaster />
+      <Toaster />
       <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm">
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">
           Sign Up
@@ -151,7 +151,7 @@ export default function SignUp() {
           <input
             type="text"
             name="username"
-            placeholder="Username"
+            placeholder="Name"
             value={formData.username}
             onChange={handleChange}
             required

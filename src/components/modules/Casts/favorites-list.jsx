@@ -1,8 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import FavoriteItem from "./favorite-item";
 
-export default function FavoritesList({setCast}) {
+export default function FavoritesList({ setCast }) {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
@@ -38,7 +38,7 @@ export default function FavoritesList({setCast}) {
   if (!favorites.length)
     return <p className="text-gray-500">No podcasts available.</p>;
 
-  
+
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-black">Your Favorites</h2>
@@ -46,7 +46,7 @@ export default function FavoritesList({setCast}) {
       {/* Scrollable list */}
       <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
         {favorites.map((favorite) => (
-          <div onClick={() => setCast(favorite)}>
+          <div key={favorite._id} onClick={() => setCast(favorite)}>
             <FavoriteItem key={favorite._id} favorite={favorite} />
           </div>
         ))}
