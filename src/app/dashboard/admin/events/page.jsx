@@ -1,27 +1,27 @@
 "use client";
-import { useState, useEffect } from "react";
+import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import axios from "axios";
 import {
-  Plus,
-  Trash2,
-  Edit,
-  RefreshCw,
-  Music,
-  Search,
-  Loader2,
-  Eye,
-  MoreVertical,
   Calendar,
-  Play,
+  Edit,
   ExternalLink,
+  Eye,
+  Filter,
+  Loader2,
+  Mic2,
+  MoreVertical,
+  Music,
+  Play,
+  Plus,
+  RefreshCw,
+  Save,
+  Search,
+  Trash2,
   TrendingUp,
   Users,
-  Filter,
-  Mic2,
-  X,
-  Save
+  X
 } from "lucide-react";
-import axios from "axios";
-import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
 // Utility function for clean error messages
@@ -40,15 +40,15 @@ const handleApiError = (error, defaultMessage = "Something went wrong") => {
 };
 
 // Confirmation Modal Component
-const ConfirmationModal = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  title, 
-  message, 
-  confirmText, 
+const ConfirmationModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText,
   cancelText = "Cancel",
-  type = "warning" 
+  type = "warning"
 }) => {
   if (!isOpen) return null;
 
@@ -81,9 +81,9 @@ const ConfirmationModal = ({
           {getIcon()}
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         </div>
-        
+
         <p className="text-gray-600 mb-6">{message}</p>
-        
+
         <div className="flex justify-end space-x-3">
           <button
             onClick={onClose}
@@ -117,7 +117,7 @@ export default function WaveManagementPage() {
     youtubeUrl: "",
   });
   const [saveLoading, setSaveLoading] = useState(false);
-  
+
   // Confirmation modal states
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
@@ -171,13 +171,13 @@ export default function WaveManagementPage() {
     }
   };
 
-  // Create or update wave - FIXED VERSION
+  // Create or update wave
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaveLoading(true);
-    
+
     try {
-      const headers = { 
+      const headers = {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
       };
@@ -195,8 +195,8 @@ export default function WaveManagementPage() {
 
       if (response.data.success) {
         toast.success(
-          editingItem 
-            ? "Open mic updated successfully!" 
+          editingItem
+            ? "Open mic updated successfully!"
             : "Open mic added successfully!"
         );
         resetForm();
@@ -212,7 +212,7 @@ export default function WaveManagementPage() {
     }
   };
 
-  // Edit wave - FIXED VERSION
+  // Edit wave
   const handleEdit = (item) => {
     setEditingItem(item);
     setFormData({
@@ -293,8 +293,8 @@ export default function WaveManagementPage() {
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
-        <Toaster/>
-        
+        <Toaster />
+
         {/* Confirmation Modal */}
         <ConfirmationModal
           isOpen={confirmationModal.isOpen}
@@ -341,31 +341,31 @@ export default function WaveManagementPage() {
 
           {/* Stats Cards - Responsive Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-            <StatCard 
-              icon={Mic2} 
-              label="Total Sessions" 
-              value={waves.length} 
+            <StatCard
+              icon={Mic2}
+              label="Total Sessions"
+              value={waves.length}
               change={18}
               color="indigo"
             />
-            <StatCard 
-              icon={Play} 
-              label="Videos" 
-              value={waves.length} 
+            <StatCard
+              icon={Play}
+              label="Videos"
+              value={waves.length}
               change={12}
               color="blue"
             />
-            <StatCard 
-              icon={Users} 
-              label="This Month" 
-              value={Math.floor(waves.length * 0.25)} 
+            <StatCard
+              icon={Users}
+              label="This Month"
+              value={Math.floor(waves.length * 0.25)}
               change={25}
               color="green"
             />
-            <StatCard 
-              icon={TrendingUp} 
-              label="Growth" 
-              value={`${Math.floor(waves.length * 2)}%`} 
+            <StatCard
+              icon={TrendingUp}
+              label="Growth"
+              value={`${Math.floor(waves.length * 2)}%`}
               change={20}
               color="purple"
             />
@@ -645,10 +645,10 @@ export default function WaveManagementPage() {
                                 >
                                   <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
                                 </button>
-                                
+
                                 {actionMenu === wave._id && (
                                   <div className="absolute right-0 mt-1 w-36 sm:w-48 bg-white rounded-lg shadow-lg border py-1 z-10">
-                                    <button 
+                                    <button
                                       onClick={() => {
                                         setActionMenu(null);
                                         handleEdit(wave);
