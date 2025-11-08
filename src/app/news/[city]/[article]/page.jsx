@@ -14,7 +14,7 @@ export default function NewsDetailsPage() {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/${article}`);
         const data = await res.json();
-        console.log("this is new data:", data)
+        console.log("this is news data:", data)
 
         if (res.ok && data.data?.news) {
           setNews(data.data.news);
@@ -87,7 +87,7 @@ export default function NewsDetailsPage() {
           {/* Additional Info */}
           <div className="flex flex-col sm:flex-row gap-6 text-sm text-gray-300 mt-8">
             {news.credit && <div>🪶 Credit: {news.credit}</div>}
-            {news.journalist && <div>✍️ Author: {news.journalist.fullName}</div>}
+            {news.journalist && <div>✍️ Author: <span className="text-[var(--primary)]">{news.journalist.username}</span></div>}
           </div>
 
           {/* Gallery */}

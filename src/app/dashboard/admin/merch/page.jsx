@@ -1,603 +1,575 @@
 "use client";
-import { useState, useEffect } from "react";
-import {
-    Plus,
-    Trash2,
-    Edit,
-    Loader2,
-    ShoppingBag,
-    Search,
-    Filter,
-    Download,
-    RefreshCw,
-    DollarSign,
-    Image,
-    Tag,
-    MoreVertical,
-    Eye,
-    TrendingUp,
-    Package,
-    Store
-} from "lucide-react";
-import axios from "axios";
-import AdminLayout from "@/components/modules/dashboard/AdminLayout";
-import toast, { Toaster } from 'react-hot-toast';
-import { handleApiError } from "@/utils/errorHandler";
-// import { handleApiError } from "@/utils/errorHandler";
 
-export default function AdminMerchPage() {
-    const [token, setToken] = useState(null);
-    const [merchItems, setMerchItems] = useState([]);
+import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import axios from "axios";
+import {
+    AlertCircle,
+    CheckCircle2,
+    ExternalLink,
+    Eye,
+    Loader2,
+    Package,
+    Plus,
+    RefreshCw,
+    ShoppingBag,
+    Trash2,
+    XCircle
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
+
+export default function AdminPrintifyMerch() {
+    const [printifyProducts, setPrintifyProducts] = useState([]);
+    const [publishedProducts, setPublishedProducts] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [showForm, setShowForm] = useState(false);
-    const [editingItem, setEditingItem] = useState(null);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [actionMenu, setActionMenu] = useState(null);
-    const [formData, setFormData] = useState({
-        name: "",
-        price: "",
-        image: "",
-        printifyId: "",
-        description: "",
-        category: "",
-        stock: ""
-    });
+    const [publishedLoading, setPublishedLoading] = useState(false);
+    const [syncingProducts, setSyncingProducts] = useState(new Set());
+    const [activeTab, setActiveTab] = useState('all');
+    const [token, setToken] = useState("");
 
     const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
-
     useEffect(() => {
         if (typeof window !== "undefined") {
-            const savedToken = localStorage.getItem("token");
-            setToken(savedToken);
+            setToken(localStorage.getItem("token"));
         }
     }, []);
 
-    // ===== Fetch All Merch =====
-    const fetchMerch = async () => {
+    // Fetch published products first, then Printify products
+    const fetchPublishedProducts = async () => {
+        if (!token) return;
+
+        setPublishedLoading(true);
         try {
-            setLoading(true);
-            const { data } = await axios.get(`${API_BASE}/api/merch`);
-
-            if (data.success && Array.isArray(data.data)) {
-                setMerchItems(data.data);
-            } else {
-                setMerchItems([]);
+            const { data } = await axios.get(`${API_BASE}/api/merch`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (data.success) {
+                setPublishedProducts(data.data || []);
+                // After getting published products, fetch Printify products
+                await fetchPrintifyProducts(data.data || []);
             }
-
-        } catch (error) {
-            const msg = handleApiError(error, "Failed to load merchandise");
-            toast.error(msg);
-            setMerchItems([]);
-        } finally {
-            setLoading(false);
+        } catch (err) {
+            console.error("Failed to fetch published products:", err);
+            setPublishedLoading(false);
         }
     };
-
-
-
-    // ===== Handle Input =====
-    const handleChange = (e) =>
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-
-    // ===== Create or Update Merch =====
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        const savePromise = new Promise(async (resolve, reject) => {
-            try {
-                const headers = { Authorization: `Bearer ${token}` };
-
-                if (editingItem) {
-                    await axios.put(`${API_BASE}/api/merch/${editingItem._id}`, formData, { headers });
-                } else {
-                    await axios.post(`${API_BASE}/api/merch`, formData, { headers });
-                }
-
-                resolve();
-            } catch (error) {
-                reject(error);
-            }
-        });
-
-        toast.promise(savePromise, {
-            loading: editingItem ? "Updating product..." : "Creating product...",
-            success: () => {
-                resetForm();
-                fetchMerch();
-                return editingItem
-                    ? "Product updated successfully!"
-                    : "Product created successfully!";
-            },
-            error: (error) => handleApiError(error, "Failed to save product"),
-        });
-    };
-
-
-    // ===== Edit Merch =====
-    const handleEdit = (item) => {
-        setEditingItem(item);
-        setFormData({
-            name: item.name,
-            price: item.price,
-            image: item.image,
-            printifyId: item.printifyId || "",
-            description: item.description || "",
-            category: item.category || "",
-            stock: item.stock || ""
-        });
-        setShowForm(true);
-        toast.success('Product loaded for editing');
-    };
-
-    // ===== Delete Merch =====
-    const handleDelete = async (id) => {
-        const deletePromise = new Promise(async (resolve, reject) => {
-            try {
-                const headers = { Authorization: `Bearer ${token}` };
-                await axios.delete(`${API_BASE}/api/merch/${id}`, { headers });
-                resolve();
-            } catch (error) {
-                reject(error);
-            }
-        });
-
-        toast.promise(deletePromise, {
-            loading: "Deleting product...",
-            success: () => {
-                fetchMerch();
-                setActionMenu(null);
-                return "Product deleted successfully!";
-            },
-            error: (error) => handleApiError(error, "Failed to delete product"),
-        });
-    };
-
-    // ===== Reset Form =====
-    const resetForm = () => {
-        setFormData({
-            name: "",
-            price: "",
-            image: "",
-            printifyId: "",
-            description: "",
-            category: "",
-            stock: ""
-        });
-        setEditingItem(null);
-        setShowForm(false);
-        // toast.success('Form reset successfully');
-    };
-
-    // ===== Refresh Data =====
-    const handleRefresh = async () => {
-        const refreshPromise = fetchMerch();
-
-        toast.promise(refreshPromise, {
-            loading: "Refreshing data...",
-            success: "Data refreshed successfully!",
-            error: (error) => handleApiError(error, "Failed to refresh data"),
-        });
-    };
-
-
-    // ===== Filtered Items =====
-    const filteredItems = (merchItems || []).filter(
-        (item) =>
-            item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.category?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
 
 
     useEffect(() => {
-        fetchMerch();
-    }, []);
+        if (token) {
+            fetchPublishedProducts();
+        }
+    }, [token]);
 
-    // ===== UI =====
+    // Fetch Printify products with published status
+    const fetchPrintifyProducts = async (publishedProductsList = null) => {
+        if (!token) {
+            toast.error("Authentication required");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const { data } = await axios.get(`${API_BASE}/api/merch/products`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (data.success) {
+                const publishedList = publishedProductsList || publishedProducts;
+
+                // Mark which products are already published
+                const productsWithStatus = data.data.map(product => ({
+                    ...product,
+                    isPublished: publishedList.some(published =>
+                        published.printifyId === product.id ||
+                        published._id === product.id ||
+                        published.name?.toLowerCase() === product.title?.toLowerCase()
+                    )
+                }));
+
+                setPrintifyProducts(productsWithStatus);
+                toast.success(`Loaded ${data.data.length} products`);
+            }
+        } catch (err) {
+            console.error("Printify Fetch Error:", err);
+            if (err.response?.status === 401) {
+                toast.error("Session expired. Please log in again.");
+                localStorage.removeItem("token");
+            } else if (err.response?.status === 500) {
+                toast.error("Server error. Please check Printify connection.");
+            } else {
+                toast.error("Failed to fetch Printify products");
+            }
+        } finally {
+            setLoading(false);
+            setPublishedLoading(false);
+        }
+    };
+
+    // Refresh both product lists
+    const handleRefresh = async () => {
+        await fetchPublishedProducts();
+    };
+
+    // Add all unpublished products
+    const handleAddAll = async () => {
+        const unpublishedProducts = printifyProducts.filter(p => !p.isPublished);
+        if (unpublishedProducts.length === 0) {
+            toast.success("All products are already published!");
+            return;
+        }
+
+        if (!confirm(`Add all ${unpublishedProducts.length} unpublished products to your store?`)) return;
+
+        const loadingToast = toast.loading(`Importing ${unpublishedProducts.length} products...`);
+        try {
+            const { data } = await axios.post(
+                `${API_BASE}/api/merch/add-all`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.dismiss(loadingToast);
+            toast.success(data.message || `All ${unpublishedProducts.length} products added successfully!`);
+
+            // Refresh both lists
+            await fetchPublishedProducts();
+        } catch (err) {
+            toast.dismiss(loadingToast);
+            const errorMsg = err.response?.data?.message || "Failed to add all products";
+            toast.error(errorMsg);
+            console.error(err);
+        }
+    };
+
+    // Add single product
+    const handleAddSingle = async (product) => {
+        if (product.isPublished) {
+            toast.success("Product is already published!");
+            return;
+        }
+
+        setSyncingProducts(prev => new Set(prev).add(product.id));
+
+        try {
+            const { data } = await axios.post(
+                `${API_BASE}/api/merch/add/${product.id}`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.success(data.message || `${product.title} published successfully!`);
+
+            // Update local state
+            setPrintifyProducts(prev => prev.map(p =>
+                p.id === product.id ? { ...p, isPublished: true } : p
+            ));
+
+            // Refresh published products list
+            await fetchPublishedProducts();
+        } catch (err) {
+            const errorMsg = err.response?.data?.message || "Failed to publish this product";
+            toast.error(errorMsg);
+            console.error(err);
+        } finally {
+            setSyncingProducts(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(product.id);
+                return newSet;
+            });
+        }
+    };
+
+    // Delete product from Printify (completely remove)
+    const handleDeleteFromPrintify = async (product) => {
+        if (!confirm(`Permanently delete "${product.title}" from Printify? This action cannot be undone.`)) return;
+
+        const loadingToast = toast.loading('Deleting from Printify...');
+        try {
+            const { data } = await axios.delete(
+                `${API_BASE}/api/merch/${product.id}?deleteFromPrintify=true`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.dismiss(loadingToast);
+            toast.success(data.message || "Product deleted from Printify successfully!");
+
+            // Remove from Printify products list
+            setPrintifyProducts(prev => prev.filter((p) => p.id !== product.id));
+        } catch (err) {
+            toast.dismiss(loadingToast);
+            const errorMsg = err.response?.data?.message || "Failed to delete product from Printify";
+            toast.error(errorMsg);
+            console.error(err);
+        }
+    };
+
+    // Delete published product from store only
+    const handleDeleteFromStore = async (product) => {
+        if (!confirm(`Remove "${product.title}" from your store? The product will remain in Printify.`)) return;
+
+        const loadingToast = toast.loading("Removing from store...");
+        try {
+            const { data } = await axios.delete(
+                `${API_BASE}/api/merch/${product.id}?deleteFromPrintify=false`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.dismiss(loadingToast);
+            toast.success(data.message || "Product removed from store successfully!");
+
+            // Update local state
+            setPrintifyProducts(prev => prev.map(p =>
+                p.id === product.id ? { ...p, isPublished: false } : p
+            ));
+
+            // Refresh published products list
+            await fetchPublishedProducts();
+        } catch (err) {
+            toast.dismiss(loadingToast);
+            const errorMsg = err.response?.data?.message || "Failed to remove product from store";
+            toast.error(errorMsg);
+            console.error(err);
+        }
+    };
+
+    // Delete published product (from database only)
+    const handleDeletePublishedProduct = async (product) => {
+        if (!confirm(`Remove "${product.name}" from your store?`)) return;
+
+        const loadingToast = toast.loading("Removing product...");
+        try {
+            const { data } = await axios.delete(
+                `${API_BASE}/api/merch/${product._id}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.dismiss(loadingToast);
+            toast.success(data.message || "Product removed from store successfully!");
+
+            // Remove from published products
+            setPublishedProducts(prev => prev.filter((p) => p._id !== product._id));
+
+            // Update Printify products status
+            setPrintifyProducts(prev => prev.map(p =>
+                p.id === product.printifyId ? { ...p, isPublished: false } : p
+            ));
+        } catch (err) {
+            toast.dismiss(loadingToast);
+            const errorMsg = err.response?.data?.message || "Failed to remove product";
+            toast.error(errorMsg);
+            console.error(err);
+        }
+    };
+
+    const formatPrice = (price) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD'
+        }).format(price);
+    };
+
+    const truncateText = (text, maxLength = 60) => {
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + '...';
+    };
+
+    // Calculate statistics
+    const totalProducts = printifyProducts.length;
+    const publishedCount = printifyProducts.filter(p => p.isPublished).length;
+    const unpublishedCount = totalProducts - publishedCount;
+
+    // Filter products based on active tab
+    const filteredProducts = printifyProducts.filter(product => {
+        switch (activeTab) {
+            case 'published':
+                return product.isPublished;
+            case 'unpublished':
+                return !product.isPublished;
+            default:
+                return true;
+        }
+    });
+
     return (
         <AdminLayout>
-            <div className="min-h-screen bg-gray-50 p-6">
-                {/* React Hot Toast Container */}
+            <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
                 <Toaster />
 
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
-                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                                <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl">
+                    <div className="bg-white rounded-2xl p-6 mb-8 shadow-sm border border-gray-200">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl">
                                     <ShoppingBag className="w-6 h-6 text-white" />
                                 </div>
-                                Merchandise Management
-                            </h1>
-                            <p className="text-gray-600 mt-2">
-                                Manage your merchandise inventory, prices, and product details
-                            </p>
-                        </div>
-                        <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-                            <button
-                                onClick={handleRefresh}
-                                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors"
-                            >
-                                <RefreshCw className="w-4 h-4" />
-                                <span>Refresh</span>
-                            </button>
-                            <button
-                                onClick={() => {
-                                  setShowForm(true);
-                                }}
-                                className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium transition-colors"
-                            >
-                                <Plus className="w-4 h-4" />
-                                <span>Add Product</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <StatCard
-                            icon={ShoppingBag}
-                            label="Total Products"
-                            value={merchItems?.length || 0}
-                            change={15}
-                            color="purple"
-                        />
-                        <StatCard
-                            icon={DollarSign}
-                            label="Average Price"
-                            value={`$${merchItems?.length > 0 ? (merchItems.reduce((sum, item) => sum + parseFloat(item.price.replace('$', '') || 0), 0) / merchItems.length).toFixed(2) : '0'}`}
-                            change={8}
-                            color="green"
-                        />
-                        <StatCard
-                            icon={Package}
-                            label="Low Stock"
-                            value={merchItems?.filter(item => item.stock < 10).length}
-                            change={-5}
-                            color="orange"
-                        />
-                        <StatCard
-                            icon={TrendingUp}
-                            label="This Month"
-                            value={Math.floor(merchItems?.length * 0.25)}
-                            change={25}
-                            color="blue"
-                        />
-                    </div>
-
-                    {/* Search and Filters */}
-                    <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
-                        <div className="flex flex-col lg:flex-row gap-4 items-end">
-                            <div className="flex-1 w-full">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Search Products
-                                </label>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search by product name or category..."
-                                        className="text-gray-500 w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
+                                <div>
+                                    <h1 className="text-2xl font-bold text-gray-900">Printify Product Manager</h1>
+                                    <p className="text-gray-600 text-sm mt-1">
+                                        Manage your Printify merchandise and sync with your store
+                                    </p>
                                 </div>
                             </div>
-                            <div className="w-full lg:w-48">
-                                <label className="text-gray-500 block text-sm font-medium text-gray-700 mb-2">
-                                    Category
-                                </label>
-                                <select
-                                    className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                                    onChange={(e) => {
-                                        setSearchTerm(e.target.value);
-                                        toast.success(`Filtered by ${e.target.value || 'all categories'}`);
-                                    }}
-                                >
-                                    <option value="">All Categories</option>
-                                    <option value="clothing">Clothing</option>
-                                    <option value="accessories">Accessories</option>
-                                    <option value="music">Music</option>
-                                </select>
-                            </div>
-                            <button
-                                onClick={() => toast.success('Filters applied successfully')}
-                                className="w-full lg:w-auto px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors flex items-center space-x-2"
-                            >
-                                <Filter className="w-4 h-4" />
-                                <span>Apply Filters</span>
-                            </button>
-                        </div>
-                    </div>
 
-                    {/* Form Section */}
-                    {showForm && (
-                        <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-semibold text-gray-900">
-                                    {editingItem ? "Edit Product" : "Add New Product"}
-                                </h2>
+                            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                                 <button
-                                    onClick={resetForm}
-                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                    onClick={handleRefresh}
+                                    disabled={loading || publishedLoading}
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
                                 >
-                                    ×
+                                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                                    {loading ? 'Refreshing...' : 'Refresh'}
+                                </button>
+                                <button
+                                    onClick={handleAddAll}
+                                    disabled={unpublishedCount === 0 || loading}
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-sm"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Publish All ({unpublishedCount})
                                 </button>
                             </div>
+                        </div>
+                    </div>
 
-                            <form onSubmit={handleSubmit}>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Product Name *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={handleChange}
-                                            className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Price *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="price"
-                                            value={formData.price}
-                                            onChange={handleChange}
-                                            placeholder="$20.00"
-                                            className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div className="lg:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Image URL
-                                        </label>
-                                        <input
-                                            type="url"
-                                            name="image"
-                                            value={formData.image}
-                                            onChange={handleChange}
-                                            placeholder="https://example.com/image.png"
-                                            className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                                        />
-                                    </div>
-
-                                    <div className="lg:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Printify ID (optional)
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="printifyId"
-                                            value={formData.printifyId}
-                                            onChange={handleChange}
-                                            placeholder="65ae5df1234567"
-                                            className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-end space-x-3 mt-6">
-                                    <button
-                                        type="button"
-                                        onClick={resetForm}
-                                        className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors"
-                                    >
-                                        {editingItem ? "Update Product" : "Add Product"}
-                                    </button>
-                                </div>
-                            </form>
+                    {/* Stats */}
+                    {printifyProducts.length > 0 && (
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+                            <div className="bg-white rounded-xl p-4 border border-gray-200">
+                                <p className="text-sm text-gray-600">Total Products</p>
+                                <p className="text-2xl font-bold text-gray-900">{totalProducts}</p>
+                            </div>
+                            <div className="bg-white rounded-xl p-4 border border-gray-200">
+                                <p className="text-sm text-gray-600">Published</p>
+                                <p className="text-2xl font-bold text-green-600 flex items-center gap-2">
+                                    <CheckCircle2 className="w-5 h-5" />
+                                    {publishedCount}
+                                </p>
+                            </div>
+                            <div className="bg-white rounded-xl p-4 border border-gray-200">
+                                <p className="text-sm text-gray-600">Unpublished</p>
+                                <p className="text-2xl font-bold text-amber-600 flex items-center gap-2">
+                                    <Package className="w-5 h-5" />
+                                    {unpublishedCount}
+                                </p>
+                            </div>
+                            <div className="bg-white rounded-xl p-4 border border-gray-200">
+                                <p className="text-sm text-gray-600">Status</p>
+                                <p className="text-lg font-semibold text-green-600 flex items-center gap-1">
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    Connected
+                                </p>
+                            </div>
                         </div>
                     )}
 
-                    {/* Products Table */}
-                    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                            <h3 className="text-lg font-semibold text-gray-900">
-                                Products ({filteredItems.length})
-                            </h3>
-                            <div className="text-sm text-gray-500">
-                                Showing all products
+                    {/* Tabs */}
+                    <div className="flex space-x-1 mb-6 bg-white p-1 rounded-xl border border-gray-200 w-fit">
+                        {[
+                            { id: 'all', label: 'All Products', count: totalProducts },
+                            { id: 'published', label: 'Published', count: publishedCount },
+                            { id: 'unpublished', label: 'Unpublished', count: unpublishedCount }
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${activeTab === tab.id
+                                    ? 'bg-purple-100 text-purple-700'
+                                    : 'text-gray-600 hover:text-gray-900'
+                                    }`}
+                            >
+                                {tab.label}
+                                <span className={`px-2 py-1 rounded-full text-xs ${activeTab === tab.id
+                                    ? 'bg-purple-200 text-purple-700'
+                                    : 'bg-gray-100 text-gray-600'
+                                    }`}>
+                                    {tab.count}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Published Products Section - Only show in All Products tab */}
+                    {activeTab === 'published' && publishedProducts.length > 0 && (
+                        <div className="mb-8">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                                    <h2 className="text-lg font-semibold text-gray-900">
+                                        Published in Store ({publishedProducts.length})
+                                    </h2>
+                                </div>
+                                <span className="text-sm text-gray-500">Manage store products</span>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {publishedProducts.map((product) => (
+                                    <div key={product._id} className="bg-white rounded-xl border border-green-200 p-4 hover:shadow-lg transition-all duration-200">
+                                        <div className="flex gap-3">
+                                            <img
+                                                src={product.image}
+                                                alt={product.name}
+                                                className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-semibold text-gray-900 text-sm mb-1 truncate">
+                                                    {product.name}
+                                                </h3>
+                                                <p className="text-green-600 text-sm font-medium mb-2">
+                                                    {formatPrice(product.price)}
+                                                </p>
+                                                <button
+                                                    onClick={() => handleDeletePublishedProduct(product)}
+                                                    className="flex items-center gap-1 px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-medium transition-colors"
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                    Remove from Store
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
+                    )}
 
-                        {loading ? (
-                            <div className="flex justify-center items-center py-12">
-                                <div className="text-center">
-                                    <Loader2 className="w-8 h-8 animate-spin text-purple-600 mx-auto mb-4" />
-                                    <p className="text-gray-600">Loading merchandise...</p>
-                                </div>
-                            </div>
-                        ) : filteredItems.length === 0 ? (
-                            <div className="text-center py-12">
-                                <Store className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                                <p className="text-lg font-medium text-gray-900 mb-2">No products found</p>
-                                <p className="text-gray-600">
-                                    {searchTerm ? "Try adjusting your search" : "Get started by adding your first product"}
-                                </p>
-                                {!searchTerm && (
-                                    <button
-                                        onClick={() => setShowForm(true)}
-                                        className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors"
+                    {/* Product List */}
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-gray-200">
+                            <Loader2 className="w-12 h-12 animate-spin text-purple-500 mb-4" />
+                            <p className="text-gray-700 text-lg font-medium">Fetching Printify products...</p>
+                            <p className="text-gray-500 text-sm mt-2">This may take a moment</p>
+                        </div>
+                    ) : filteredProducts.length === 0 ? (
+                        <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
+                            <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                                {activeTab === 'published' ? 'No published products' :
+                                    activeTab === 'unpublished' ? 'No unpublished products' : 'No products found'}
+                            </h3>
+                            <p className="text-gray-600 max-w-md mx-auto mb-6">
+                                {activeTab === 'published' ? 'No products have been published to your store yet.' :
+                                    activeTab === 'unpublished' ? 'All products are already published to your store.' :
+                                        'No products were found on your Printify account. Try refreshing or check your API connection.'}
+                            </p>
+                            <button
+                                onClick={handleRefresh}
+                                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors font-medium"
+                            >
+                                Try Again
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            {filteredProducts.map((product) => {
+                                const isSyncing = syncingProducts.has(product.id);
+                                const isPublished = product.isPublished;
+
+                                return (
+                                    <div
+                                        key={product.id}
+                                        className={`bg-white rounded-2xl border overflow-hidden hover:shadow-lg transition-all duration-300 group ${isPublished ? 'border-green-200' : 'border-gray-200'
+                                            }`}
                                     >
-                                        Add Your First Product
-                                    </button>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead className="bg-gray-50 border-b border-gray-200">
-                                        <tr>
-                                            <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Product
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Details
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Price
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Printify ID
-                                            </th>
-                                            <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Actions
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {filteredItems.map((item) => (
-                                            <tr key={item._id} className="hover:bg-gray-50 transition-colors group">
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center space-x-3">
-                                                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                            {item.image ? (
-                                                                <img
-                                                                    src={item.image}
-                                                                    alt={item.name}
-                                                                    className="w-10 h-10 object-contain rounded"
-                                                                />
-                                                            ) : (
-                                                                <Image className="w-6 h-6 text-gray-400" />
-                                                            )}
-                                                        </div>
-                                                        <div>
-                                                            <div className="text-sm font-semibold text-gray-900 group-hover:text-purple-700">
-                                                                {item.name}
-                                                            </div>
-                                                            {item.category && (
-                                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mt-1">
-                                                                    <Tag className="w-3 h-3 mr-1" />
-                                                                    {item.category}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="text-sm text-gray-600 max-w-xs">
-                                                        {item.description || "No description"}
-                                                    </div>
-                                                    {item.stock !== undefined && (
-                                                        <div className={`text-xs font-medium mt-1 ${item.stock < 10 ? 'text-red-600' : 'text-green-600'
-                                                            }`}>
-                                                            Stock: {item.stock}
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm font-semibold text-gray-900">
-                                                        {item.price}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="text-sm text-gray-500">
-                                                        {item.printifyId || "-"}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                    <div className="flex justify-end items-center space-x-2">
-                                                        <button
-                                                            onClick={() => handleEdit(item)}
-                                                            className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-                                                            title="Edit Product"
-                                                        >
-                                                            <Edit className="w-4 h-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => toast.success(`Viewing ${item.name}`)}
-                                                            className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
-                                                            title="View Product"
-                                                        >
-                                                            <Eye className="w-4 h-4" />
-                                                        </button>
-                                                        <div className="relative">
-                                                            <button
-                                                                onClick={() => setActionMenu(actionMenu === item._id ? null : item._id)}
-                                                                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                                                            >
-                                                                <MoreVertical className="w-4 h-4" />
-                                                            </button>
+                                        {/* Product Image */}
+                                        <div className="relative overflow-hidden bg-gray-100">
+                                            <img
+                                                src={product.image}
+                                                alt={product.title}
+                                                className="w-full h-60 object-cover group-hover:scale-105 transition-transform duration-300"
+                                            />
+                                            <div className="absolute top-3 right-3">
+                                                <span className="bg-black/70 text-white px-2 py-1 rounded-lg text-sm font-medium">
+                                                    {formatPrice(product.price)}
+                                                </span>
+                                            </div>
+                                            {isPublished && (
+                                                <div className="absolute top-3 left-3">
+                                                    <span className="bg-green-500 text-white px-2 py-1 rounded-lg text-sm font-medium flex items-center gap-1">
+                                                        <CheckCircle2 className="w-3 h-3" />
+                                                        Published
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
 
-                                                            {actionMenu === item._id && (
-                                                                <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border py-1 z-10">
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            setActionMenu(null);
-                                                                            toast.success(`Viewing details for ${item.name}`);
-                                                                        }}
-                                                                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                                                                    >
-                                                                        <Eye className="w-4 h-4 mr-2" />
-                                                                        View Details
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => handleDelete(item._id)}
-                                                                        className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
-                                                                    >
-                                                                        <Trash2 className="w-4 h-4 mr-2" />
-                                                                        Delete Product
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
+                                        {/* Product Info */}
+                                        <div className="p-5">
+                                            <h3 className="font-semibold text-gray-900 text-lg mb-2 line-clamp-2">
+                                                {truncateText(product.title)}
+                                            </h3>
+
+                                            {product.description && (
+                                                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                                                    {truncateText(product.description, 80)}
+                                                </p>
+                                            )}
+
+                                            {/* Action Buttons */}
+                                            <div className="flex gap-2 pt-4 border-t border-gray-100">
+                                                {!isPublished ? (
+                                                    <button
+                                                        onClick={() => handleAddSingle(product)}
+                                                        disabled={isSyncing}
+                                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium text-sm"
+                                                    >
+                                                        {isSyncing ? (
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                        ) : (
+                                                            <Plus className="w-4 h-4" />
+                                                        )}
+                                                        {isSyncing ? 'Publishing...' : 'Publish to Store'}
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => window.open('/merch', '_blank')}
+                                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl transition-all duration-200 font-medium text-sm"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                        View in Store
+                                                    </button>
+                                                )}
+
+                                                <div className="flex flex-col gap-2">
+                                                    {isPublished ? (
+                                                        <button
+                                                            onClick={() => handleDeleteFromStore(product)}
+                                                            className="flex items-center justify-center px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-xl transition-all duration-200 font-medium text-xs"
+                                                            title="Remove from store"
+                                                        >
+                                                            <XCircle className="w-3 h-3" />
+                                                        </button>
+                                                    ) : null}
+                                                    <button
+                                                        onClick={() => handleDeleteFromPrintify(product)}
+                                                        disabled={isPublished} // Disable delete from Printify for published products
+                                                        className="flex items-center justify-center px-3 py-2 bg-gray-100 hover:bg-red-50 text-gray-600 hover:text-red-600 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium text-xs"
+                                                        title={isPublished ? "Cannot delete published products from Printify" : "Delete from Printify"}
+                                                    >
+                                                        <Trash2 className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Footer Help Text */}
+                    {printifyProducts.length > 0 && (
+                        <div className="mt-8 text-center">
+                            <p className="text-gray-500 text-sm">
+                                Published products will appear in your store's merchandise section.{" "}
+                                <a
+                                    href="https://developers.printify.com/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-purple-600 hover:text-purple-700 font-medium inline-flex items-center gap-1"
+                                >
+                                    Printify API Docs <ExternalLink className="w-3 h-3" />
+                                </a>
+                            </p>
+                        </div>
+                    )}
                 </div>
-            </div>
+            </main>
         </AdminLayout>
     );
 }
-
-// Stat Card Component
-const StatCard = ({ icon: Icon, label, value, change, color }) => {
-    const colorClasses = {
-        purple: "from-purple-500 to-pink-600",
-        green: "from-green-500 to-emerald-600",
-        orange: "from-orange-500 to-red-600",
-        blue: "from-blue-500 to-cyan-600",
-    };
-
-    const changeColor = change >= 0 ? "text-green-600" : "text-red-600";
-    const changeIcon = change >= 0 ? "↗" : "↘";
-
-    return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-xl bg-gradient-to-r ${colorClasses[color]}`}>
-                    <Icon className="w-6 h-6 text-white" />
-                </div>
-                <div className={`flex items-center space-x-1 text-sm font-medium ${changeColor}`}>
-                    <span>{changeIcon}</span>
-                    <span>{Math.abs(change)}%</span>
-                </div>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">{value}</h3>
-            <p className="text-gray-600 text-sm">{label}</p>
-        </div>
-    );
-};

@@ -1,9 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  Building2,
+  Calendar,
+  Clock,
+  Edit3,
+  ImageIcon,
+  Loader2,
+  MapPin,
+  Music,
+  Save,
+  Star,
+  Trash2,
+  Users
+} from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { Save, Trash2, Building2, Clock, ImageIcon, Loader2 } from "lucide-react";
 
 export default function VenueDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -85,61 +98,55 @@ export default function VenueDashboard() {
   };
 
   // === Save Venue ===
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return toast.error("You are not logged in.");
 
-const handleSave = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) return toast.error("You are not logged in.");
+      const formData = new FormData();
+      formData.append("venueName", venue.name);
+      formData.append("city", venue.city.toLowerCase());
+      formData.append("address", venue.address);
+      formData.append("seatingCapacity", venue.seating);
+      formData.append("biography", venue.biography || "");
+      formData.append("openHours", venue.openHours);
+      formData.append("openDays", "Mon-Sat");
 
-    const formData = new FormData();
-    formData.append("venueName", venue.name);
-    formData.append("city", venue.city.toLowerCase());
-    formData.append("address", venue.address);
-    formData.append("seatingCapacity", venue.seating);
-    formData.append("biography", venue.biography || "");
-    formData.append("openHours", venue.openHours);
-    formData.append("openDays", "Mon-Sat");
+      if (venue.photos && venue.photos.length > 0) {
+        venue.photos.forEach((file) => {
+          formData.append("photos", file);
+        });
+      }
 
-    if (venue.photos && venue.photos.length > 0) {
-      venue.photos.forEach((file) => {
-        formData.append("photos", file);
+      setSaving(true);
+      const saveToast = toast.loading("Saving venue...");
+
+      const res = await fetch(`${API_BASE}/api/venues/profile`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
       });
+
+      const data = await res.json();
+      toast.dismiss(saveToast);
+      if (!res.ok) throw new Error(data.message || "Failed to save venue.");
+
+      toast.success("Venue profile saved successfully!");
+
+      // Update local state with new photos
+      if (data.data?.venue?.photos) {
+        setPreviewImages(data.data.venue.photos.map(p => p.url));
+      }
+
+    } catch (error) {
+      console.error("Save error:", error);
+      toast.error(error.message || "Server error while saving venue.");
+    } finally {
+      setSaving(false);
     }
-
-    // Debugging
-    console.log('Sending form data with photos:', venue.photos);
-
-    setSaving(true);
-    const saveToast = toast.loading("Saving venue...");
-
-    const res = await fetch(`${API_BASE}/api/venues/profile`, {
-      method: "POST",
-      headers: { 
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    const data = await res.json();
-    console.log('Server response:', data);
-
-    toast.dismiss(saveToast);
-    if (!res.ok) throw new Error(data.message || "Failed to save venue.");
-
-    toast.success("Venue profile saved successfully!");
-    
-    // Update local state with new photos
-    if (data.data?.venue?.photos) {
-      setPreviewImages(data.data.venue.photos.map(p => p.url));
-    }
-
-  } catch (error) {
-    console.error("Save error:", error);
-    toast.error(error.message || "Server error while saving venue.");
-  } finally {
-    setSaving(false);
-  }
-};
+  };
 
   // === Add Show ===
   const handleAddShow = async (e) => {
@@ -172,103 +179,218 @@ const handleSave = async () => {
   };
 
   return (
-    <div className="py-16 px-4 flex justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4">
       <Toaster position="top-center" reverseOrder={false} />
-      <div className="container w-full bg-[var(--color-card)] border border-[var(--color-border)] rounded-[var(--radius-xl)] shadow-lg p-8 md:p-12">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-semibold text-[var(--color-primary)] flex items-center gap-2">
-            <Building2 size={26} /> Venue Dashboard
+
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
+            <div className="p-2 bg-yellow-500 rounded-lg">
+              <Building2 size={32} className="text-black" />
+            </div>
+            Venue Dashboard
           </h1>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex justify-center gap-6 mb-12 border-b border-[var(--color-border)] pb-2">
-          {["overview", "edit", "addshow"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`pb-2 px-2 text-lg font-medium transition-all ${
-                activeTab === tab
-                  ? "text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]"
-                  : "text-[var(--color-muted-foreground)] hover:text-[var(--color-accent)]"
-              }`}
-            >
-              {tab === "overview"
-                ? "Overview"
-                : tab === "edit"
-                ? "Edit Profile"
-                : "Add Show"}
-            </button>
-          ))}
-        </div>
-
-        {loading && (
-          <p className="text-gray-400 italic animate-pulse text-center mb-6">
-            Processing request...
+          <p className="text-gray-400 text-lg">
+            Manage your venue profile and upcoming shows
           </p>
-        )}
+        </div>
 
-        {activeTab === "overview" && (
-          <OverviewTab venue={venue} previewImages={previewImages} />
-        )}
-        {activeTab === "edit" && (
-          <EditProfileTab
-            venue={venue}
-            cityOptions={cityOptions}
-            handleChange={handleChange}
-            handleImageUpload={handleImageUpload}
-            removeImage={removeImage}
-            previewImages={previewImages}
-            handleSave={handleSave}
-            saving={saving}
-          />
-        )}
-        {activeTab === "addshow" && (
-          <AddShowTab
-            newShow={newShow}
-            setNewShow={setNewShow}
-            handleAddShow={handleAddShow}
-          />
-        )}
+        {/* Main Container */}
+        <div className="bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-700">
+          {/* Enhanced Tabs */}
+          <div className="border-b border-gray-700 bg-gray-900">
+            <div className="flex overflow-x-auto">
+              {[
+                { id: "overview", label: "Overview", icon: Building2 },
+                { id: "edit", label: "Edit Profile", icon: Edit3 },
+                { id: "addshow", label: "Add Show", icon: Music },
+              ].map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === id
+                      ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
+                      : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
+                    }`}
+                >
+                  <Icon size={18} />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-6 md:p-8">
+            {loading && (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500"></div>
+                <span className="ml-3 text-gray-400">Loading...</span>
+              </div>
+            )}
+
+            {activeTab === "overview" && (
+              <OverviewTab venue={venue} previewImages={previewImages} />
+            )}
+            {activeTab === "edit" && (
+              <EditProfileTab
+                venue={venue}
+                cityOptions={cityOptions}
+                handleChange={handleChange}
+                handleImageUpload={handleImageUpload}
+                removeImage={removeImage}
+                previewImages={previewImages}
+                handleSave={handleSave}
+                saving={saving}
+              />
+            )}
+            {activeTab === "addshow" && (
+              <AddShowTab
+                newShow={newShow}
+                setNewShow={setNewShow}
+                handleAddShow={handleAddShow}
+              />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-/* ============== Overview ============== */
+/* ============== Enhanced Overview Tab ============== */
 const OverviewTab = ({ venue, previewImages }) => (
-  <div className="animate-fadeIn space-y-10">
-    <div className="grid md:grid-cols-2 gap-10">
-      <div className="space-y-4">
-        <Info label="Venue Name" value={venue.name} />
-        <Info label="City" value={venue.city} />
-        <Info label="Address" value={venue.address} />
-        <Info label="Seating Capacity" value={venue.seating} />
-        <Info label="Biography" value={venue.biography} />
-        <Info label="Open Hours" value={venue.openHours} icon={<Clock size={14} />} />
+  <div className="animate-fadeIn space-y-8">
+    {/* Stats Cards */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-blue-500/20 rounded-lg">
+            <Users size={24} className="text-blue-400" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-white">{venue.seating || "0"}</p>
+            <p className="text-gray-400">Seating Capacity</p>
+          </div>
+        </div>
       </div>
 
-      <div>
-        <h4 className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-          <ImageIcon size={16} /> Photos
-        </h4>
+      <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-green-500/20 rounded-lg">
+            <MapPin size={24} className="text-green-400" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-white capitalize">{venue.city || "—"}</p>
+            <p className="text-gray-400">Location</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-yellow-500/20 rounded-lg">
+            <Clock size={24} className="text-yellow-400" />
+          </div>
+          <div>
+            <p className="text-lg font-bold text-white truncate">{venue.openHours || "—"}</p>
+            <p className="text-gray-400">Open Hours</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div className="grid lg:grid-cols-2 gap-8">
+      {/* Venue Details Card */}
+      <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <Building2 size={24} />
+          Venue Information
+        </h3>
+
+        <div className="space-y-6">
+          <InfoCard
+            icon={<Star className="text-yellow-400" size={20} />}
+            label="Venue Name"
+            value={venue.name}
+          />
+          <InfoCard
+            icon={<MapPin className="text-red-400" size={20} />}
+            label="Address"
+            value={venue.address}
+          />
+          <InfoCard
+            icon={<Users className="text-blue-400" size={20} />}
+            label="Seating Capacity"
+            value={venue.seating ? `${venue.seating} people` : "—"}
+          />
+          <InfoCard
+            icon={<Clock className="text-green-400" size={20} />}
+            label="Open Hours"
+            value={venue.openHours}
+          />
+        </div>
+
+        {/* Biography Section */}
+        {venue.biography && (
+          <div className="mt-6 pt-6 border-t border-gray-700">
+            <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+              <Edit3 size={18} />
+              About Venue
+            </h4>
+            <p className="text-gray-300 leading-relaxed bg-gray-800/50 rounded-lg p-4">
+              {venue.biography}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Photos Gallery Card */}
+      <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <ImageIcon size={24} />
+          Venue Photos
+          {previewImages.length > 0 && (
+            <span className="bg-yellow-500 text-black px-2 py-1 rounded-full text-sm font-medium ml-2">
+              {previewImages.length}
+            </span>
+          )}
+        </h3>
+
         {previewImages.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             {previewImages.map((src, idx) => (
-              <div key={idx} className="relative aspect-square overflow-hidden rounded-lg">
-                <Image src={src} alt="Venue" fill className="object-cover" />
+              <div
+                key={idx}
+                className="relative aspect-square rounded-xl overflow-hidden group border border-gray-600"
+              >
+                <Image
+                  src={src}
+                  alt={`Venue photo ${idx + 1}`}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-end justify-center pb-2">
+                  <span className="text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                    Photo {idx + 1}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-400 italic">No photos uploaded yet.</p>
+          <div className="text-center py-12 bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-600">
+            <ImageIcon size={48} className="text-gray-500 mx-auto mb-4" />
+            <p className="text-gray-400 text-lg mb-2">No photos uploaded yet</p>
+            <p className="text-gray-500 text-sm">Add photos in the Edit Profile section</p>
+          </div>
         )}
       </div>
     </div>
   </div>
 );
 
-/* ============== Edit Profile ============== */
+/* ============== Enhanced Edit Profile Tab ============== */
 const EditProfileTab = ({
   venue,
   cityOptions,
@@ -279,172 +401,274 @@ const EditProfileTab = ({
   handleSave,
   saving,
 }) => (
-  <div className="animate-fadeIn space-y-10">
-    <div className="grid md:grid-cols-2 gap-8">
-      <Input label="Venue Name" name="name" value={venue.name} onChange={handleChange} />
-      <Select
-        label="City"
-        name="city"
-        value={venue.city}
-        options={cityOptions}
-        onChange={handleChange}
-      />
-      <Input label="Address" name="address" value={venue.address} onChange={handleChange} />
-      <Input
-        label="Seating Capacity"
-        name="seating"
-        type="number"
-        value={venue.seating}
-        onChange={handleChange}
-      />
-      <Textarea
-        label="Biography"
-        name="biography"
-        value={venue.biography}
-        onChange={handleChange}
-      />
-      <Input
-        label="Open Hours"
-        name="openHours"
-        value={venue.openHours}
-        onChange={handleChange}
-      />
-    </div>
+  <div className="animate-fadeIn max-w-4xl mx-auto">
+    <div className="grid lg:grid-cols-3 gap-8">
+      {/* Main Form */}
+      <div className="lg:col-span-2 space-y-6">
+        <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <Edit3 size={20} />
+            Venue Details
+          </h3>
 
-    {/* Upload Section */}
-    <div>
-      <label className="block text-sm mb-2 text-gray-500">Upload Venue Photos</label>
-      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition">
-        Upload Images
-        <input type="file" hidden multiple onChange={handleImageUpload} />
-      </label>
-
-      {previewImages.length > 0 && (
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
-          {previewImages.map((src, idx) => (
-            <div
-              key={idx}
-              className="relative aspect-square border rounded-md overflow-hidden group"
-            >
-              <Image src={src} alt="Preview" fill className="object-cover" />
-              <button
-                onClick={() => removeImage(idx)}
-                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
-              >
-                <Trash2 size={12} />
-              </button>
+          <div className="grid md:grid-cols-2 gap-6">
+            <Input
+              label="Venue Name *"
+              name="name"
+              value={venue.name}
+              onChange={handleChange}
+              icon={<Building2 size={18} />}
+            />
+            <Select
+              label="City *"
+              name="city"
+              value={venue.city}
+              options={cityOptions}
+              onChange={handleChange}
+              icon={<MapPin size={18} />}
+            />
+            <div className="md:col-span-2">
+              <Input
+                label="Address *"
+                name="address"
+                value={venue.address}
+                onChange={handleChange}
+                icon={<MapPin size={18} />}
+              />
             </div>
-          ))}
+            <Input
+              label="Seating Capacity"
+              name="seating"
+              type="number"
+              value={venue.seating}
+              onChange={handleChange}
+              icon={<Users size={18} />}
+            />
+            <Input
+              label="Open Hours"
+              name="openHours"
+              value={venue.openHours}
+              onChange={handleChange}
+              icon={<Clock size={18} />}
+            />
+            <div className="md:col-span-2">
+              <Textarea
+                label="Biography"
+                name="biography"
+                value={venue.biography}
+                onChange={handleChange}
+                icon={<Edit3 size={18} />}
+                placeholder="Tell us about your venue, its history, and what makes it special..."
+              />
+            </div>
+          </div>
         </div>
-      )}
-    </div>
-
-    <div className="flex justify-center mt-10">
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className={`flex items-center gap-2 bg-yellow-500 text-white px-10 py-3 rounded-md font-medium hover:bg-yellow-600 transition ${
-          saving ? "opacity-70 cursor-not-allowed" : ""
-        }`}
-      >
-        {saving ? (
-          <>
-            <Loader2 size={18} className="animate-spin" /> Saving...
-          </>
-        ) : (
-          <>
-            <Save size={18} /> Save Changes
-          </>
-        )}
-      </button>
-    </div>
-  </div>
-);
-
-/* ============== Add Show ============== */
-const AddShowTab = ({ newShow, setNewShow, handleAddShow }) => (
-  <div className="animate-fadeIn max-w-lg mx-auto">
-    <form onSubmit={handleAddShow} className="space-y-5">
-      <Input
-        label="Artist / Band Name"
-        name="artist"
-        value={newShow.artist}
-        onChange={(e) => setNewShow({ ...newShow, artist: e.target.value })}
-      />
-      <Input
-        label="Date"
-        name="date"
-        type="date"
-        value={newShow.date}
-        onChange={(e) => setNewShow({ ...newShow, date: e.target.value })}
-      />
-      <Input
-        label="Time"
-        name="time"
-        type="time"
-        value={newShow.time}
-        onChange={(e) => setNewShow({ ...newShow, time: e.target.value })}
-      />
-      <div className="flex justify-center pt-4">
-        <button
-          type="submit"
-          className="bg-yellow-500 hover:bg-yellow-600 text-white px-8 py-3 rounded-md font-semibold transition"
-        >
-          Add Show
-        </button>
       </div>
-    </form>
+
+      {/* Sidebar - Photos & Actions */}
+      <div className="space-y-6">
+        {/* Photo Upload */}
+        <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <ImageIcon size={20} />
+            Photos ({previewImages.length}/5)
+          </h3>
+
+          <label className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-xl transition ${previewImages.length >= 5
+              ? 'border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed'
+              : 'border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20'
+            }`}>
+            <ImageIcon size={32} />
+            <span className="text-sm font-medium text-center">
+              {previewImages.length >= 5 ? 'Maximum Reached' : 'Upload Venue Photos'}
+            </span>
+            <span className="text-xs text-gray-400 text-center">
+              Max 5 photos • JPG, PNG
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              onChange={handleImageUpload}
+              disabled={previewImages.length >= 5}
+            />
+          </label>
+
+          {previewImages.length > 0 && (
+            <div className="mt-4">
+              <p className="text-sm text-gray-400 mb-3">Preview:</p>
+              <div className="grid grid-cols-2 gap-3">
+                {previewImages.map((src, i) => (
+                  <div
+                    key={i}
+                    className="relative aspect-square rounded-lg overflow-hidden border border-gray-600 group"
+                  >
+                    <Image
+                      src={src}
+                      alt={`Preview ${i + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                    <button
+                      onClick={() => removeImage(i)}
+                      className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
+          <h3 className="text-lg font-semibold text-white mb-4">Actions</h3>
+          <div className="space-y-3">
+            <button
+              disabled={saving}
+              onClick={handleSave}
+              className="w-full flex items-center justify-center gap-2 bg-yellow-500 text-black py-3 rounded-lg hover:bg-yellow-400 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save size={18} />
+                  Save Changes
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 );
 
-/* ============== Reusable Components ============== */
-const Info = ({ label, value, icon }) => (
-  <div>
-    <h4 className="flex items-center gap-1 text-sm text-gray-500">
-      {icon} {label}
-    </h4>
-    <p className="text-lg font-medium">{value || "—"}</p>
+/* ============== Enhanced Add Show Tab ============== */
+const AddShowTab = ({ newShow, setNewShow, handleAddShow }) => (
+  <div className="animate-fadeIn max-w-2xl mx-auto">
+    <div className="bg-gray-900 rounded-2xl p-8 border border-gray-700">
+      <div className="text-center mb-8">
+        <div className="w-16 h-16 bg-yellow-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <Music size={32} className="text-black" />
+        </div>
+        <h2 className="text-2xl font-bold text-white mb-2">Add New Show</h2>
+        <p className="text-gray-400">Schedule a live performance at your venue</p>
+      </div>
+
+      <form onSubmit={handleAddShow} className="space-y-6">
+        <Input
+          label="Artist / Band Name *"
+          name="artist"
+          value={newShow.artist}
+          onChange={(e) => setNewShow({ ...newShow, artist: e.target.value })}
+          icon={<Music size={18} />}
+          placeholder="Enter artist or band name"
+        />
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <Input
+            label="Show Date *"
+            name="date"
+            type="date"
+            value={newShow.date}
+            onChange={(e) => setNewShow({ ...newShow, date: e.target.value })}
+            icon={<Calendar size={18} />}
+          />
+          <Input
+            label="Show Time *"
+            name="time"
+            type="time"
+            value={newShow.time}
+            onChange={(e) => setNewShow({ ...newShow, time: e.target.value })}
+            icon={<Clock size={18} />}
+          />
+        </div>
+
+        <div className="flex justify-center pt-4">
+          <button
+            type="submit"
+            className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-3 rounded-lg font-semibold transition transform hover:scale-105"
+          >
+            <Music size={18} />
+            Add Show
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 );
 
-const Input = ({ label, name, value, onChange, type = "text" }) => (
+/* ============== Enhanced Reusable Components ============== */
+const InfoCard = ({ icon, label, value }) => (
+  <div className="flex items-start gap-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
+    <div className="flex-shrink-0 mt-1">
+      {icon}
+    </div>
+    <div className="flex-1">
+      <h4 className="text-sm font-medium text-gray-400 mb-1">{label}</h4>
+      <p className="text-white font-semibold">{value || "Not specified"}</p>
+    </div>
+  </div>
+);
+
+const Input = ({ label, name, value, onChange, type = "text", icon, placeholder }) => (
   <div>
-    <label className="block text-sm mb-1 text-gray-500">{label}</label>
+    <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+      {icon}
+      {label}
+    </label>
     <input
       name={name}
       type={type}
       value={value}
       onChange={onChange}
-      className="bg-gray-600 w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-yellow-400 outline-none"
+      placeholder={placeholder}
+      className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition"
       required
     />
   </div>
 );
 
-const Textarea = ({ label, name, value, onChange }) => (
-  <div className="md:col-span-2">
-    <label className="block text-sm mb-1 text-gray-500">{label}</label>
+const Textarea = ({ label, name, value, onChange, icon, placeholder }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+      {icon}
+      {label}
+    </label>
     <textarea
       name={name}
       value={value}
       onChange={onChange}
+      placeholder={placeholder}
       rows={4}
-      className="bg-gray-500 w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-yellow-400 outline-none"
+      className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition resize-vertical"
     />
   </div>
 );
 
-const Select = ({ label, name, value, options, onChange }) => (
+const Select = ({ label, name, value, options, onChange, icon }) => (
   <div>
-    <label className="block text-sm mb-1 text-gray-500">{label}</label>
+    <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+      {icon}
+      {label}
+    </label>
     <select
       name={name}
       value={value}
       onChange={onChange}
-      className="bg-gray-500 w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-yellow-400 outline-none"
+      className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition"
     >
+      <option value="">Select a city</option>
       {options.map((opt) => (
-        <option key={opt}>{opt}</option>
+        <option key={opt} value={opt}>{opt}</option>
       ))}
     </select>
   </div>

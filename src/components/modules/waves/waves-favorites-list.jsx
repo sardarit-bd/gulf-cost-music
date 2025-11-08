@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import WaveItem from "./wave-item";
 
 
-export default function WavesFavoritesList({setWave}) {
+export default function WavesFavoritesList({ setWave }) {
   const [waves, setWaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
@@ -45,7 +45,7 @@ export default function WavesFavoritesList({setWave}) {
 
       <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
         {waves.map((wave) => (
-          <div onClick={() => setWave(wave)}>
+          <div key={wave._id} onClick={() => setWave(wave)}>
             <WaveItem key={wave._id} wave={wave} />
           </div>
         ))}

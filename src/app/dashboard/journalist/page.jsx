@@ -1,26 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import toast, { Toaster } from "react-hot-toast";
+import { useSession } from "@/lib/auth";
 import {
-  Upload,
-  Save,
-  Trash2,
-  Newspaper,
-  Plus,
-  Pencil,
-  User2,
-  Camera,
-  MapPin,
   Calendar,
-  User,
+  Camera,
+  Eye,
   FileText,
   Image as ImageIcon,
+  MapPin,
+  Newspaper,
+  Pencil,
+  Plus,
+  Save,
+  Trash2,
+  Upload,
+  User,
+  User2,
   X,
-  Eye,
 } from "lucide-react";
-import { useSession } from "@/lib/auth";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 // Utility to get cookie safely
 const getCookie = (name) => {
@@ -57,11 +57,10 @@ function NewsDetailModal({ news, isOpen, onClose }) {
           {/* Images Gallery */}
           {news.photos?.length > 0 && (
             <div className="p-6 border-b border-gray-700">
-              <div className={`grid gap-4 ${
-                news.photos.length === 1 ? "grid-cols-1" : 
-                news.photos.length === 2 ? "grid-cols-2" : 
-                "grid-cols-1 md:grid-cols-2"
-              }`}>
+              <div className={`grid gap-4 ${news.photos.length === 1 ? "grid-cols-1" :
+                news.photos.length === 2 ? "grid-cols-2" :
+                  "grid-cols-1 md:grid-cols-2"
+                }`}>
                 {news.photos.map((photo, index) => (
                   <div key={index} className="relative aspect-video rounded-lg overflow-hidden bg-gray-900">
                     <Image
@@ -83,7 +82,7 @@ function NewsDetailModal({ news, isOpen, onClose }) {
               <h1 className="text-3xl font-bold text-white mb-4 leading-tight">
                 {news.title}
               </h1>
-              
+
               {/* Meta Information */}
               <div className="flex flex-wrap gap-4 text-sm text-gray-400 mb-4">
                 <div className="flex items-center gap-2 bg-gray-700 px-3 py-1 rounded-full">
@@ -123,11 +122,10 @@ function NewsDetailModal({ news, isOpen, onClose }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-700">
               <div>
                 <h4 className="text-sm font-medium text-gray-400 mb-2">Status</h4>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  news.published ? 
-                  'bg-green-500/20 text-green-400' : 
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${news.published ?
+                  'bg-green-500/20 text-green-400' :
                   'bg-yellow-500/20 text-yellow-400'
-                }`}>
+                  }`}>
                   {news.published ? 'Published' : 'Draft'}
                 </span>
               </div>
@@ -242,7 +240,6 @@ export default function JournalistDashboard() {
     const toastId = toast.loading("Saving profile...");
     try {
       const formData = new FormData();
-      formData.append("fullName", journalist.fullName);
       formData.append("bio", journalist.bio);
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/journalists/profile`, {
@@ -267,19 +264,19 @@ export default function JournalistDashboard() {
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error("Please select an image file");
       return;
     }
-    
+
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image size should be less than 5MB");
       return;
     }
-    
+
     setPreviewAvatar(URL.createObjectURL(file));
 
     try {
@@ -287,9 +284,9 @@ export default function JournalistDashboard() {
       if (!token) return toast.error("You are not logged in!");
 
       const formData = new FormData();
-      formData.append("fullName", journalist.fullName);
-      formData.append("bio", journalist.bio);
+      formData.append("bio", journalist.bio || "");
       formData.append("profilePhoto", file);
+
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/journalists/profile`, {
         method: "POST",
@@ -309,7 +306,7 @@ export default function JournalistDashboard() {
   // === News Image Upload ===
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files).slice(0, 5);
-    
+
     // Validate files
     const validFiles = files.filter(file => {
       if (!file.type.startsWith('image/')) {
@@ -331,7 +328,7 @@ export default function JournalistDashboard() {
     const urls = validFiles.map((f) => URL.createObjectURL(f));
     setPreviewImages(prev => [...prev, ...urls]);
     setForm(prev => ({ ...prev, photos: [...prev.photos, ...validFiles] }));
-    
+
     if (validFiles.length > 0) {
       toast.success(`Added ${validFiles.length} photo(s)`);
     }
@@ -353,7 +350,7 @@ export default function JournalistDashboard() {
       toast.error("Please enter a title");
       return;
     }
-    
+
     if (!form.description.trim()) {
       toast.error("Please enter a description");
       return;
@@ -469,12 +466,12 @@ export default function JournalistDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4">
       <Toaster />
-      
+
       {/* News Detail Modal */}
-      <NewsDetailModal 
-        news={selectedNews} 
-        isOpen={isModalOpen} 
-        onClose={closeModal} 
+      <NewsDetailModal
+        news={selectedNews}
+        isOpen={isModalOpen}
+        onClose={closeModal}
       />
 
       <div className="max-w-7xl mx-auto">
@@ -504,11 +501,10 @@ export default function JournalistDashboard() {
                 <button
                   key={id}
                   onClick={() => setActiveTab(id)}
-                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${
-                    activeTab === id
-                      ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
-                      : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
-                  }`}
+                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === id
+                    ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
+                    : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
+                    }`}
                 >
                   <Icon size={18} />
                   {label}
@@ -529,10 +525,10 @@ export default function JournalistDashboard() {
                         <div className="relative inline-block">
                           <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-yellow-500 mx-auto mb-4">
                             {previewAvatar ? (
-                              <Image 
-                                src={previewAvatar} 
-                                alt="Profile" 
-                                fill 
+                              <Image
+                                src={previewAvatar}
+                                alt="Profile"
+                                fill
                                 className="object-cover"
                               />
                             ) : (
@@ -543,22 +539,22 @@ export default function JournalistDashboard() {
                           </div>
                           <label className="absolute bottom-2 right-2 bg-yellow-500 text-black p-2 rounded-full cursor-pointer hover:bg-yellow-400 transition shadow-lg">
                             <Camera size={16} />
-                            <input 
-                              type="file" 
-                              accept="image/*" 
-                              hidden 
-                              onChange={handleAvatarUpload} 
+                            <input
+                              type="file"
+                              accept="image/*"
+                              hidden
+                              onChange={handleAvatarUpload}
                             />
                           </label>
                         </div>
-                        
+
                         <h2 className="text-xl font-bold text-white mb-2">
                           {journalist.fullName || "Your Name"}
                         </h2>
                         <p className="text-gray-400 text-sm mb-4">
                           {journalist.email || "Journalist"}
                         </p>
-                        
+
                         <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-medium">
                           <Upload size={16} /> Change Photo
                           <input type="file" accept="image/*" hidden onChange={handleAvatarUpload} />
@@ -574,7 +570,7 @@ export default function JournalistDashboard() {
                         <User size={20} />
                         Profile Information
                       </h3>
-                      
+
                       <div className="space-y-6">
                         <div>
                           <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -587,7 +583,7 @@ export default function JournalistDashboard() {
                             className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition"
                           />
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-300 mb-2">
                             Email
@@ -599,7 +595,7 @@ export default function JournalistDashboard() {
                           />
                           <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-300 mb-2">
                             Biography
@@ -612,7 +608,7 @@ export default function JournalistDashboard() {
                             className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition resize-vertical"
                           />
                         </div>
-                        
+
                         <div className="flex justify-end pt-4">
                           <button
                             onClick={handleSaveProfile}
@@ -644,7 +640,7 @@ export default function JournalistDashboard() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
                     <div className="flex items-center gap-4">
                       <div className="p-3 bg-green-500/20 rounded-lg">
@@ -658,7 +654,7 @@ export default function JournalistDashboard() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
                     <div className="flex items-center gap-4">
                       <div className="p-3 bg-yellow-500/20 rounded-lg">
@@ -714,7 +710,7 @@ export default function JournalistDashboard() {
                           <div className="flex flex-col lg:flex-row lg:items-start gap-6">
                             {/* Thumbnail */}
                             {item.photos?.length > 0 && (
-                              <div 
+                              <div
                                 className="lg:w-48 lg:h-32 w-full h-48 relative rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
                                 onClick={() => viewNewsDetails(item)}
                               >
@@ -729,11 +725,11 @@ export default function JournalistDashboard() {
                                 </div>
                               </div>
                             )}
-                            
+
                             {/* Content */}
                             <div className="flex-1 min-w-0">
                               <div className="flex justify-between items-start mb-3">
-                                <h3 
+                                <h3
                                   className="text-xl font-bold text-white group-hover:text-yellow-400 transition line-clamp-2 cursor-pointer"
                                   onClick={() => viewNewsDetails(item)}
                                 >
@@ -763,7 +759,7 @@ export default function JournalistDashboard() {
                                   </button>
                                 </div>
                               </div>
-                              
+
                               <div className="flex flex-wrap gap-4 text-sm text-gray-400 mb-3">
                                 <div className="flex items-center gap-1">
                                   <Calendar size={14} />
@@ -780,14 +776,14 @@ export default function JournalistDashboard() {
                                   </div>
                                 )}
                               </div>
-                              
-                              <p 
+
+                              <p
                                 className="text-gray-300 leading-relaxed line-clamp-3 cursor-pointer"
                                 onClick={() => viewNewsDetails(item)}
                               >
                                 {item.description}
                               </p>
-                              
+
                               {item.photos?.length > 1 && (
                                 <div className="flex gap-2 mt-3">
                                   {item.photos.slice(1, 4).map((p, i) => (
@@ -805,7 +801,7 @@ export default function JournalistDashboard() {
                                     </div>
                                   ))}
                                   {item.photos.length > 4 && (
-                                    <div 
+                                    <div
                                       className="w-12 h-12 rounded border border-gray-600 bg-gray-800 flex items-center justify-center text-xs text-gray-400 cursor-pointer hover:bg-gray-700 transition"
                                       onClick={() => viewNewsDetails(item)}
                                     >
@@ -915,12 +911,11 @@ export default function JournalistDashboard() {
                         <ImageIcon size={20} />
                         Photos ({previewImages.length}/5)
                       </h3>
-                      
-                      <label className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg transition ${
-                        previewImages.length >= 5 
-                          ? 'border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed' 
-                          : 'border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20'
-                      }`}>
+
+                      <label className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg transition ${previewImages.length >= 5
+                        ? 'border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed'
+                        : 'border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20'
+                        }`}>
                         <Upload size={24} />
                         <span className="text-sm font-medium">
                           {previewImages.length >= 5 ? 'Maximum Reached' : 'Upload Photos'}
@@ -981,7 +976,7 @@ export default function JournalistDashboard() {
                             "Publish News"
                           )}
                         </button>
-                        
+
                         <button
                           onClick={() => {
                             setActiveTab("news");
