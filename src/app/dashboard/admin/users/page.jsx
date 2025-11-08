@@ -1,26 +1,29 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import AdminLayout from "@/components/modules/dashboard/AdminLayout";
 import axios from "axios";
 import {
-  Search,
-  MoreVertical,
-  Edit,
-  Trash2,
-  CheckCircle,
-  XCircle,
-  User,
-  Mail,
-  Calendar,
-  Shield,
-  Music,
   Building2,
-  Download,
-  RefreshCw,
+  Calendar,
+  CheckCircle,
+  X as CloseIcon,
+  Crown,
+  Edit,
   Eye,
+  Filter,
+  Mail,
+  MoreVertical,
+  Music,
+  RefreshCw,
   Save,
-  X
+  Search,
+  Shield,
+  Trash2,
+  User,
+  UserPlus,
+  X,
+  XCircle
 } from "lucide-react";
-import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import { useEffect, useState } from "react";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -35,8 +38,37 @@ const UserManagement = () => {
   const [viewingUser, setViewingUser] = useState(null);
   const [formData, setFormData] = useState({});
   const [saveLoading, setSaveLoading] = useState(false);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    verifiedUsers: 0,
+    artists: 0,
+    venues: 0,
+    admins: 0,
+    totalAdmins: 0
+  });
+  const [promoteModal, setPromoteModal] = useState(null);
+  const [deleteModal, setDeleteModal] = useState(null);
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
-  const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/users`;
+  const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin`;
+  const USERS_URL = `${API_URL}/users`;
+  const STATS_URL = `${API_URL}/dashboard`;
+  console.log(STATS_URL)
+
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const { data } = await axios.get(STATS_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (data.success) {
+        console.log(data)
+        setStats(data.data);
+      }
+    } catch (err) {
+      console.error("Fetch stats error:", err);
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -47,7 +79,7 @@ const UserManagement = () => {
       if (userType !== "all") params.append("userType", userType);
       if (verified !== "") params.append("verified", verified);
 
-      const { data } = await axios.get(`${API_URL}?${params.toString()}`, {
+      const { data } = await axios.get(`${USERS_URL}?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -60,15 +92,42 @@ const UserManagement = () => {
     }
   };
 
+  // Debounced search function
+  const handleSearchChange = (value) => {
+    setSearch(value);
+
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Set new timeout for search
+    setSearchTimeout(
+      setTimeout(() => {
+        setPage(1); // Reset to first page when searching
+        fetchUsers();
+      }, 500) // 500ms delay
+    );
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearch("");
+    setUserType("all");
+    setVerified("");
+    setPage(1);
+  };
+
   const handleVerify = async (id) => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `${API_URL}/${id}/verify`,
+        `${USERS_URL}/${id}/verify`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchUsers();
+      fetchStats();
       setActionMenu(null);
     } catch (err) {
       console.error("Verify error:", err);
@@ -76,16 +135,41 @@ const UserManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      try {
-        const token = localStorage.getItem("token");
-        await axios.delete(`${API_URL}/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`${USERS_URL}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchUsers();
+      fetchStats();
+      setDeleteModal(null);
+      setActionMenu(null);
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
+
+  const handlePromoteToAdmin = async (userId, role = "content_admin") => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${USERS_URL}/${userId}/promote`,
+        { role, permissions: ["manage_users", "manage_content"] },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        alert("User promoted to admin successfully!");
         fetchUsers();
-        setActionMenu(null);
-      } catch (err) {
-        console.error("Delete error:", err);
+        fetchStats();
+        setPromoteModal(null);
+      }
+    } catch (err) {
+      console.error("Promote error:", err);
+      if (err.response?.data?.message) {
+        alert(`Error: ${err.response.data.message}`);
+      } else {
+        alert("Failed to promote user to admin");
       }
     }
   };
@@ -111,20 +195,21 @@ const UserManagement = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.put(
-        `${API_URL}/${id}`,
+        `${USERS_URL}/${id}`,
         formData,
-        { 
-          headers: { 
+        {
+          headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
-          } 
+          }
         }
       );
-      
+
       if (response.data.success) {
         setEditingUser(null);
         setFormData({});
-        fetchUsers(); // Refresh the user list
+        fetchUsers();
+        fetchStats();
       }
     } catch (err) {
       console.error("Update error:", err);
@@ -152,7 +237,17 @@ const UserManagement = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchStats();
   }, [page, userType, verified]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
 
   const getUserTypeIcon = (type) => {
     switch (type) {
@@ -172,16 +267,26 @@ const UserManagement = () => {
     }
   };
 
-  // User Detail Modal Component
-  const UserDetailModal = ({ user, onClose }) => {
-    if (!user) return null;
+  // Check if any filter is active
+  const hasActiveFilters = search || userType !== "all" || verified !== "";
+
+  // Promote to Admin Modal
+  const PromoteModal = ({ user, onClose, onPromote }) => {
+    const [role, setRole] = useState("content_admin");
+    const [promoting, setPromoting] = useState(false);
+
+    const handlePromote = async () => {
+      setPromoting(true);
+      await onPromote(user._id, role);
+      setPromoting(false);
+    };
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-xl max-w-md w-full">
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900">User Details</h3>
+              <h3 className="text-xl font-bold text-gray-900">Promote to Admin</h3>
               <button
                 onClick={onClose}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -191,69 +296,145 @@ const UserManagement = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
-                  {user.username?.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900">{user.username}</h4>
-                  <p className="text-gray-600 flex items-center">
-                    <Mail className="w-4 h-4 mr-1" />
-                    {user.email}
-                  </p>
-                </div>
+              <div className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
+                <Crown className="w-5 h-5 text-yellow-600" />
+                <p className="text-sm text-yellow-700">
+                  Promoting <strong>{user?.username}</strong> to admin role
+                </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <label className="font-medium text-gray-700">User Type:</label>
-                  <span className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getUserTypeColor(user.userType)}`}>
-                    {getUserTypeIcon(user.userType)}
-                    <span className="ml-1 capitalize">{user.userType}</span>
-                  </span>
-                </div>
-                <div>
-                  <label className="font-medium text-gray-700">Status:</label>
-                  <span className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.isVerified
-                    ? "bg-green-100 text-green-800"
-                    : "bg-orange-100 text-orange-800"
-                    }`}>
-                    {user.isVerified ? "Verified" : "Pending"}
-                  </span>
-                </div>
-                <div>
-                  <label className="font-medium text-gray-700">Joined:</label>
-                  <p className="text-gray-600">{new Date(user.createdAt).toLocaleDateString()}</p>
-                </div>
-                <div>
-                  <label className="font-medium text-gray-700">Last Updated:</label>
-                  <p className="text-gray-600">{new Date(user.updatedAt).toLocaleDateString()}</p>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Admin Role
+                </label>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="content_admin">Content Admin</option>
+                  <option value="user_admin">User Admin</option>
+                  <option value="super_admin">Super Admin</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Content Admin: Manage content only | User Admin: Manage users only | Super Admin: Full access
+                </p>
               </div>
 
-              {user.bio && (
-                <div>
-                  <label className="font-medium text-gray-700">Bio:</label>
-                  <p className="text-gray-600 mt-1 text-sm">{user.bio}</p>
-                </div>
-              )}
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Permissions:</h4>
+                <ul className="text-xs text-gray-600 space-y-1">
+                  <li>✓ Manage users and content</li>
+                  <li>✓ Access admin dashboard</li>
+                  <li>✓ Moderate platform content</li>
+                  {role === "super_admin" && <li>✓ Promote other users to admin</li>}
+                </ul>
+              </div>
             </div>
 
             <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
               <button
-                onClick={() => {
-                  onClose();
-                  handleEdit(user);
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-              >
-                Edit User
-              </button>
-              <button
                 onClick={onClose}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors text-sm font-medium"
               >
-                Close
+                Cancel
+              </button>
+              <button
+                onClick={handlePromote}
+                disabled={promoting}
+                className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium disabled:opacity-50 flex items-center"
+              >
+                {promoting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Promoting...
+                  </>
+                ) : (
+                  <>
+                    <Crown className="w-4 h-4 mr-2" />
+                    Promote to Admin
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Delete Confirmation Modal
+  const DeleteConfirmationModal = ({ user, onClose, onConfirm }) => {
+    const [deleting, setDeleting] = useState(false);
+
+    const handleConfirm = async () => {
+      setDeleting(true);
+      await onConfirm(user._id);
+      setDeleting(false);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl max-w-md w-full">
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-100 rounded-full">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Delete User</h3>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-gray-600">
+                Are you sure you want to delete this user? This action cannot be undone.
+              </p>
+
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                    {user?.username?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900 text-sm">{user?.username}</h4>
+                    <p className="text-gray-600 text-xs flex items-center">
+                      <Mail className="w-3 h-3 mr-1" />
+                      {user?.email}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-yellow-800 text-sm">
+                  <strong>Warning:</strong> This will permanently delete the user account and all associated data.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
+              <button
+                onClick={onClose}
+                disabled={deleting}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors text-sm font-medium disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={deleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50 flex items-center"
+              >
+                {deleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete User
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -271,12 +452,15 @@ const UserManagement = () => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
               <p className="text-gray-600 mt-2">
-                Manage all users, verify accounts, and maintain platform integrity
+                Manage all users, verify accounts, and promote to admin roles
               </p>
             </div>
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
               <button
-                onClick={fetchUsers}
+                onClick={() => {
+                  fetchUsers();
+                  fetchStats();
+                }}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -290,31 +474,48 @@ const UserManagement = () => {
             <StatCard
               icon={User}
               label="Total Users"
-              value={users.length}
+              value={stats.totalUsers}
               color="blue"
             />
             <StatCard
               icon={CheckCircle}
-              label="Verified"
-              value={users.filter(u => u.isVerified).length}
+              label="Verified Users"
+              value={stats.verifiedUsers}
               color="green"
             />
             <StatCard
               icon={Music}
               label="Artists"
-              value={users.filter(u => u.userType === 'artist').length}
+              value={stats.artists}
               color="purple"
             />
             <StatCard
-              icon={Building2}
-              label="Venues"
-              value={users.filter(u => u.userType === 'venue').length}
-              color="green"
+              icon={Shield}
+              label="Admins"
+              value={stats.totalAdmins}
+              color="red"
             />
           </div>
 
-          {/* Filters Card */}
+          {/* Improved Filters Card */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Filter className="w-5 h-5 text-gray-600" />
+                <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+              </div>
+
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="flex items-center gap-2 px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <CloseIcon className="w-4 h-4" />
+                  Clear Filters
+                </button>
+              )}
+            </div>
+
             <div className="flex flex-col lg:flex-row gap-4 items-end">
               <div className="flex-1 w-full">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -327,9 +528,16 @@ const UserManagement = () => {
                     placeholder="Search by username or email..."
                     className="text-gray-500 w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && fetchUsers()}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                   />
+                  {search && (
+                    <button
+                      onClick={() => handleSearchChange("")}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <CloseIcon className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -346,6 +554,7 @@ const UserManagement = () => {
                   <option value="artist">Artist</option>
                   <option value="venue">Venue</option>
                   <option value="admin">Admin</option>
+                  <option value="user">Regular User</option>
                 </select>
               </div>
 
@@ -371,15 +580,57 @@ const UserManagement = () => {
                 Apply Filters
               </button>
             </div>
+
+            {/* Active Filters Display */}
+            {hasActiveFilters && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {search && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                    Search: "{search}"
+                    <button
+                      onClick={() => setSearch("")}
+                      className="ml-1 hover:text-blue-600"
+                    >
+                      <CloseIcon className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {userType !== "all" && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                    Type: {userType}
+                    <button
+                      onClick={() => setUserType("all")}
+                      className="ml-1 hover:text-green-600"
+                    >
+                      <CloseIcon className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {verified !== "" && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
+                    Status: {verified === "true" ? "Verified" : "Unverified"}
+                    <button
+                      onClick={() => setVerified("")}
+                      className="ml-1 hover:text-purple-600"
+                    >
+                      <CloseIcon className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Users Table Card */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
             {/* Table Header */}
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <h3 className="text-lg font-semibold text-gray-900">
                 Users ({users.length})
               </h3>
+              <div className="text-sm text-gray-500">
+                Page {page} of {pages}
+              </div>
             </div>
 
             {/* Table */}
@@ -527,6 +778,16 @@ const UserManagement = () => {
                                 </>
                               ) : (
                                 <>
+                                  {user.userType !== 'admin' && (
+                                    <button
+                                      onClick={() => setPromoteModal(user)}
+                                      className="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-sm font-medium"
+                                      title="Promote to Admin"
+                                    >
+                                      <Crown className="w-3 h-3 mr-1" />
+                                      Promote
+                                    </button>
+                                  )}
                                   {!user.isVerified && (
                                     <button
                                       onClick={() => handleVerify(user._id)}
@@ -560,8 +821,17 @@ const UserManagement = () => {
                                           <Edit className="w-4 h-4 mr-2" />
                                           Edit User
                                         </button>
+                                        {user.userType !== 'admin' && (
+                                          <button
+                                            onClick={() => setPromoteModal(user)}
+                                            className="flex items-center px-4 py-2 text-sm text-yellow-600 hover:bg-yellow-50 w-full text-left"
+                                          >
+                                            <UserPlus className="w-4 h-4 mr-2" />
+                                            Promote to Admin
+                                          </button>
+                                        )}
                                         <button
-                                          onClick={() => handleDelete(user._id)}
+                                          onClick={() => setDeleteModal(user)}
                                           className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
                                         >
                                           <Trash2 className="w-4 h-4 mr-2" />
@@ -583,8 +853,19 @@ const UserManagement = () => {
                             <User className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                             <p className="text-lg font-medium">No users found</p>
                             <p className="text-sm mt-1">
-                              Try adjusting your search filters
+                              {hasActiveFilters
+                                ? "Try adjusting your search filters"
+                                : "No users in the system"
+                              }
                             </p>
+                            {hasActiveFilters && (
+                              <button
+                                onClick={clearFilters}
+                                className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                              >
+                                Clear Filters
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -646,6 +927,24 @@ const UserManagement = () => {
             onClose={() => setViewingUser(null)}
           />
         )}
+
+        {/* Promote to Admin Modal */}
+        {promoteModal && (
+          <PromoteModal
+            user={promoteModal}
+            onClose={() => setPromoteModal(null)}
+            onPromote={handlePromoteToAdmin}
+          />
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {deleteModal && (
+          <DeleteConfirmationModal
+            user={deleteModal}
+            onClose={() => setDeleteModal(null)}
+            onConfirm={handleDelete}
+          />
+        )}
       </div>
     </AdminLayout>
   );
@@ -657,6 +956,7 @@ const StatCard = ({ icon: Icon, label, value, color }) => {
     blue: "from-blue-500 to-blue-600",
     green: "from-green-500 to-green-600",
     purple: "from-purple-500 to-purple-600",
+    red: "from-red-500 to-red-600",
     orange: "from-orange-500 to-orange-600",
   };
 
@@ -669,6 +969,105 @@ const StatCard = ({ icon: Icon, label, value, color }) => {
       </div>
       <h3 className="text-2xl font-bold text-gray-900 mb-1">{value || 0}</h3>
       <p className="text-gray-600 text-sm">{label}</p>
+    </div>
+  );
+};
+
+// UserDetailModal Component
+const UserDetailModal = ({ user, onClose }) => {
+  if (!user) return null;
+
+  const getUserTypeColor = (type) => {
+    switch (type) {
+      case 'artist': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'venue': return 'bg-green-100 text-green-800 border-green-200';
+      case 'admin': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-blue-100 text-blue-800 border-blue-200';
+    }
+  };
+
+  const getUserTypeIcon = (type) => {
+    switch (type) {
+      case 'artist': return <Music className="w-4 h-4" />;
+      case 'venue': return <Building2 className="w-4 h-4" />;
+      case 'admin': return <Shield className="w-4 h-4" />;
+      default: return <User className="w-4 h-4" />;
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold text-gray-900">User Details</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-lg">
+                {user.username?.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900">{user.username}</h4>
+                <p className="text-gray-600 flex items-center">
+                  <Mail className="w-4 h-4 mr-1" />
+                  {user.email}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <label className="font-medium text-gray-700">User Type:</label>
+                <span className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getUserTypeColor(user.userType)}`}>
+                  {getUserTypeIcon(user.userType)}
+                  <span className="ml-1 capitalize">{user.userType}</span>
+                </span>
+              </div>
+              <div>
+                <label className="font-medium text-gray-700">Status:</label>
+                <span className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.isVerified
+                  ? "bg-green-100 text-green-800"
+                  : "bg-orange-100 text-orange-800"
+                  }`}>
+                  {user.isVerified ? "Verified" : "Pending"}
+                </span>
+              </div>
+              <div>
+                <label className="font-medium text-gray-700">Joined:</label>
+                <p className="text-gray-600">{new Date(user.createdAt).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <label className="font-medium text-gray-700">Last Updated:</label>
+                <p className="text-gray-600">{new Date(user.updatedAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+
+            {user.bio && (
+              <div>
+                <label className="font-medium text-gray-700">Bio:</label>
+                <p className="text-gray-600 mt-1 text-sm">{user.bio}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors text-sm font-medium"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
