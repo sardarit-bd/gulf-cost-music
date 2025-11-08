@@ -1,19 +1,15 @@
 "use client";
-import { useState, useEffect } from "react";
-import {
-  Plus,
-  Trash2,
-  Edit,
-  RefreshCw,
-  Video,
-  Search,
-  Loader2,
-  Eye,
-  MoreVertical,
-  Tag,
-} from "lucide-react";
-import axios from "axios";
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import axios from "axios";
+import {
+  Edit,
+  Loader2,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Video
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
 // Utility function for clean error messages
@@ -79,18 +75,31 @@ export default function CastPage() {
   // Create or update cast
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const savePromise = new Promise(async (resolve, reject) => {
       try {
-        const headers = { Authorization: `Bearer ${token}` };
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        };
+
+        // Build FormData for file upload
+        const fd = new FormData();
+        fd.append("title", formData.title);
+        fd.append("youtubeUrl", formData.youtubeUrl);
+        fd.append("description", formData.description);
+
+        // If thumbnail is a File object (user selected new image)
+        if (formData.thumbnail instanceof File) {
+          fd.append("thumbnail", formData.thumbnail);
+        }
 
         if (editingItem) {
-          await axios.put(
-            `${API_BASE}/api/casts/${editingItem._id}`,
-            formData,
-            { headers }
-          );
+          await axios.put(`${API_BASE}/api/casts/${editingItem._id}`, fd, {
+            headers,
+          });
         } else {
-          await axios.post(`${API_BASE}/api/casts`, formData, { headers });
+          await axios.post(`${API_BASE}/api/casts`, fd, { headers });
         }
 
         resolve();
@@ -111,6 +120,7 @@ export default function CastPage() {
       error: (error) => handleApiError(error, "Failed to save podcast"),
     });
   };
+
 
   // Edit
   const handleEdit = (item) => {
@@ -192,92 +202,78 @@ export default function CastPage() {
           </div>
 
           {/* Form Section */}
-          {showForm && (
-            <div className="bg-white rounded-xl border shadow-sm p-6 mb-6">
-              <h2 className="text-xl font-semibold mb-4">
-                {editingItem ? "Edit Podcast" : "Add New Podcast"}
-              </h2>
-              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Title *
-                  </label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    className="text-gray-500 bg-gray-100 w-full border rounded-lg px-3 py-2"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    YouTube URL *
-                  </label>
-                  <input
-                    type="url"
-                    name="youtubeUrl"
-                    value={formData.youtubeUrl}
-                    onChange={(e) =>
-                      setFormData({ ...formData, youtubeUrl: e.target.value })
-                    }
-                    className="text-gray-500 bg-gray-100 w-full border rounded-lg px-3 py-2"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Thumbnail URL
-                  </label>
-                  <input
-                    type="url"
-                    name="thumbnail"
-                    value={formData.thumbnail}
-                    onChange={(e) =>
-                      setFormData({ ...formData, thumbnail: e.target.value })
-                    }
-                    className="text-gray-500 bg-gray-100 w-full border rounded-lg px-3 py-2"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block mb-2 text-sm font-medium text-gray-700">
-                    Description
-                  </label>
-                  <textarea
-                    name="description"
-                    rows="3"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    className="text-gray-500 bg-gray-100 w-full border rounded-lg px-3 py-2"
-                  ></textarea>
-                </div>
-
-                <div className="md:col-span-2 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="px-6 py-2 border rounded-lg text-gray-600 hover:bg-gray-100"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-                  >
-                    {editingItem ? "Update Podcast" : "Add Podcast"}
-                  </button>
-                </div>
-              </form>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-700">Title *</label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="text-gray-500 bg-gray-100 w-full border rounded-lg px-3 py-2"
+                required
+              />
             </div>
-          )}
+
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-700">YouTube URL *</label>
+              <input
+                type="url"
+                value={formData.youtubeUrl}
+                onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
+                className="text-gray-500 bg-gray-100 w-full border rounded-lg px-3 py-2"
+                required
+              />
+            </div>
+
+            {/* File Upload Input */}
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-700">Thumbnail Image</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                  setFormData({ ...formData, thumbnail: e.target.files[0] })
+                }
+                className="text-gray-500 bg-gray-100 w-full border rounded-lg px-3 py-2"
+              />
+              {formData.thumbnail && formData.thumbnail instanceof File && (
+                <img
+                  src={URL.createObjectURL(formData.thumbnail)}
+                  alt="Preview"
+                  className="w-24 h-24 mt-2 rounded object-cover border"
+                />
+              )}
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block mb-2 text-sm font-medium text-gray-700">Description</label>
+              <textarea
+                rows="3"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                className="text-gray-500 bg-gray-100 w-full border rounded-lg px-3 py-2"
+              ></textarea>
+            </div>
+
+            <div className="md:col-span-2 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={resetForm}
+                className="px-6 py-2 border rounded-lg text-gray-600 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              >
+                {editingItem ? "Update Podcast" : "Add Podcast"}
+              </button>
+            </div>
+          </form>
+
 
           {/* Casts Table */}
           <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
