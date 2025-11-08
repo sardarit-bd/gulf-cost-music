@@ -1,7 +1,7 @@
 import { AlertCircle } from "lucide-react";
 
-const EmptyState = ({ activeTab, onRefresh }) => {
-    const getEmptyStateConfig = () => {
+export default function EmptyState({ activeTab, onRefresh }) {
+    const getMessage = () => {
         switch (activeTab) {
             case 'published':
                 return {
@@ -21,13 +21,13 @@ const EmptyState = ({ activeTab, onRefresh }) => {
         }
     };
 
-    const { title, description } = getEmptyStateConfig();
+    const message = getMessage();
 
     return (
         <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
             <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
-            <p className="text-gray-600 max-w-md mx-auto mb-6">{description}</p>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">{message.title}</h3>
+            <p className="text-gray-600 max-w-md mx-auto mb-6">{message.description}</p>
             <button
                 onClick={onRefresh}
                 className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-colors font-medium"
@@ -36,6 +36,4 @@ const EmptyState = ({ activeTab, onRefresh }) => {
             </button>
         </div>
     );
-};
-
-export default EmptyState;
+}

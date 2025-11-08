@@ -1,8 +1,6 @@
 import { CheckCircle2, Package } from "lucide-react";
 
-const StatsSection = ({ printifyProducts, totalProducts, publishedCount, unpublishedCount }) => {
-    if (printifyProducts.length === 0) return null;
-
+export default function StatsSection({ totalProducts, publishedCount, unpublishedCount }) {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
             <div className="bg-white rounded-xl p-4 border border-gray-200">
@@ -32,6 +30,4 @@ const StatsSection = ({ printifyProducts, totalProducts, publishedCount, unpubli
             </div>
         </div>
     );
-};
-
-export default StatsSection;
+}

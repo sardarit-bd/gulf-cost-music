@@ -1,4 +1,4 @@
-const TabNavigation = ({ activeTab, onTabChange, totalProducts, publishedCount, unpublishedCount }) => {
+export default function TabNavigation({ activeTab, onTabChange, totalProducts, publishedCount, unpublishedCount }) {
     const tabs = [
         { id: 'all', label: 'All Products', count: totalProducts },
         { id: 'published', label: 'Published', count: publishedCount },
@@ -27,6 +27,4 @@ const TabNavigation = ({ activeTab, onTabChange, totalProducts, publishedCount, 
             ))}
         </div>
     );
-};
-
-export default TabNavigation;
+}
