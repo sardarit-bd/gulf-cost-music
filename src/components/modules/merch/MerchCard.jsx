@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-export default function MerchCard() {
+export default function MerchCard({ limit = null }) {
   const [merchItems, setMerchItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -12,10 +12,19 @@ export default function MerchCard() {
       try {
         const res = await fetch(`${API_BASE}/api/merch`);
         const data = await res.json();
-        console.log(data);
 
         if (res.ok && data.success) {
-          setMerchItems(Array.isArray(data.data) ? data.data : []);
+          // Sort and optionally limit results
+          let items = Array.isArray(data.data) ? data.data : [];
+
+          // Sort by creation date or _id (assuming newer entries have newer _id)
+          items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+          if (limit) {
+            items = items.slice(0, limit);
+          }
+
+          setMerchItems(items);
         } else {
           console.error("Error loading merch:", data.message);
           setMerchItems([]);
@@ -29,7 +38,7 @@ export default function MerchCard() {
     };
 
     fetchMerch();
-  }, [API_BASE]);
+  }, [API_BASE, limit]);
 
   if (loading) {
     return (
@@ -67,7 +76,7 @@ export default function MerchCard() {
                   <h3 className="text-base font-medium text-gray-900">
                     {item.name}
                   </h3>
-                  <p className="text-gray-600 text-sm mt-1">{item.price}</p>
+                  <p className="text-gray-600 text-sm mt-1">${item.price}</p>
                   <button
                     onClick={() => setShowModal(true)}
                     className="bg-[var(--primary)] w-full text-gray-700 mt-5 px-4 py-2 rounded font-bold hover:bg-[var(--primary)]/90 transition text-lg"
@@ -84,13 +93,10 @@ export default function MerchCard() {
       {/* ===== Modal ===== */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
-          {/* Overlay */}
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setShowModal(false)}
           ></div>
-
-          {/* Modal Content */}
           <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-[90%] max-w-md text-center z-10 animate-fadeInScale">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               🚧 Under Construction
@@ -109,7 +115,6 @@ export default function MerchCard() {
         </div>
       )}
 
-      {/* Animation */}
       <style jsx>{`
         @keyframes fadeInScale {
           from {
