@@ -1,6 +1,6 @@
 import { Plus, RefreshCw, ShoppingBag } from "lucide-react";
 
-const HeaderSection = ({ loading, publishedLoading, unpublishedCount, onRefresh, onAddAll }) => {
+export default function HeaderSection({ onRefresh, onAddAll, loading, publishedLoading, unpublishedCount }) {
     return (
         <div className="bg-white rounded-2xl p-6 mb-8 shadow-sm border border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -28,7 +28,7 @@ const HeaderSection = ({ loading, publishedLoading, unpublishedCount, onRefresh,
                     <button
                         onClick={onAddAll}
                         disabled={unpublishedCount === 0 || loading}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-[#FEDA19] text-black rounded-xl hover:bg-[#e0c00a] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-sm"
                     >
                         <Plus className="w-4 h-4" />
                         Publish All ({unpublishedCount})
@@ -37,6 +37,4 @@ const HeaderSection = ({ loading, publishedLoading, unpublishedCount, onRefresh,
             </div>
         </div>
     );
-};
-
-export default HeaderSection;
+}
