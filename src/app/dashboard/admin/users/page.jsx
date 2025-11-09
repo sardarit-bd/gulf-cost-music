@@ -280,6 +280,20 @@ const UserManagement = () => {
       );
 
       if (response.data.success) {
+        const updatedUser = response.data.data?.user;
+        const loggedInUser = JSON.parse(localStorage.getItem("user"));
+
+        if (
+          loggedInUser?.id === updatedUser?._id &&
+          loggedInUser?.userType === "admin"
+        ) {
+          alert("Email updated successfully. Please log in again.");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.href = "/signin";
+          return;
+        }
+
         setEditingUser(null);
         setFormData({});
         fetchUsers();
@@ -290,12 +304,13 @@ const UserManagement = () => {
       if (err.response?.data?.message) {
         alert(`Error: ${err.response.data.message}`);
       } else {
-        alert('Error updating user. Please try again.');
+        alert("Error updating user. Please try again.");
       }
     } finally {
       setSaveLoading(false);
     }
   };
+
 
   const handleCancel = () => {
     setEditingUser(null);
