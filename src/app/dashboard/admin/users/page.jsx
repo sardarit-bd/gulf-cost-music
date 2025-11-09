@@ -9,6 +9,7 @@ import {
   Crown,
   Edit,
   Eye,
+  FileText,
   Filter,
   Mail,
   MoreVertical,
@@ -44,6 +45,7 @@ const UserManagement = () => {
     artists: 0,
     venues: 0,
     admins: 0,
+    journalists: 0,
     totalAdmins: 0
   });
   const [promoteModal, setPromoteModal] = useState(null);
@@ -53,7 +55,6 @@ const UserManagement = () => {
   const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin`;
   const USERS_URL = `${API_URL}/users`;
   const STATS_URL = `${API_URL}/dashboard`;
-  console.log(STATS_URL)
 
   const fetchStats = async () => {
     try {
@@ -61,12 +62,59 @@ const UserManagement = () => {
       const { data } = await axios.get(STATS_URL, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       if (data.success) {
-        console.log(data)
-        setStats(data.data);
+        console.log("Dashboard API Response:", data.data);
+
+        // Transform API response to match our stats structure
+        const dashboardData = data.data;
+
+        // Extract counts from userStats array
+        const userStats = dashboardData.userStats || [];
+        const artistsCount = userStats.find(stat => stat._id === 'artist')?.count || 0;
+        const venuesCount = userStats.find(stat => stat._id === 'venue')?.count || 0;
+        const adminsCount = userStats.find(stat => stat._id === 'admin')?.count || 0;
+        const journalistsCount = userStats.find(stat => stat._id === 'journalist')?.count || 0;
+
+        // Use stats from dashboard or calculate from userStats
+        const totalUsers = dashboardData.stats?.totalUsers ||
+          (artistsCount + venuesCount + adminsCount + journalistsCount);
+
+        // For verified users, we'll calculate from the current users list
+        // This is an approximation since we don't have verified count in dashboard
+        const verifiedUsersCount = await fetchVerifiedUsersCount();
+
+        setStats({
+          totalUsers: totalUsers,
+          verifiedUsers: verifiedUsersCount,
+          artists: artistsCount,
+          venues: venuesCount,
+          admins: adminsCount,
+          journalists: journalistsCount,
+          totalAdmins: adminsCount,
+          // Additional stats from dashboard
+          totalEvents: dashboardData.stats?.totalEvents || 0,
+          totalNews: dashboardData.stats?.totalNews || 0,
+          pendingContacts: dashboardData.stats?.pendingContacts || 0
+        });
       }
     } catch (err) {
       console.error("Fetch stats error:", err);
+    }
+  };
+
+  // Helper function to get verified users count
+  const fetchVerifiedUsersCount = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const { data } = await axios.get(`${USERS_URL}?verified=true&limit=1`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      return data.data?.pagination?.total || 0;
+    } catch (err) {
+      console.error("Fetch verified users count error:", err);
+      return 0;
     }
   };
 
@@ -85,12 +133,38 @@ const UserManagement = () => {
 
       setUsers(data.data.users);
       setPages(data.data.pagination.pages);
+
+      // Update verified count when we fetch verified users
+      if (verified === "true") {
+        setStats(prev => ({
+          ...prev,
+          verifiedUsers: data.data.pagination?.total || prev.verifiedUsers
+        }));
+      }
     } catch (err) {
       console.error("Fetch users error:", err);
     } finally {
       setLoading(false);
     }
   };
+
+  // Calculate real-time stats from current filtered users
+  const calculateRealTimeStats = () => {
+    return {
+      totalUsers: users.length,
+      verifiedUsers: users.filter(user => user.isVerified).length,
+      artists: users.filter(user => user.userType === 'artist').length,
+      venues: users.filter(user => user.userType === 'venue').length,
+      admins: users.filter(user => user.userType === 'admin').length,
+      journalists: users.filter(user => user.userType === 'journalist').length,
+      totalAdmins: users.filter(user => user.userType === 'admin').length
+    };
+  };
+
+  // Use real-time stats when filters are active, otherwise use server stats
+  const displayStats = (search || userType !== "all" || verified !== "")
+    ? calculateRealTimeStats()
+    : stats;
 
   // Debounced search function
   const handleSearchChange = (value) => {
@@ -254,6 +328,7 @@ const UserManagement = () => {
       case 'artist': return <Music className="w-4 h-4" />;
       case 'venue': return <Building2 className="w-4 h-4" />;
       case 'admin': return <Shield className="w-4 h-4" />;
+      case 'journalist': return <FileText className="w-4 h-4" />;
       default: return <User className="w-4 h-4" />;
     }
   };
@@ -263,13 +338,15 @@ const UserManagement = () => {
       case 'artist': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'venue': return 'bg-green-100 text-green-800 border-green-200';
       case 'admin': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'journalist': return 'bg-blue-100 text-blue-800 border-blue-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   // Check if any filter is active
   const hasActiveFilters = search || userType !== "all" || verified !== "";
 
+  // Rest of the component (PromoteModal, DeleteConfirmationModal) remains the same...
   // Promote to Admin Modal
   const PromoteModal = ({ user, onClose, onPromote }) => {
     const [role, setRole] = useState("content_admin");
@@ -453,6 +530,7 @@ const UserManagement = () => {
               <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
               <p className="text-gray-600 mt-2">
                 Manage all users, verify accounts, and promote to admin roles
+                {hasActiveFilters && " (Showing filtered results)"}
               </p>
             </div>
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
@@ -469,31 +547,60 @@ const UserManagement = () => {
             </div>
           </div>
 
-          {/* Stats Cards */}
+          {/* Stats Cards - Now with proper data mapping */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard
               icon={User}
               label="Total Users"
-              value={stats.totalUsers}
+              value={displayStats.totalUsers}
               color="blue"
+              description="All registered users"
             />
             <StatCard
               icon={CheckCircle}
               label="Verified Users"
-              value={stats.verifiedUsers}
+              value={displayStats.verifiedUsers}
               color="green"
+              description="Email verified accounts"
             />
             <StatCard
               icon={Music}
               label="Artists"
-              value={stats.artists}
+              value={displayStats.artists}
               color="purple"
+              description="Music artists"
             />
             <StatCard
               icon={Shield}
               label="Admins"
-              value={stats.totalAdmins}
+              value={displayStats.totalAdmins}
               color="red"
+              description="Administrative users"
+            />
+          </div>
+
+          {/* Additional Stats Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <StatCard
+              icon={Building2}
+              label="Venues"
+              value={displayStats.venues}
+              color="green"
+              description="Event venues"
+            />
+            <StatCard
+              icon={FileText}
+              label="Journalists"
+              value={displayStats.journalists}
+              color="blue"
+              description="Content creators"
+            />
+            <StatCard
+              icon={User}
+              label="Filtered Users"
+              value={users.length}
+              color="orange"
+              description="Currently showing"
             />
           </div>
 
@@ -503,6 +610,11 @@ const UserManagement = () => {
               <div className="flex items-center gap-2">
                 <Filter className="w-5 h-5 text-gray-600" />
                 <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+                {hasActiveFilters && (
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                    Active Filters
+                  </span>
+                )}
               </div>
 
               {hasActiveFilters && (
@@ -554,6 +666,7 @@ const UserManagement = () => {
                   <option value="artist">Artist</option>
                   <option value="venue">Venue</option>
                   <option value="admin">Admin</option>
+                  <option value="journalist">Journalist</option>
                   <option value="user">Regular User</option>
                 </select>
               </div>
@@ -621,12 +734,18 @@ const UserManagement = () => {
             )}
           </div>
 
+          {/* Rest of the component remains the same */}
           {/* Users Table Card */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
             {/* Table Header */}
             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <h3 className="text-lg font-semibold text-gray-900">
-                Users ({users.length})
+                Users ({stats?.totalUsers})
+                {hasActiveFilters && (
+                  <span className="text-sm text-gray-500 ml-2">
+                    (Filtered from {stats.totalUsers} total users)
+                  </span>
+                )}
               </h3>
               <div className="text-sm text-gray-500">
                 Page {page} of {pages}
@@ -715,6 +834,7 @@ const UserManagement = () => {
                                 <option value="artist">Artist</option>
                                 <option value="venue">Venue</option>
                                 <option value="admin">Admin</option>
+                                <option value="journalist">Journalist</option>
                               </select>
                             ) : (
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getUserTypeColor(user.userType)}`}>
@@ -950,8 +1070,8 @@ const UserManagement = () => {
   );
 };
 
-// Stat Card Component
-const StatCard = ({ icon: Icon, label, value, color }) => {
+// Updated Stat Card Component with description
+const StatCard = ({ icon: Icon, label, value, color, description }) => {
   const colorClasses = {
     blue: "from-blue-500 to-blue-600",
     green: "from-green-500 to-green-600",
@@ -968,12 +1088,15 @@ const StatCard = ({ icon: Icon, label, value, color }) => {
         </div>
       </div>
       <h3 className="text-2xl font-bold text-gray-900 mb-1">{value || 0}</h3>
-      <p className="text-gray-600 text-sm">{label}</p>
+      <p className="text-gray-900 font-medium text-sm">{label}</p>
+      {description && (
+        <p className="text-gray-500 text-xs mt-1">{description}</p>
+      )}
     </div>
   );
 };
 
-// UserDetailModal Component
+// UserDetailModal Component (unchanged)
 const UserDetailModal = ({ user, onClose }) => {
   if (!user) return null;
 
@@ -982,7 +1105,8 @@ const UserDetailModal = ({ user, onClose }) => {
       case 'artist': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'venue': return 'bg-green-100 text-green-800 border-green-200';
       case 'admin': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'journalist': return 'bg-blue-100 text-blue-800 border-blue-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -991,6 +1115,7 @@ const UserDetailModal = ({ user, onClose }) => {
       case 'artist': return <Music className="w-4 h-4" />;
       case 'venue': return <Building2 className="w-4 h-4" />;
       case 'admin': return <Shield className="w-4 h-4" />;
+      case 'journalist': return <FileText className="w-4 h-4" />;
       default: return <User className="w-4 h-4" />;
     }
   };

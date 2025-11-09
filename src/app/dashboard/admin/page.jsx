@@ -1,30 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  Users,
-  Music,
-  Building2,
-  Newspaper,
-  Mail,
-  Calendar,
-  TrendingUp,
-  Eye,
-  UserCheck,
-  Download,
-  RefreshCw,
-  BarChart3,
-  Plus,
-  MoreVertical,
-  Search,
-  Filter,
-  Clock,
-  MapPin,
-  CheckCircle,
-  XCircle,
-  AlertCircle
-} from "lucide-react";
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import {
+  AlertCircle,
+  Building2,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Download,
+  Filter,
+  Mail,
+  MapPin,
+  MoreVertical,
+  Music,
+  Plus,
+  UserCheck,
+  Users
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function AdminDashboard() {
@@ -112,7 +105,7 @@ export default function AdminDashboard() {
   return (
     <AdminLayout>
       <div className="w-full mx-auto">
-        <Toaster/>
+        <Toaster />
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div>
@@ -121,19 +114,6 @@ export default function AdminDashboard() {
               Welcome back! Here's what's happening with your platform today.
             </p>
           </div>
-          {/* <div className="flex items-center space-x-3 mt-4 sm:mt-0">
-            <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium">
-              <Download className="w-4 h-4" />
-              <span>Export</span>
-            </button>
-            <button 
-              onClick={fetchDashboardData}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span>Refresh</span>
-            </button>
-          </div> */}
         </div>
 
         {/* Stats Grid */}
@@ -330,9 +310,9 @@ const RecentUsersTable = ({ users }) => {
               </td>
               <td className="py-3">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${user.userType === 'admin' ? 'bg-red-100 text-red-800' :
-                    user.userType === 'artist' ? 'bg-purple-100 text-purple-800' :
-                      user.userType === 'venue' ? 'bg-green-100 text-green-800' :
-                        'bg-blue-100 text-blue-800'
+                  user.userType === 'artist' ? 'bg-purple-100 text-purple-800' :
+                    user.userType === 'venue' ? 'bg-green-100 text-green-800' :
+                      'bg-blue-100 text-blue-800'
                   }`}>
                   {user.userType}
                 </span>
