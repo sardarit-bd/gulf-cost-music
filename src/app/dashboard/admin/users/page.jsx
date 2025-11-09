@@ -22,7 +22,7 @@ import {
   User,
   UserPlus,
   X,
-  XCircle
+  XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -46,7 +46,7 @@ const UserManagement = () => {
     venues: 0,
     admins: 0,
     journalists: 0,
-    totalAdmins: 0
+    totalAdmins: 0,
   });
   const [promoteModal, setPromoteModal] = useState(null);
   const [deleteModal, setDeleteModal] = useState(null);
@@ -71,14 +71,19 @@ const UserManagement = () => {
 
         // Extract counts from userStats array
         const userStats = dashboardData.userStats || [];
-        const artistsCount = userStats.find(stat => stat._id === 'artist')?.count || 0;
-        const venuesCount = userStats.find(stat => stat._id === 'venue')?.count || 0;
-        const adminsCount = userStats.find(stat => stat._id === 'admin')?.count || 0;
-        const journalistsCount = userStats.find(stat => stat._id === 'journalist')?.count || 0;
+        const artistsCount =
+          userStats.find((stat) => stat._id === "artist")?.count || 0;
+        const venuesCount =
+          userStats.find((stat) => stat._id === "venue")?.count || 0;
+        const adminsCount =
+          userStats.find((stat) => stat._id === "admin")?.count || 0;
+        const journalistsCount =
+          userStats.find((stat) => stat._id === "journalist")?.count || 0;
 
         // Use stats from dashboard or calculate from userStats
-        const totalUsers = dashboardData.stats?.totalUsers ||
-          (artistsCount + venuesCount + adminsCount + journalistsCount);
+        const totalUsers =
+          dashboardData.stats?.totalUsers ||
+          artistsCount + venuesCount + adminsCount + journalistsCount;
 
         // For verified users, we'll calculate from the current users list
         // This is an approximation since we don't have verified count in dashboard
@@ -95,7 +100,7 @@ const UserManagement = () => {
           // Additional stats from dashboard
           totalEvents: dashboardData.stats?.totalEvents || 0,
           totalNews: dashboardData.stats?.totalNews || 0,
-          pendingContacts: dashboardData.stats?.pendingContacts || 0
+          pendingContacts: dashboardData.stats?.pendingContacts || 0,
         });
       }
     } catch (err) {
@@ -136,9 +141,9 @@ const UserManagement = () => {
 
       // Update verified count when we fetch verified users
       if (verified === "true") {
-        setStats(prev => ({
+        setStats((prev) => ({
           ...prev,
-          verifiedUsers: data.data.pagination?.total || prev.verifiedUsers
+          verifiedUsers: data.data.pagination?.total || prev.verifiedUsers,
         }));
       }
     } catch (err) {
@@ -152,19 +157,21 @@ const UserManagement = () => {
   const calculateRealTimeStats = () => {
     return {
       totalUsers: users.length,
-      verifiedUsers: users.filter(user => user.isVerified).length,
-      artists: users.filter(user => user.userType === 'artist').length,
-      venues: users.filter(user => user.userType === 'venue').length,
-      admins: users.filter(user => user.userType === 'admin').length,
-      journalists: users.filter(user => user.userType === 'journalist').length,
-      totalAdmins: users.filter(user => user.userType === 'admin').length
+      verifiedUsers: users.filter((user) => user.isVerified).length,
+      artists: users.filter((user) => user.userType === "artist").length,
+      venues: users.filter((user) => user.userType === "venue").length,
+      admins: users.filter((user) => user.userType === "admin").length,
+      journalists: users.filter((user) => user.userType === "journalist")
+        .length,
+      totalAdmins: users.filter((user) => user.userType === "admin").length,
     };
   };
 
   // Use real-time stats when filters are active, otherwise use server stats
-  const displayStats = (search || userType !== "all" || verified !== "")
-    ? calculateRealTimeStats()
-    : stats;
+  const displayStats =
+    search || userType !== "all" || verified !== ""
+      ? calculateRealTimeStats()
+      : stats;
 
   // Debounced search function
   const handleSearchChange = (value) => {
@@ -254,7 +261,7 @@ const UserManagement = () => {
       username: user.username,
       email: user.email,
       userType: user.userType,
-      isVerified: user.isVerified
+      isVerified: user.isVerified,
     });
     setActionMenu(null);
   };
@@ -268,16 +275,12 @@ const UserManagement = () => {
     setSaveLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.put(
-        `${USERS_URL}/${id}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await axios.put(`${USERS_URL}/${id}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (response.data.success) {
         const updatedUser = response.data.data?.user;
@@ -311,16 +314,15 @@ const UserManagement = () => {
     }
   };
 
-
   const handleCancel = () => {
     setEditingUser(null);
     setFormData({});
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -340,21 +342,31 @@ const UserManagement = () => {
 
   const getUserTypeIcon = (type) => {
     switch (type) {
-      case 'artist': return <Music className="w-4 h-4" />;
-      case 'venue': return <Building2 className="w-4 h-4" />;
-      case 'admin': return <Shield className="w-4 h-4" />;
-      case 'journalist': return <FileText className="w-4 h-4" />;
-      default: return <User className="w-4 h-4" />;
+      case "artist":
+        return <Music className="w-4 h-4" />;
+      case "venue":
+        return <Building2 className="w-4 h-4" />;
+      case "admin":
+        return <Shield className="w-4 h-4" />;
+      case "journalist":
+        return <FileText className="w-4 h-4" />;
+      default:
+        return <User className="w-4 h-4" />;
     }
   };
 
   const getUserTypeColor = (type) => {
     switch (type) {
-      case 'artist': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'venue': return 'bg-green-100 text-green-800 border-green-200';
-      case 'admin': return 'bg-red-100 text-red-800 border-red-200';
-      case 'journalist': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case "artist":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      case "venue":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "admin":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "journalist":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
@@ -378,7 +390,9 @@ const UserManagement = () => {
         <div className="bg-white rounded-xl max-w-md w-full">
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Promote to Admin</h3>
+              <h3 className="text-xl font-bold text-gray-900">
+                Promote to Admin
+              </h3>
               <button
                 onClick={onClose}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -409,17 +423,22 @@ const UserManagement = () => {
                   <option value="super_admin">Super Admin</option>
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
-                  Content Admin: Manage content only | User Admin: Manage users only | Super Admin: Full access
+                  Content Admin: Manage content only | User Admin: Manage users
+                  only | Super Admin: Full access
                 </p>
               </div>
 
               <div className="bg-gray-50 p-3 rounded-lg">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Permissions:</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">
+                  Permissions:
+                </h4>
                 <ul className="text-xs text-gray-600 space-y-1">
                   <li>✓ Manage users and content</li>
                   <li>✓ Access admin dashboard</li>
                   <li>✓ Moderate platform content</li>
-                  {role === "super_admin" && <li>✓ Promote other users to admin</li>}
+                  {role === "super_admin" && (
+                    <li>✓ Promote other users to admin</li>
+                  )}
                 </ul>
               </div>
             </div>
@@ -478,7 +497,8 @@ const UserManagement = () => {
 
             <div className="space-y-4">
               <p className="text-gray-600">
-                Are you sure you want to delete this user? This action cannot be undone.
+                Are you sure you want to delete this user? This action cannot be
+                undone.
               </p>
 
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -487,7 +507,9 @@ const UserManagement = () => {
                     {user?.username?.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900 text-sm">{user?.username}</h4>
+                    <h4 className="font-medium text-gray-900 text-sm">
+                      {user?.username}
+                    </h4>
                     <p className="text-gray-600 text-xs flex items-center">
                       <Mail className="w-3 h-3 mr-1" />
                       {user?.email}
@@ -498,7 +520,8 @@ const UserManagement = () => {
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                 <p className="text-yellow-800 text-sm">
-                  <strong>Warning:</strong> This will permanently delete the user account and all associated data.
+                  <strong>Warning:</strong> This will permanently delete the
+                  user account and all associated data.
                 </p>
               </div>
             </div>
@@ -542,7 +565,9 @@ const UserManagement = () => {
           {/* Header */}
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                User Management
+              </h1>
               <p className="text-gray-600 mt-2">
                 Manage all users, verify accounts, and promote to admin roles
                 {hasActiveFilters && " (Showing filtered results)"}
@@ -811,15 +836,25 @@ const UserManagement = () => {
                                   <div className="space-y-2">
                                     <input
                                       type="text"
-                                      value={formData.username || ''}
-                                      onChange={(e) => handleInputChange('username', e.target.value)}
+                                      value={formData.username || ""}
+                                      onChange={(e) =>
+                                        handleInputChange(
+                                          "username",
+                                          e.target.value
+                                        )
+                                      }
                                       className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-32"
                                       placeholder="Username"
                                     />
                                     <input
                                       type="email"
-                                      value={formData.email || ''}
-                                      onChange={(e) => handleInputChange('email', e.target.value)}
+                                      value={formData.email || ""}
+                                      onChange={(e) =>
+                                        handleInputChange(
+                                          "email",
+                                          e.target.value
+                                        )
+                                      }
                                       className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-40"
                                       placeholder="Email"
                                     />
@@ -841,8 +876,10 @@ const UserManagement = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             {editingUser === user._id ? (
                               <select
-                                value={formData.userType || ''}
-                                onChange={(e) => handleInputChange('userType', e.target.value)}
+                                value={formData.userType || ""}
+                                onChange={(e) =>
+                                  handleInputChange("userType", e.target.value)
+                                }
                                 className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               >
                                 <option value="user">User</option>
@@ -852,17 +889,30 @@ const UserManagement = () => {
                                 <option value="journalist">Journalist</option>
                               </select>
                             ) : (
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getUserTypeColor(user.userType)}`}>
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getUserTypeColor(
+                                  user.userType
+                                )}`}
+                              >
                                 {getUserTypeIcon(user.userType)}
-                                <span className="ml-1 capitalize">{user.userType}</span>
+                                <span className="ml-1 capitalize">
+                                  {user.userType}
+                                </span>
                               </span>
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             {editingUser === user._id ? (
                               <select
-                                value={formData.isVerified?.toString() || 'false'}
-                                onChange={(e) => handleInputChange('isVerified', e.target.value === 'true')}
+                                value={
+                                  formData.isVerified?.toString() || "false"
+                                }
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    "isVerified",
+                                    e.target.value === "true"
+                                  )
+                                }
                                 className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               >
                                 <option value="true">Verified</option>
@@ -913,7 +963,7 @@ const UserManagement = () => {
                                 </>
                               ) : (
                                 <>
-                                  {user.userType !== 'admin' && (
+                                  {user.userType !== "admin" && (
                                     <button
                                       onClick={() => setPromoteModal(user)}
                                       className="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-sm font-medium"
@@ -941,7 +991,13 @@ const UserManagement = () => {
                                   </button>
                                   <div className="relative">
                                     <button
-                                      onClick={() => setActionMenu(actionMenu === user._id ? null : user._id)}
+                                      onClick={() =>
+                                        setActionMenu(
+                                          actionMenu === user._id
+                                            ? null
+                                            : user._id
+                                        )
+                                      }
                                       className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
                                     >
                                       <MoreVertical className="w-4 h-4" />
@@ -956,9 +1012,11 @@ const UserManagement = () => {
                                           <Edit className="w-4 h-4 mr-2" />
                                           Edit User
                                         </button>
-                                        {user.userType !== 'admin' && (
+                                        {user.userType !== "admin" && (
                                           <button
-                                            onClick={() => setPromoteModal(user)}
+                                            onClick={() =>
+                                              setPromoteModal(user)
+                                            }
                                             className="flex items-center px-4 py-2 text-sm text-yellow-600 hover:bg-yellow-50 w-full text-left"
                                           >
                                             <UserPlus className="w-4 h-4 mr-2" />
@@ -986,12 +1044,13 @@ const UserManagement = () => {
                         <td colSpan="5" className="px-6 py-12 text-center">
                           <div className="text-gray-500">
                             <User className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                            <p className="text-lg font-medium">No users found</p>
+                            <p className="text-lg font-medium">
+                              No users found
+                            </p>
                             <p className="text-sm mt-1">
                               {hasActiveFilters
                                 ? "Try adjusting your search filters"
-                                : "No users in the system"
-                              }
+                                : "No users in the system"}
                             </p>
                             {hasActiveFilters && (
                               <button
@@ -1032,10 +1091,11 @@ const UserManagement = () => {
                         <button
                           key={pageNumber}
                           onClick={() => setPage(pageNumber)}
-                          className={`px-3 py-1 rounded-lg text-sm font-medium ${page === pageNumber
-                            ? "bg-blue-600 text-white"
-                            : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                            }`}
+                          className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                            page === pageNumber
+                              ? "bg-blue-600 text-white"
+                              : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                          }`}
                         >
                           {pageNumber}
                         </button>
@@ -1098,7 +1158,9 @@ const StatCard = ({ icon: Icon, label, value, color, description }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
-        <div className={`p-3 rounded-xl bg-gradient-to-r ${colorClasses[color]}`}>
+        <div
+          className={`p-3 rounded-xl bg-gradient-to-r ${colorClasses[color]}`}
+        >
           <Icon className="w-6 h-6 text-white" />
         </div>
       </div>
@@ -1117,21 +1179,31 @@ const UserDetailModal = ({ user, onClose }) => {
 
   const getUserTypeColor = (type) => {
     switch (type) {
-      case 'artist': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'venue': return 'bg-green-100 text-green-800 border-green-200';
-      case 'admin': return 'bg-red-100 text-red-800 border-red-200';
-      case 'journalist': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case "artist":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      case "venue":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "admin":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "journalist":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getUserTypeIcon = (type) => {
     switch (type) {
-      case 'artist': return <Music className="w-4 h-4" />;
-      case 'venue': return <Building2 className="w-4 h-4" />;
-      case 'admin': return <Shield className="w-4 h-4" />;
-      case 'journalist': return <FileText className="w-4 h-4" />;
-      default: return <User className="w-4 h-4" />;
+      case "artist":
+        return <Music className="w-4 h-4" />;
+      case "venue":
+        return <Building2 className="w-4 h-4" />;
+      case "admin":
+        return <Shield className="w-4 h-4" />;
+      case "journalist":
+        return <FileText className="w-4 h-4" />;
+      default:
+        return <User className="w-4 h-4" />;
     }
   };
 
@@ -1155,7 +1227,9 @@ const UserDetailModal = ({ user, onClose }) => {
                 {user.username?.charAt(0).toUpperCase()}
               </div>
               <div>
-                <h4 className="text-lg font-semibold text-gray-900">{user.username}</h4>
+                <h4 className="text-lg font-semibold text-gray-900">
+                  {user.username}
+                </h4>
                 <p className="text-gray-600 flex items-center">
                   <Mail className="w-4 h-4 mr-1" />
                   {user.email}
@@ -1166,27 +1240,40 @@ const UserDetailModal = ({ user, onClose }) => {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <label className="font-medium text-gray-700">User Type:</label>
-                <span className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getUserTypeColor(user.userType)}`}>
+                <span
+                  className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getUserTypeColor(
+                    user.userType
+                  )}`}
+                >
                   {getUserTypeIcon(user.userType)}
                   <span className="ml-1 capitalize">{user.userType}</span>
                 </span>
               </div>
               <div>
                 <label className="font-medium text-gray-700">Status:</label>
-                <span className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.isVerified
-                  ? "bg-green-100 text-green-800"
-                  : "bg-orange-100 text-orange-800"
-                  }`}>
+                <span
+                  className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    user.isVerified
+                      ? "bg-green-100 text-green-800"
+                      : "bg-orange-100 text-orange-800"
+                  }`}
+                >
                   {user.isVerified ? "Verified" : "Pending"}
                 </span>
               </div>
               <div>
                 <label className="font-medium text-gray-700">Joined:</label>
-                <p className="text-gray-600">{new Date(user.createdAt).toLocaleDateString()}</p>
+                <p className="text-gray-600">
+                  {new Date(user.createdAt).toLocaleDateString()}
+                </p>
               </div>
               <div>
-                <label className="font-medium text-gray-700">Last Updated:</label>
-                <p className="text-gray-600">{new Date(user.updatedAt).toLocaleDateString()}</p>
+                <label className="font-medium text-gray-700">
+                  Last Updated:
+                </label>
+                <p className="text-gray-600">
+                  {new Date(user.updatedAt).toLocaleDateString()}
+                </p>
               </div>
             </div>
 
