@@ -23,13 +23,13 @@ export default function FeaturedSection() {
           </div>
 
           {/* Streaming Badge */}
-          <div className="text-center absolute bottom-4 left-4  shadow-md rounded-md px-3 py-4 text-sm font-semibold">
+          <div className="bg-white text-center absolute bottom-4 left-4  shadow-md rounded-md px-3 py-4 text-sm font-semibold">
             <span className="text-gray-800">259+</span><br />
             <span className="text-gray-500">Streaming</span>
           </div>
 
           {/* Hits Badge */}
-          <div className="text-center absolute top-4 right-4  shadow-md rounded-md px-6 py-3 text-sm font-semibold">
+          <div className="bg-white text-center absolute top-4 right-4  shadow-md rounded-md px-6 py-3 text-sm font-semibold">
             <span className="text-gray-800">100+</span><br />
             <span className="text-gray-500">Hits</span>
           </div>

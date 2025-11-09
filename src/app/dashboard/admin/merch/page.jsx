@@ -82,7 +82,7 @@ export default function AdminPrintifyMerch() {
                 }));
 
                 setPrintifyProducts(productsWithStatus);
-                toast.success(`Loaded ${data.data.length} products`);
+                // toast.success(`Loaded ${data.data.length} products`);
             }
         } catch (err) {
             console.error("Printify Fetch Error:", err);

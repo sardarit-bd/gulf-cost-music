@@ -1,25 +1,25 @@
 "use client";
-import { useState, useEffect } from "react";
-import {
-  Plus,
-  Trash2,
-  Edit,
-  RefreshCw,
-  Music,
-  Search,
-  Loader2,
-  Eye,
-  MoreVertical,
-  Calendar,
-  Play,
-  ExternalLink,
-  TrendingUp,
-  Users,
-  Filter,
-  Mic2
-} from "lucide-react";
-import axios from "axios";
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import axios from "axios";
+import {
+  Calendar,
+  Edit,
+  ExternalLink,
+  Eye,
+  Filter,
+  Loader2,
+  Mic2,
+  MoreVertical,
+  Music,
+  Play,
+  Plus,
+  RefreshCw,
+  Search,
+  Trash2,
+  TrendingUp,
+  Users
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
 // Utility function for clean error messages
@@ -79,19 +79,30 @@ export default function WaveManagementPage() {
   // Create or update wave
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const savePromise = new Promise(async (resolve, reject) => {
       try {
-        const headers = { Authorization: `Bearer ${token}` };
+
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        };
+
+
+        const fd = new FormData();
+        fd.append("title", formData.title);
+        fd.append("youtubeUrl", formData.youtubeUrl);
+
+        if (formData.thumbnail instanceof File) {
+          fd.append("thumbnail", formData.thumbnail);
+        }
 
         if (editingItem) {
-          await axios.put(
-            `${API_BASE}/api/waves/${editingItem._id}`,
-            formData,
-            { headers }
-          );
+          await axios.put(`${API_BASE}/api/waves/${editingItem._id}`, fd, { headers });
         } else {
-          await axios.post(`${API_BASE}/api/waves`, formData, { headers });
+          await axios.post(`${API_BASE}/api/waves`, fd, { headers });
         }
+
         resolve();
       } catch (error) {
         reject(error);
@@ -110,6 +121,7 @@ export default function WaveManagementPage() {
       error: (error) => handleApiError(error, "Failed to save open mic"),
     });
   };
+
 
   // Edit wave
   const handleEdit = (item) => {
@@ -185,8 +197,8 @@ export default function WaveManagementPage() {
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50 p-6">
-        <Toaster/>
-        
+        <Toaster />
+
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
@@ -221,31 +233,31 @@ export default function WaveManagementPage() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard 
-              icon={Mic2} 
-              label="Total Sessions" 
-              value={waves.length} 
+            <StatCard
+              icon={Mic2}
+              label="Total Sessions"
+              value={waves.length}
               change={18}
               color="indigo"
             />
-            <StatCard 
-              icon={Play} 
-              label="Videos" 
-              value={waves.length} 
+            <StatCard
+              icon={Play}
+              label="Videos"
+              value={waves.length}
               change={12}
               color="blue"
             />
-            <StatCard 
-              icon={Users} 
-              label="This Month" 
-              value={Math.floor(waves.length * 0.25)} 
+            <StatCard
+              icon={Users}
+              label="This Month"
+              value={Math.floor(waves.length * 0.25)}
               change={25}
               color="green"
             />
-            <StatCard 
-              icon={TrendingUp} 
-              label="Growth" 
-              value={`${Math.floor(waves.length * 2)}%`} 
+            <StatCard
+              icon={TrendingUp}
+              label="Growth"
+              value={`${Math.floor(waves.length * 2)}%`}
               change={20}
               color="purple"
             />
@@ -339,22 +351,34 @@ export default function WaveManagementPage() {
 
                   <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Thumbnail URL
+                      Thumbnail Image
                     </label>
                     <input
-                      type="url"
-                      name="thumbnail"
-                      value={formData.thumbnail}
+                      type="file"
+                      accept="image/*"
                       onChange={(e) =>
-                        setFormData({ ...formData, thumbnail: e.target.value })
+                        setFormData({ ...formData, thumbnail: e.target.files[0] })
                       }
                       className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                      placeholder="https://example.com/thumbnail.jpg"
                     />
+                    {formData.thumbnail && (
+                      <div className="mt-3">
+                        <img
+                          src={
+                            formData.thumbnail instanceof File
+                              ? URL.createObjectURL(formData.thumbnail)
+                              : formData.thumbnail
+                          }
+                          alt="Thumbnail Preview"
+                          className="w-32 h-24 rounded object-cover border"
+                        />
+                      </div>
+                    )}
                     <p className="text-xs text-gray-500 mt-1">
-                      Leave empty to use YouTube thumbnail
+                      Upload a custom image or leave empty to use YouTube’s default.
                     </p>
                   </div>
+
                 </div>
 
                 <div className="flex justify-end space-x-3 mt-6">
@@ -511,10 +535,10 @@ export default function WaveManagementPage() {
                                 >
                                   <MoreVertical className="w-4 h-4" />
                                 </button>
-                                
+
                                 {actionMenu === wave._id && (
                                   <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border py-1 z-10">
-                                    <button 
+                                    <button
                                       onClick={() => {
                                         setActionMenu(null);
                                         toast.success(`Viewing details for ${wave.title}`);
