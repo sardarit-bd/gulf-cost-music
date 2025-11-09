@@ -78,7 +78,7 @@ export default function RecentMerchSection() {
                                 <h3 className="text-base font-medium text-gray-900">
                                     {item.name}
                                 </h3>
-                                <p className="text-gray-600 text-sm mt-1">{item.price}</p>
+                                <p className="text-gray-600 text-sm mt-1">${item.price}</p>
                                 <button
                                     onClick={() => setShowModal(true)}
                                     className="bg-[var(--primary)] w-full text-gray-700 mt-5 px-4 py-2 rounded font-bold hover:bg-[var(--primary)]/90 transition text-lg"
