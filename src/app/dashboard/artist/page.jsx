@@ -72,7 +72,6 @@ export default function ArtistDashboard() {
         }
 
         const data = await res.json();
-        console.log("Artist Data:", data);
         if (data.data?.artist && isMounted.current) {
           const a = data.data.artist;
           setArtist({

@@ -96,7 +96,6 @@ export default function SignUp() {
       );
 
       const data = await res.json();
-
       // SUCCESS
       if (res.ok && data.success) {
         toast.success(data.message || "Registration successful!", {
@@ -118,9 +117,9 @@ export default function SignUp() {
       }
 
       // VALIDATION ERROR (field-wise)
-      else if (data.errors && Array.isArray(data.errors)) {
+      else if (data.errors?.details && Array.isArray(data.errors.details)) {
         toast.dismiss(toastId);
-        data.errors.forEach((err) => {
+        data.errors.details.forEach((err) => {
           toast.error(`${err.field ? `${err.field}: ` : ""}${err.message}`);
         });
       }

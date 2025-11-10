@@ -13,8 +13,6 @@ export default function WavesFavoritesList({ setWave }) {
       try {
         const res = await fetch(`${API_BASE}/api/waves`, { cache: "no-store" });
         const data = await res.json();
-        console.log("🌊 Fetched Wave Data:", data);
-
         if (res.ok && data.success && Array.isArray(data.data.waves)) {
           setWaves(data.data.waves);
           setWave(data.data.waves[0])

@@ -99,7 +99,6 @@ export default function PodcastPage() {
     try {
       setLoading(true);
       const { data } = await axios.get(`${API_BASE}/api/casts`);
-      console.log(data);
       if (data.success) {
         setPodcasts(Array.isArray(data.data.casts) ? data.data.casts : []);
       } else {
