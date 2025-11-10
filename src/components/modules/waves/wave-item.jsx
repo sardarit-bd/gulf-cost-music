@@ -20,9 +20,9 @@ export default function WaveItem({ wave }) {
 
       <div className="flex-1 min-w-0">
         <h3 className="font-semibold text-black truncate">{wave.title}</h3>
-        <p className="text-sm text-gray-600 line-clamp-2">
+        {/* <p className="text-sm text-gray-600 line-clamp-2">
           {wave.description || "No description available."}
-        </p>
+        </p> */}
       </div>
     </div>
   );

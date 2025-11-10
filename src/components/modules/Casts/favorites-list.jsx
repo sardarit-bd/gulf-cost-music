@@ -12,7 +12,6 @@ export default function FavoritesList({ setCast }) {
       try {
         const res = await fetch(`${API_BASE}/api/casts`, { cache: "no-store" });
         const data = await res.json();
-        console.log("🎧 Fetched Cast Data:", data);
 
         if (res.ok && data.success && Array.isArray(data.data.casts)) {
           setFavorites(data.data.casts);

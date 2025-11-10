@@ -33,7 +33,6 @@ export default function SignIn() {
       );
 
       const data = await res.json();
-      console.log("Sign-in:", data)
 
       // SUCCESS
       if (res.ok && data.success) {

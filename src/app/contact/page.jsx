@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
 import axios from "axios";
+import { useState } from "react";
 
 export default function ContactSection() {
   const [email, setEmail] = useState("");
@@ -93,11 +93,10 @@ export default function ContactSection() {
           {/* Feedback message */}
           {feedback && (
             <div
-              className={`p-3 rounded-md text-sm font-medium ${
-                feedback.type === "success"
+              className={`p-3 rounded-md text-sm font-medium ${feedback.type === "success"
                   ? "bg-green-100 text-green-700 border border-green-300"
                   : "bg-red-100 text-red-700 border border-red-300"
-              }`}
+                }`}
             >
               {feedback.msg}
             </div>
@@ -107,9 +106,8 @@ export default function ContactSection() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full ${
-              loading ? "bg-yellow-300" : "bg-yellow-400 hover:bg-yellow-500"
-            } text-black font-semibold py-3 rounded-md transition-all shadow-sm hover:shadow-md`}
+            className={`w-full ${loading ? "bg-yellow-300" : "bg-yellow-400 hover:bg-yellow-500"
+              } text-black font-semibold py-3 rounded-md transition-all shadow-sm hover:shadow-md`}
           >
             {loading ? "Submitting..." : "Submit"}
           </button>

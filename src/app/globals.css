@@ -119,15 +119,39 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
 
 span.swiper-pagination-bullet.swiper-pagination-bullet-active {
-    background: var(--primary);
+  background: var(--primary);
 }
 
-.swiper-button-next, .swiper-button-prev {
-    color: var(--primary) !important;
+.swiper-button-next,
+.swiper-button-prev {
+  color: var(--primary) !important;
+}
+
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  /* light gray */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #facc15, #f59e0b);
+  /* yellow gradient */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #fbbf24, #eab308);
+  /* darker hover */
 }

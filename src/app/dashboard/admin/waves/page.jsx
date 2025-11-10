@@ -350,34 +350,84 @@ export default function WaveManagementPage() {
                   </div>
 
                   <div className="lg:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-800 mb-2">
                       Thumbnail Image
                     </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        setFormData({ ...formData, thumbnail: e.target.files[0] })
-                      }
-                      className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                    />
-                    {formData.thumbnail && (
-                      <div className="mt-3">
-                        <img
-                          src={
-                            formData.thumbnail instanceof File
-                              ? URL.createObjectURL(formData.thumbnail)
-                              : formData.thumbnail
+
+                    {/* Upload Box */}
+                    <div
+                      className={`relative border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 ${formData.thumbnail
+                        ? "border-green-400 bg-green-50"
+                        : "border-gray-300 hover:border-indigo-400 hover:bg-indigo-50"
+                        }`}
+                      onClick={() => document.getElementById("thumbnailInput").click()}
+                    >
+                      {formData.thumbnail ? (
+                        <>
+                          <img
+                            src={
+                              formData.thumbnail instanceof File
+                                ? URL.createObjectURL(formData.thumbnail)
+                                : formData.thumbnail
+                            }
+                            alt="Thumbnail Preview"
+                            className="w-40 h-28 object-cover rounded-lg shadow-md border border-gray-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFormData({ ...formData, thumbnail: null });
+                            }}
+                            className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-md hover:bg-red-700 transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-10 w-10 text-gray-400 mb-2"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6h1.1a5 5 0 010 10H7z"
+                            />
+                          </svg>
+                          <p className="text-gray-700 text-sm font-medium">
+                            Click or drag & drop to upload
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            JPG, PNG, or WEBP — Max size 5MB
+                          </p>
+                        </>
+                      )}
+
+                      <input
+                        id="thumbnailInput"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setFormData({ ...formData, thumbnail: e.target.files[0] });
                           }
-                          alt="Thumbnail Preview"
-                          className="w-32 h-24 rounded object-cover border"
-                        />
-                      </div>
-                    )}
-                    <p className="text-xs text-gray-500 mt-1">
-                      Upload a custom image or leave empty to use YouTube’s default.
+                        }}
+                        className="hidden"
+                      />
+                    </div>
+
+                    {/* Help text */}
+                    <p className="text-xs text-gray-500 mt-2">
+                      Upload a custom thumbnail, or leave empty to use YouTube’s default.
                     </p>
                   </div>
+
 
                 </div>
 

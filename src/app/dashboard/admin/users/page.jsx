@@ -64,7 +64,6 @@ const UserManagement = () => {
       });
 
       if (data.success) {
-        console.log("Dashboard API Response:", data.data);
 
         // Transform API response to match our stats structure
         const dashboardData = data.data;
@@ -1091,11 +1090,10 @@ const UserManagement = () => {
                         <button
                           key={pageNumber}
                           onClick={() => setPage(pageNumber)}
-                          className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                            page === pageNumber
+                          className={`px-3 py-1 rounded-lg text-sm font-medium ${page === pageNumber
                               ? "bg-blue-600 text-white"
                               : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                          }`}
+                            }`}
                         >
                           {pageNumber}
                         </button>
@@ -1252,11 +1250,10 @@ const UserDetailModal = ({ user, onClose }) => {
               <div>
                 <label className="font-medium text-gray-700">Status:</label>
                 <span
-                  className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    user.isVerified
+                  className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.isVerified
                       ? "bg-green-100 text-green-800"
                       : "bg-orange-100 text-orange-800"
-                  }`}
+                    }`}
                 >
                   {user.isVerified ? "Verified" : "Pending"}
                 </span>

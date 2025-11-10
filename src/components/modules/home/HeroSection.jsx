@@ -4,9 +4,8 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
 export default function HeroSection() {
-  const {user} = useAuth()
-  console.log(user)
-  
+  const { user } = useAuth()
+
   return (
     <section className="relative w-full h-screen bg-cover bg-center pt-16 overflow-hidden">
       {/* Background Video */}

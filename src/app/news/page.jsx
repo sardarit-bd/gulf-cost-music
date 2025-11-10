@@ -55,10 +55,6 @@ export default function NewsPage() {
     pensacola: "from-yellow-400/80 to-amber-600/80",
   };
 
-
-  console.log(newsData);
-
-
   return (
     <section className="brandBg min-h-screen py-14 mt-16 px-6">
       <Toaster />
@@ -103,8 +99,8 @@ export default function NewsPage() {
                       setDropdownOpen(false);
                     }}
                     className={`block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 transition ${selectedCity === c
-                        ? "bg-yellow-50 font-semibold text-gray-800"
-                        : "text-gray-600"
+                      ? "bg-yellow-50 font-semibold text-gray-800"
+                      : "text-gray-600"
                       }`}
                   >
                     {c}
