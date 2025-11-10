@@ -2,18 +2,17 @@
 
 import axios from "axios";
 import { useState } from "react";
+import { Toaster, toast } from "react-hot-toast";
 
 export default function ContactSection() {
   const [email, setEmail] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [feedback, setFeedback] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setFeedback(null);
 
     try {
       const res = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/api/contact`, {
@@ -23,19 +22,17 @@ export default function ContactSection() {
       });
 
       if (res.data.success) {
-        setFeedback({ type: "success", msg: res.data.message });
+        toast.success(res.data.message || "Message sent successfully!");
         setEmail("");
         setSubject("");
         setMessage("");
       } else {
-        setFeedback({ type: "error", msg: res.data.message || "Something went wrong!" });
+        toast.error(res.data.message || "Something went wrong!");
       }
     } catch (err) {
       console.error("Contact form submit error:", err);
-      setFeedback({
-        type: "error",
-        msg: err.response?.data?.message || "Server error. Please try again later.",
-      });
+      toast.error(
+        err.response?.data?.message || "Server error. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -48,6 +45,8 @@ export default function ContactSection() {
         background: "linear-gradient(to bottom, #f9f9f6 0%, #000000 100%)",
       }}
     >
+      <Toaster />
+
       <div className="container mx-auto py-16 px-6 md:px-16 w-full bg-[#fefdeb] rounded-md shadow-md p-8 md:p-10">
         <h2 className="text-center text-lg md:text-xl font-semibold text-black mb-6">
           For any inquiries:
@@ -89,18 +88,6 @@ export default function ContactSection() {
               required
             ></textarea>
           </div>
-
-          {/* Feedback message */}
-          {feedback && (
-            <div
-              className={`p-3 rounded-md text-sm font-medium ${feedback.type === "success"
-                  ? "bg-green-100 text-green-700 border border-green-300"
-                  : "bg-red-100 text-red-700 border border-red-300"
-                }`}
-            >
-              {feedback.msg}
-            </div>
-          )}
 
           {/* Submit Button */}
           <button
