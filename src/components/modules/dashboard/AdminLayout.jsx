@@ -16,7 +16,6 @@ import {
   Mic2,
   Music,
   Newspaper,
-  Search,
   Settings,
   ShoppingBag,
   User,
@@ -27,16 +26,23 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import logo from "../../../../public/images/logo.png";
 
 export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const router = useRouter();
+
+  // Refs for dropdowns
+  const userDropdownRef = useRef(null);
+  const notificationDropdownRef = useRef(null);
 
   const navigation = [
     {
@@ -79,6 +85,192 @@ export default function AdminLayout({ children }) {
     },
   ];
 
+  // Fetch notifications
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/contacts?limit=5&read=false`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        if (data.success && data.data.contacts) {
+          // Transform contact messages to notifications
+          const contactNotifications = data.data.contacts.map(contact => ({
+            id: contact._id,
+            title: 'New Contact Message',
+            message: `From: ${contact.name || 'Unknown'} - ${contact.subject}`,
+            email: contact.email,
+            time: formatTimeAgo(contact.createdAt),
+            read: contact.isRead,
+            type: 'contact',
+            contactId: contact._id,
+            createdAt: contact.createdAt
+          }));
+
+          setNotifications(contactNotifications);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      // Fallback to mock data if API fails
+      setNotifications(getMockNotifications());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  // Mock notifications for fallback
+  const getMockNotifications = () => {
+    return [
+      {
+        id: 1,
+        title: 'New Contact Message',
+        message: 'From: John Doe - Website Inquiry',
+        email: 'john@example.com',
+        time: '5 minutes ago',
+        read: false,
+        type: 'contact',
+        contactId: '1'
+      },
+      {
+        id: 2,
+        title: 'New Contact Message',
+        message: 'From: Sarah Smith - Support Request',
+        email: 'sarah@example.com',
+        time: '1 hour ago',
+        read: false,
+        type: 'contact',
+        contactId: '2'
+      },
+      {
+        id: 3,
+        title: 'New User Registration',
+        message: 'A new artist has registered on the platform',
+        time: '2 hours ago',
+        read: true,
+        type: 'user'
+      }
+    ];
+  };
+
+  // Format time ago
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  // Mark notification as read
+  const markAsRead = async (notificationId, contactId) => {
+    try {
+      if (contactId) {
+        const token = localStorage.getItem("token");
+        await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/contacts/${contactId}/read`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
+
+      // Update local state
+      setNotifications(prev =>
+        prev.map(notif =>
+          notif.id === notificationId ? { ...notif, read: true } : notif
+        )
+      );
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  // Mark all as read
+  const markAllAsRead = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const unreadContacts = notifications.filter(n => !n.read && n.contactId);
+
+      // Mark all contact notifications as read
+      await Promise.all(
+        unreadContacts.map(contact =>
+          fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/contacts/${contact.contactId}/read`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+        )
+      );
+
+      // Update local state
+      setNotifications(prev =>
+        prev.map(notif => ({ ...notif, read: true }))
+      );
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  };
+
+  // Handle notification click
+  const handleNotificationClick = (notification) => {
+    if (notification.contactId) {
+      // Redirect to contact messages page
+      router.push('/dashboard/admin/contacts');
+      markAsRead(notification.id, notification.contactId);
+    }
+    setNotificationDropdownOpen(false);
+  };
+
+  // Close all dropdowns
+  const closeAllDropdowns = () => {
+    setUserDropdownOpen(false);
+    setNotificationDropdownOpen(false);
+  };
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+        setUserDropdownOpen(false);
+      }
+      if (notificationDropdownRef.current && !notificationDropdownRef.current.contains(event.target)) {
+        setNotificationDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Close dropdowns when route changes
+  useEffect(() => {
+    closeAllDropdowns();
+  }, [pathname]);
+
+  // Fetch notifications on component mount and when notification dropdown opens
+  useEffect(() => {
+    if (notificationDropdownOpen) {
+      fetchNotifications();
+    }
+  }, [notificationDropdownOpen]);
+
   const toggleExpanded = (itemName) => {
     setExpandedItems(prev =>
       prev.includes(itemName)
@@ -100,6 +292,8 @@ export default function AdminLayout({ children }) {
     logout();
     router.push("/signin");
   };
+
+  const unreadCount = notifications.filter(notification => !notification.read).length;
 
   const NavItem = ({ item }) => {
     const Icon = item.icon;
@@ -259,60 +453,163 @@ export default function AdminLayout({ children }) {
             </div>
 
             <div className="flex items-center space-x-4">
-              {/* Search Bar */}
-              <div className="hidden md:block">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
-                  />
-                </div>
+              {/* Notifications */}
+              <div className="relative" ref={notificationDropdownRef}>
+                <button
+                  onClick={() => {
+                    setNotificationDropdownOpen(!notificationDropdownOpen);
+                    setUserDropdownOpen(false);
+                  }}
+                  className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+                  )}
+                </button>
+
+                {notificationDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border py-2 z-50">
+                    <div className="px-4 py-2 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                        <div className="flex items-center space-x-2">
+                          {unreadCount > 0 && (
+                            <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                              {unreadCount} new
+                            </span>
+                          )}
+                          {unreadCount > 0 && (
+                            <button
+                              onClick={markAllAsRead}
+                              className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                            >
+                              Mark all read
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="max-h-96 overflow-y-auto">
+                      {loading ? (
+                        <div className="flex justify-center items-center py-8">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                        </div>
+                      ) : notifications.length > 0 ? (
+                        notifications.map((notification) => (
+                          <div
+                            key={notification.id}
+                            onClick={() => handleNotificationClick(notification)}
+                            className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${!notification.read ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                              }`}
+                          >
+                            <div className="flex items-start space-x-3">
+                              <div className={`p-2 rounded-lg ${notification.type === 'contact' ? 'bg-blue-100 text-blue-600' :
+                                notification.type === 'user' ? 'bg-green-100 text-green-600' :
+                                  'bg-gray-100 text-gray-600'
+                                }`}>
+                                <Mail className="h-4 w-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900">
+                                  {notification.title}
+                                </p>
+                                <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                                  {notification.message}
+                                </p>
+                                {notification.email && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {notification.email}
+                                  </p>
+                                )}
+                                <p className="text-xs text-gray-400 mt-1">
+                                  {notification.time}
+                                </p>
+                              </div>
+                              {!notification.read && (
+                                <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-8 text-center">
+                          <Bell className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                          <p className="text-sm text-gray-500">No notifications</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="px-4 py-2 border-t border-gray-200">
+                      <Link
+                        href="/dashboard/admin/contacts"
+                        className="block w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium py-2"
+                        onClick={() => setNotificationDropdownOpen(false)}
+                      >
+                        View All Contact Messages
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* Notifications */}
-              <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-
-              {/* User Menu */}
-              <div className="relative">
+              {/* User Menu - Updated with new style */}
+              <div className="relative group" ref={userDropdownRef}>
                 <button
-                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100"
+                  onClick={() => {
+                    setUserDropdownOpen(!userDropdownOpen);
+                    setNotificationDropdownOpen(false);
+                  }}
+                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                    A
+                    {user?.username?.charAt(0)?.toUpperCase() || 'A'}
                   </div>
                   <div className="hidden sm:block text-left">
-                    <p className="text-sm font-medium text-gray-900">Admin User</p>
-                    <p className="text-xs text-gray-500">Super Admin</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {user?.username || 'Admin User'}
+                    </p>
+                    <p className="text-xs text-gray-500 capitalize">
+                      {user?.role || 'Super Admin'}
+                    </p>
                   </div>
                   <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border py-1 z-50">
-                    <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                      <User className="mr-3 h-4 w-4" />
-                      Profile
-                    </button>
-                    <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                      <Settings className="mr-3 h-4 w-4" />
-                      Settings
-                    </button>
-                    <div className="border-t my-1"></div>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
-                    >
-                      <LogOut className="mr-3 h-4 w-4" />
-                      Logout
-                    </button>
-                  </div>
-                )}
+                {/* Updated Dropdown with new style */}
+                <div className={`absolute top-full right-0 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 transition-all duration-200 ${userDropdownOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
+                  <Link
+                    href="/dashboard/admin"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors duration-200"
+                    onClick={closeAllDropdowns}
+                  >
+                    <User className="w-4 h-4" />
+                    My Profile
+                  </Link>
+
+                  <Link
+                    href="/dashboard/admin/settings"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors duration-200"
+                    onClick={closeAllDropdowns}
+                  >
+                    <Settings className="w-4 h-4" />
+                    Settings
+                  </Link>
+
+                  <div className="border-t border-gray-100 my-1"></div>
+
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      closeAllDropdowns();
+                    }}
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </div>
               </div>
             </div>
           </div>

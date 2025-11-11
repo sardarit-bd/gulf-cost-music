@@ -1,29 +1,28 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import AdminLayout from "@/components/modules/dashboard/AdminLayout";
 import axios from "axios";
-import { 
-  Mail, 
-  Eye, 
-  CheckCircle2, 
-  Trash2, 
-  Clock, 
-  Search, 
-  Filter,
-  MoreVertical,
-  User,
-  MessageSquare,
-  Download,
-  RefreshCw,
-  TrendingUp,
+import {
+  AlertTriangle,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Eye,
+  Mail,
   MailOpen,
   MailWarning,
-  Calendar,
+  MessageSquare,
+  MoreVertical,
   Phone,
+  RefreshCw,
   Reply,
-  Archive
+  Tag,
+  Trash2,
+  TrendingUp,
+  User,
+  X
 } from "lucide-react";
-import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import { useEffect, useState } from "react";
 
 const ContactManagement = () => {
   const [contacts, setContacts] = useState([]);
@@ -34,15 +33,19 @@ const ContactManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [actionMenu, setActionMenu] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/contacts`;
 
-  // 🔹 Fetch all contact messages
+  // Fetch all contact messages
   const fetchContacts = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      
+
       const params = new URLSearchParams({
         page,
         limit: 10,
@@ -63,7 +66,7 @@ const ContactManagement = () => {
     }
   };
 
-  // 🔹 Mark message as read
+  // Mark message as read
   const markAsRead = async (id) => {
     try {
       const token = localStorage.getItem("token");
@@ -79,9 +82,9 @@ const ContactManagement = () => {
     }
   };
 
-  // 🔹 Delete message
+  // Delete message
   const deleteMessage = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this message?")) return;
+    setDeleting(true);
     try {
       const token = localStorage.getItem("token");
       await axios.delete(`${API_URL}/${id}`, {
@@ -89,12 +92,31 @@ const ContactManagement = () => {
       });
       fetchContacts();
       setActionMenu(null);
+      setShowDetailsModal(false);
+      setShowDeleteModal(false);
+      setMessageToDelete(null);
     } catch (err) {
       console.error("Delete message error:", err);
+    } finally {
+      setDeleting(false);
     }
   };
 
-  // 🔹 Mark all as read
+  // Open delete confirmation modal
+  const openDeleteModal = (message) => {
+    setMessageToDelete(message);
+    setShowDeleteModal(true);
+    setActionMenu(null);
+  };
+
+  // Close delete modal
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setMessageToDelete(null);
+    setDeleting(false);
+  };
+
+  // Mark all as read
   const markAllAsRead = async () => {
     if (!window.confirm("Mark all messages as read?")) return;
     try {
@@ -108,6 +130,26 @@ const ContactManagement = () => {
     } catch (err) {
       console.error("Mark all as read error:", err);
     }
+  };
+
+  // View message details
+  const viewMessageDetails = (message) => {
+    setSelectedMessage(message);
+    setShowDetailsModal(true);
+
+    // Auto mark as read when viewing details
+    if (!message.isRead) {
+      markAsRead(message._id);
+    }
+    setActionMenu(null);
+  };
+
+  // Reply to message
+  const handleReply = (message) => {
+    const subject = `Re: ${message.subject}`;
+    const body = `\n\n--- Original Message ---\nFrom: ${message.name} <${message.email}>\nDate: ${new Date(message.createdAt).toLocaleString()}\nMessage: ${message.message}\n`;
+
+    window.open(`mailto:${message.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
   };
 
   useEffect(() => {
@@ -125,11 +167,21 @@ const ContactManagement = () => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
     return date.toLocaleDateString();
+  };
+
+  const formatFullDate = (dateString) => {
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -150,12 +202,8 @@ const ContactManagement = () => {
               </p>
             </div>
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-              <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium">
-                <Download className="w-4 h-4" />
-                <span>Export</span>
-              </button>
               {getUnreadCount() > 0 && (
-                <button 
+                <button
                   onClick={markAllAsRead}
                   className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
                 >
@@ -163,7 +211,7 @@ const ContactManagement = () => {
                   <span>Mark All Read</span>
                 </button>
               )}
-              <button 
+              <button
                 onClick={fetchContacts}
                 className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
               >
@@ -175,79 +223,34 @@ const ContactManagement = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard 
-              icon={Mail} 
-              label="Total Messages" 
-              value={contacts.length} 
+            <StatCard
+              icon={Mail}
+              label="Total Messages"
+              value={contacts.length}
               change={8}
               color="indigo"
             />
-            <StatCard 
-              icon={MailOpen} 
-              label="Read Messages" 
-              value={contacts.filter(msg => msg.isRead).length} 
+            <StatCard
+              icon={MailOpen}
+              label="Read Messages"
+              value={contacts.filter(msg => msg.isRead).length}
               change={12}
               color="green"
             />
-            <StatCard 
-              icon={MailWarning} 
-              label="Unread Messages" 
-              value={getUnreadCount()} 
+            <StatCard
+              icon={MailWarning}
+              label="Unread Messages"
+              value={getUnreadCount()}
               change={-4}
               color="orange"
             />
-            <StatCard 
-              icon={TrendingUp} 
-              label="This Month" 
-              value={Math.floor(contacts.length * 0.2)} 
+            <StatCard
+              icon={TrendingUp}
+              label="This Month"
+              value={Math.floor(contacts.length * 0.2)}
               change={20}
               color="purple"
             />
-          </div>
-
-          {/* Filters Card */}
-          <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
-            <div className="flex flex-col lg:flex-row gap-4 items-end">
-              <div className="flex-1 w-full">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Search Messages
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Search by email, subject, or message content..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && fetchContacts()}
-                  />
-                </div>
-              </div>
-
-              <div className="w-full lg:w-48">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="all">All Messages</option>
-                  <option value="unread">Unread Only</option>
-                  <option value="read">Read Only</option>
-                </select>
-              </div>
-
-              <button
-                onClick={fetchContacts}
-                className="w-full lg:w-auto px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors flex items-center space-x-2"
-              >
-                <Filter className="w-4 h-4" />
-                <span>Apply Filters</span>
-              </button>
-            </div>
           </div>
 
           {/* Messages Table Card */}
@@ -297,11 +300,10 @@ const ContactManagement = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {contacts.length > 0 ? (
                       contacts.map((msg) => (
-                        <tr 
-                          key={msg._id} 
-                          className={`hover:bg-gray-50 transition-colors group ${
-                            !msg.isRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                          }`}
+                        <tr
+                          key={msg._id}
+                          className={`hover:bg-gray-50 transition-colors group ${!msg.isRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                            }`}
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-3">
@@ -309,9 +311,9 @@ const ContactManagement = () => {
                                 {msg.name ? msg.name.charAt(0).toUpperCase() : msg.email.charAt(0).toUpperCase()}
                               </div>
                               <div>
-                                <div className="text-sm font-semibold text-gray-900">
+                                {/* <div className="text-sm font-semibold text-gray-900">
                                   {msg.name || 'Unknown'}
-                                </div>
+                                </div> */}
                                 <div className="text-sm text-gray-500 flex items-center">
                                   <Mail className="w-3 h-3 mr-1" />
                                   {msg.email}
@@ -373,6 +375,7 @@ const ContactManagement = () => {
                               )}
 
                               <button
+                                onClick={() => handleReply(msg)}
                                 className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
                                 title="Reply"
                               >
@@ -386,23 +389,18 @@ const ContactManagement = () => {
                                 >
                                   <MoreVertical className="w-4 h-4" />
                                 </button>
-                                
+
                                 {actionMenu === msg._id && (
                                   <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border py-1 z-10">
-                                    <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
+                                    <button
+                                      onClick={() => viewMessageDetails(msg)}
+                                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                    >
                                       <MessageSquare className="w-4 h-4 mr-2" />
                                       View Details
                                     </button>
-                                    <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                                      <Reply className="w-4 h-4 mr-2" />
-                                      Reply
-                                    </button>
-                                    <button className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left">
-                                      <Archive className="w-4 h-4 mr-2" />
-                                      Archive
-                                    </button>
                                     <button
-                                      onClick={() => deleteMessage(msg._id)}
+                                      onClick={() => openDeleteModal(msg)}
                                       className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
                                     >
                                       <Trash2 className="w-4 h-4 mr-2" />
@@ -423,7 +421,7 @@ const ContactManagement = () => {
                             <p className="text-lg font-medium text-gray-900 mb-2">No messages found</p>
                             <p className="text-sm">
                               {search || statusFilter !== "all"
-                                ? "Try adjusting your search filters" 
+                                ? "Try adjusting your search filters"
                                 : "All contact messages will appear here"
                               }
                             </p>
@@ -457,11 +455,10 @@ const ContactManagement = () => {
                         <button
                           key={pageNumber}
                           onClick={() => setPage(pageNumber)}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            page === pageNumber
-                              ? "bg-indigo-600 text-white shadow-sm"
-                              : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                          }`}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${page === pageNumber
+                            ? "bg-indigo-600 text-white shadow-sm"
+                            : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                            }`}
                         >
                           {pageNumber}
                         </button>
@@ -480,7 +477,264 @@ const ContactManagement = () => {
             )}
           </div>
         </div>
+
+        {/* Message Details Modal */}
+        {showDetailsModal && selectedMessage && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+              onClick={() => setShowDetailsModal(false)}
+            ></div>
+
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden animate-fadeInScale">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <MessageSquare className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">Message Details</h2>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDetailsModal(false)}
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="overflow-y-auto max-h-[calc(90vh-140px)]">
+                <div className="p-6 space-y-6">
+                  {/* Sender Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-gray-50 rounded-xl p-4">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                        <User className="w-4 h-4 mr-2" />
+                        Sender Information
+                      </h3>
+                      <div className="space-y-2">
+                        <div>
+                          <label className="text-xs text-gray-500">Email</label>
+                          <p className="text-sm font-medium text-gray-900 break-all">
+                            {selectedMessage.email}
+                          </p>
+                        </div>
+                        {selectedMessage.phone && (
+                          <div>
+                            <label className="text-xs text-gray-500">Phone</label>
+                            <p className="text-sm font-medium text-gray-900">
+                              {selectedMessage.phone}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-xl p-4">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                        <Tag className="w-4 h-4 mr-2" />
+                        Message Information
+                      </h3>
+                      <div className="space-y-2">
+                        <div>
+                          <label className="text-xs text-gray-500">Status</label>
+                          <div className="mt-1">
+                            {selectedMessage.isRead ? (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                                <MailOpen className="w-3 h-3 mr-1" />
+                                Read
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                                <Eye className="w-3 h-3 mr-1" />
+                                Unread
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500">Received</label>
+                          <p className="text-sm font-medium text-gray-900">
+                            {formatFullDate(selectedMessage.createdAt)}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500">Time Ago</label>
+                          <p className="text-sm text-gray-600">
+                            {formatTimeAgo(selectedMessage.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Subject */}
+                  <div>
+                    <label className="text-sm font-semibold text-gray-900 mb-2 block">Subject</label>
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                      <p className="text-lg font-medium text-gray-900">
+                        {selectedMessage.subject}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Message Content */}
+                  <div>
+                    <label className="text-sm font-semibold text-gray-900 mb-2 block">Message</label>
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 min-h-[150px]">
+                      <p className="text-gray-700 whitespace-pre-wrap">
+                        {selectedMessage.message}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex justify-between items-center p-6 border-t border-gray-200 bg-gray-50">
+                <div className="flex items-center space-x-2 text-sm text-gray-500">
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Message ID: {selectedMessage._id}</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => openDeleteModal(selectedMessage)}
+                    className="flex items-center space-x-2 px-4 py-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors font-medium"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete</span>
+                  </button>
+                  <button
+                    onClick={() => handleReply(selectedMessage)}
+                    className="flex items-center space-x-2 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                  >
+                    <Reply className="w-4 h-4" />
+                    <span>Reply</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && messageToDelete && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+              onClick={closeDeleteModal}
+            ></div>
+
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fadeInScale">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <AlertTriangle className="w-6 h-6 text-red-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Delete Message</h2>
+                    <p className="text-gray-600 text-sm">This action cannot be undone</p>
+                  </div>
+                </div>
+                <button
+                  onClick={closeDeleteModal}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  disabled={deleting}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6">
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+                  <div className="flex items-start space-x-3">
+                    <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-red-800 font-medium mb-1">Warning: Permanent Deletion</p>
+                      <p className="text-red-700 text-sm">
+                        You are about to permanently delete this message. This action cannot be reversed.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Message Details</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">From:</span>
+                      <span className="font-medium text-gray-900">
+                        {messageToDelete.name || 'Unknown'} ({messageToDelete.email})
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Subject:</span>
+                      <span className="font-medium text-gray-900 truncate ml-2 max-w-[200px]">
+                        {messageToDelete.subject}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Date:</span>
+                      <span className="font-medium text-gray-900">
+                        {formatFullDate(messageToDelete.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex justify-end items-center space-x-3 p-6 border-t border-gray-200 bg-gray-50">
+                <button
+                  onClick={closeDeleteModal}
+                  className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => deleteMessage(messageToDelete._id)}
+                  className="flex items-center space-x-2 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={deleting}
+                >
+                  {deleting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete Message</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
+      <style jsx>{`
+        @keyframes fadeInScale {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-fadeInScale {
+          animation: fadeInScale 0.2s ease-out;
+        }
+      `}</style>
     </AdminLayout>
   );
 };

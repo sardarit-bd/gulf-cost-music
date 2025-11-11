@@ -1,32 +1,26 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import AdminLayout from "@/components/modules/dashboard/AdminLayout";
 import axios from "axios";
 import {
-  Settings,
-  Loader2,
-  ShieldCheck,
-  Bell,
-  Upload,
-  Lock,
-  Globe,
-  FileText,
-  Save,
-  RefreshCw,
-  Database,
-  Server,
-  Mail,
-  Users,
-  Eye,
-  EyeOff,
-  ToggleLeft,
-  ToggleRight,
-  CheckCircle,
-  XCircle,
   AlertTriangle,
-  Info
+  Bell,
+  CheckCircle,
+  Database,
+  Globe,
+  Info,
+  Loader2,
+  Lock,
+  Mail,
+  RefreshCw,
+  Server,
+  Settings,
+  ShieldCheck,
+  Upload,
+  Users,
+  XCircle
 } from "lucide-react";
-import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import { useEffect, useState } from "react";
 
 const SystemSettingsPage = () => {
   const [settings, setSettings] = useState(null);
@@ -37,7 +31,7 @@ const SystemSettingsPage = () => {
 
   const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/settings`;
 
-  // 🔹 Fetch system settings
+  // Fetch system settings
   const fetchSettings = async () => {
     setLoading(true);
     try {
@@ -54,7 +48,7 @@ const SystemSettingsPage = () => {
     }
   };
 
-  // 🔹 Save settings
+  // Save settings
   const saveSettings = async () => {
     setSaving(true);
     try {
@@ -140,14 +134,14 @@ const SystemSettingsPage = () => {
               </p>
             </div>
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-              <button 
+              <button
                 onClick={fetchSettings}
-                className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
+                className="flex items-center space-x-2 px-4 py-2 text-black bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Reload</span>
               </button>
-              <button 
+              {/* <button
                 onClick={saveSettings}
                 disabled={saving}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50"
@@ -158,34 +152,34 @@ const SystemSettingsPage = () => {
                   <Save className="w-4 h-4" />
                 )}
                 <span>{saving ? "Saving..." : "Save Changes"}</span>
-              </button>
+              </button> */}
             </div>
           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard 
-              icon={Server} 
-              label="System Status" 
-              value={formData.maintenanceMode ? "Maintenance" : "Operational"} 
+            <StatCard
+              icon={Server}
+              label="System Status"
+              value={formData.maintenanceMode ? "Maintenance" : "Operational"}
               status={!formData.maintenanceMode}
             />
-            <StatCard 
-              icon={Users} 
-              label="Registrations" 
-              value={formData.allowRegistrations ? "Open" : "Closed"} 
+            <StatCard
+              icon={Users}
+              label="Registrations"
+              value={formData.allowRegistrations ? "Open" : "Closed"}
               status={formData.allowRegistrations}
             />
-            <StatCard 
-              icon={Mail} 
-              label="Email Notifications" 
-              value={formData.emailNotifications ? "Enabled" : "Disabled"} 
+            <StatCard
+              icon={Mail}
+              label="Email Notifications"
+              value={formData.emailNotifications ? "Enabled" : "Disabled"}
               status={formData.emailNotifications}
             />
-            <StatCard 
-              icon={Database} 
-              label="Last Updated" 
-              value="Just now" 
+            <StatCard
+              icon={Database}
+              label="Last Updated"
+              value="Just now"
               status={true}
             />
           </div>
@@ -200,11 +194,10 @@ const SystemSettingsPage = () => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                        activeTab === tab.id
-                          ? "border-blue-500 text-blue-600 bg-blue-50"
-                          : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                      }`}
+                      className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
+                        ? "border-blue-500 text-blue-600 bg-blue-50"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                        }`}
                     >
                       <Icon className="w-4 h-4" />
                       <span>{tab.name}</span>
@@ -222,7 +215,7 @@ const SystemSettingsPage = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <Globe className="w-5 h-5 text-blue-500" />
+                        <Globe className="text-gray-600 w-5 h-5" />
                         Site Information
                       </h3>
                       <p className="text-sm text-gray-600 mt-1">Configure your site's basic information</p>
@@ -238,7 +231,7 @@ const SystemSettingsPage = () => {
                         type="text"
                         value={formData.siteName || ""}
                         onChange={(e) => handleInputChange("siteName", e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                         placeholder="Enter site name"
                       />
                     </div>
@@ -250,7 +243,7 @@ const SystemSettingsPage = () => {
                         value={formData.siteDescription || ""}
                         onChange={(e) => handleInputChange("siteDescription", e.target.value)}
                         rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                         placeholder="Enter site description"
                       />
                     </div>
@@ -265,8 +258,8 @@ const SystemSettingsPage = () => {
                         type="email"
                         value={formData.contactEmail || ""}
                         onChange={(e) => handleInputChange("contactEmail", e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="contact@example.com"
+                        className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                        placeholder="thegulfcoastmusic@gmail.com"
                       />
                     </div>
                     <div>
@@ -277,8 +270,8 @@ const SystemSettingsPage = () => {
                         type="text"
                         value={formData.supportPhone || ""}
                         onChange={(e) => handleInputChange("supportPhone", e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="+1 (555) 123-4567"
+                        className="text-gray-700 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                        placeholder="2519994651"
                       />
                     </div>
                   </div>
@@ -326,7 +319,7 @@ const SystemSettingsPage = () => {
                       <div>
                         <h4 className="text-sm font-medium text-yellow-800">Security Notice</h4>
                         <p className="text-sm text-yellow-700 mt-1">
-                          Changing these settings may affect system security and user access. 
+                          Changing these settings may affect system security and user access.
                           Please review changes carefully before saving.
                         </p>
                       </div>
@@ -392,7 +385,7 @@ const SystemSettingsPage = () => {
                         type="number"
                         value={formData.maxFileSize || 10}
                         onChange={(e) => handleInputChange("maxFileSize", parseInt(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         min="1"
                         max="100"
                       />
@@ -406,7 +399,7 @@ const SystemSettingsPage = () => {
                         type="text"
                         value={(formData.allowedFileTypes || []).join(", ")}
                         onChange={(e) => handleInputChange("allowedFileTypes", e.target.value.split(", "))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="text-gray-600 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="jpg, png, pdf, doc"
                       />
                       <p className="text-xs text-gray-500 mt-1">Separate file types with commas</p>
@@ -447,8 +440,8 @@ const SystemSettingsPage = () => {
                       <div>
                         <h4 className="text-sm font-medium text-blue-800">System Summary</h4>
                         <p className="text-sm text-blue-700 mt-1">
-                          The system is currently running in <strong>{formData.maintenanceMode ? "maintenance" : "normal"}</strong> mode. 
-                          User registrations are <strong>{formData.allowRegistrations ? "enabled" : "disabled"}</strong> and 
+                          The system is currently running in <strong>{formData.maintenanceMode ? "maintenance" : "normal"}</strong> mode.
+                          User registrations are <strong>{formData.allowRegistrations ? "enabled" : "disabled"}</strong> and
                           email notifications are <strong>{formData.emailNotifications ? "active" : "inactive"}</strong>.
                         </p>
                       </div>
@@ -469,14 +462,12 @@ const StatCard = ({ icon: Icon, label, value, status }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
-        <div className={`p-3 rounded-xl ${
-          status ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
-        }`}>
+        <div className={`p-3 rounded-xl ${status ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+          }`}>
           <Icon className="w-6 h-6" />
         </div>
-        <div className={`flex items-center space-x-1 text-sm font-medium ${
-          status ? "text-green-600" : "text-red-600"
-        }`}>
+        <div className={`flex items-center space-x-1 text-sm font-medium ${status ? "text-green-600" : "text-red-600"
+          }`}>
           {status ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
         </div>
       </div>
@@ -501,14 +492,12 @@ const ToggleSetting = ({ label, description, enabled, onToggle, icon: Icon }) =>
       </div>
       <button
         onClick={onToggle}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-          enabled ? "bg-blue-600" : "bg-gray-200"
-        }`}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enabled ? "bg-blue-600" : "bg-gray-200"
+          }`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-            enabled ? "translate-x-6" : "translate-x-1"
-          }`}
+          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enabled ? "translate-x-6" : "translate-x-1"
+            }`}
         />
       </button>
     </div>
