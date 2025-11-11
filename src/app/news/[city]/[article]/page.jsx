@@ -17,7 +17,6 @@ export default function NewsDetailsPage() {
 
         if (res.ok && data.data?.news) {
           setNews(data.data.news);
-          console.log(data.data.news)
         } else {
           setNews(null);
         }
