@@ -39,7 +39,7 @@ export default function CityNewsPage() {
   if (loading) {
     return (
       <div className="brandBg text-white min-h-screen flex items-center justify-center">
-        <p className="text-lg">Loading {city} news...</p>
+        <p className="text-lg">Loading {decodeURIComponent(city)} news...</p>
       </div>
     );
   }
