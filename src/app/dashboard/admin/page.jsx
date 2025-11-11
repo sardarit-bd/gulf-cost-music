@@ -7,16 +7,12 @@ import {
   Calendar,
   CheckCircle,
   Clock,
-  Download,
-  Filter,
   Mail,
   MapPin,
-  MoreVertical,
   Music,
-  Plus,
-  UserCheck,
   Users
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -65,42 +61,6 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
-
-
-  const quickActions = [
-    {
-      title: "Verify Users",
-      description: "Approve pending user verifications",
-      icon: UserCheck,
-      count: stats?.pendingContacts || 0,
-      color: "orange",
-      href: "/admin/users"
-    },
-    {
-      title: "Add Content",
-      description: "Create new articles or events",
-      icon: Plus,
-      count: null,
-      color: "blue",
-      href: "/admin/content"
-    },
-    {
-      title: "Moderate",
-      description: "Review user submissions",
-      icon: Filter,
-      count: (stats?.totalNews || 0) + (stats?.totalArtists || 0),
-      color: "purple",
-      href: "/admin/content"
-    },
-    {
-      title: "Export Data",
-      description: "Download reports and analytics",
-      icon: Download,
-      count: null,
-      color: "green",
-      href: "#"
-    }
-  ];
 
   return (
     <AdminLayout>
@@ -152,26 +112,13 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Left Column */}
           <div className="xl:col-span-2 space-y-8">
-            {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Quick Actions</h2>
-                <MoreVertical className="w-5 h-5 text-gray-400 cursor-pointer" />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {quickActions.map((action, index) => (
-                  <QuickActionCard key={index} action={action} />
-                ))}
-              </div>
-            </div>
-
             {/* Recent Users */}
             <div className="bg-white rounded-xl shadow-sm border-gray-300 border p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Recent Users</h2>
-                <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                <Link href="/dashboard/admin/users" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
                   View All
-                </button>
+                </Link>
               </div>
               <RecentUsersTable users={recentUsers} />
             </div>
@@ -194,17 +141,6 @@ export default function AdminDashboard() {
                 </button>
               </div>
               <UpcomingEventsList events={upcomingEvents} />
-            </div>
-
-            {/* System Status */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">System Status</h2>
-              <div className="space-y-3">
-                <StatusItem label="API" status="operational" />
-                <StatusItem label="Database" status="operational" />
-                <StatusItem label="Storage" status="warning" />
-                <StatusItem label="Email Service" status="operational" />
-              </div>
             </div>
           </div>
         </div>
@@ -331,9 +267,9 @@ const RecentUsersTable = ({ users }) => {
                 )}
               </td>
               <td className="py-3">
-                <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                <Link href="/dashboard/admin/users" className="rounded-2xl bg-gray-100 px-3 py-1 text-yellow-500 hover:text-yellow-600 text-sm">
                   Manage
-                </button>
+                </Link>
               </td>
             </tr>
           ))}
