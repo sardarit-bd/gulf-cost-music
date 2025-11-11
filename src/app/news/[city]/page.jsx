@@ -14,10 +14,13 @@ export default function CityNewsPage() {
     const fetchCityNews = async () => {
       try {
         setLoading(true);
+        const decodedCity = decodeURIComponent(city);
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/news?location=${city.toLowerCase()}`
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/news?location=${decodedCity.toLowerCase()}`
         );
+
         const data = await res.json();
+
         if (res.ok && data.data?.news) {
           setNews(data.data.news);
         } else {
@@ -63,8 +66,9 @@ export default function CityNewsPage() {
         {/* Header */}
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold text-[var(--primary)] capitalize">
-            {city} News
+            {decodeURIComponent(city)} News
           </h1>
+
           <button
             onClick={() => router.push("/news")}
             className="px-4 py-2 bg-white text-gray-700 rounded-md border hover:bg-yellow-100 transition"
