@@ -9,19 +9,29 @@ export default function CityWiseVenues() {
   const router = useRouter();
   const [venues, setVenues] = useState([]);
 
+  const decodedCity = decodeURIComponent(city);
+
   useEffect(() => {
     const fetchCityVenues = async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/venues?city=${city}`);
-      const data = await res.json();
-      if (res.ok) setVenues(data.data.venues);
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues?city=${decodedCity.toLowerCase()}`
+        );
+        const data = await res.json();
+        if (res.ok && data.data?.venues) setVenues(data.data.venues);
+      } catch (err) {
+        console.error("Error fetching venues:", err);
+      }
     };
     fetchCityVenues();
-  }, [city]);
+  }, [decodedCity]);
 
   if (!venues.length) {
     return (
       <div className="brandBg text-white min-h-screen flex flex-col justify-center items-center">
-        <h1 className="text-3xl font-bold mb-3">No Venues Found in {city} 😢</h1>
+        <h1 className="text-3xl font-bold mb-3">
+          No Venues Found in {decodedCity} 😢
+        </h1>
         <button
           onClick={() => router.push("/venues")}
           className="px-6 py-2 bg-yellow-400 text-black rounded-md font-medium hover:bg-yellow-500 transition"
@@ -36,7 +46,7 @@ export default function CityWiseVenues() {
     <section className="py-14 mt-20 px-6">
       <div className="container mx-auto">
         <h1 className="text-4xl md:text-5xl font-bold brandColor capitalize mb-10">
-          {city} Venues
+          {decodedCity} Venues
         </h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
