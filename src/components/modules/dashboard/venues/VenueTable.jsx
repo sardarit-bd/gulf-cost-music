@@ -53,7 +53,7 @@ const VenueTable = ({
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-900">
                     Venues ({venues.length})
@@ -329,8 +329,8 @@ const VenueRow = ({
                             <button
                                 onClick={() => onToggleActive(venue._id, venue.isActive, venue.venueName)}
                                 className={`p-2 rounded-lg transition-colors ${venue.isActive
-                                        ? "bg-orange-100 text-orange-600 hover:bg-orange-200"
-                                        : "bg-green-100 text-green-600 hover:bg-green-200"
+                                    ? "bg-orange-100 text-orange-600 hover:bg-orange-200"
+                                    : "bg-green-100 text-green-600 hover:bg-green-200"
                                     }`}
                                 title={venue.isActive ? "Deactivate" : "Activate"}
                             >
@@ -394,8 +394,8 @@ const Pagination = ({ page, pages, venuesCount, onPageChange }) => {
                                 key={pageNumber}
                                 onClick={() => onPageChange(pageNumber)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${page === pageNumber
-                                        ? "bg-blue-600 text-white shadow-sm"
-                                        : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                                    ? "bg-blue-600 text-white shadow-sm"
+                                    : "border border-gray-300 text-gray-700 hover:bg-gray-50"
                                     }`}
                             >
                                 {pageNumber}

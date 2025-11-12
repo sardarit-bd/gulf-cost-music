@@ -366,7 +366,7 @@ export default function AdminLayout({ children }) {
         }`}>
         <div className="flex flex-col h-full">
           {/* Logo Section */}
-          <div className="flex items-center justify-between h-16 px-4 bg-white border-b">
+          <div className="flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200">
             <div className="flex items-center">
               <div className="flex items-center space-x-2">
                 <div className="w-20 h-12 bg-gradient-to-r from-gray-700 to-gray-700 rounded-lg flex items-center justify-center">
@@ -420,7 +420,7 @@ export default function AdminLayout({ children }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:ml-0 min-w-0">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b">
+        <header className="bg-white shadow-sm border-b border-gray-100">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center">
               <button

@@ -15,7 +15,7 @@ const Filters = ({
     const hasActiveFilters = search || statusFilter !== "all" || locationFilter;
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 mb-6">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
                 <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">

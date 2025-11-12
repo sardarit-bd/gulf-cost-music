@@ -108,7 +108,7 @@ const PodcastForm = ({
     };
 
     return (
-        <div className="bg-white rounded-xl border shadow-sm p-6 mb-6">
+        <div className="bg-white rounded-xl border border-gray-300 shadow-sm p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4 text-gray-900">
                 {editingItem ? 'Edit Podcast' : 'Add New Podcast'}
             </h2>
@@ -124,7 +124,7 @@ const PodcastForm = ({
                     onClearThumbnail={clearThumbnail}
                 />
 
-                <div className="md:col-span-2 flex justify-end gap-3 pt-4 border-t">
+                <div className="md:col-span-2 flex justify-end gap-3 pt-4 border-t border-gray-300">
                     <button
                         type="button"
                         onClick={onCancel}

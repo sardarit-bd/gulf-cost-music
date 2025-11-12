@@ -7,7 +7,7 @@ const Filters = ({
     onApply
 }) => {
     return (
-        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-4 sm:p-6 mb-4 sm:mb-6">
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-end">
                 <div className="flex-1 w-full">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
