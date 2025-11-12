@@ -13,7 +13,7 @@ const WaveForm = ({
     if (!showForm) return null;
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-4 sm:p-6 mb-4 sm:mb-6">
             <div className="flex justify-between items-center mb-4 sm:mb-6">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
                     {editingItem ? "Edit Open Mic Session" : "Add New Session"}

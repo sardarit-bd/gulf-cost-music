@@ -3,7 +3,7 @@ import { Edit, Loader2, Trash2, Video } from "lucide-react";
 const PodcastTable = ({ podcasts, loading, onEdit, onDelete, onAddNew }) => {
     if (loading) {
         return (
-            <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-300 shadow-sm overflow-hidden">
                 <div className="flex justify-center items-center py-20">
                     <Loader2 className="w-8 h-8 animate-spin text-purple-600 mr-3" />
                     <span className="text-gray-600">Loading podcasts...</span>
@@ -14,7 +14,7 @@ const PodcastTable = ({ podcasts, loading, onEdit, onDelete, onAddNew }) => {
 
     if (podcasts.length === 0) {
         return (
-            <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-300 shadow-sm overflow-hidden">
                 <div className="py-16 text-center">
                     <Video className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -35,8 +35,8 @@ const PodcastTable = ({ podcasts, loading, onEdit, onDelete, onAddNew }) => {
     }
 
     return (
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b flex justify-between items-center">
+        <div className="bg-white rounded-xl border border-gray-300 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-300 flex justify-between items-center">
                 <h3 className="font-semibold text-gray-900">
                     Podcasts ({podcasts.length})
                 </h3>

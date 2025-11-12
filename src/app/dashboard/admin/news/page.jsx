@@ -1,21 +1,14 @@
 "use client";
-import axios from "axios";
-import { FileText, Newspaper, Power, RefreshCw, TrendingUp } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Toaster } from 'react-hot-toast';
-// import AdminLayout from "@/components/modules/dashboard/AdminLayout";
-// import ConfirmationModal from "@/components/modules/dashboard/news/ConfirmationModal";
-// import StatCard from "@/components/modules/dashboard/news/StatCard";
-// import Filters from "@/components/modules/dashboard/news/Filters";
-// import NewsTable from "@/components/modules/dashboard/news/NewsTable";
-// import NewsDetailModal from "@/components/modules/dashboard/news/NewsDetailModal";
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
 import ConfirmationModal from "@/components/modules/dashboard/news/ConfirmationModal";
 import Filters from "@/components/modules/dashboard/news/Filters";
 import NewsDetailModal from "@/components/modules/dashboard/news/NewsDetailModal";
 import NewsTable from "@/components/modules/dashboard/news/NewsTable";
 import StatCard from "@/components/modules/dashboard/news/StatCard";
-import toast from "react-hot-toast";
+import axios from "axios";
+import { FileText, Newspaper, Power, RefreshCw, TrendingUp } from "lucide-react";
+import { useEffect, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 const NewsManagement = () => {
   const [newsList, setNewsList] = useState([]);
@@ -79,7 +72,7 @@ const NewsManagement = () => {
 
       setNewsList(data.data.content);
       setPages(data.data.pagination.pages);
-      toast.success('News loaded successfully');
+      // toast.success('News loaded successfully');
     } catch (err) {
       console.error("Fetch news error:", err);
       toast.error('Failed to load news');

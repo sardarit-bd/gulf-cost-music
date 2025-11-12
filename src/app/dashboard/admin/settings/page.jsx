@@ -184,7 +184,7 @@ const SystemSettingsPage = () => {
             />
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
             {/* Tabs */}
             <div className="border-b border-gray-200">
               <nav className="flex overflow-x-auto">
