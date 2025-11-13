@@ -1,3 +1,5 @@
+// OrderManagement.js (Updated)
+
 "use client";
 
 import axios from "axios";
@@ -37,6 +39,7 @@ export default function OrderManagement() {
     const [paymentFilter, setPaymentFilter] = useState("all");
     const [showFilters, setShowFilters] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(null);
+    const [statusUpdateLoading, setStatusUpdateLoading] = useState(null);
 
     const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -60,6 +63,58 @@ export default function OrderManagement() {
             toast.error("Failed to load orders");
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Update delivery status
+    const handleUpdateDeliveryStatus = async (orderId, newStatus) => {
+        setStatusUpdateLoading(orderId);
+        try {
+            const token = localStorage.getItem("token");
+            const { data } = await axios.put(
+                `${API_BASE}/api/orders/${orderId}/status`,
+                { deliveryStatus: newStatus },
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+
+            if (data.success) {
+                toast.success(`Order status updated to ${newStatus}`);
+                fetchOrders();
+            }
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || "Failed to update order status";
+            toast.error(errorMsg);
+        } finally {
+            setStatusUpdateLoading(null);
+            setDropdownOpen(null);
+        }
+    };
+
+    // Update payment status
+    const handleUpdatePaymentStatus = async (orderId, newStatus) => {
+        setStatusUpdateLoading(orderId);
+        try {
+            const token = localStorage.getItem("token");
+            const { data } = await axios.put(
+                `${API_BASE}/api/orders/${orderId}/payment-status`,
+                { paymentStatus: newStatus },
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+
+            if (data.success) {
+                toast.success(`Payment status updated to ${newStatus}`);
+                fetchOrders();
+            }
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || "Failed to update payment status";
+            toast.error(errorMsg);
+        } finally {
+            setStatusUpdateLoading(null);
+            setDropdownOpen(null);
         }
     };
 
@@ -121,6 +176,7 @@ export default function OrderManagement() {
         setDropdownOpen(dropdownOpen === orderId ? null : orderId);
     };
 
+    // Enhanced status badge with all statuses
     const getStatusBadge = (order) => {
         const status = order.deliveryStatus;
         const paymentStatus = order.paymentStatus;
@@ -131,6 +187,26 @@ export default function OrderManagement() {
                 icon: Clock,
                 text: "Pending"
             },
+            confirmed: {
+                color: "bg-blue-50 text-blue-700 border border-blue-200",
+                icon: CheckCircle,
+                text: "Confirmed"
+            },
+            processing: {
+                color: "bg-indigo-50 text-indigo-700 border border-indigo-200",
+                icon: RefreshCw,
+                text: "Processing"
+            },
+            "ready-for-pickup": {
+                color: "bg-purple-50 text-purple-700 border border-purple-200",
+                icon: Package,
+                text: "Ready for Pickup"
+            },
+            shipped: {
+                color: "bg-cyan-50 text-cyan-700 border border-cyan-200",
+                icon: Truck,
+                text: "Shipped"
+            },
             delivered: {
                 color: "bg-emerald-50 text-emerald-700 border border-emerald-200",
                 icon: CheckCircle,
@@ -140,11 +216,6 @@ export default function OrderManagement() {
                 color: "bg-rose-50 text-rose-700 border border-rose-200",
                 icon: XCircle,
                 text: "Cancelled"
-            },
-            shipped: {
-                color: "bg-blue-50 text-blue-700 border border-blue-200",
-                icon: Truck,
-                text: "Shipped"
             }
         };
 
@@ -188,6 +259,68 @@ export default function OrderManagement() {
         );
     };
 
+    // Status dropdown component
+    const StatusDropdown = ({ order, onStatusUpdate, loading }) => {
+        const statusOptions = [
+            { value: "pending", label: "Pending", color: "text-amber-600" },
+            { value: "confirmed", label: "Confirmed", color: "text-blue-600" },
+            { value: "processing", label: "Processing", color: "text-indigo-600" },
+            { value: "ready-for-pickup", label: "Ready for Pickup", color: "text-purple-600" },
+            { value: "shipped", label: "Shipped", color: "text-cyan-600" },
+            { value: "delivered", label: "Delivered", color: "text-emerald-600" },
+            { value: "cancelled", label: "Cancelled", color: "text-rose-600" }
+        ];
+
+        const paymentStatusOptions = [
+            { value: "pending", label: "Pending", color: "text-orange-600" },
+            { value: "paid", label: "Paid", color: "text-green-600" },
+            { value: "failed", label: "Failed", color: "text-red-600" },
+            { value: "refunded", label: "Refunded", color: "text-purple-600" }
+        ];
+
+        return (
+            <div className="space-y-4">
+                <div>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Delivery Status</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                        {statusOptions.map((option) => (
+                            <button
+                                key={option.value}
+                                onClick={() => onStatusUpdate('delivery', option.value)}
+                                disabled={loading || order.deliveryStatus === option.value}
+                                className={`p-2 text-xs font-medium rounded-lg border transition-all duration-200 ${order.deliveryStatus === option.value
+                                    ? 'bg-blue-100 text-blue-700 border-blue-300'
+                                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                                <span className={option.color}>{option.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Payment Status</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                        {paymentStatusOptions.map((option) => (
+                            <button
+                                key={option.value}
+                                onClick={() => onStatusUpdate('payment', option.value)}
+                                disabled={loading || order.paymentStatus === option.value}
+                                className={`p-2 text-xs font-medium rounded-lg border transition-all duration-200 ${order.paymentStatus === option.value
+                                    ? 'bg-green-100 text-green-700 border-green-300'
+                                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
+                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                                <span className={option.color}>{option.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const getPaymentMethodBadge = (method) => {
         const config = {
             stripe: {
@@ -199,11 +332,6 @@ export default function OrderManagement() {
                 color: "bg-violet-50 text-violet-700 border border-violet-200",
                 text: "Cash on Delivery",
                 icon: Wallet
-            },
-            card: {
-                color: "bg-teal-50 text-teal-700 border border-teal-200",
-                text: "Credit Card",
-                icon: CreditCard
             }
         };
         const methodConfig = config[method] || config.cod;
@@ -230,7 +358,7 @@ export default function OrderManagement() {
         return matchesSearch && matchesStatus && matchesPayment;
     });
 
-    // Statistics with better data
+    // Statistics
     const stats = {
         total: orders.length,
         pending: orders.filter(order => order.deliveryStatus === "pending").length,
@@ -276,7 +404,6 @@ export default function OrderManagement() {
         return count;
     };
 
-    // Format price to 2 decimal places
     const formatPrice = (price) => {
         if (typeof price !== 'number') return '0.00';
         return price.toFixed(2);
@@ -439,10 +566,34 @@ export default function OrderManagement() {
                                     className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 transition-all duration-200"
                                 >
                                     <option value="all">All Delivery Status</option>
-                                    <option value="pending">🟡 Pending</option>
-                                    <option value="shipped">🚚 Shipped</option>
-                                    <option value="delivered">✅ Delivered</option>
-                                    <option value="cancelled">❌ Cancelled</option>
+                                    <option value="pending">
+                                        <Clock className="w-4 h-4 inline mr-2" />
+                                        Pending
+                                    </option>
+                                    <option value="confirmed">
+                                        <CheckCircle className="w-4 h-4 inline mr-2 text-blue-500" />
+                                        Confirmed
+                                    </option>
+                                    <option value="processing">
+                                        <RefreshCw className="w-4 h-4 inline mr-2 text-indigo-500" />
+                                        Processing
+                                    </option>
+                                    <option value="ready-for-pickup">
+                                        <Package className="w-4 h-4 inline mr-2 text-purple-500" />
+                                        Ready for Pickup
+                                    </option>
+                                    <option value="shipped">
+                                        <Truck className="w-4 h-4 inline mr-2 text-cyan-500" />
+                                        Shipped
+                                    </option>
+                                    <option value="delivered">
+                                        <CheckCircle className="w-4 h-4 inline mr-2 text-emerald-500" />
+                                        Delivered
+                                    </option>
+                                    <option value="cancelled">
+                                        <XCircle className="w-4 h-4 inline mr-2 text-rose-500" />
+                                        Cancelled
+                                    </option>
                                 </select>
                             </div>
 
@@ -456,10 +607,22 @@ export default function OrderManagement() {
                                     className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 transition-all duration-200"
                                 >
                                     <option value="all">All Payment Status</option>
-                                    <option value="pending">⏳ Payment Pending</option>
-                                    <option value="paid">💰 Paid</option>
-                                    <option value="failed">❌ Failed</option>
-                                    <option value="refunded">↩️ Refunded</option>
+                                    <option value="pending">
+                                        <Clock className="w-4 h-4 inline mr-2 text-orange-500" />
+                                        Payment Pending
+                                    </option>
+                                    <option value="paid">
+                                        <CheckCircle className="w-4 h-4 inline mr-2 text-green-500" />
+                                        Paid
+                                    </option>
+                                    <option value="failed">
+                                        <XCircle className="w-4 h-4 inline mr-2 text-red-500" />
+                                        Failed
+                                    </option>
+                                    <option value="refunded">
+                                        <RefreshCw className="w-4 h-4 inline mr-2 text-purple-500" />
+                                        Refunded
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -630,10 +793,10 @@ export default function OrderManagement() {
                                                             <MoreVertical className="w-4 h-4" />
                                                         </button>
 
-                                                        {/* Dropdown Menu */}
+                                                        {/* Enhanced Dropdown Menu */}
                                                         {dropdownOpen === order._id && (
-                                                            <div className="absolute right-0 top-10 z-50 w-48 bg-white rounded-xl shadow-2xl border border-gray-200/60 backdrop-blur-sm">
-                                                                <div className="p-2 space-y-1">
+                                                            <div className="absolute right-0 top-10 z-50 w-64 bg-white rounded-xl shadow-2xl border border-gray-200/60 backdrop-blur-sm">
+                                                                <div className="p-4 space-y-4">
                                                                     {/* View Details Button */}
                                                                     <button
                                                                         onClick={() => handleViewDetails(order)}
@@ -643,21 +806,20 @@ export default function OrderManagement() {
                                                                         <span className="font-medium">View Details</span>
                                                                     </button>
 
-                                                                    {/* Mark as Delivered Button */}
-                                                                    {order.deliveryStatus === "pending" && (
-                                                                        <button
-                                                                            onClick={() => handleMarkDelivered(order._id)}
-                                                                            disabled={actionLoading === order._id}
-                                                                            className="w-full flex items-center gap-3 px-4 py-3 text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
-                                                                        >
-                                                                            {actionLoading === order._id ? (
-                                                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                                                            ) : (
-                                                                                <CheckCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                                                            )}
-                                                                            <span className="font-medium">Mark Delivered</span>
-                                                                        </button>
-                                                                    )}
+                                                                    {/* Status Update Section */}
+                                                                    <div className="border-t border-gray-200 pt-4">
+                                                                        <StatusDropdown
+                                                                            order={order}
+                                                                            onStatusUpdate={(type, status) => {
+                                                                                if (type === 'delivery') {
+                                                                                    handleUpdateDeliveryStatus(order._id, status);
+                                                                                } else {
+                                                                                    handleUpdatePaymentStatus(order._id, status);
+                                                                                }
+                                                                            }}
+                                                                            loading={statusUpdateLoading === order._id}
+                                                                        />
+                                                                    </div>
 
                                                                     {/* Delete Order Button */}
                                                                     {order.deliveryStatus !== "delivered" && (
@@ -689,7 +851,7 @@ export default function OrderManagement() {
                 </div>
             </div>
 
-            {/* Order Details Modal - Keep this part the same as before */}
+            {/* Enhanced Order Details Modal */}
             {showDetailsModal && selectedOrder && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
                     <div
@@ -762,11 +924,14 @@ export default function OrderManagement() {
                                                         ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
                                                         : selectedOrder.paymentStatus === "pending"
                                                             ? "bg-amber-100 text-amber-700 border border-amber-200"
-                                                            : "bg-rose-100 text-rose-700 border border-rose-200"
+                                                            : selectedOrder.paymentStatus === "failed"
+                                                                ? "bg-rose-100 text-rose-700 border border-rose-200"
+                                                                : "bg-purple-100 text-purple-700 border border-purple-200"
                                                         }`}>
                                                         {selectedOrder.paymentStatus === "paid" && <CheckCircle className="w-4 h-4" />}
                                                         {selectedOrder.paymentStatus === "pending" && <Clock className="w-4 h-4" />}
                                                         {selectedOrder.paymentStatus === "failed" && <XCircle className="w-4 h-4" />}
+                                                        {selectedOrder.paymentStatus === "refunded" && <RefreshCw className="w-4 h-4" />}
                                                         {selectedOrder.paymentStatus.charAt(0).toUpperCase() + selectedOrder.paymentStatus.slice(1)}
                                                     </span>
                                                 </div>
@@ -780,12 +945,21 @@ export default function OrderManagement() {
                                                 ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
                                                 : selectedOrder.deliveryStatus === "pending"
                                                     ? "bg-amber-100 text-amber-700 border border-amber-200"
-                                                    : selectedOrder.deliveryStatus === "shipped"
+                                                    : selectedOrder.deliveryStatus === "confirmed"
                                                         ? "bg-blue-100 text-blue-700 border border-blue-200"
-                                                        : "bg-rose-100 text-rose-700 border border-rose-200"
+                                                        : selectedOrder.deliveryStatus === "processing"
+                                                            ? "bg-indigo-100 text-indigo-700 border border-indigo-200"
+                                                            : selectedOrder.deliveryStatus === "ready-for-pickup"
+                                                                ? "bg-purple-100 text-purple-700 border border-purple-200"
+                                                                : selectedOrder.deliveryStatus === "shipped"
+                                                                    ? "bg-cyan-100 text-cyan-700 border border-cyan-200"
+                                                                    : "bg-rose-100 text-rose-700 border border-rose-200"
                                                 }`}>
                                                 {selectedOrder.deliveryStatus === "delivered" && <CheckCircle className="w-5 h-5" />}
                                                 {selectedOrder.deliveryStatus === "pending" && <Clock className="w-5 h-5" />}
+                                                {selectedOrder.deliveryStatus === "confirmed" && <CheckCircle className="w-5 h-5" />}
+                                                {selectedOrder.deliveryStatus === "processing" && <RefreshCw className="w-5 h-5" />}
+                                                {selectedOrder.deliveryStatus === "ready-for-pickup" && <Package className="w-5 h-5" />}
                                                 {selectedOrder.deliveryStatus === "shipped" && <Truck className="w-5 h-5" />}
                                                 {selectedOrder.deliveryStatus === "cancelled" && <XCircle className="w-5 h-5" />}
                                                 {selectedOrder.deliveryStatus.charAt(0).toUpperCase() + selectedOrder.deliveryStatus.slice(1)}
@@ -914,10 +1088,29 @@ export default function OrderManagement() {
                                         )}
                                     </div>
 
-                                    {/* Action Buttons */}
+                                    {/* Enhanced Action Buttons */}
                                     <div className="bg-white rounded-2xl p-6 border border-gray-200/60 shadow-sm">
                                         <h3 className="text-xl font-semibold text-gray-900 mb-6">Order Actions</h3>
                                         <div className="space-y-4">
+                                            {/* Status Update Section */}
+                                            <div className="p-4 bg-gray-50/50 rounded-xl border border-gray-200/60">
+                                                <h4 className="text-sm font-semibold text-gray-900 mb-3">Update Status</h4>
+                                                <StatusDropdown
+                                                    order={selectedOrder}
+                                                    onStatusUpdate={(type, status) => {
+                                                        if (type === 'delivery') {
+                                                            handleUpdateDeliveryStatus(selectedOrder._id, status);
+                                                            setShowDetailsModal(false);
+                                                        } else {
+                                                            handleUpdatePaymentStatus(selectedOrder._id, status);
+                                                            setShowDetailsModal(false);
+                                                        }
+                                                    }}
+                                                    loading={statusUpdateLoading === selectedOrder._id}
+                                                />
+                                            </div>
+
+                                            {/* Traditional Action Buttons */}
                                             {selectedOrder.deliveryStatus === "pending" && (
                                                 <button
                                                     onClick={() => {
