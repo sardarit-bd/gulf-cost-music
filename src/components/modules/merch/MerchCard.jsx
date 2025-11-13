@@ -1,6 +1,8 @@
 "use client";
 import { Eye, Loader2, Mail, MapPin, Minus, Phone, Plus, ShoppingCart, User } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function MerchCard({ limit = null }) {
   const [merchItems, setMerchItems] = useState([]);
@@ -12,6 +14,7 @@ export default function MerchCard({ limit = null }) {
   const [orderLoading, setOrderLoading] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [showShippingForm, setShowShippingForm] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [shippingInfo, setShippingInfo] = useState({
     name: "",
     email: "",
@@ -21,6 +24,8 @@ export default function MerchCard({ limit = null }) {
     postalCode: "",
     note: ""
   });
+
+  const router = useRouter();
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
   useEffect(() => {
@@ -34,6 +39,10 @@ export default function MerchCard({ limit = null }) {
 
       if (res.ok && data.success) {
         let items = Array.isArray(data.data) ? data.data : [];
+
+        // Filter out inactive products
+        items = items.filter(item => item.isActive !== false);
+
         items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         if (limit) {
@@ -53,12 +62,29 @@ export default function MerchCard({ limit = null }) {
     }
   };
 
+  // Check if user is logged in
+  const isLoggedIn = () => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem("token");
+      return !!token;
+    }
+    return false;
+  };
+
   const handleViewDetails = (item) => {
     setSelectedItem(item);
     setShowModal(true);
   };
 
   const handleOrderClick = (item) => {
+    // Check if user is logged in
+    if (!isLoggedIn()) {
+      setSelectedItem(item);
+      setShowLoginModal(true);
+      return;
+    }
+
+    // If logged in, proceed with order
     setSelectedItem(item);
     setOrderQuantity(1);
     setSelectedPaymentMethod(null);
@@ -73,6 +99,11 @@ export default function MerchCard({ limit = null }) {
       note: ""
     });
     setShowOrderModal(true);
+  };
+
+  const handleLoginAndProceed = () => {
+    setShowLoginModal(false);
+    router.push("/signin");
   };
 
   const handlePaymentMethodSelect = (paymentMethod) => {
@@ -148,9 +179,16 @@ export default function MerchCard({ limit = null }) {
   const handleCreateOrder = async () => {
     if (!selectedItem || !selectedPaymentMethod) return;
 
+    // Double check if user is logged in
+    if (!isLoggedIn()) {
+      toast.error("Your session has expired. Please login again.");
+      router.push("/signin");
+      return;
+    }
+
     // Validate shipping info for COD
     if (selectedPaymentMethod === "cod" && !isShippingFormValid()) {
-      alert("Please fill all required shipping information");
+      toast.error("Please fill all required shipping information");
       return;
     }
 
@@ -189,16 +227,22 @@ export default function MerchCard({ limit = null }) {
         if (selectedPaymentMethod === "stripe" && data.data.stripeSession) {
           window.location.href = data.data.stripeSession.url;
         } else {
-          alert("Order placed successfully! For COD, you'll pay when delivered.");
+          toast.success("Order placed successfully! For COD, you'll pay when delivered.");
           setShowOrderModal(false);
           fetchMerch();
         }
       } else {
-        alert(data.message || "Failed to create order");
+        // If token is invalid, redirect to login
+        if (response.status === 401) {
+          toast("Your session has expired. Please login again.");
+          router.push("/signin");
+        } else {
+          toast.error(data.message || "Failed to create order");
+        }
       }
     } catch (error) {
       console.error("Order error:", error);
-      alert("Failed to create order");
+      toast.error("Failed to create order");
     } finally {
       setOrderLoading(false);
     }
@@ -217,6 +261,7 @@ export default function MerchCard({ limit = null }) {
 
   return (
     <section className="py-16 px-6 md:px-16 bg-white relative">
+      <Toaster />
       <div className="container mx-auto">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Merchandise</h2>
         <p className="text-gray-600 mb-8">Exclusive Gulf Coast Music Collection</p>
@@ -350,6 +395,46 @@ export default function MerchCard({ limit = null }) {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Login Required Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowLoginModal(false)}
+          ></div>
+
+          <div className="relative bg-white max-w-sm w-full rounded-2xl shadow-xl p-6 animate-fadeInScale z-10">
+            <div className="text-center mb-4">
+              <div className="w-16 h-16 mx-auto mb-3 bg-yellow-100 rounded-full flex items-center justify-center">
+                <User className="w-8 h-8 text-yellow-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                Login Required
+              </h2>
+              <p className="text-gray-600">
+                Please login first to purchase merchandise.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleLoginAndProceed}
+                className="w-full bg-[var(--primary)] text-gray-700 py-3 rounded-lg font-semibold hover:bg-[var(--primary)]/90 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Go to Login
+              </button>
+
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="w-full text-gray-600 py-3 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all duration-200 font-medium"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
