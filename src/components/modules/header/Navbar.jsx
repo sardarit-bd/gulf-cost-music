@@ -1,18 +1,16 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [mobileDropdown, setMobileDropdown] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  // const [isLoggedIn, setIsLoggedIn] = useState(false);
-  // const [user, setUser] = useState(null);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -29,7 +27,6 @@ export default function Header() {
     logout();
     router.push("/signin");
   };
-
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -63,14 +60,7 @@ export default function Header() {
     };
   }, [isOpen]);
 
-  // const handleSignOut = () => {
-  //   localStorage.removeItem("token");
-  //   localStorage.removeItem("user");
-  //   setIsLoggedIn(false);
-  //   setUser(null);
-  //   router.push("/signin");
-  // };
-
+  // Dashboard link for different user roles
   const getDashboardLink = () => {
     if (!user) return "/signin";
 
@@ -83,6 +73,8 @@ export default function Header() {
         return "/dashboard/journalist";
       case "admin":
         return "/dashboard/admin";
+      case "user": // Fan/regular user
+        return "/dashboard/user/orders";
       default:
         return "/dashboard";
     }
@@ -92,6 +84,9 @@ export default function Header() {
     if (!user) return "Dashboard";
 
     const role = user.role?.charAt(0).toUpperCase() + user.role?.slice(1);
+    if (user.role === "user") {
+      return "My Orders";
+    }
     return `${role} Dashboard`;
   };
 
@@ -212,9 +207,8 @@ export default function Header() {
                 <button className="flex items-center gap-1 hover:text-yellow-400 transition-colors duration-200 font-medium text-sm xl:text-base py-2">
                   {dropdownData[key].title}
                   <svg
-                    className={`w-4 h-4 transition-transform ${
-                      activeDropdown === key ? "rotate-180" : "rotate-0"
-                    }`}
+                    className={`w-4 h-4 transition-transform ${activeDropdown === key ? "rotate-180" : "rotate-0"
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -235,8 +229,8 @@ export default function Header() {
                         key === "artists"
                           ? `/artists/${encodeURIComponent(item)}`
                           : key === "venues"
-                          ? `/venues/${encodeURIComponent(item)}`
-                          : `/news/${encodeURIComponent(item)}`;
+                            ? `/venues/${encodeURIComponent(item)}`
+                            : `/news/${encodeURIComponent(item)}`;
 
                       return (
                         <Link
@@ -297,9 +291,8 @@ export default function Header() {
                 >
                   {dropdownData[key].title}
                   <svg
-                    className={`w-3 h-3 transition-transform ${
-                      mobileDropdown === key ? "rotate-180" : "rotate-0"
-                    }`}
+                    className={`w-3 h-3 transition-transform ${mobileDropdown === key ? "rotate-180" : "rotate-0"
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -320,8 +313,8 @@ export default function Header() {
                         key === "artists"
                           ? `/artists/${encodeURIComponent(item)}`
                           : key === "venues"
-                          ? `/venues/${encodeURIComponent(item)}`
-                          : `/news/${encodeURIComponent(item)}`;
+                            ? `/venues/${encodeURIComponent(item)}`
+                            : `/news/${encodeURIComponent(item)}`;
 
                       return (
                         <Link
@@ -420,7 +413,7 @@ export default function Header() {
                           d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         />
                       </svg>
-                      My Profile
+                      {user?.role === "user" ? "My Orders" : "My Profile"}
                     </Link>
 
                     <button
@@ -543,9 +536,8 @@ export default function Header() {
                     >
                       <span>{dropdownData[key].title}</span>
                       <svg
-                        className={`w-5 h-5 transition-transform ${
-                          mobileDropdown === key ? "rotate-180" : "rotate-0"
-                        }`}
+                        className={`w-5 h-5 transition-transform ${mobileDropdown === key ? "rotate-180" : "rotate-0"
+                          }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -560,17 +552,16 @@ export default function Header() {
                     </button>
 
                     <div
-                      className={`overflow-hidden transition-all duration-300 ${
-                        mobileDropdown === key ? "max-h-96 pb-2" : "max-h-0"
-                      }`}
+                      className={`overflow-hidden transition-all duration-300 ${mobileDropdown === key ? "max-h-96 pb-2" : "max-h-0"
+                        }`}
                     >
                       {dropdownData[key].items.map((item, index) => {
                         const href =
                           key === "artists"
                             ? `/artists/${encodeURIComponent(item)}`
                             : key === "venues"
-                            ? `/venues/${encodeURIComponent(item)}`
-                            : `/news/${encodeURIComponent(item)}`;
+                              ? `/venues/${encodeURIComponent(item)}`
+                              : `/news/${encodeURIComponent(item)}`;
 
                         return (
                           <Link

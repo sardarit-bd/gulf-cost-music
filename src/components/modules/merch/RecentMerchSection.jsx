@@ -80,10 +80,10 @@ export default function RecentMerchSection() {
                                 </h3>
                                 <p className="text-gray-600 text-sm mt-1">${item.price}</p>
                                 <button
-                                    onClick={() => setShowModal(true)}
+                                    href="/merch"
                                     className="bg-[var(--primary)] w-full text-gray-700 mt-5 px-4 py-2 rounded font-bold hover:bg-[var(--primary)]/90 transition text-lg"
                                 >
-                                    See Details
+                                    Buy Now
                                 </button>
                             </div>
                         </div>
@@ -92,32 +92,34 @@ export default function RecentMerchSection() {
             </div>
 
             {/* ===== Modal ===== */}
-            {showModal && (
-                <div className="fixed inset-0 flex items-center justify-center z-50">
-                    {/* Overlay */}
-                    <div
-                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                        onClick={() => setShowModal(false)}
-                    ></div>
-
-                    {/* Modal Content */}
-                    <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-[90%] max-w-md text-center z-10 animate-fadeInScale">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                            🚧 Under Construction
-                        </h2>
-                        <p className="text-gray-600 mb-6">
-                            This feature is currently being developed. Please check back soon
-                            to explore our exclusive Gulf Coast Music merchandise collection.
-                        </p>
-                        <button
+            {
+                showModal && (
+                    <div className="fixed inset-0 flex items-center justify-center z-50">
+                        {/* Overlay */}
+                        <div
+                            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                             onClick={() => setShowModal(false)}
-                            className="px-6 py-2 bg-[var(--primary)] text-gray-700 rounded-md font-semibold hover:bg-[var(--primary)]/90 transition"
-                        >
-                            Close
-                        </button>
+                        ></div>
+
+                        {/* Modal Content */}
+                        <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-[90%] max-w-md text-center z-10 animate-fadeInScale">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                                🚧 Under Construction
+                            </h2>
+                            <p className="text-gray-600 mb-6">
+                                This feature is currently being developed. Please check back soon
+                                to explore our exclusive Gulf Coast Music merchandise collection.
+                            </p>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="px-6 py-2 bg-[var(--primary)] text-gray-700 rounded-md font-semibold hover:bg-[var(--primary)]/90 transition"
+                            >
+                                Close
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Animation */}
             <style jsx>{`
@@ -135,6 +137,6 @@ export default function RecentMerchSection() {
           animation: fadeInScale 0.25s ease-out;
         }
       `}</style>
-        </section>
+        </section >
     );
 }
