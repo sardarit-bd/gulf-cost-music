@@ -79,12 +79,12 @@ export default function RecentMerchSection() {
                                     {item.name}
                                 </h3>
                                 <p className="text-gray-600 text-sm mt-1">${item.price}</p>
-                                <button
+                                <Link
                                     href="/merch"
-                                    className="bg-[var(--primary)] w-full text-gray-700 mt-5 px-4 py-2 rounded font-bold hover:bg-[var(--primary)]/90 transition text-lg"
+                                    className="block bg-[var(--primary)] w-full text-gray-700 mt-5 px-4 py-2 rounded font-bold hover:bg-[var(--primary)]/90 transition text-lg text-center"
                                 >
                                     Buy Now
-                                </button>
+                                </Link>
                             </div>
                         </div>
                     ))}

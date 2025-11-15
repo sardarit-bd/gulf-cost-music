@@ -133,7 +133,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Upcoming Events */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
+            {/* <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Upcoming Events</h2>
                 <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
@@ -141,7 +141,7 @@ export default function AdminDashboard() {
                 </button>
               </div>
               <UpcomingEventsList events={upcomingEvents} />
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 'use client'
 import { useSession } from '@/lib/auth'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 export default function DashboardLayout({ children }) {
   const { user, logout } = useSession()
@@ -12,7 +12,7 @@ export default function DashboardLayout({ children }) {
     router.push('/signin')
   }
 
-  if (pathname.startsWith('/dashboard/admin')) {
+  if (pathname.startsWith('/dashboard/admin') || pathname.startsWith(`/dashboard/${user?.role}/orders`)) {
     return <>{children}</>
   }
 
