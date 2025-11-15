@@ -36,7 +36,6 @@ export default function UserOrderTracking() {
                 setOrders(data.data);
             }
         } catch (error) {
-            console.log(error);
             toast.error("Failed to load order data.");
         } finally {
             setLoading(false);

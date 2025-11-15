@@ -155,28 +155,40 @@ export default function ProductManagement() {
         setActionLoading(item._id);
         try {
             const token = localStorage.getItem("token");
-            const updatedData = {
-                name: item.name,
-                price: item.price,
-                description: item.description,
-                stock: item.stock,
-                quantity: item.quantity,
-                isActive: !item.isActive
-            };
 
-            const response = await axios.put(`${API_BASE}/api/merch/${item._id}`, updatedData, {
+            // Create form data for the update
+            const formData = new FormData();
+            formData.append("name", item.name);
+            formData.append("price", item.price);
+            formData.append("description", item.description || "");
+            formData.append("stock", item.stock);
+            formData.append("quantity", item.quantity || "1");
+            formData.append("isActive", !item.isActive); // Toggle the status
+
+            const response = await axios.put(`${API_BASE}/api/merch/${item._id}`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json"
+                    "Content-Type": "multipart/form-data"
                 }
             });
 
             if (response.data.success) {
                 toast.success(`Product ${item.isActive ? 'deactivated' : 'activated'} successfully!`);
-                fetchMerch();
+                // Immediately update the local state for better UX
+                setMerchItems(prevItems =>
+                    prevItems.map(prevItem =>
+                        prevItem._id === item._id
+                            ? { ...prevItem, isActive: !item.isActive }
+                            : prevItem
+                    )
+                );
             }
         } catch (error) {
-            toast.error("Failed to update product status");
+            console.error("Toggle status error:", error);
+            const errorMsg = error.response?.data?.message || "Failed to update product status";
+            toast.error(errorMsg);
+            // Refresh the list to get correct data
+            fetchMerch();
         } finally {
             setActionLoading(null);
         }
@@ -223,7 +235,7 @@ export default function ProductManagement() {
         return matchesSearch && matchesStatus;
     });
 
-    // Statistics
+    // Statistics - FIXED: Include all products regardless of status
     const stats = {
         total: merchItems.length,
         active: merchItems.filter(item => item.isActive).length,
@@ -311,6 +323,7 @@ export default function ProductManagement() {
                     </div>
                 </div>
             </div>
+
 
             {/* Product Form */}
             {showForm && (

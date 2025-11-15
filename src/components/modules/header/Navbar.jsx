@@ -31,7 +31,6 @@ export default function Header() {
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Close tablet dropdowns
       if (
         tabletDropdownRef.current &&
         !tabletDropdownRef.current.contains(event.target)
@@ -39,7 +38,6 @@ export default function Header() {
         setMobileDropdown(null);
       }
 
-      // Close mobile menu when clicking outside
       if (
         isOpen &&
         mobileMenuRef.current &&
@@ -60,33 +58,46 @@ export default function Header() {
     };
   }, [isOpen]);
 
-  // Dashboard link for different user roles
+  const getUserRole = () => {
+    if (!user) return "user";
+    return user.role || user.userType || "user";
+  };
+
+  // Main Dashboard link for different user roles
   const getDashboardLink = () => {
     if (!user) return "/signin";
 
-    switch (user.role) {
+    const userRole = getUserRole();
+
+    switch (userRole) {
       case "artist":
-        return "/dashboard/artist";
+        return "/dashboard/artist/";
       case "venue":
         return "/dashboard/venue";
       case "journalist":
         return "/dashboard/journalist";
       case "admin":
         return "/dashboard/admin";
-      case "user": // Fan/regular user
-        return "/dashboard/user/orders";
+      case "user":
+        return "/dashboard/user";
       default:
         return "/dashboard";
     }
   };
 
+  // Orders link for different user roles
+  const getOrdersLink = () => {
+    if (!user) return "/signin";
+
+    const userRole = getUserRole();
+    return `/dashboard/${userRole}/orders`;
+  };
+
   const getDashboardLabel = () => {
     if (!user) return "Dashboard";
 
-    const role = user.role?.charAt(0).toUpperCase() + user.role?.slice(1);
-    if (user.role === "user") {
-      return "My Orders";
-    }
+    const userRole = getUserRole();
+    const role = userRole.charAt(0).toUpperCase() + userRole.slice(1);
     return `${role} Dashboard`;
   };
 
@@ -188,7 +199,7 @@ export default function Header() {
             />
           </Link>
 
-          {/* Desktop Nav - Show from md breakpoint */}
+          {/* Desktop Nav */}
           <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-white">
             <Link
               href="/"
@@ -248,7 +259,6 @@ export default function Header() {
               </div>
             ))}
 
-            {/* New Links: Merch, Casts, Waves */}
             <Link
               href="/merch"
               className="hover:text-yellow-400 transition-colors duration-200 font-medium text-sm xl:text-base"
@@ -269,7 +279,7 @@ export default function Header() {
             </Link>
           </nav>
 
-          {/* Tablet Nav - Show from md to lg breakpoint */}
+          {/* Tablet Nav */}
           <nav
             className="hidden md:flex lg:hidden items-center gap-4 text-white"
             ref={tabletDropdownRef}
@@ -282,7 +292,6 @@ export default function Header() {
               Home
             </Link>
 
-            {/* Simplified dropdowns for tablet */}
             {Object.keys(dropdownData).map((key) => (
               <div key={key} className="relative">
                 <button
@@ -332,7 +341,6 @@ export default function Header() {
               </div>
             ))}
 
-            {/* New Links for Tablet: Merch, Casts, Waves */}
             <Link
               href="/merch"
               className="hover:text-yellow-400 transition-colors duration-200 text-sm"
@@ -380,23 +388,68 @@ export default function Header() {
                       />
                     </svg>
                     <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-black font-bold text-sm">
-                      {user?.username?.charAt(0).toUpperCase() || "U"}
+                      {user?.username?.charAt(0)?.toUpperCase() || "U"}
                     </div>
                   </button>
 
                   {/* Profile Dropdown Menu */}
-                  <div className="absolute top-full right-0 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <div className="absolute top-full right-0 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                     <div className="px-4 py-2 border-b border-gray-100">
                       <p className="text-sm font-semibold text-gray-900 truncate">
-                        {user?.username}
+                        {user?.username || "User"}
                       </p>
                       <p className="text-xs text-gray-500 capitalize">
-                        {user?.role}
+                        {getUserRole()}
                       </p>
                     </div>
 
+                    {/* Main Dashboard Link */}
                     <Link
                       href={getDashboardLink()}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors duration-200"
+                      onClick={closeAllDropdowns}
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                        />
+                      </svg>
+                      {getDashboardLabel()}
+                    </Link>
+
+                    {/* My Orders Link */}
+                    <Link
+                      href={getOrdersLink()}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors duration-200"
+                      onClick={closeAllDropdowns}
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                        />
+                      </svg>
+                      My Orders
+                    </Link>
+
+                    {/* Profile Link */}
+                    {/* <Link
+                      href="/profile"
                       className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors duration-200"
                       onClick={closeAllDropdowns}
                     >
@@ -413,15 +466,16 @@ export default function Header() {
                           d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         />
                       </svg>
-                      {user?.role === "user" ? "My Orders" : "My Profile"}
-                    </Link>
+                      My Profile
+                    </Link> */}
 
+                    {/* Sign Out Button */}
                     <button
                       onClick={() => {
                         handleSignOut();
                         closeAllDropdowns();
                       }}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 text-left"
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 text-left border-t border-gray-100 mt-1"
                     >
                       <svg
                         className="w-4 h-4"
@@ -486,18 +540,15 @@ export default function Header() {
         {/* Mobile Menu */}
         {isOpen && (
           <>
-            {/* Backdrop */}
             <div
               className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
               onClick={closeMobileMenu}
             />
 
-            {/* Mobile Menu Content */}
             <div
               ref={mobileMenuRef}
               className="lg:hidden fixed h-[100vh] top-0 py-16 left-0 right-0 bottom-0 bg-black/95 backdrop-blur-md z-50 flex flex-col overflow-y-auto"
             >
-              {/* Close Button */}
               <button
                 onClick={closeMobileMenu}
                 className="absolute top-4 right-4 text-white p-2 hover:bg-white/10 rounded-lg transition-colors duration-200"
@@ -518,7 +569,6 @@ export default function Header() {
               </button>
 
               <div className="flex flex-col space-y-1 px-6 py-8">
-                {/* Main Links */}
                 <Link
                   href="/"
                   className="text-white hover:text-yellow-400 transition-colors duration-200 py-4 px-4 rounded-lg hover:bg-white/5 font-medium text-lg text-left border-b border-gray-700"
@@ -527,7 +577,6 @@ export default function Header() {
                   Home
                 </Link>
 
-                {/* Dropdowns for Mobile */}
                 {Object.keys(dropdownData).map((key) => (
                   <div key={key} className="w-full border-b border-gray-700">
                     <button
@@ -578,7 +627,6 @@ export default function Header() {
                   </div>
                 ))}
 
-                {/* New Links for Mobile: Merch, Casts, Waves */}
                 <Link
                   href="/merch"
                   className="text-white hover:text-yellow-400 transition-colors duration-200 py-4 px-4 rounded-lg hover:bg-white/5 font-medium text-lg text-left border-b border-gray-700"
@@ -601,16 +649,15 @@ export default function Header() {
                   Waves
                 </Link>
 
-                {/* Mobile Auth Buttons */}
                 <div className="pt-6 mt-4 border-t border-gray-700">
                   {isLoggedIn ? (
                     <>
                       <div className="px-4 py-4 mb-4 bg-white/5 rounded-lg">
                         <p className="text-white font-semibold text-lg">
-                          {user?.username}
+                          {user?.username || "User"}
                         </p>
                         <p className="text-yellow-400 text-sm capitalize">
-                          {user?.role}
+                          {getUserRole()}
                         </p>
                       </div>
 
@@ -636,6 +683,27 @@ export default function Header() {
                       </Link>
 
                       <Link
+                        href={getOrdersLink()}
+                        className="flex items-center gap-3 bg-blue-600 text-white px-4 py-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold justify-center w-full mb-3 text-lg"
+                        onClick={closeMobileMenu}
+                      >
+                        <svg
+                          className="w-6 h-6"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                          />
+                        </svg>
+                        My Orders
+                      </Link>
+
+                      {/* <Link
                         href="/profile"
                         className="flex items-center gap-3 text-white px-4 py-4 rounded-lg hover:bg-white/5 transition-colors duration-200 font-medium justify-center w-full mb-3 text-lg"
                         onClick={closeMobileMenu}
@@ -654,7 +722,7 @@ export default function Header() {
                           />
                         </svg>
                         My Profile
-                      </Link>
+                      </Link> */}
 
                       <button
                         onClick={() => {

@@ -577,14 +577,14 @@ export default function AdminLayout({ children }) {
 
                 {/* Updated Dropdown with new style */}
                 <div className={`absolute top-full right-0 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 transition-all duration-200 ${userDropdownOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
-                  <Link
+                  {/* <Link
                     href="/dashboard/admin"
                     className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors duration-200"
                     onClick={closeAllDropdowns}
                   >
                     <User className="w-4 h-4" />
                     My Profile
-                  </Link>
+                  </Link> */}
 
                   <Link
                     href="/dashboard/admin/settings"
