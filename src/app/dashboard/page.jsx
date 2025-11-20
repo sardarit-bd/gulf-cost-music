@@ -1,15 +1,15 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 import { useSession } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function DashboardPage() {
   const { user, loading } = useSession()
   const router = useRouter()
 
   useEffect(() => {
-    if (loading) return 
+    if (loading) return
 
     if (!user) {
 
@@ -17,7 +17,7 @@ export default function DashboardPage() {
       return
     }
 
-   
+
     switch (user.userType?.toLowerCase()) {
       case 'artist':
         router.replace('/dashboard/artist')
