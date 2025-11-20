@@ -2,27 +2,28 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import aw from "../../../../public/images/aw.png";
-import pizza_corner from "../../../../public/images/pizza_corner.png";
-import techzone from "../../../../public/images/techzone.jpg";
-import urban_cage from "../../../../public/images/urban_cage.jpg";
-
-const sponsors = [
-    { id: 1, name: "Pizza Corner", logo: pizza_corner },
-    { id: 2, name: "Urban Cafe", logo: urban_cage },
-    { id: 3, name: "FreshMart", logo: aw },
-    { id: 4, name: "TechZone", logo: techzone },
-    { id: 5, name: "Pizza Corner", logo: pizza_corner },
-    { id: 6, name: "Urban Cafe", logo: urban_cage },
-    { id: 7, name: "FreshMart", logo: aw },
-    { id: 8, name: "TechZone", logo: techzone },
-    { id: 9, name: "Pizza Corner", logo: pizza_corner },
-    { id: 10, name: "Urban Cafe", logo: urban_cage },
-    { id: 11, name: "FreshMart", logo: aw },
-    { id: 12, name: "TechZone", logo: techzone },
-];
+import { useEffect, useState } from "react";
 
 export default function Sponsorships() {
+    const [sponsors, setSponsors] = useState([]);
+
+    useEffect(() => {
+        const fetchSponsors = async () => {
+            try {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/sponsors`);
+                const data = await res.json();
+
+                if (data.success) {
+                    setSponsors(data.data);
+                }
+            } catch (err) {
+                console.error("Failed to load sponsors:", err);
+            }
+        };
+
+        fetchSponsors();
+    }, []);
+
     return (
         <section className="py-20 bg-white text-center">
             {/* Heading */}

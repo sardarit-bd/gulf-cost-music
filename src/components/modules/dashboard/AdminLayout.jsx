@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronRight,
   FileText,
+  Handshake,
   Home,
   LogOut,
   Mail,
@@ -17,6 +18,8 @@ import {
   Newspaper,
   Settings,
   ShoppingBag,
+  Sparkles,
+  TvMinimalPlay,
   User,
   Users,
   Waves,
@@ -67,6 +70,9 @@ export default function AdminLayout({ children }) {
         { name: 'Merch', href: '/dashboard/admin/merch', icon: ShoppingBag },
         { name: 'Casts', href: '/dashboard/admin/Casts', icon: Mic2 },
         { name: 'Waves', href: '/dashboard/admin/waves', icon: Waves },
+        { name: 'Sponsorships', href: '/dashboard/admin/sponsorships', icon: Handshake },
+        { name: 'Homesection', href: '/dashboard/admin/herosection', icon: TvMinimalPlay },
+        { name: 'Featured', href: '/dashboard/admin/featured', icon: Sparkles },
       ]
     },
     {
@@ -75,12 +81,12 @@ export default function AdminLayout({ children }) {
       icon: Mail,
       type: 'single'
     },
-    {
-      name: 'System Settings',
-      href: '/dashboard/admin/settings',
-      icon: Settings,
-      type: 'single'
-    },
+    // {
+    //   name: 'System Settings',
+    //   href: '/dashboard/admin/settings',
+    //   icon: Settings,
+    //   type: 'single'
+    // },
   ];
 
   // Fetch notifications
