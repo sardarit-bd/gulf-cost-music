@@ -25,6 +25,7 @@ export default function SignIn() {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/login`,
+
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -37,13 +38,29 @@ export default function SignIn() {
       // SUCCESS
       if (res.ok && data.success) {
         toast.success(data.message || "Login successful!", { id: toastId });
+
+        const user = data.data.user;
         localStorage.setItem("token", data.data.token);
-        login(data.data.user);
-        setTimeout(() => router.push("/"), 1000);
+        login(user);
+
+        // Role & Redirect Map
+        const redirectMap = {
+          admin: "/dashboard/admin",
+          artist: "/dashboard/artist",
+          venue: "/dashboard/venue",
+          journalist: "/dashboard/journalist",
+          fan: "/"
+        };
+
+        const redirectTo = redirectMap[user.userType] || "/";
+
+        setTimeout(() => router.push(redirectTo), 800);
+
         setEmail("");
         setPassword("");
         return;
       }
+
 
 
       let newFieldErrors = { email: "", password: "" };
