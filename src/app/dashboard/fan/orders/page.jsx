@@ -31,8 +31,6 @@ export default function UserOrderTracking() {
             const { data } = await axios.get(`${API_BASE}/api/orders/user`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-
-            console.log("user:", data)
             if (data.success) {
                 setOrders(data.data);
             }
