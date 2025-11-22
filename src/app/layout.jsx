@@ -1,8 +1,8 @@
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import Navbar from "@/components/modules/header/Navbar";
-import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "@/context/AuthContext";
+import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "react-hot-toast";
+import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +16,12 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "Gulf Coast Music",
-  description: "Music Platform Admin Dashboard",
+  description: "Best music platform",
+  icons: {
+    icon: "/images/logo.png"
+  },
 };
+
 
 export default function RootLayout({ children }) {
   return (
