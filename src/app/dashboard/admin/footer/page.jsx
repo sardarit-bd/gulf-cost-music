@@ -24,7 +24,6 @@ export default function AdminFooterPage() {
                 setFooter(data.data);
 
                 setPreviewLogo(data.data.logoUrl);
-                console.log(data.data.logoUrl)
             }
         } catch (err) {
             toast.error("Failed to load footer data");

@@ -6,7 +6,12 @@ import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function AdminHeroSectionPage() {
-    const [heroData, setHeroData] = useState(null);
+    const [heroData, setHeroData] = useState({
+        title: "",
+        subtitle: "",
+        buttonText: "",
+        videoUrl: ""
+    });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
@@ -18,10 +23,19 @@ export default function AdminHeroSectionPage() {
         try {
             const res = await fetch(`${API_BASE}/api/hero-video`);
             const data = await res.json();
+
             if (data.success) {
-                setHeroData(data.data);
+                // Fix: Check if data exists directly or in data property
+                const heroDataFromAPI = data.data || data;
+                setHeroData({
+                    title: heroDataFromAPI?.title || "",
+                    subtitle: heroDataFromAPI?.subtitle || "",
+                    buttonText: heroDataFromAPI?.buttonText || "",
+                    videoUrl: heroDataFromAPI?.videoUrl || ""
+                });
             }
         } catch (err) {
+            console.error("Fetch error:", err);
             toast.error("Failed to load hero section data");
         } finally {
             setLoading(false);
@@ -49,7 +63,7 @@ export default function AdminHeroSectionPage() {
         toast.success("Video URL removed");
     };
 
-    // Save Hero Section
+    // Save Hero Section - FIXED VERSION
     const handleSave = async () => {
         try {
             setSaving(true);
@@ -74,19 +88,22 @@ export default function AdminHeroSectionPage() {
 
             if (data.success) {
                 toast.success("Hero section updated successfully!");
-                fetchHeroData(); // Refresh data
+                // Fix: Wait a bit before refreshing to ensure DB is updated
+                setTimeout(() => {
+                    fetchHeroData();
+                }, 500);
             } else {
                 toast.error(data.message || "Failed to save hero section.");
             }
         } catch (err) {
-            toast.error("Error updating hero section");
             console.error("Save error:", err);
+            toast.error("Error updating hero section");
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading || !heroData) {
+    if (loading) {
         return (
             <AdminLayout>
                 <div className="flex items-center justify-center h-64">
@@ -123,6 +140,7 @@ export default function AdminHeroSectionPage() {
                         {saving ? "Saving Changes..." : "Save Changes"}
                     </button>
                 </div>
+
 
                 {/* Content Section */}
                 <div className="grid grid-cols-1 gap-8">
@@ -271,13 +289,13 @@ export default function AdminHeroSectionPage() {
                         <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 bg-gradient-to-br from-blue-50 to-purple-50">
                             <div className="text-center space-y-4">
                                 <h1 className="text-4xl font-bold text-gray-900">
-                                    {heroData.title}
+                                    {heroData.title || "Your Title Here"}
                                 </h1>
                                 <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                                    {heroData.subtitle}
+                                    {heroData.subtitle || "Your subtitle will appear here"}
                                 </p>
                                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200">
-                                    {heroData.buttonText}
+                                    {heroData.buttonText || "Button Text"}
                                 </button>
 
                                 {heroData.videoUrl && (
