@@ -16,9 +16,9 @@ import {
   Mic2,
   Music,
   Newspaper,
+  PanelBottom,
   Settings,
   ShoppingBag,
-  Sparkles,
   TvMinimalPlay,
   User,
   Users,
@@ -72,7 +72,7 @@ export default function AdminLayout({ children }) {
         { name: 'Waves', href: '/dashboard/admin/waves', icon: Waves },
         { name: 'Sponsorships', href: '/dashboard/admin/sponsorships', icon: Handshake },
         { name: 'Homesection', href: '/dashboard/admin/herosection', icon: TvMinimalPlay },
-        { name: 'Featured', href: '/dashboard/admin/featured', icon: Sparkles },
+        { name: 'Footer', href: '/dashboard/admin/footer', icon: PanelBottom },
       ]
     },
     {
