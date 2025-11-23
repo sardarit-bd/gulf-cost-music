@@ -282,8 +282,7 @@ export default function AdminFeaturedSection() {
     return (
         <AdminLayout>
             <div className="min-h-screen bg-gray-50 p-6">
-                <Toaster position="top-right" />
-
+                <Toaster />
                 {/* Header */}
                 <div className="max-w-7xl mx-auto">
                     <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
