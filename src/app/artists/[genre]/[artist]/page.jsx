@@ -406,7 +406,7 @@ export default function ArtistProfile() {
                         </div>
                         <div className="flex-1">
                           <h5 className="font-medium text-white">{track.title}</h5>
-                          <p className="text-sm text-gray-400">{track.duration}</p>
+                          {/* <p className="text-sm text-gray-400">{track.duration}</p> */}
                         </div>
                       </div>
 
