@@ -19,6 +19,7 @@ import {
   PanelBottom,
   Settings,
   ShoppingBag,
+  Sparkles,
   TvMinimalPlay,
   User,
   Users,
@@ -70,8 +71,9 @@ export default function AdminLayout({ children }) {
         { name: 'Merch', href: '/dashboard/admin/merch', icon: ShoppingBag },
         { name: 'Casts', href: '/dashboard/admin/Casts', icon: Mic2 },
         { name: 'Waves', href: '/dashboard/admin/waves', icon: Waves },
-        { name: 'Sponsorships', href: '/dashboard/admin/sponsorships', icon: Handshake },
         { name: 'Homesection', href: '/dashboard/admin/herosection', icon: TvMinimalPlay },
+        { name: 'Featured', href: '/dashboard/admin/featured', icon: Sparkles },
+        { name: 'Sponsorships', href: '/dashboard/admin/sponsorships', icon: Handshake },
         { name: 'Footer', href: '/dashboard/admin/footer', icon: PanelBottom },
       ]
     },
