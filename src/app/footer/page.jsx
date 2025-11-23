@@ -94,10 +94,12 @@ export default function Footer() {
 
       {/* Divider*/}
       <div className="border-t border-gray-700 mt-10 pt-4 text-center text-sm text-gray-400">
-        Copyright © 2025 <span className="text-yellow-400 font-semibold">Gulf Coast Music</span>.
+        Copyright © {new Date().getFullYear()}{" "}
+        <span className="text-yellow-400 font-semibold">Gulf Coast Music</span>.
         All Rights Reserved || Developed By{" "}
         <span className="text-yellow-400 font-semibold">Sardar IT Team</span>
       </div>
+
     </footer>
   );
 }
