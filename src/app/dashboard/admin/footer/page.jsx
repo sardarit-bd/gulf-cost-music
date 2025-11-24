@@ -1,7 +1,7 @@
 "use client";
 
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
-import { Eye, ImageIcon, Loader2, Plus, Save, Trash2, Upload } from "lucide-react";
+import { ImageIcon, Loader2, Plus, Save, Trash2, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -224,7 +224,7 @@ export default function AdminFooterPage() {
 
                             <div className="space-y-4">
                                 <div className="flex items-center gap-6">
-                                    <div className="relative group">
+                                    {/* <div className="relative group">
                                         <img
                                             src={previewLogo || "/images/logo.png"}
                                             alt="Footer Logo"
@@ -242,7 +242,7 @@ export default function AdminFooterPage() {
                                                 New
                                             </div>
                                         )}
-                                    </div>
+                                    </div> */}
 
                                     <div className="flex-1 space-y-3">
                                         <label className="cursor-pointer block">
