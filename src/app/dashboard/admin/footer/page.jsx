@@ -13,6 +13,8 @@ export default function AdminFooterPage() {
     const [logoFile, setLogoFile] = useState(null);
 
     const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
+    console.log(process.env.NEXT_PUBLIC_API_URL);
+
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
     // Fetch Footer Data
