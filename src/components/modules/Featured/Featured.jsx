@@ -62,8 +62,8 @@ export default function FeaturedSection() {
               text: "One-click links to buy tickets online.",
             },
           ],
-          streamsCount: 259,
-          hitsCount: 100,
+          // streamsCount: 259,
+          // hitsCount: 100,
           imageUrl: "/images/Featured.jpg"
         });
       }
@@ -155,17 +155,17 @@ export default function FeaturedSection() {
             />
           </div>
 
-          {/* Streaming Badge */}
+          {/* Streaming Badge
           <div className="bg-white text-center absolute bottom-4 left-4 shadow-md rounded-md px-3 py-4 text-sm font-semibold">
             <span className="text-gray-800">{featuredData.streamsCount}+</span><br />
             <span className="text-gray-500">Streaming</span>
           </div>
 
-          {/* Hits Badge */}
+          Hits Badge
           <div className="bg-white text-center absolute top-4 right-4 shadow-md rounded-md px-6 py-3 text-sm font-semibold">
             <span className="text-gray-800">{featuredData.hitsCount}+</span><br />
             <span className="text-gray-500">Hits</span>
-          </div>
+          </div> */}
         </div>
 
         {/* Right Content */}

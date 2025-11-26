@@ -33,8 +33,8 @@ export default function AdminFeaturedSection() {
         title: "",
         subtitle: "",
         description: "",
-        streamsCount: 0,
-        hitsCount: 0,
+        // streamsCount: 0,
+        // hitsCount: 0,
         listItems: [],
         imageUrl: ""
     });
@@ -69,8 +69,8 @@ export default function AdminFeaturedSection() {
                     title: data.data.title || "",
                     subtitle: data.data.subtitle || "",
                     description: data.data.description || "",
-                    streamsCount: data.data.streamsCount || 0,
-                    hitsCount: data.data.hitsCount || 0,
+                    // streamsCount: data.data.streamsCount || 0,
+                    // hitsCount: data.data.hitsCount || 0,
                     listItems: data.data.listItems || [],
                     imageUrl: data.data.imageUrl || ""
                 });
@@ -228,8 +228,8 @@ export default function AdminFeaturedSection() {
             formData.append("title", featuredData.title);
             formData.append("subtitle", featuredData.subtitle);
             formData.append("description", featuredData.description);
-            formData.append("streamsCount", featuredData.streamsCount.toString());
-            formData.append("hitsCount", featuredData.hitsCount.toString());
+            // formData.append("streamsCount", featuredData.streamsCount.toString());
+            // formData.append("hitsCount", featuredData.hitsCount.toString());
             formData.append("listItems", JSON.stringify(featuredData.listItems));
 
             if (selectedImage) {
@@ -380,7 +380,7 @@ export default function AdminFeaturedSection() {
 
                                     {/* Stats */}
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div>
+                                        {/* <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                                 Streams Count
                                             </label>
@@ -392,8 +392,8 @@ export default function AdminFeaturedSection() {
                                                 min="0"
                                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                                             />
-                                        </div>
-                                        <div>
+                                        </div> */}
+                                        {/* <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                                 Hits Count
                                             </label>
@@ -405,7 +405,7 @@ export default function AdminFeaturedSection() {
                                                 min="0"
                                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                                             />
-                                        </div>
+                                        </div> */}
                                     </div>
                                 </form>
                             </div>
