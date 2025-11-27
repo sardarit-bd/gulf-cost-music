@@ -67,6 +67,7 @@ export default function AdminLayout({ children }) {
       children: [
         { name: 'Artists', href: '/dashboard/admin/artist', icon: Music },
         { name: 'Venues', href: '/dashboard/admin/venues', icon: Building2 },
+        { name: 'Events', href: '/dashboard/admin/events', icon: Building2 },
         { name: 'News', href: '/dashboard/admin/news', icon: Newspaper },
         { name: 'Merch', href: '/dashboard/admin/merch', icon: ShoppingBag },
         { name: 'Casts', href: '/dashboard/admin/Casts', icon: Mic2 },

@@ -151,25 +151,33 @@ export default function VenueDashboard() {
   // === Add Show ===
   const handleAddShow = async (e) => {
     e.preventDefault();
+
     try {
       const token = localStorage.getItem("token");
       if (!token) return toast.error("You are not logged in.");
 
+      const formData = new FormData();
+      formData.append("artist", newShow.artist);
+      formData.append("date", newShow.date);
+      formData.append("time", newShow.time);
+      if (newShow.image) formData.append("image", newShow.image);
+
       setLoading(true);
+
       const res = await fetch(`${API_BASE}/api/venues/add-show`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(newShow),
+        body: formData,
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to add show.");
 
       toast.success("🎤 Show added successfully!");
-      setNewShow({ artist: "", date: "", time: "" });
+      setNewShow({ artist: "", date: "", time: "", image: null });
+
     } catch (err) {
       console.error("Add show error:", err);
       toast.error(err.message || "Error adding show.");
@@ -177,6 +185,7 @@ export default function VenueDashboard() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4">
@@ -210,8 +219,8 @@ export default function VenueDashboard() {
                   key={id}
                   onClick={() => setActiveTab(id)}
                   className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === id
-                      ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
-                      : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
+                    ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
+                    : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
                     }`}
                 >
                   <Icon size={18} />
@@ -475,8 +484,8 @@ const EditProfileTab = ({
           </h3>
 
           <label className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-xl transition ${previewImages.length >= 5
-              ? 'border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed'
-              : 'border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20'
+            ? 'border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed'
+            : 'border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20'
             }`}>
             <ImageIcon size={32} />
             <span className="text-sm font-medium text-center">
@@ -564,6 +573,8 @@ const AddShowTab = ({ newShow, setNewShow, handleAddShow }) => (
       </div>
 
       <form onSubmit={handleAddShow} className="space-y-6">
+
+        {/* ARTIST */}
         <Input
           label="Artist / Band Name *"
           name="artist"
@@ -573,6 +584,7 @@ const AddShowTab = ({ newShow, setNewShow, handleAddShow }) => (
           placeholder="Enter artist or band name"
         />
 
+        {/* DATE & TIME */}
         <div className="grid md:grid-cols-2 gap-6">
           <Input
             label="Show Date *"
@@ -592,6 +604,23 @@ const AddShowTab = ({ newShow, setNewShow, handleAddShow }) => (
           />
         </div>
 
+        {/* SHOW IMAGE UPLOAD — ADD HERE */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+            <ImageIcon size={18} />
+            Show Image *
+          </label>
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setNewShow({ ...newShow, image: e.target.files[0] })}
+            className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400"
+            required
+          />
+        </div>
+
+        {/* SUBMIT BUTTON */}
         <div className="flex justify-center pt-4">
           <button
             type="submit"
@@ -601,7 +630,9 @@ const AddShowTab = ({ newShow, setNewShow, handleAddShow }) => (
             Add Show
           </button>
         </div>
+
       </form>
+
     </div>
   </div>
 );
