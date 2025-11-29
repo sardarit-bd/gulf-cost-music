@@ -76,6 +76,8 @@ export default function Header() {
         return "/dashboard/venue";
       case "journalist":
         return "/dashboard/journalist";
+      case "photographer":
+        return "/dashboard/photographer";
       case "admin":
         return "/dashboard/admin";
       case "user":
@@ -222,9 +224,8 @@ export default function Header() {
                 <button className="flex items-center gap-1 hover:text-yellow-400 transition-colors duration-200 font-medium text-sm xl:text-base py-2">
                   {dropdownData[key].title}
                   <svg
-                    className={`w-4 h-4 transition-transform ${
-                      activeDropdown === key ? "rotate-180" : "rotate-0"
-                    }`}
+                    className={`w-4 h-4 transition-transform ${activeDropdown === key ? "rotate-180" : "rotate-0"
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -245,10 +246,10 @@ export default function Header() {
                         key === "artists"
                           ? `/artists/${encodeURIComponent(item)}`
                           : key === "venues"
-                          ? `/venues/${encodeURIComponent(item)}`
-                          : key === "cameras"
-                          ? `/cameras/${encodeURIComponent(item)}`
-                          : `/news/${encodeURIComponent(item)}`;
+                            ? `/venues/${encodeURIComponent(item)}`
+                            : key === "cameras"
+                              ? `/cameras/${encodeURIComponent(item)}`
+                              : `/news/${encodeURIComponent(item)}`;
 
                       return (
                         <Link
@@ -307,9 +308,8 @@ export default function Header() {
                 >
                   {dropdownData[key].title}
                   <svg
-                    className={`w-3 h-3 transition-transform ${
-                      mobileDropdown === key ? "rotate-180" : "rotate-0"
-                    }`}
+                    className={`w-3 h-3 transition-transform ${mobileDropdown === key ? "rotate-180" : "rotate-0"
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -330,10 +330,10 @@ export default function Header() {
                         key === "artists"
                           ? `/artists/${encodeURIComponent(item)}`
                           : key === "venues"
-                          ? `/venues/${encodeURIComponent(item)}`
-                          : key === "cameras"
-                          ? `/cameras/${encodeURIComponent(item)}`
-                          : `/news/${encodeURIComponent(item)}`;
+                            ? `/venues/${encodeURIComponent(item)}`
+                            : key === "cameras"
+                              ? `/cameras/${encodeURIComponent(item)}`
+                              : `/news/${encodeURIComponent(item)}`;
 
                       return (
                         <Link
@@ -597,9 +597,8 @@ export default function Header() {
                     >
                       <span>{dropdownData[key].title}</span>
                       <svg
-                        className={`w-5 h-5 transition-transform ${
-                          mobileDropdown === key ? "rotate-180" : "rotate-0"
-                        }`}
+                        className={`w-5 h-5 transition-transform ${mobileDropdown === key ? "rotate-180" : "rotate-0"
+                          }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -614,19 +613,18 @@ export default function Header() {
                     </button>
 
                     <div
-                      className={`overflow-hidden transition-all duration-300 ${
-                        mobileDropdown === key ? "max-h-96 pb-2" : "max-h-0"
-                      }`}
+                      className={`overflow-hidden transition-all duration-300 ${mobileDropdown === key ? "max-h-96 pb-2" : "max-h-0"
+                        }`}
                     >
                       {dropdownData[key].items.map((item, index) => {
                         const href =
                           key === "artists"
                             ? `/artists/${encodeURIComponent(item)}`
                             : key === "venues"
-                            ? `/venues/${encodeURIComponent(item)}`
-                            : key === "cameras"
-                            ? `/cameras/${encodeURIComponent(item)}`
-                            : `/news/${encodeURIComponent(item)}`;
+                              ? `/venues/${encodeURIComponent(item)}`
+                              : key === "cameras"
+                                ? `/cameras/${encodeURIComponent(item)}`
+                                : `/news/${encodeURIComponent(item)}`;
 
                         return (
                           <Link

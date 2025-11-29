@@ -42,6 +42,11 @@ export default function SignUp() {
       label: "Location",
       options: ["New Orleans", "Biloxi", "Mobile", "Pensacola"],
     },
+    // NEW: Photographer option
+    Photographer: {
+      label: "Location",
+      options: ["New Orleans", "Biloxi", "Mobile", "Pensacola"],
+    },
     Fan: {
       label: "Preferred Location",
       options: ["New Orleans", "Biloxi", "Mobile", "Pensacola"],
@@ -80,7 +85,7 @@ export default function SignUp() {
 
       if (userTypeLower === "artist") {
         submissionData.genre = formData.genre;
-      } else if (userTypeLower === "venue" || userTypeLower === "journalist") {
+      } else if (["venue", "journalist", "photographer"].includes(userTypeLower)) {
         submissionData.location = formData.location;
       }
 
@@ -186,6 +191,7 @@ export default function SignUp() {
             <option>Artist</option>
             <option>Venue</option>
             <option>Journalist</option>
+            <option>Photographer</option>
             <option>Fan</option>
           </select>
 
