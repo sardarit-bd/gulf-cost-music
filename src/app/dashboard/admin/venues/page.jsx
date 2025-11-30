@@ -5,8 +5,9 @@ import Filters from "@/components/modules/dashboard/venues/Filters";
 import StatCard from "@/components/modules/dashboard/venues/StatCard";
 import VenueDetailModal from "@/components/modules/dashboard/venues/VenueDetailModal";
 import VenueTable from "@/components/modules/dashboard/venues/VenueTable";
+// import VenueTable from "@/components/modules/dashboard/venues/VenueTable";
 import axios from "axios";
-import { Building2, Power, RefreshCw, TrendingUp, Users } from "lucide-react";
+import { Building2, CheckCircle, Power, RefreshCw, TrendingUp, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -174,6 +175,44 @@ const VenueManagement = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+
+  const verifyVenue = async (id, venueName) => {
+    showConfirmation(
+      "Verify Venue",
+      `Are you sure you want to verify "${venueName}"? This will assign a unique color to the venue and make it visible in the calendar with proper color coding.`,
+      "Verify Venue",
+      "success",
+      async () => {
+        try {
+          const token = localStorage.getItem("token");
+
+          const response = await axios.put(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/admin/${id}`,
+            {
+              isActive: true,
+
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+
+          if (response.data.success) {
+            fetchVenues();
+            setActionMenu(null);
+            showToast(`Venue "${venueName}" verified successfully with color ${response.data.data.venue.colorCode}!`);
+          }
+        } catch (err) {
+          console.error("Verify venue error:", err);
+          showToast("Failed to verify venue", "error");
+        }
+      }
+    );
+  };
+
   const deleteVenue = async (id, venueName) => {
     showConfirmation(
       "Delete Venue",
@@ -220,6 +259,7 @@ const VenueManagement = () => {
     total: venues.length,
     active: venues.filter(v => v.isActive).length,
     inactive: venues.filter(v => !v.isActive).length,
+    verified: venues.filter(v => v.verifiedOrder > 0).length,
     thisMonth: Math.floor(venues.length * 0.18),
   };
 
@@ -265,11 +305,12 @@ const VenueManagement = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
             <StatCard icon={Building2} label="Total Venues" value={stats.total} change={8} color="blue" />
             <StatCard icon={Users} label="Active Venues" value={stats.active} change={12} color="green" />
+            <StatCard icon={CheckCircle} label="Verified Venues" value={stats.verified} change={15} color="purple" />
             <StatCard icon={Power} label="Inactive Venues" value={stats.inactive} change={-4} color="orange" />
-            <StatCard icon={TrendingUp} label="This Month" value={stats.thisMonth} change={18} color="purple" />
+            <StatCard icon={TrendingUp} label="This Month" value={stats.thisMonth} change={18} color="cyan" />
           </div>
 
           {/* Filters */}
@@ -304,6 +345,7 @@ const VenueManagement = () => {
             onInputChange={handleInputChange}
             onDeleteVenue={deleteVenue}
             onActionMenuToggle={handleActionMenuToggle}
+            onVerifyVenue={verifyVenue}
           />
 
           {/* Venue Detail Modal */}

@@ -76,6 +76,8 @@ export default function Header() {
         return "/dashboard/venue";
       case "journalist":
         return "/dashboard/journalist";
+      case "photographer":
+        return "/dashboard/photographer";
       case "admin":
         return "/dashboard/admin";
       case "user":
@@ -122,6 +124,10 @@ export default function Header() {
     },
     news: {
       title: "News",
+      items: ["New Orleans", "Biloxi", "Mobile", "Pensacola"],
+    },
+    cameras: {
+      title: "Cameras",
       items: ["New Orleans", "Biloxi", "Mobile", "Pensacola"],
     },
   };
@@ -241,7 +247,9 @@ export default function Header() {
                           ? `/artists/${encodeURIComponent(item)}`
                           : key === "venues"
                             ? `/venues/${encodeURIComponent(item)}`
-                            : `/news/${encodeURIComponent(item)}`;
+                            : key === "cameras"
+                              ? `/cameras/${encodeURIComponent(item)}`
+                              : `/news/${encodeURIComponent(item)}`;
 
                       return (
                         <Link
@@ -323,7 +331,9 @@ export default function Header() {
                           ? `/artists/${encodeURIComponent(item)}`
                           : key === "venues"
                             ? `/venues/${encodeURIComponent(item)}`
-                            : `/news/${encodeURIComponent(item)}`;
+                            : key === "cameras"
+                              ? `/cameras/${encodeURIComponent(item)}`
+                              : `/news/${encodeURIComponent(item)}`;
 
                       return (
                         <Link
@@ -426,7 +436,6 @@ export default function Header() {
                         {getDashboardLabel()}
                       </Link>
                     )}
-
 
                     {/* My Orders Link */}
                     <Link
@@ -613,7 +622,9 @@ export default function Header() {
                             ? `/artists/${encodeURIComponent(item)}`
                             : key === "venues"
                               ? `/venues/${encodeURIComponent(item)}`
-                              : `/news/${encodeURIComponent(item)}`;
+                              : key === "cameras"
+                                ? `/cameras/${encodeURIComponent(item)}`
+                                : `/news/${encodeURIComponent(item)}`;
 
                         return (
                           <Link

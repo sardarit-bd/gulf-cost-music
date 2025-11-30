@@ -2,6 +2,7 @@
 import {
     Building2,
     Calendar,
+    CheckCircle,
     Clock,
     Edit,
     Eye,
@@ -12,6 +13,7 @@ import {
     Phone,
     Power,
     Save,
+    Sparkles,
     Trash2,
     User,
     Users,
@@ -35,7 +37,8 @@ const VenueTable = ({
     onCancel,
     onInputChange,
     onDeleteVenue,
-    onActionMenuToggle
+    onActionMenuToggle,
+    onVerifyVenue
 }) => {
     const getCapacityColor = (capacity) => {
         if (capacity > 1000) return "bg-purple-100 text-purple-800 border-purple-200";
@@ -103,6 +106,7 @@ const VenueTable = ({
                                     onInputChange={onInputChange}
                                     onDeleteVenue={onDeleteVenue}
                                     onActionMenuToggle={onActionMenuToggle}
+                                    onVerifyVenue={onVerifyVenue}
                                 />
                             ))
                         ) : (
@@ -132,8 +136,9 @@ const VenueTable = ({
     );
 };
 
+// VenueRow component - FIXED: venue prop ব্যবহার করুন
 const VenueRow = ({
-    venue,
+    venue, // FIXED: venues থেকে venue তে পরিবর্তন
     editingVenue,
     formData,
     saveLoading,
@@ -146,15 +151,24 @@ const VenueRow = ({
     onCancel,
     onInputChange,
     onDeleteVenue,
-    onActionMenuToggle
+    onActionMenuToggle,
+    onVerifyVenue
 }) => {
-    const isEditing = editingVenue === venue._id;
+    const isEditing = editingVenue === venue._id; // FIXED: venues._id থেকে venue._id
+    const isVerified = venue.verifiedOrder > 0; // FIXED: venues থেকে venue
+    const hasColor = venue.colorCode && venue.colorCode !== "#808080" && venue.colorCode !== "#000000"; // FIXED: venues থেকে venue
 
     return (
         <tr className="hover:bg-gray-50 transition-colors group">
             <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center text-white font-semibold text-lg">
+                    <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-semibold text-lg"
+                        style={{
+                            backgroundColor: hasColor ? venue.colorCode : '#6b7280',
+                            background: hasColor ? `linear-gradient(135deg, ${venue.colorCode}99, ${venue.colorCode})` : 'linear-gradient(135deg, #6b7280, #4b5563)'
+                        }}
+                    >
                         <Building2 className="w-6 h-6" />
                     </div>
                     <div className="ml-4">
@@ -167,8 +181,20 @@ const VenueRow = ({
                                 placeholder="Venue name"
                             />
                         ) : (
-                            <div className="text-sm font-semibold text-gray-900 group-hover:text-blue-700">
-                                {venue.venueName}
+                            <div className="flex items-center space-x-2">
+                                <div className="text-sm font-semibold text-gray-900 group-hover:text-blue-700">
+                                    {venue.venueName}
+                                </div>
+                                {isVerified && (
+                                    <span
+                                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
+                                        style={{ backgroundColor: venue.colorCode }}
+                                        title={`Verified - Order: ${venue.verifiedOrder}, Color: ${venue.colorCode}`}
+                                    >
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        Verified
+                                    </span>
+                                )}
                             </div>
                         )}
                         <div className="text-sm text-gray-500 flex items-center mt-1">
@@ -182,6 +208,8 @@ const VenueRow = ({
                     </div>
                 </div>
             </td>
+
+            {/* Location & Contact Column */}
             <td className="px-6 py-4">
                 <div className="space-y-2">
                     {isEditing ? (
@@ -205,7 +233,7 @@ const VenueRow = ({
                         <>
                             <div className="flex items-center text-sm text-gray-600">
                                 <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                                <span>{venue.city || "Not specified"}</span>
+                                <span>{venue.city ? venue.city.charAt(0).toUpperCase() + venue.city.slice(1) : "Not specified"}</span>
                             </div>
                             {venue.address && (
                                 <div className="text-sm text-gray-500 ml-6">
@@ -228,6 +256,8 @@ const VenueRow = ({
                     )}
                 </div>
             </td>
+
+            {/* Details Column */}
             <td className="px-6 py-4">
                 <div className="space-y-2">
                     {isEditing ? (
@@ -269,6 +299,8 @@ const VenueRow = ({
                     )}
                 </div>
             </td>
+
+            {/* Status Column */}
             <td className="px-6 py-4 whitespace-nowrap">
                 {isEditing ? (
                     <select
@@ -291,6 +323,8 @@ const VenueRow = ({
                     </span>
                 )}
             </td>
+
+            {/* Actions Column */}
             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex justify-end items-center space-x-2">
                     {isEditing ? (
@@ -326,6 +360,17 @@ const VenueRow = ({
                                 <Eye className="w-4 h-4" />
                             </button>
 
+                            {/* Verify Button - শুধুমাত্র unverified এবং active venues এর জন্য */}
+                            {!isVerified && venue.isActive && (
+                                <button
+                                    onClick={() => onVerifyVenue(venue._id, venue.venueName)}
+                                    className="p-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition-colors"
+                                    title="Verify Venue & Assign Color"
+                                >
+                                    <Sparkles className="w-4 h-4" />
+                                </button>
+                            )}
+
                             <button
                                 onClick={() => onToggleActive(venue._id, venue.isActive, venue.venueName)}
                                 className={`p-2 rounded-lg transition-colors ${venue.isActive
@@ -354,6 +399,15 @@ const VenueRow = ({
                                             <Edit className="w-4 h-4 mr-2" />
                                             Edit Venue
                                         </button>
+                                        {!isVerified && (
+                                            <button
+                                                onClick={() => onVerifyVenue(venue._id, venue.venueName)}
+                                                className="flex items-center px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 w-full text-left"
+                                            >
+                                                <Sparkles className="w-4 h-4 mr-2" />
+                                                Verify Venue
+                                            </button>
+                                        )}
                                         <button
                                             onClick={() => onDeleteVenue(venue._id, venue.venueName)}
                                             className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
@@ -372,6 +426,7 @@ const VenueRow = ({
     );
 };
 
+// Pagination Component
 const Pagination = ({ page, pages, venuesCount, onPageChange }) => {
     return (
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">

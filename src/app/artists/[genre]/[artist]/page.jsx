@@ -126,7 +126,7 @@ export default function ArtistProfile() {
 
   if (loading) {
     return (
-      <div className="brandBg text-white min-h-screen flex justify-center items-center">
+      <div className="brandBg text-white min-h-screen flex justify-center items-center pt-16">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-500 mx-auto mb-4"></div>
           <p className="text-lg text-yellow-400">Loading artist details...</p>
@@ -137,8 +137,8 @@ export default function ArtistProfile() {
 
   if (!artist) {
     return (
-      <div className="brandBg text-white min-h-screen flex flex-col justify-center items-center">
-        <h1 className="text-3xl font-bold mb-3">Artist Not Found 😢</h1>
+      <div className="brandBg text-white min-h-screen flex flex-col justify-center items-center pt-16">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-3 text-center px-4">Artist Not Found 😢</h1>
         <button
           onClick={() => router.back()}
           className="px-6 py-2 bg-yellow-400 text-black rounded-md font-medium hover:bg-yellow-500 transition"
@@ -150,7 +150,7 @@ export default function ArtistProfile() {
   }
 
   return (
-    <section className="brandBg min-h-screen text-white mt-12">
+    <section className="brandBg min-h-screen text-white pt-16">
       {/* Hidden audio element */}
       {audioTracks.length > 0 && (
         <audio
@@ -163,7 +163,7 @@ export default function ArtistProfile() {
       )}
 
       {/* ====== Banner Section ====== */}
-      <div className="relative w-full h-[400px] md:h-[500px] overflow-hidden">
+      <div className="relative w-full h-64 sm:h-80 md:h-[400px] lg:h-[500px] overflow-hidden">
         <Image
           src={
             artist.photos?.[0]?.url ||
@@ -176,32 +176,32 @@ export default function ArtistProfile() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/70 to-transparent"></div>
 
-        <div className="container relative mx-auto h-full flex flex-col md:flex-row md:items-end md:justify-start justify-end bottom-10 left-10 text-white">
-          <div className="flex items-end gap-3">
-            <div className="border-3 border-yellow-400 w-[170px] rounded-md h-[200px]">
+        <div className="container relative mx-auto h-full flex flex-col justify-end pb-6 sm:pb-8 px-4 sm:px-6">
+          <div className="flex items-end gap-3 sm:gap-4 md:gap-6">
+            <div className="border-2 sm:border-3 border-yellow-400 w-24 h-28 sm:w-32 sm:h-36 md:w-40 md:h-44 lg:w-48 lg:h-52 rounded-md overflow-hidden flex-shrink-0">
               <Image
                 src={artist.photos?.[0]?.url || "/default.jpg"}
                 alt={artist.name}
-                width={1000}
-                height={1000}
+                width={200}
+                height={250}
                 className="object-cover h-full w-full"
               />
             </div>
-            <div>
-              <h1 className="md:text-5xl text-3xl font-bold mb-3 brandColor">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 sm:mb-3 brandColor break-words">
                 {artist.name}
               </h1>
-              <p className="text-lg text-gray-200 capitalize">{artist.genre} Artist</p>
+              <p className="text-sm sm:text-base md:text-lg text-gray-200 capitalize">{artist.genre} Artist</p>
 
               {/* Audio Stats */}
               {audioTracks.length > 0 && (
-                <div className="flex items-center gap-4 mt-3 text-sm text-gray-300">
+                <div className="flex items-center gap-3 sm:gap-4 mt-2 sm:mt-3 text-xs sm:text-sm text-gray-300 flex-wrap">
                   <div className="flex items-center gap-1">
-                    <Music size={16} />
+                    <Music size={14} className="sm:w-4" />
                     <span>{audioTracks.length} Tracks</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Headphones size={16} />
+                    <Headphones size={14} className="sm:w-4" />
                     <span>Now Playing</span>
                   </div>
                 </div>
@@ -212,56 +212,56 @@ export default function ArtistProfile() {
       </div>
 
       {/* ====== Info Section ====== */}
-      <div className="container mx-auto px-6 py-12 md:py-16">
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl p-8 md:p-12 border border-white/10">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <h2 className="text-3xl font-bold mb-2">{artist.name}</h2>
-              <p className="text-gray-300 text-sm mb-3 capitalize">
+      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 md:py-16">
+        <div className="bg-white/10 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 lg:p-12 border border-white/10">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
+            <div className="flex-1">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{artist.name}</h2>
+              <p className="text-gray-300 text-xs sm:text-sm mb-2 sm:mb-3 capitalize">
                 {artist.genre} • {artist.city}
               </p>
-              <p className="text-gray-400 text-base leading-relaxed max-w-2xl">
+              <p className="text-gray-400 text-sm sm:text-base leading-relaxed max-w-2xl">
                 {artist.biography || "No biography available."}
               </p>
             </div>
 
             {/* Audio Stats Card */}
             {audioTracks.length > 0 && (
-              <div className="bg-gray-800 rounded-xl p-4 border border-gray-700">
+              <div className="bg-gray-800 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-700 flex-shrink-0">
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-yellow-400">
+                  <p className="text-xl sm:text-2xl font-bold text-yellow-400">
                     {audioTracks.length}
                   </p>
-                  <p className="text-sm text-gray-300">Music Tracks</p>
+                  <p className="text-xs sm:text-sm text-gray-300">Music Tracks</p>
                 </div>
               </div>
             )}
           </div>
 
           {/* ====== Photos Gallery Section ====== */}
-          {artist.photos?.length > 1 && (
-            <div className="mt-12">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="p-2 bg-yellow-500 rounded-lg">
-                  <span className="text-black font-bold">📸</span>
+          {artist.photos?.length > 0 && (
+            <div className="mt-8 sm:mt-12">
+              <div className="flex items-center gap-2 mb-4 sm:mb-6 flex-wrap">
+                <div className="p-1 sm:p-2 bg-yellow-500 rounded-lg">
+                  <span className="text-black text-sm sm:text-base font-bold">📸</span>
                 </div>
-                <h3 className="text-2xl font-bold text-white">Gallery</h3>
-                <span className="bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-medium">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white">Gallery</h3>
+                <span className="bg-yellow-500 text-black px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
                   {artist.photos.length} photos
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {artist.photos.map((p, i) => (
-                  <div key={i} className="group relative w-full h-64 rounded-2xl overflow-hidden border border-gray-700 hover:border-yellow-500/50 transition-all duration-300">
+                  <div key={i} className="group relative w-full h-48 sm:h-56 md:h-64 rounded-xl sm:rounded-2xl overflow-hidden border border-gray-700 hover:border-yellow-500/50 transition-all duration-300">
                     <Image
                       src={p.url}
                       alt={`${artist.name} photo ${i + 1}`}
                       fill
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
-                      <span className="text-white text-sm font-medium">Photo {i + 1}</span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-3 sm:pb-4">
+                      <span className="text-white text-xs sm:text-sm font-medium">Photo {i + 1}</span>
                     </div>
                   </div>
                 ))}
@@ -271,30 +271,30 @@ export default function ArtistProfile() {
 
           {/* ====== Modern Audio Player Section ====== */}
           {audioTracks.length > 0 && (
-            <div className="mt-12">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="p-2 bg-yellow-500 rounded-lg">
-                  <Music size={24} className="text-black" />
+            <div className="mt-8 sm:mt-12">
+              <div className="flex items-center gap-2 mb-4 sm:mb-6 flex-wrap">
+                <div className="p-1 sm:p-2 bg-yellow-500 rounded-lg">
+                  <Music size={18} className="sm:w-6 text-black" />
                 </div>
-                <h3 className="text-2xl font-bold text-white">Music Collection</h3>
-                <span className="bg-yellow-500 text-black px-3 py-1 rounded-full text-sm font-medium">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white">Music Collection</h3>
+                <span className="bg-yellow-500 text-black px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium">
                   {audioTracks.length} tracks
                 </span>
               </div>
 
               {/* Main Audio Player */}
-              <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 mb-8">
+              <div className="bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-700 mb-6 sm:mb-8">
                 {/* Now Playing */}
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
-                      <Music size={24} className="text-white" />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <Music size={20} className="sm:w-6 text-white" />
                     </div>
-                    <div>
-                      <h4 className="text-lg font-semibold text-white">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-base sm:text-lg font-semibold text-white truncate">
                         {audioTracks[currentTrackIndex]?.title}
                       </h4>
-                      <p className="text-gray-400 text-sm">
+                      <p className="text-gray-400 text-xs sm:text-sm">
                         Track {currentTrackIndex + 1} of {audioTracks.length}
                       </p>
                     </div>
@@ -306,21 +306,21 @@ export default function ArtistProfile() {
                       audioTracks[currentTrackIndex]?.src,
                       audioTracks[currentTrackIndex]?.originalName
                     )}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition"
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm sm:text-base flex-shrink-0"
                   >
-                    <Download size={16} />
+                    <Download size={14} className="sm:w-4" />
                     Download
                   </button>
                 </div>
 
                 {/* Progress Bar with Time */}
                 <div className="mb-4">
-                  <div className="flex justify-between text-sm text-gray-400 mb-2">
+                  <div className="flex justify-between text-xs sm:text-sm text-gray-400 mb-2">
                     <span>{formatTime(currentTime)}</span>
                     <span>{formatTime(duration)}</span>
                   </div>
                   <div
-                    className="w-full h-2 bg-gray-700 rounded-full cursor-pointer"
+                    className="w-full h-1.5 sm:h-2 bg-gray-700 rounded-full cursor-pointer"
                     onClick={handleSeek}
                   >
                     <div
@@ -331,49 +331,49 @@ export default function ArtistProfile() {
                 </div>
 
                 {/* Player Controls */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   {/* Volume Control */}
-                  <div className="flex items-center gap-3">
-                    <Volume2 size={20} className="text-gray-400" />
+                  <div className="flex items-center gap-2 sm:gap-3 order-2 sm:order-1">
+                    <Volume2 size={16} className="sm:w-5 text-gray-400" />
                     <input
                       type="range"
                       min="0"
                       max="100"
                       value={volume}
                       onChange={handleVolumeChange}
-                      className="w-24 accent-yellow-500"
+                      className="w-20 sm:w-24 accent-yellow-500"
                     />
                   </div>
 
                   {/* Playback Controls */}
-                  <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-4 sm:gap-6 order-1 sm:order-2">
                     <button
                       onClick={prevTrack}
-                      className="p-3 text-gray-400 hover:text-white transition"
+                      className="p-2 sm:p-3 text-gray-400 hover:text-white transition"
                       disabled={audioTracks.length <= 1}
                     >
-                      <SkipBack size={24} />
+                      <SkipBack size={20} className="sm:w-6" />
                     </button>
 
                     <button
                       onClick={togglePlayPause}
-                      className="p-4 bg-yellow-500 text-black rounded-full hover:bg-yellow-400 transition transform hover:scale-105"
+                      className="p-3 sm:p-4 bg-yellow-500 text-black rounded-full hover:bg-yellow-400 transition transform hover:scale-105"
                     >
-                      {isPlaying ? <Pause size={32} /> : <Play size={32} />}
+                      {isPlaying ? <Pause size={24} className="sm:w-8" /> : <Play size={24} className="sm:w-8" />}
                     </button>
 
                     <button
                       onClick={nextTrack}
-                      className="p-3 text-gray-400 hover:text-white transition"
+                      className="p-2 sm:p-3 text-gray-400 hover:text-white transition"
                       disabled={audioTracks.length <= 1}
                     >
-                      <SkipForward size={24} />
+                      <SkipForward size={20} className="sm:w-6" />
                     </button>
                   </div>
 
                   {/* Track Info */}
-                  <div className="text-right">
-                    <p className="text-sm text-gray-400">
+                  <div className="text-center sm:text-right order-3">
+                    <p className="text-xs sm:text-sm text-gray-400">
                       {currentTrackIndex + 1} / {audioTracks.length}
                     </p>
                   </div>
@@ -381,43 +381,42 @@ export default function ArtistProfile() {
               </div>
 
               {/* Track List */}
-              <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
-                <h4 className="text-lg font-semibold text-white mb-4">All Tracks</h4>
-                <div className="space-y-3">
+              <div className="bg-gray-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-700">
+                <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">All Tracks</h4>
+                <div className="space-y-2 sm:space-y-3">
                   {audioTracks.map((track, index) => (
                     <div
                       key={track.id}
-                      className={`flex items-center justify-between p-4 rounded-lg cursor-pointer transition ${index === currentTrackIndex
+                      className={`flex items-center justify-between p-3 sm:p-4 rounded-lg cursor-pointer transition ${index === currentTrackIndex
                         ? 'bg-yellow-500/20 border border-yellow-500/30'
                         : 'bg-gray-700/50 hover:bg-gray-700'
                         }`}
                       onClick={() => playTrack(index)}
                     >
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${index === currentTrackIndex
+                      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${index === currentTrackIndex
                           ? 'bg-yellow-500 text-black'
                           : 'bg-gray-600 text-gray-300'
                           }`}>
                           {index === currentTrackIndex && isPlaying ? (
-                            <Pause size={16} />
+                            <Pause size={14} className="sm:w-4" />
                           ) : (
-                            <Play size={16} />
+                            <Play size={14} className="sm:w-4" />
                           )}
                         </div>
-                        <div className="flex-1">
-                          <h5 className="font-medium text-white">{track.title}</h5>
-                          {/* <p className="text-sm text-gray-400">{track.duration}</p> */}
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-medium text-white text-sm sm:text-base truncate">{track.title}</h5>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                         {/* Audio Visualizer for current track */}
                         {index === currentTrackIndex && isPlaying && (
                           <div className="flex items-center gap-1">
-                            <div className="w-1 h-3 bg-yellow-500 rounded-full animate-audio-bar"></div>
-                            <div className="w-1 h-5 bg-yellow-500 rounded-full animate-audio-bar" style={{ animationDelay: '0.2s' }}></div>
-                            <div className="w-1 h-4 bg-yellow-500 rounded-full animate-audio-bar" style={{ animationDelay: '0.4s' }}></div>
-                            <div className="w-1 h-6 bg-yellow-500 rounded-full animate-audio-bar" style={{ animationDelay: '0.6s' }}></div>
+                            <div className="w-1 h-2 sm:h-3 bg-yellow-500 rounded-full animate-audio-bar"></div>
+                            <div className="w-1 h-3 sm:h-4 bg-yellow-500 rounded-full animate-audio-bar" style={{ animationDelay: '0.2s' }}></div>
+                            <div className="w-1 h-2.5 sm:h-3.5 bg-yellow-500 rounded-full animate-audio-bar" style={{ animationDelay: '0.4s' }}></div>
+                            <div className="w-1 h-3.5 sm:h-5 bg-yellow-500 rounded-full animate-audio-bar" style={{ animationDelay: '0.6s' }}></div>
                           </div>
                         )}
 
@@ -427,10 +426,10 @@ export default function ArtistProfile() {
                             e.stopPropagation();
                             downloadTrack(track.src, track.originalName);
                           }}
-                          className="p-2 text-gray-400 hover:text-green-400 transition"
+                          className="p-1.5 sm:p-2 text-gray-400 hover:text-green-400 transition"
                           title="Download"
                         >
-                          <Download size={16} />
+                          <Download size={14} className="sm:w-4" />
                         </button>
                       </div>
                     </div>
@@ -441,10 +440,10 @@ export default function ArtistProfile() {
           )}
 
           {/* ====== Back Button ====== */}
-          <div className="pt-10 text-center">
+          <div className="pt-6 sm:pt-8 md:pt-10 text-center">
             <button
               onClick={() => router.back()}
-              className="px-6 py-3 bg-yellow-400 text-black rounded-full font-semibold hover:bg-yellow-500 hover:scale-105 transition transform"
+              className="px-4 sm:px-6 py-2 sm:py-3 bg-yellow-400 text-black rounded-full font-semibold hover:bg-yellow-500 hover:scale-105 transition transform text-sm sm:text-base"
             >
               ← Back to {genre} Artists
             </button>

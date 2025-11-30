@@ -1,20 +1,26 @@
 "use client";
 import {
+    AlertTriangle,
     Building2,
     Calendar,
     CalendarDays,
+    CheckCircle,
     Clock,
     Globe,
     Mail,
     MapPin,
     Phone,
+    Sparkles,
     User,
     Users,
     X
 } from "lucide-react";
 
-const VenueDetailModal = ({ venue, onClose, onEdit }) => {
+const VenueDetailModal = ({ venue, onClose, onEdit, onVerifyVenue }) => {
     if (!venue) return null;
+
+    const isVerified = venue.verifiedOrder > 0;
+    const hasColor = venue.colorCode && venue.colorCode !== "#808080" && venue.colorCode !== "#000000";
 
     const getCapacityColor = (capacity) => {
         if (capacity > 1000) return "bg-purple-100 text-purple-800 border-purple-200";
@@ -38,12 +44,30 @@ const VenueDetailModal = ({ venue, onClose, onEdit }) => {
                     </div>
 
                     <div className="space-y-6">
+                        {/* Header Section with Verification Status */}
                         <div className="flex items-center space-x-4">
-                            <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center text-white">
+                            <div
+                                className="w-20 h-20 rounded-xl flex items-center justify-center text-white"
+                                style={{
+                                    backgroundColor: hasColor ? venue.colorCode : '#6b7280',
+                                    background: hasColor ? `linear-gradient(135deg, ${venue.colorCode}99, ${venue.colorCode})` : 'linear-gradient(135deg, #6b7280, #4b5563)'
+                                }}
+                            >
                                 <Building2 className="w-8 h-8" />
                             </div>
-                            <div>
-                                <h4 className="text-2xl font-bold text-gray-900">{venue.venueName}</h4>
+                            <div className="flex-1">
+                                <div className="flex items-center space-x-2 mb-2">
+                                    <h4 className="text-2xl font-bold text-gray-900">{venue.venueName}</h4>
+                                    {isVerified && (
+                                        <span
+                                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium text-white"
+                                            style={{ backgroundColor: venue.colorCode }}
+                                        >
+                                            <CheckCircle className="w-4 h-4 mr-1" />
+                                            Verified #{venue.verifiedOrder}
+                                        </span>
+                                    )}
+                                </div>
                                 <p className="text-gray-600 flex items-center mt-1">
                                     <User className="w-4 h-4 mr-2" />
                                     {venue.user?.username}
@@ -55,13 +79,70 @@ const VenueDetailModal = ({ venue, onClose, onEdit }) => {
                             </div>
                         </div>
 
+                        {/* Verification Status Section */}
+                        {isVerified ? (
+                            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+                                <div className="flex items-center space-x-2 mb-2">
+                                    <CheckCircle className="w-5 h-5 text-green-600" />
+                                    <h5 className="font-semibold text-green-800">Venue Verified</h5>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span className="text-green-700 font-medium">Verification Order:</span>
+                                        <p className="text-green-600">#{venue.verifiedOrder} in {venue.city}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-green-700 font-medium">Assigned Color:</span>
+                                        <div className="flex items-center space-x-2 mt-1">
+                                            <div
+                                                className="w-6 h-6 rounded border border-gray-300"
+                                                style={{ backgroundColor: venue.colorCode }}
+                                            ></div>
+                                            <span className="text-green-600 font-mono">{venue.colorCode}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="text-green-600 text-xs mt-2">
+                                    This venue will appear in the calendar with its assigned color
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-lg p-4">
+                                <div className="flex items-center space-x-2 mb-2">
+                                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                                    <h5 className="font-semibold text-yellow-800">Venue Not Verified</h5>
+                                </div>
+                                <p className="text-yellow-700 text-sm mb-3">
+                                    This venue is not yet verified. Verify to assign a unique color for calendar events.
+                                </p>
+                                {venue.isActive && (
+                                    <button
+                                        onClick={() => {
+                                            onClose();
+                                            onVerifyVenue(venue._id, venue.venueName);
+                                        }}
+                                        className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                                    >
+                                        <Sparkles className="w-4 h-4 mr-2" />
+                                        Verify Venue
+                                    </button>
+                                )}
+                                {!venue.isActive && (
+                                    <p className="text-yellow-700 text-sm">
+                                        Activate the venue first to enable verification.
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Venue Details Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-4">
                                 <div>
                                     <label className="font-medium text-gray-700">Location:</label>
                                     <p className="text-gray-600 mt-1 flex items-center">
                                         <MapPin className="w-4 h-4 mr-2" />
-                                        {venue.city || "Not specified"}
+                                        {venue.city ? venue.city.charAt(0).toUpperCase() + venue.city.slice(1) : "Not specified"}
                                     </p>
                                     {venue.address && (
                                         <p className="text-gray-600 text-sm mt-1 ml-6">{venue.address}</p>
@@ -117,43 +198,74 @@ const VenueDetailModal = ({ venue, onClose, onEdit }) => {
                                     <label className="font-medium text-gray-700">Joined:</label>
                                     <p className="text-gray-600 mt-1 flex items-center">
                                         <Calendar className="w-4 h-4 mr-2" />
-                                        {venue.createdAt ? new Date(venue.createdAt).toLocaleDateString() : 'N/A'}
+                                        {venue.createdAt ? new Date(venue.createdAt).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        }) : 'N/A'}
                                     </p>
                                 </div>
                             </div>
                         </div>
 
-                        {venue.phone && (
-                            <div>
-                                <label className="font-medium text-gray-700">Phone:</label>
-                                <p className="text-gray-600 mt-1 flex items-center">
-                                    <Phone className="w-4 h-4 mr-2" />
-                                    {venue.phone}
-                                </p>
+                        {/* Contact Information */}
+                        {(venue.phone || venue.website) && (
+                            <div className="border-t pt-4">
+                                <h5 className="font-medium text-gray-700 mb-3">Contact Information</h5>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {venue.phone && (
+                                        <div>
+                                            <label className="font-medium text-gray-700 text-sm">Phone:</label>
+                                            <p className="text-gray-600 mt-1 flex items-center">
+                                                <Phone className="w-4 h-4 mr-2" />
+                                                {venue.phone}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {venue.website && (
+                                        <div>
+                                            <label className="font-medium text-gray-700 text-sm">Website:</label>
+                                            <p className="text-gray-600 mt-1">
+                                                <a
+                                                    href={venue.website}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-blue-600 hover:underline flex items-center"
+                                                >
+                                                    <Globe className="w-4 h-4 mr-2" />
+                                                    {venue.website}
+                                                </a>
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
 
-                        {venue.website && (
-                            <div>
-                                <label className="font-medium text-gray-700">Website:</label>
-                                <p className="text-gray-600 mt-1">
-                                    <a href={venue.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center">
-                                        <Globe className="w-4 h-4 mr-2" />
-                                        {venue.website}
-                                    </a>
-                                </p>
-                            </div>
-                        )}
-
+                        {/* Biography */}
                         {venue.biography && (
-                            <div>
+                            <div className="border-t pt-4">
                                 <label className="font-medium text-gray-700">About:</label>
                                 <p className="text-gray-600 mt-2 text-sm leading-relaxed">{venue.biography}</p>
                             </div>
                         )}
                     </div>
 
+                    {/* Action Buttons */}
                     <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                        {!isVerified && venue.isActive && (
+                            <button
+                                onClick={() => {
+                                    onClose();
+                                    onVerifyVenue(venue._id, venue.venueName);
+                                }}
+                                className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                            >
+                                <Sparkles className="w-4 h-4 mr-2" />
+                                Verify Venue
+                            </button>
+                        )}
                         <button
                             onClick={() => {
                                 onClose();

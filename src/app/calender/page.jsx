@@ -5,11 +5,12 @@ import { useEffect, useState } from "react";
 
 export default function CalendarBoard() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedCity, setSelectedCity] = useState("Mobile");
+  const [selectedCity, setSelectedCity] = useState("mobile");
   const [view, setView] = useState("month");
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -24,46 +25,42 @@ export default function CalendarBoard() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
+        setLoading(true);
         const res = await fetch(
-          `${API_BASE}/api/venues/calendar?city=${selectedCity.toLowerCase()}`
+          `${API_BASE}/api/events/calendar?city=${selectedCity}`
         );
         const data = await res.json();
 
         if (res.ok && data.success) {
-          const formattedEvents = [];
+          const formattedEvents = data.data.events.map(event => ({
+            id: event.id,
+            fullDate: event.date,
+            date: new Date(event.date).getUTCDate(),
+            title: event.title,
+            color: event.color,
+            time: event.time,
+            venue: event.venue,
+            desc: `Performance by ${event.title} at ${event.venue}`,
+            tag: "Show",
+            banner: "https://images.unsplash.com/photo-1515169067865-5387ec356754?auto=format&fit=crop&w=900&q=60",
+          }));
 
-          data.data.venues.forEach((venue) => {
-            venue.shows.forEach((show) => {
-              const eventDate = new Date(show.date);
-              formattedEvents.push({
-                fullDate: show.date,
-                date: eventDate.getDate(),
-                title: show.artist,
-                color: `bg-${venue.colorCode.toLowerCase()}-100 text-${venue.colorCode.toLowerCase()}-700`,
-                time: show.time,
-                venue: venue.venueName,
-                desc: `Performance by ${show.artist} at ${venue.venueName}`,
-                tag: "Show",
-                banner:
-                  "https://images.unsplash.com/photo-1515169067865-5387ec356754?auto=format&fit=crop&w=900&q=60",
-              });
-            });
-          });
-
-
-          formattedEvents.sort((a, b) => a.date - b.date);
+          formattedEvents.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
           setEvents(formattedEvents);
         } else {
+          console.error("API Error:", data.message);
           setEvents([]);
         }
       } catch (error) {
         console.error("Error fetching calendar data:", error);
         setEvents([]);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchEvents();
-  }, [selectedCity]);
+  }, [selectedCity, API_BASE]);
 
   // calendar helpers
   const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -88,6 +85,13 @@ export default function CalendarBoard() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   const handleToday = () => setCurrentDate(new Date());
 
+  // Format city name for display
+  const formatCityName = (city) => {
+    return city.split(' ').map(word =>
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  };
+
   // ---- JSX ----
   return (
     <section className="brandBg min-h-screen py-10">
@@ -107,13 +111,13 @@ export default function CalendarBoard() {
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center gap-2 border border-gray-300 rounded-md px-4 py-2 text-sm text-gray-700 bg-white hover:border-yellow-400 hover:bg-yellow-50 transition"
             >
-              <span className="font-medium">{selectedCity}</span>
+              <span className="font-medium">{formatCityName(selectedCity)}</span>
               <ChevronDownIcon open={dropdownOpen} />
             </button>
 
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
-                {["Mobile", "Biloxi", "New Orleans", "Pensacola"].map((city) => (
+                {["mobile", "biloxi", "new orleans", "pensacola"].map((city) => (
                   <button
                     key={city}
                     onClick={() => {
@@ -125,7 +129,7 @@ export default function CalendarBoard() {
                       : "text-gray-600"
                       }`}
                   >
-                    {city}
+                    {formatCityName(city)}
                   </button>
                 ))}
               </div>
@@ -193,8 +197,16 @@ export default function CalendarBoard() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500"></div>
+            <span className="ml-2 text-gray-600">Loading events...</span>
+          </div>
+        )}
+
         {/* Month View */}
-        {view === "month" && (
+        {!loading && view === "month" && (
           <MonthView
             weekDays={weekDays}
             startDay={startDay}
@@ -206,7 +218,7 @@ export default function CalendarBoard() {
         )}
 
         {/* Week View */}
-        {view === "week" && (
+        {!loading && view === "week" && (
           <WeekView
             weekDays={getWeekDates()}
             hours={hours}
@@ -216,13 +228,22 @@ export default function CalendarBoard() {
         )}
 
         {/* Day View */}
-        {view === "day" && (
+        {!loading && view === "day" && (
           <DayView
             date={currentDate}
             hours={hours}
             events={events}
             onSelect={(e) => setSelectedEvent(e)}
           />
+        )}
+
+        {/* No Events State */}
+        {!loading && events.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <CalendarDays className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <p>No events found for {formatCityName(selectedCity)}</p>
+            <p className="text-sm">Try selecting a different city or check back later.</p>
+          </div>
         )}
 
         {/* Event Modal */}
@@ -259,10 +280,10 @@ const MonthView = ({ weekDays, startDay, daysInMonth, events, currentDate, onSel
 
     {Array.from({ length: daysInMonth }).map((_, i) => {
       const day = i + 1;
-      const event = events.find((e) => {
+      const dayEvents = events.filter((e) => {
         const evDate = new Date(e.fullDate);
         return (
-          evDate.getDate() === day &&
+          evDate.getUTCDate() === day &&
           evDate.getMonth() === currentDate.getMonth() &&
           evDate.getFullYear() === currentDate.getFullYear()
         );
@@ -271,33 +292,42 @@ const MonthView = ({ weekDays, startDay, daysInMonth, events, currentDate, onSel
       return (
         <div
           key={day}
-          onClick={() => event && onSelect(event)}
-          className={`relative border h-24 p-2 cursor-pointer hover:bg-yellow-50 transition ${event ? "bg-yellow-50" : "bg-white"
+          className={`relative border h-24 p-2 ${dayEvents.length > 0 ? "cursor-pointer hover:bg-yellow-50" : ""} transition ${dayEvents.length > 0 ? "bg-yellow-50" : "bg-white"
             }`}
         >
           <span className="absolute top-1 right-2 text-xs text-gray-500 font-medium">
             {day}
           </span>
-          {event && (
+          {dayEvents.map((event, index) => (
             <div
-              className={`absolute bottom-2 left-2 right-2 border border-gray-200 rounded-md text-xs px-2 py-1 ${event.color} shadow-sm`}
+              key={event.id}
+              onClick={() => onSelect(event)}
+              className="absolute left-2 right-2 rounded-md text-xs px-2 py-1 shadow-sm mb-1 cursor-pointer hover:opacity-80"
+              style={{
+                backgroundColor: event.color,
+                color: "white",
+                borderLeft: "3px solid rgba(0,0,0,0.25)",
+                bottom: `${(index * 28) + 2}px`,
+                fontSize: "11px",
+                filter: "brightness(0.95)"
+              }}
+
             >
               • {event.title}
             </div>
-          )}
+          ))}
         </div>
       );
     })}
   </div>
 );
 
-
 const WeekView = ({ weekDays, hours, events, onSelect }) => (
   <div className="border border-gray-200 rounded-lg overflow-x-auto">
     <table className="w-full border-collapse text-sm">
       <thead className="bg-gray-50">
         <tr>
-          <th className="border p-2 text-left w-24">All-day</th>
+          <th className="border p-2 text-left w-24">Time</th>
           {weekDays.map((d, i) => (
             <th key={i} className="border p-2 text-center font-medium text-gray-600">
               {d.toLocaleDateString("en-US", {
@@ -313,33 +343,47 @@ const WeekView = ({ weekDays, hours, events, onSelect }) => (
         {hours.map((h) => (
           <tr key={h} className="text-gray-600">
             <td className="border px-2 py-1 text-xs">{h}</td>
-            {Array.from({ length: 7 }).map((_, i) => {
-              const dateNum = weekDays[i].getDate();
-              const event = events.find((e) => {
+            {weekDays.map((date, i) => {
+              const dateEvents = events.filter((e) => {
                 const evDate = new Date(e.fullDate);
                 return (
-                  evDate.getDate() === dateNum &&
-                  evDate.getMonth() === weekDays[i].getMonth() &&
-                  evDate.getFullYear() === weekDays[i].getFullYear()
+                  evDate.getUTCDate() === date.getUTCDate() &&
+                  evDate.getMonth() === date.getMonth() &&
+                  evDate.getFullYear() === date.getFullYear()
                 );
+              });
+
+              // Filter events for this specific hour
+              const hourEvents = dateEvents.filter(event => {
+                const eventHour = event.time.split(':')[0];
+                return eventHour === h.split(':')[0];
               });
 
               return (
                 <td
                   key={i}
-                  onClick={() => event && onSelect(event)}
-                  className={`border border-gray-200 h-8 hover:bg-yellow-50 transition ${event ? "bg-yellow-50" : ""
-                    }`}
+                  className="border border-gray-200 h-8 relative p-0"
                 >
-                  {event && (
-                    <span className={`text-xs ${event.color.split(" ")[1]}`}>
+                  {hourEvents.map((event, index) => (
+                    <div
+                      key={event.id}
+                      onClick={() => onSelect(event)}
+                      className="absolute left-0 right-0 mx-1 rounded text-xs px-1 py-0.5 cursor-pointer hover:opacity-80 z-10"
+                      style={{
+                        backgroundColor: event.color,
+                        color: "white",
+                        borderLeft: "2px solid rgba(0,0,0,0.25)",
+                        top: `${index * 20}px`,
+                        filter: "brightness(0.95)"
+
+                      }}
+                    >
                       {event.title}
-                    </span>
-                  )}
+                    </div>
+                  ))}
                 </td>
               );
             })}
-
           </tr>
         ))}
       </tbody>
@@ -348,7 +392,7 @@ const WeekView = ({ weekDays, hours, events, onSelect }) => (
 );
 
 const DayView = ({ date, hours, events, onSelect }) => {
-  const event = events.find((e) => {
+  const dayEvents = events.filter((e) => {
     const evDate = new Date(e.fullDate);
     return (
       evDate.getDate() === date.getDate() &&
@@ -362,7 +406,7 @@ const DayView = ({ date, hours, events, onSelect }) => {
       <table className="w-full border-collapse text-sm">
         <thead className="bg-gray-50">
           <tr>
-            <th className="border p-2 text-left w-24">All-day</th>
+            <th className="border p-2 text-left w-24">Time</th>
             <th className="border p-2 text-center font-medium text-gray-600">
               {date.toLocaleDateString("en-US", {
                 weekday: "long",
@@ -374,84 +418,110 @@ const DayView = ({ date, hours, events, onSelect }) => {
           </tr>
         </thead>
         <tbody>
-          {hours.map((h) => (
-            <tr key={h} className="text-gray-600">
-              <td className="border px-2 py-1 text-xs">{h}</td>
-              <td
-                onClick={() => event && onSelect(event)}
-                className={`border border-gray-200 h-8 hover:bg-yellow-50 transition ${event ? "bg-yellow-50" : ""
-                  }`}
-              >
-                {event && h.startsWith("10") && (
-                  <span className={`text-xs ${event.color.split(" ")[1]}`}>
-                    {event.title}
-                  </span>
-                )}
-              </td>
-            </tr>
-          ))}
+          {hours.map((h) => {
+            const hourEvents = dayEvents.filter(event => {
+              const eventHour = event.time.split(':')[0];
+              return eventHour === h.split(':')[0];
+            });
+
+            return (
+              <tr key={h} className="text-gray-600">
+                <td className="border px-2 py-3 text-xs align-top">{h}</td>
+                <td className="border border-gray-200 p-0 relative">
+                  {hourEvents.map((event, index) => (
+                    <div
+                      key={event.id}
+                      onClick={() => onSelect(event)}
+                      className="mx-2 my-1 rounded text-xs px-2 py-2 cursor-pointer hover:opacity-80"
+                      style={{
+                        backgroundColor: event.color,
+                        color: "white",
+                        borderLeft: "3px solid rgba(0,0,0,0.25)",
+                        minHeight: "40px",
+                        filter: "brightness(0.92)"
+                      }}
+                    >
+                      <div className="font-semibold">{event.title}</div>
+                      <div className="text-xs opacity-75">{event.time} • {event.venue}</div>
+                    </div>
+                  ))}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
   );
 };
 
+const EventModal = ({ event, city, monthNames, currentDate, onClose }) => {
+  const eventDate = new Date(event.fullDate);
 
-const EventModal = ({ event, city, monthNames, currentDate, onClose }) => (
-  <div className="fixed inset-0 bg-black/40 bg-opacity-20 flex items-center justify-center z-50">
-    <div className="bg-white rounded-2xl shadow-2xl w-[95%] max-w-2xl overflow-hidden animate-fadeIn relative">
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 bg-black/60 hover:bg-black/80 text-white rounded-full p-1.5 transition"
-      >
-        <X className="w-5 h-5" />
-      </button>
-      <div className="w-full h-52 md:h-64 bg-gray-200 overflow-hidden">
-        <Image
-          src={
-            // event.banner ||
-            "https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZXZlbnR8ZW58MHx8MHx8fDA%3D&fm=jpg&q=60&w=3000"
-          }
-          width={800}
-          height={400}
-          alt="Event Banner"
-          className="w-full h-full object-cover"
-        />
-      </div>
-      <div className="p-6 space-y-4">
-        <h2 className="text-2xl font-bold text-[var(--primary)]">{event.title}</h2>
-        <p className="text-gray-500 text-sm">
-          {monthNames[currentDate.getMonth()]} {event.date},{" "}
-          {currentDate.getFullYear()} • {city}
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-sm text-gray-700">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">🕒 Time:</span>
-            <span>{event.time}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-semibold">📍 Venue:</span>
-            <span>{event.venue}</span>
-          </div>
-        </div>
-        <div
-          className={`inline-block px-4 py-1 rounded-full text-xs font-semibold ${event.color}`}
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fadeIn relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 bg-black/60 hover:bg-black/80 text-white rounded-full p-1.5 transition z-10"
         >
-          {event.tag}
+          <X className="w-5 h-5" />
+        </button>
+        <div className="w-full h-52 md:h-64 bg-gray-200 overflow-hidden">
+          <Image
+            src={event.banner}
+            width={800}
+            height={400}
+            alt="Event Banner"
+            className="w-full h-full object-cover"
+          />
         </div>
-        <p className="text-gray-700 leading-relaxed">{event.desc}</p>
-        <div className="pt-4">
-          <button
-            onClick={onClose}
-            className="w-full py-2 rounded-md brandBg text-gray-700 font-semibold hover:opacity-90 transition"
+        <div className="p-6 space-y-4">
+          <h2 className="text-2xl font-bold text-gray-900">{event.title}</h2>
+          <p className="text-gray-600 text-sm">
+            {eventDate.toLocaleDateString("en-US", {
+              weekday: 'long',
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric'
+            })} • {event.time} • {city.split(' ').map(word =>
+              word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ')}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-sm text-gray-700">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">🕒 Time:</span>
+              <span>{event.time}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold">📍 Venue:</span>
+              <span>{event.venue}</span>
+            </div>
+          </div>
+          <div
+            className="inline-block px-4 py-1 rounded-full text-xs font-semibold"
+            style={{
+              backgroundColor: `${event.color}20`,
+              color: event.color,
+              border: `1px solid ${event.color}`
+            }}
           >
-            Close
-          </button>
+            {event.tag}
+          </div>
+          <p className="text-gray-700 leading-relaxed">{event.desc}</p>
+          <div className="pt-4">
+            <button
+              onClick={onClose}
+              className="w-full py-2 rounded-md bg-yellow-400 text-gray-800 font-semibold hover:bg-yellow-500 transition"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 /* helper icon */
 const ChevronDownIcon = ({ open }) => (

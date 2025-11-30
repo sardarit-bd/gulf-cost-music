@@ -11,10 +11,34 @@ export default function HeroSection() {
     const fetchHeroData = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/hero-video`);
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
         const data = await res.json();
-        setHero(data.data);
+
+        if (data.success) {
+          setHero(data.data);
+        } else {
+          console.error("API Error:", data.message);
+          // Set default data if API fails
+          setHero({
+            title: "Welcome to Gulf Coast Music",
+            subtitle: "Experience the best with stunning venues and powerful performances.",
+            buttonText: "Get Started",
+            videoUrl: null
+          });
+        }
       } catch (error) {
         console.error("Error fetching hero data:", error);
+        // Set default data on error
+        setHero({
+          title: "Welcome to Gulf Coast Music",
+          subtitle: "Experience the best with stunning venues and powerful performances.",
+          buttonText: "Get Started",
+          videoUrl: null
+        });
       } finally {
         setIsLoading(false);
       }
@@ -23,33 +47,33 @@ export default function HeroSection() {
     fetchHeroData();
   }, []);
 
-  const getEmbedUrl = (url) => {
-    if (!url) return null;
+  const getVideoUrl = (videoUrl) => {
+    if (!videoUrl) return null;
+
+    // If it's a Cloudinary public_id
+    if (!videoUrl.includes('http') && !videoUrl.includes('youtube') && !videoUrl.includes('youtu.be')) {
+      return `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/q_auto/${videoUrl}.mp4`;
+    }
 
     // YouTube URL handling
-    if (url.includes("youtube.com") || url.includes("youtu.be")) {
-      let videoId = "";
+    // if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
+    //   let videoId = "";
 
-      // Handle different YouTube URL formats
-      if (url.includes("youtube.com/watch?v=")) {
-        videoId = url.split("v=")[1]?.split("&")[0];
-      } else if (url.includes("youtu.be/")) {
-        videoId = url.split("youtu.be/")[1]?.split("?")[0];
-      } else if (url.includes("youtube.com/embed/")) {
-        videoId = url.split("embed/")[1]?.split("?")[0];
-      }
+    //   if (videoUrl.includes("youtube.com/watch?v=")) {
+    //     videoId = videoUrl.split("v=")[1]?.split("&")[0];
+    //   } else if (videoUrl.includes("youtu.be/")) {
+    //     videoId = videoUrl.split("youtu.be/")[1]?.split("?")[0];
+    //   } else if (videoUrl.includes("youtube.com/embed/")) {
+    //     videoId = videoUrl.split("embed/")[1]?.split("?")[0];
+    //   }
 
-      if (videoId) {
-        return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&showinfo=0&disablekb=1&iv_load_policy=3`;
-      }
-    }
+    //   if (videoId) {
+    //     return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&showinfo=0&disablekb=1&iv_load_policy=3`;
+    //   }
+    // }
 
-    // Direct MP4 video URL
-    if (url.match(/\.(mp4|webm|ogg)$/i)) {
-      return url;
-    }
-
-    return null;
+    // Direct video URL
+    return videoUrl;
   };
 
   // Show loading state
@@ -61,37 +85,38 @@ export default function HeroSection() {
     );
   }
 
-  const embedUrl = getEmbedUrl(hero?.videoUrl);
+  const videoUrl = getVideoUrl(hero?.videoUrl);
 
   return (
     <section className="relative w-full h-screen bg-cover bg-center pt-16 overflow-hidden">
       {/* Background Video */}
-      {embedUrl ? (
-        embedUrl.includes("youtube.com") ? (
+      {videoUrl ? (
+        videoUrl.includes("youtube.com") ? (
           // YouTube Embed
           <iframe
             className="absolute top-0 left-0 w-full h-full object-cover -z-10 scale-105"
-            src={embedUrl}
+            src={videoUrl}
             frameBorder="0"
             allow="autoplay; encrypted-media; fullscreen"
             allowFullScreen
             title="Hero Background Video"
           ></iframe>
         ) : (
-          // Direct Video File
+          // Direct Video File (Cloudinary or direct URL)
           <video
             className="absolute top-0 left-0 w-full h-full object-cover -z-10"
             autoPlay
             muted
             loop
             playsInline
+            key={videoUrl} // Important: force re-render when video changes
           >
-            <source src={embedUrl} type="video/mp4" />
+            <source src={videoUrl} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         )
       ) : (
-        // Fallback Background Image
+        // Fallback Background
         <div
           className="absolute top-0 left-0 w-full h-full object-cover -z-10 bg-gradient-to-br from-blue-900 to-purple-900"
         ></div>
@@ -102,16 +127,16 @@ export default function HeroSection() {
 
       {/* Content */}
       <div className="relative h-full flex flex-col items-center justify-center text-center px-4">
-        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+        <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
           {hero?.title || "Welcome to Gulf Coast Music"}
         </h1>
 
-        <p className="text-xl md:text-2xl lg:text-3xl text-gray-200 mb-8 max-w-4xl leading-relaxed">
+        <p className="text-xl md:text-2xl lg:text-2xl text-gray-200 mb-8 max-w-4xl leading-relaxed">
           {hero?.subtitle || "Experience the best with stunning venues and powerful performances."}
         </p>
 
-        <button className="bg-primary text-primary-foreground px-4 py-2 rounded font-bold hover:bg-primary/90 transition text-lg">
-          <Link href="/dashboard">
+        <button className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-black px-4 py-2 rounded-lg font-bold hover:bg-primary/90 transition text-lg">
+          <Link href="/venues">
             {hero?.buttonText || "Get Started"}
           </Link>
         </button>

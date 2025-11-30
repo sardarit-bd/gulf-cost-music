@@ -197,15 +197,15 @@ export default function NewsDetailsPage() {
           </div>
 
           {/* Gallery */}
-          {news.photos?.length > 1 && (
+          {news.photos?.length > 0 && (
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-yellow-400 mb-4">Gallery</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {news.photos.slice(1).map((photo, i) => (
+                {news.photos.map((photo, i) => (
                   <div key={i} className="relative aspect-square rounded-lg overflow-hidden">
                     <Image
                       src={photo.url}
-                      alt={`${news.title} photo ${i + 2}`}
+                      alt={`${news.title} photo ${i + 1}`}
                       fill
                       className="object-cover hover:scale-105 transition-transform duration-300"
                     />
@@ -214,6 +214,7 @@ export default function NewsDetailsPage() {
               </div>
             </div>
           )}
+
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-4 pt-6 border-t border-white/10">
