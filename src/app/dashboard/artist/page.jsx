@@ -1,21 +1,23 @@
 "use client";
 
-import { useSession } from "@/lib/auth";
-import {
-  ImageIcon,
-  Music2,
-  Pause,
-  Play,
-  Save,
-  Upload,
-  X
-} from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { ImageIcon, Music2, Pause, Play, Save, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
+// Function to get cookie value by name
+const getCookie = (name) => {
+  if (typeof document === "undefined") return null;
+
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return null;
+};
+
 export default function ArtistDashboard() {
-  const { user, loading, logout } = useSession();
+  const { user, loading, logout } = useAuth();
 
   const [activeTab, setActiveTab] = useState("overview");
   const [artist, setArtist] = useState({
@@ -30,7 +32,6 @@ export default function ArtistDashboard() {
   const [audioPreview, setAudioPreview] = useState([]);
   const [saving, setSaving] = useState(false);
   const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
-
 
   const audioElements = useRef({});
   const isMounted = useRef(true);
@@ -52,7 +53,7 @@ export default function ArtistDashboard() {
   // Fetch existing artist profile from backend - FIXED useEffect
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
       if (!token || !user) return; // Wait until user is available
 
       try {
@@ -104,139 +105,164 @@ export default function ArtistDashboard() {
     }
   }, [user, loading]);
 
+  const toggleAudio = useCallback(
+    (index) => {
+      if (currentlyPlaying === index) {
+        // Pause current audio
+        if (audioElements.current[index]) {
+          audioElements.current[index].pause();
+        }
+        setCurrentlyPlaying(null);
+      } else {
+        // Pause any currently playing audio
+        if (
+          currentlyPlaying !== null &&
+          audioElements.current[currentlyPlaying]
+        ) {
+          audioElements.current[currentlyPlaying].pause();
+        }
 
-
-  const toggleAudio = useCallback((index) => {
-    if (currentlyPlaying === index) {
-      // Pause current audio
-      if (audioElements.current[index]) {
-        audioElements.current[index].pause();
-      }
-      setCurrentlyPlaying(null);
-    } else {
-      // Pause any currently playing audio
-      if (currentlyPlaying !== null && audioElements.current[currentlyPlaying]) {
-        audioElements.current[currentlyPlaying].pause();
-      }
-
-      // Play new audio
-      if (audioElements.current[index]) {
-        const playPromise = audioElements.current[index].play();
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              setCurrentlyPlaying(index);
-            })
-            .catch(error => {
-              console.error("Error playing audio:", error);
-              toast.error("Error playing audio file");
-            });
+        // Play new audio
+        if (audioElements.current[index]) {
+          const playPromise = audioElements.current[index].play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                setCurrentlyPlaying(index);
+              })
+              .catch((error) => {
+                console.error("Error playing audio:", error);
+                toast.error("Error playing audio file");
+              });
+          }
         }
       }
-    }
-  }, [currentlyPlaying]);
+    },
+    [currentlyPlaying]
+  );
 
+  const handleAudioRef = useCallback(
+    (index, element) => {
+      if (element) {
+        audioElements.current[index] = element;
 
-  const handleAudioRef = useCallback((index, element) => {
-    if (element) {
-      audioElements.current[index] = element;
+        // Handle audio end
+        const handleEnded = () => {
+          setCurrentlyPlaying(null);
+        };
 
-      // Handle audio end
-      const handleEnded = () => {
-        setCurrentlyPlaying(null);
-      };
+        // Handle audio error
+        const handleError = () => {
+          toast.error(
+            `Error loading audio file: ${
+              audioPreview[index]?.name || "Unknown"
+            }`
+          );
+          setCurrentlyPlaying(null);
+        };
 
-      // Handle audio error
-      const handleError = () => {
-        toast.error(`Error loading audio file: ${audioPreview[index]?.name || 'Unknown'}`);
-        setCurrentlyPlaying(null);
-      };
+        element.addEventListener("ended", handleEnded);
+        element.addEventListener("error", handleError);
 
-      element.addEventListener('ended', handleEnded);
-      element.addEventListener('error', handleError);
-
-      // Cleanup event listeners
-      return () => {
-        element.removeEventListener('ended', handleEnded);
-        element.removeEventListener('error', handleError);
-      };
-    }
-  }, [audioPreview]);
+        // Cleanup event listeners
+        return () => {
+          element.removeEventListener("ended", handleEnded);
+          element.removeEventListener("error", handleError);
+        };
+      }
+    },
+    [audioPreview]
+  );
 
   // Handle text input changes
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
-    setArtist(prev => ({ ...prev, [name]: value }));
+    setArtist((prev) => ({ ...prev, [name]: value }));
   }, []);
 
   // Handle image upload (max 5)
-  const handleImageUpload = useCallback((e) => {
-    const files = Array.from(e.target.files).slice(0, 5);
+  const handleImageUpload = useCallback(
+    (e) => {
+      const files = Array.from(e.target.files).slice(0, 5);
 
-    if (files.length + previewImages.length > 5) {
-      toast.error("Maximum 5 photos allowed");
-      return;
-    }
+      if (files.length + previewImages.length > 5) {
+        toast.error("Maximum 5 photos allowed");
+        return;
+      }
 
-    const urls = files.map((file) => URL.createObjectURL(file));
-    setPreviewImages(prev => [...prev, ...urls]);
-    setArtist(prev => ({ ...prev, photos: [...prev.photos, ...files] }));
-    toast.success(`Added ${files.length} photo(s)`);
+      const urls = files.map((file) => URL.createObjectURL(file));
+      setPreviewImages((prev) => [...prev, ...urls]);
+      setArtist((prev) => ({ ...prev, photos: [...prev.photos, ...files] }));
+      toast.success(`Added ${files.length} photo(s)`);
 
-    // Reset file input
-    e.target.value = '';
-  }, [previewImages.length]);
+      // Reset file input
+      e.target.value = "";
+    },
+    [previewImages.length]
+  );
 
   const removeImage = useCallback((index) => {
-    setPreviewImages(prev => prev.filter((_, i) => i !== index));
-    setArtist(prev => ({
+    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
+    setArtist((prev) => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index)
+      photos: prev.photos.filter((_, i) => i !== index),
     }));
     toast.success("Photo removed");
   }, []);
 
   // Handle MP3 upload
-  const handleAudioUpload = useCallback((e) => {
-    const files = Array.from(e.target.files);
+  const handleAudioUpload = useCallback(
+    (e) => {
+      const files = Array.from(e.target.files);
 
-    if (files.length + audioPreview.length > 5) {
-      toast.error("You can upload a maximum of 5 audio files!");
-      return;
-    }
-
-    const limitedFiles = files.slice(0, 5 - audioPreview.length);
-
-    const newAudioPreviews = limitedFiles.map((file) => ({
-      url: URL.createObjectURL(file),
-      name: file.name
-    }));
-
-    setAudioPreview(prev => [...prev, ...newAudioPreviews]);
-    setArtist(prev => ({ ...prev, audios: [...prev.audios, ...limitedFiles] }));
-    toast.success(`Added ${limitedFiles.length} audio file(s)`);
-
-    // Reset file input
-    e.target.value = '';
-  }, [audioPreview.length]);
-
-  const removeAudio = useCallback((index) => {
-    // Stop audio if it's playing
-    if (currentlyPlaying === index) {
-      if (audioElements.current[index]) {
-        audioElements.current[index].pause();
+      if (files.length + audioPreview.length > 5) {
+        toast.error("You can upload a maximum of 5 audio files!");
+        return;
       }
-      setCurrentlyPlaying(null);
-    }
 
-    setAudioPreview(prev => prev.filter((_, i) => i !== index));
-    setArtist(prev => ({ ...prev, audios: prev.audios.filter((_, i) => i !== index) }));
+      const limitedFiles = files.slice(0, 5 - audioPreview.length);
 
-    // Clean up audio element reference
-    delete audioElements.current[index];
+      const newAudioPreviews = limitedFiles.map((file) => ({
+        url: URL.createObjectURL(file),
+        name: file.name,
+      }));
 
-    toast.success("Audio file removed");
-  }, [currentlyPlaying]);
+      setAudioPreview((prev) => [...prev, ...newAudioPreviews]);
+      setArtist((prev) => ({
+        ...prev,
+        audios: [...prev.audios, ...limitedFiles],
+      }));
+      toast.success(`Added ${limitedFiles.length} audio file(s)`);
+
+      // Reset file input
+      e.target.value = "";
+    },
+    [audioPreview.length]
+  );
+
+  const removeAudio = useCallback(
+    (index) => {
+      // Stop audio if it's playing
+      if (currentlyPlaying === index) {
+        if (audioElements.current[index]) {
+          audioElements.current[index].pause();
+        }
+        setCurrentlyPlaying(null);
+      }
+
+      setAudioPreview((prev) => prev.filter((_, i) => i !== index));
+      setArtist((prev) => ({
+        ...prev,
+        audios: prev.audios.filter((_, i) => i !== index),
+      }));
+
+      // Clean up audio element reference
+      delete audioElements.current[index];
+
+      toast.success("Audio file removed");
+    },
+    [currentlyPlaying]
+  );
 
   // Save (POST/PUT to backend)
   const handleSave = async () => {
@@ -283,7 +309,7 @@ export default function ArtistDashboard() {
         });
       }
 
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
 
       if (!token) {
         toast.error("Authentication token not found");
@@ -294,13 +320,16 @@ export default function ArtistDashboard() {
       const saveToast = toast.loading("Saving profile...");
 
       // Send to backend
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/profile`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/profile`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
 
       const data = await res.json();
 
@@ -320,10 +349,12 @@ export default function ArtistDashboard() {
             audios: a.mp3Files || [],
           });
           setPreviewImages(a.photos?.map((p) => p.url) || []);
-          setAudioPreview(a.mp3Files?.map((a) => ({
-            url: a.url,
-            name: a.name || `Audio ${a._id}`
-          })) || []);
+          setAudioPreview(
+            a.mp3Files?.map((a) => ({
+              url: a.url,
+              name: a.name || `Audio ${a._id}`,
+            })) || []
+          );
         }
       } else {
         toast.dismiss(saveToast);
@@ -346,15 +377,15 @@ export default function ArtistDashboard() {
   useEffect(() => {
     return () => {
       // Clean up image preview URLs
-      previewImages.forEach(url => {
-        if (url.startsWith('blob:')) {
+      previewImages.forEach((url) => {
+        if (url.startsWith("blob:")) {
           URL.revokeObjectURL(url);
         }
       });
 
       // Clean up audio preview URLs
-      audioPreview.forEach(audio => {
-        if (audio.url.startsWith('blob:')) {
+      audioPreview.forEach((audio) => {
+        if (audio.url.startsWith("blob:")) {
           URL.revokeObjectURL(audio.url);
         }
       });
@@ -365,37 +396,6 @@ export default function ArtistDashboard() {
     return (
       <div className="flex items-center justify-center min-h-screen text-yellow-400">
         Loading...
-      </div>
-    );
-
-  if (!user)
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-4">
-        <div className="text-center max-w-sm mx-auto">
-          {/* Icon */}
-          <div className="mb-6">
-            <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-red-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-            </div>
-          </div>
-
-          {/* Title */}
-          <h2 className="text-xl font-semibold text-white mb-3">
-            Authentication Required
-          </h2>
-        </div>
       </div>
     );
 
@@ -420,10 +420,11 @@ export default function ArtistDashboard() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-2 px-2 text-lg font-medium transition-all ${activeTab === tab
-                ? "text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]"
-                : "text-[var(--color-muted-foreground)] hover:text-[var(--color-accent)]"
-                }`}
+              className={`pb-2 px-2 text-lg font-medium transition-all ${
+                activeTab === tab
+                  ? "text-[var(--color-primary)] border-b-2 border-[var(--color-primary)]"
+                  : "text-[var(--color-muted-foreground)] hover:text-[var(--color-accent)]"
+              }`}
             >
               {tab === "overview" ? "Overview" : "Edit Profile"}
             </button>
@@ -461,11 +462,15 @@ export default function ArtistDashboard() {
                   <div className="flex flex-wrap gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                      <span className="text-gray-300 capitalize">{artist.genre || "No genre"}</span>
+                      <span className="text-gray-300 capitalize">
+                        {artist.genre || "No genre"}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-gray-300">{artist.city || "No city"}</span>
+                      <span className="text-gray-300">
+                        {artist.city || "No city"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -473,11 +478,15 @@ export default function ArtistDashboard() {
                 {/* Stats */}
                 <div className="flex gap-6">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-yellow-500">{previewImages.length}</div>
+                    <div className="text-2xl font-bold text-yellow-500">
+                      {previewImages.length}
+                    </div>
                     <div className="text-xs text-gray-400">Photos</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-yellow-500">{audioPreview.length}</div>
+                    <div className="text-2xl font-bold text-yellow-500">
+                      {audioPreview.length}
+                    </div>
                     <div className="text-xs text-gray-400">Tracks</div>
                   </div>
                 </div>
@@ -514,7 +523,9 @@ export default function ArtistDashboard() {
                   <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <div className="w-1 h-6 bg-yellow-500 rounded"></div>
                     Audio Tracks
-                    <span className="text-sm text-gray-400 ml-2">({audioPreview.length})</span>
+                    <span className="text-sm text-gray-400 ml-2">
+                      ({audioPreview.length})
+                    </span>
                   </h3>
 
                   {audioPreview.length > 0 ? (
@@ -522,17 +533,19 @@ export default function ArtistDashboard() {
                       {audioPreview.map((audio, index) => (
                         <div
                           key={index}
-                          className={`flex items-center gap-4 p-4 rounded-lg border transition-all ${currentlyPlaying === index
-                            ? "border-yellow-500 bg-yellow-500/10"
-                            : "border-gray-700 bg-gray-700/50 hover:bg-gray-700"
-                            }`}
+                          className={`flex items-center gap-4 p-4 rounded-lg border transition-all ${
+                            currentlyPlaying === index
+                              ? "border-yellow-500 bg-yellow-500/10"
+                              : "border-gray-700 bg-gray-700/50 hover:bg-gray-700"
+                          }`}
                         >
                           <button
                             onClick={() => toggleAudio(index)}
-                            className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all ${currentlyPlaying === index
-                              ? "bg-yellow-500 text-black"
-                              : "bg-gray-600 text-white hover:bg-yellow-500 hover:text-black"
-                              }`}
+                            className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                              currentlyPlaying === index
+                                ? "bg-yellow-500 text-black"
+                                : "bg-gray-600 text-white hover:bg-yellow-500 hover:text-black"
+                            }`}
                           >
                             {currentlyPlaying === index ? (
                               <Pause size={20} />
@@ -558,9 +571,16 @@ export default function ArtistDashboard() {
                               <div
                                 className="bg-yellow-500 h-2 rounded-full transition-all duration-100"
                                 style={{
-                                  width: currentlyPlaying === index
-                                    ? `${(audioElements.current[index]?.currentTime / audioElements.current[index]?.duration) * 100 || 0}%`
-                                    : '0%'
+                                  width:
+                                    currentlyPlaying === index
+                                      ? `${
+                                          (audioElements.current[index]
+                                            ?.currentTime /
+                                            audioElements.current[index]
+                                              ?.duration) *
+                                            100 || 0
+                                        }%`
+                                      : "0%",
                                 }}
                               />
                             </div>
@@ -592,11 +612,15 @@ export default function ArtistDashboard() {
                   <div className="space-y-4">
                     <div>
                       <label className="text-sm text-gray-400">Name</label>
-                      <p className="text-white font-medium">{artist.name || "Not set"}</p>
+                      <p className="text-white font-medium">
+                        {artist.name || "Not set"}
+                      </p>
                     </div>
                     <div>
                       <label className="text-sm text-gray-400">City</label>
-                      <p className="text-white font-medium">{artist.city || "Not set"}</p>
+                      <p className="text-white font-medium">
+                        {artist.city || "Not set"}
+                      </p>
                     </div>
                     <div>
                       <label className="text-sm text-gray-400">Genre</label>
@@ -612,7 +636,9 @@ export default function ArtistDashboard() {
                   <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                     <div className="w-1 h-6 bg-yellow-500 rounded"></div>
                     Photos
-                    <span className="text-sm text-gray-400 ml-2">({previewImages.length}/5)</span>
+                    <span className="text-sm text-gray-400 ml-2">
+                      ({previewImages.length}/5)
+                    </span>
                   </h3>
 
                   {previewImages.length > 0 ? (
@@ -655,7 +681,9 @@ export default function ArtistDashboard() {
             <div className="grid md:grid-cols-2 gap-8">
               {/* Name */}
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Name *</label>
+                <label className="block text-sm text-gray-400 mb-1">
+                  Name *
+                </label>
                 <input
                   name="name"
                   value={artist.name}
@@ -667,7 +695,9 @@ export default function ArtistDashboard() {
 
               {/* City Dropdown */}
               <div>
-                <label className="block text-sm text-gray-400 mb-1">City *</label>
+                <label className="block text-sm text-gray-400 mb-1">
+                  City *
+                </label>
                 <select
                   name="city"
                   value={artist.city.toLowerCase()}
@@ -726,10 +756,17 @@ export default function ArtistDashboard() {
                 <label className="block text-sm text-gray-400 mb-2">
                   Upload Photos (max 5) - {previewImages.length}/5
                 </label>
-                <label className={`cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-black rounded-md hover:bg-yellow-400 transition ${previewImages.length >= 5 ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}>
+                <label
+                  className={`cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-black rounded-md hover:bg-yellow-400 transition ${
+                    previewImages.length >= 5
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                >
                   <Upload size={16} />
-                  {previewImages.length >= 5 ? 'Maximum Reached' : 'Upload Images'}
+                  {previewImages.length >= 5
+                    ? "Maximum Reached"
+                    : "Upload Images"}
                   <input
                     type="file"
                     accept="image/*"
@@ -742,7 +779,9 @@ export default function ArtistDashboard() {
 
                 {previewImages.length > 0 && (
                   <div className="mt-4">
-                    <p className="text-sm text-gray-400 mb-2">Uploaded Photos:</p>
+                    <p className="text-sm text-gray-400 mb-2">
+                      Uploaded Photos:
+                    </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                       {previewImages.map((src, idx) => (
                         <div
@@ -775,10 +814,17 @@ export default function ArtistDashboard() {
                   Upload Audio (MP3) - {audioPreview.length}/5
                 </label>
 
-                <label className={`cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-black rounded-md hover:bg-yellow-400 transition ${audioPreview.length >= 5 ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}>
+                <label
+                  className={`cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-black rounded-md hover:bg-yellow-400 transition ${
+                    audioPreview.length >= 5
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                >
                   <Music2 size={16} />
-                  {audioPreview.length >= 5 ? 'Maximum Reached' : 'Upload Audio'}
+                  {audioPreview.length >= 5
+                    ? "Maximum Reached"
+                    : "Upload Audio"}
                   <input
                     type="file"
                     accept="audio/*"
@@ -791,10 +837,15 @@ export default function ArtistDashboard() {
 
                 {audioPreview.length > 0 && (
                   <div className="mt-4">
-                    <p className="text-sm text-gray-400 mb-2">Uploaded Audio:</p>
+                    <p className="text-sm text-gray-400 mb-2">
+                      Uploaded Audio:
+                    </p>
                     <div className="space-y-2">
                       {audioPreview.map((audio, index) => (
-                        <div key={index} className="flex items-center gap-2 p-2 border border-gray-600 rounded bg-gray-800/50">
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 p-2 border border-gray-600 rounded bg-gray-800/50"
+                        >
                           <button
                             onClick={() => removeAudio(index)}
                             className="p-1 bg-red-500 text-white rounded hover:bg-red-400 transition"
@@ -817,8 +868,11 @@ export default function ArtistDashboard() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className={`flex items-center gap-2 px-10 py-3 rounded-lg font-medium shadow-md transition ${saving ? "bg-gray-400 cursor-not-allowed" : "bg-yellow-500 hover:bg-yellow-400 text-black"
-                  }`}
+                className={`flex items-center gap-2 px-10 py-3 rounded-lg font-medium shadow-md transition ${
+                  saving
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-yellow-500 hover:bg-yellow-400 text-black"
+                }`}
               >
                 {saving ? (
                   <>

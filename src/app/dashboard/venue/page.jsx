@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "@/lib/auth";
+import { useAuth } from "@/context/AuthContext";
 import {
   Building2,
   Calendar,
@@ -13,15 +13,22 @@ import {
   Save,
   Star,
   Trash2,
-  Users
+  Users,
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
+// Utility to get cookie safely
+const getCookie = (name) => {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+  return match ? match[2] : null;
+};
+
 export default function VenueDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
-  const { user } = useSession();
+  const { user } = useAuth();
   const [venue, setVenue] = useState({
     name: "",
     city: "",
@@ -44,7 +51,7 @@ export default function VenueDashboard() {
     const fetchVenue = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token");
+        const token = getCookie("token");
         if (!token) return toast.error("You must be logged in.");
 
         const res = await fetch(`${API_BASE}/api/venues/profile`, {
@@ -102,7 +109,7 @@ export default function VenueDashboard() {
   // === Save Venue ===
   const handleSave = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
       if (!token) return toast.error("You are not logged in.");
 
       const formData = new FormData();
@@ -139,9 +146,8 @@ export default function VenueDashboard() {
 
       // Update local state with new photos
       if (data.data?.venue?.photos) {
-        setPreviewImages(data.data.venue.photos.map(p => p.url));
+        setPreviewImages(data.data.venue.photos.map((p) => p.url));
       }
-
     } catch (error) {
       console.error("Save error:", error);
       toast.error(error.message || "Server error while saving venue.");
@@ -155,7 +161,7 @@ export default function VenueDashboard() {
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
       if (!token) return toast.error("You are not logged in.");
 
       const formData = new FormData();
@@ -179,7 +185,6 @@ export default function VenueDashboard() {
 
       toast.success("🎤 Show added successfully!");
       setNewShow({ artist: "", date: "", time: "", image: null });
-
     } catch (err) {
       console.error("Add show error:", err);
       toast.error(err.message || "Error adding show.");
@@ -188,44 +193,18 @@ export default function VenueDashboard() {
     }
   };
 
-
-  if (!user)
+  if (loading)
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-4">
-        <div className="text-center max-w-sm mx-auto">
-          {/* Icon */}
-          <div className="mb-6">
-            <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-red-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-            </div>
-          </div>
-
-          {/* Title */}
-          <h2 className="text-xl font-semibold text-white mb-3">
-            Authentication Required
-          </h2>
-        </div>
+      <div className="flex items-center justify-center min-h-screen text-yellow-400">
+        Loading...
       </div>
     );
 
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br py-8 px-4">
       <Toaster position="top-center" reverseOrder={false} />
 
-      <div className="max-w-7xl mx-auto">
+      <div className="">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
@@ -252,10 +231,11 @@ export default function VenueDashboard() {
                 <button
                   key={id}
                   onClick={() => setActiveTab(id)}
-                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === id
-                    ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
-                    : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
-                    }`}
+                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${
+                    activeTab === id
+                      ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
+                      : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
+                  }`}
                 >
                   <Icon size={18} />
                   {label}
@@ -312,7 +292,9 @@ const OverviewTab = ({ venue, previewImages }) => (
             <Users size={24} className="text-blue-400" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-white">{venue.seating || "0"}</p>
+            <p className="text-2xl font-bold text-white">
+              {venue.seating || "0"}
+            </p>
             <p className="text-gray-400">Seating Capacity</p>
           </div>
         </div>
@@ -324,7 +306,9 @@ const OverviewTab = ({ venue, previewImages }) => (
             <MapPin size={24} className="text-green-400" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-white capitalize">{venue.city || "—"}</p>
+            <p className="text-2xl font-bold text-white capitalize">
+              {venue.city || "—"}
+            </p>
             <p className="text-gray-400">Location</p>
           </div>
         </div>
@@ -336,7 +320,9 @@ const OverviewTab = ({ venue, previewImages }) => (
             <Clock size={24} className="text-yellow-400" />
           </div>
           <div>
-            <p className="text-lg font-bold text-white truncate">{venue.openHours || "—"}</p>
+            <p className="text-lg font-bold text-white truncate">
+              {venue.openHours || "—"}
+            </p>
             <p className="text-gray-400">Open Hours</p>
           </div>
         </div>
@@ -425,7 +411,9 @@ const OverviewTab = ({ venue, previewImages }) => (
           <div className="text-center py-12 bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-600">
             <ImageIcon size={48} className="text-gray-500 mx-auto mb-4" />
             <p className="text-gray-400 text-lg mb-2">No photos uploaded yet</p>
-            <p className="text-gray-500 text-sm">Add photos in the Edit Profile section</p>
+            <p className="text-gray-500 text-sm">
+              Add photos in the Edit Profile section
+            </p>
           </div>
         )}
       </div>
@@ -444,7 +432,7 @@ const EditProfileTab = ({
   handleSave,
   saving,
 }) => (
-  <div className="animate-fadeIn max-w-4xl mx-auto">
+  <div className="">
     <div className="grid lg:grid-cols-3 gap-8">
       {/* Main Form */}
       <div className="lg:col-span-2 space-y-6">
@@ -517,13 +505,18 @@ const EditProfileTab = ({
             Photos ({previewImages.length}/5)
           </h3>
 
-          <label className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-xl transition ${previewImages.length >= 5
-            ? 'border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed'
-            : 'border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20'
-            }`}>
+          <label
+            className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-xl transition ${
+              previewImages.length >= 5
+                ? "border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed"
+                : "border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20"
+            }`}
+          >
             <ImageIcon size={32} />
             <span className="text-sm font-medium text-center">
-              {previewImages.length >= 5 ? 'Maximum Reached' : 'Upload Venue Photos'}
+              {previewImages.length >= 5
+                ? "Maximum Reached"
+                : "Upload Venue Photos"}
             </span>
             <span className="text-xs text-gray-400 text-center">
               Max 5 photos • JPG, PNG
@@ -596,18 +589,19 @@ const EditProfileTab = ({
 
 /* ============== Enhanced Add Show Tab ============== */
 const AddShowTab = ({ newShow, setNewShow, handleAddShow }) => (
-  <div className="animate-fadeIn max-w-2xl mx-auto">
+  <div className="">
     <div className="bg-gray-900 rounded-2xl p-8 border border-gray-700">
       <div className="text-center mb-8">
         <div className="w-16 h-16 bg-yellow-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <Music size={32} className="text-black" />
         </div>
         <h2 className="text-2xl font-bold text-white mb-2">Add New Show</h2>
-        <p className="text-gray-400">Schedule a live performance at your venue</p>
+        <p className="text-gray-400">
+          Schedule a live performance at your venue
+        </p>
       </div>
 
       <form onSubmit={handleAddShow} className="space-y-6">
-
         {/* ARTIST */}
         <Input
           label="Artist / Band Name *"
@@ -648,7 +642,9 @@ const AddShowTab = ({ newShow, setNewShow, handleAddShow }) => (
           <input
             type="file"
             accept="image/*"
-            onChange={(e) => setNewShow({ ...newShow, image: e.target.files[0] })}
+            onChange={(e) =>
+              setNewShow({ ...newShow, image: e.target.files[0] })
+            }
             className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400"
             required
           />
@@ -664,9 +660,7 @@ const AddShowTab = ({ newShow, setNewShow, handleAddShow }) => (
             Add Show
           </button>
         </div>
-
       </form>
-
     </div>
   </div>
 );
@@ -674,9 +668,7 @@ const AddShowTab = ({ newShow, setNewShow, handleAddShow }) => (
 /* ============== Enhanced Reusable Components ============== */
 const InfoCard = ({ icon, label, value }) => (
   <div className="flex items-start gap-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
-    <div className="flex-shrink-0 mt-1">
-      {icon}
-    </div>
+    <div className="flex-shrink-0 mt-1">{icon}</div>
     <div className="flex-1">
       <h4 className="text-sm font-medium text-gray-400 mb-1">{label}</h4>
       <p className="text-white font-semibold">{value || "Not specified"}</p>
@@ -684,7 +676,15 @@ const InfoCard = ({ icon, label, value }) => (
   </div>
 );
 
-const Input = ({ label, name, value, onChange, type = "text", icon, placeholder }) => (
+const Input = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  icon,
+  placeholder,
+}) => (
   <div>
     <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
       {icon}
@@ -733,7 +733,9 @@ const Select = ({ label, name, value, options, onChange, icon }) => (
     >
       <option value="">Select a city</option>
       {options.map((opt) => (
-        <option key={opt} value={opt}>{opt}</option>
+        <option key={opt} value={opt}>
+          {opt}
+        </option>
       ))}
     </select>
   </div>

@@ -6,9 +6,25 @@ import NewsDetailModal from "@/components/modules/dashboard/news/NewsDetailModal
 import NewsTable from "@/components/modules/dashboard/news/NewsTable";
 import StatCard from "@/components/modules/dashboard/news/StatCard";
 import axios from "axios";
-import { FileText, Newspaper, Power, RefreshCw, TrendingUp } from "lucide-react";
+import {
+  FileText,
+  Newspaper,
+  Power,
+  RefreshCw,
+  TrendingUp,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+
+// Function to get cookie value by name
+const getCookie = (name) => {
+  if (typeof document === "undefined") return null;
+
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return null;
+};
 
 const NewsManagement = () => {
   const [newsList, setNewsList] = useState([]);
@@ -30,7 +46,7 @@ const NewsManagement = () => {
     message: "",
     confirmText: "",
     type: "warning",
-    onConfirm: null
+    onConfirm: null,
   });
 
   const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content?type=news`;
@@ -44,26 +60,30 @@ const NewsManagement = () => {
       type,
       onConfirm: () => {
         onConfirm();
-        setConfirmationModal(prev => ({ ...prev, isOpen: false }));
-      }
+        setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
+      },
     });
   };
 
   const closeConfirmation = () => {
-    setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+    setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
   };
 
   const fetchNews = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
+      if (!token) {
+        toast.error("Authentication token not found");
+        return;
+      }
 
       const params = new URLSearchParams({
         page,
         limit: 10,
         ...(search && { search }),
         ...(statusFilter !== "all" && { status: statusFilter }),
-        ...(locationFilter && { location: locationFilter })
+        ...(locationFilter && { location: locationFilter }),
       });
 
       const { data } = await axios.get(`${API_URL}&${params.toString()}`, {
@@ -75,7 +95,7 @@ const NewsManagement = () => {
       // toast.success('News loaded successfully');
     } catch (err) {
       console.error("Fetch news error:", err);
-      toast.error('Failed to load news');
+      toast.error("Failed to load news");
     } finally {
       setLoading(false);
     }
@@ -90,15 +110,21 @@ const NewsManagement = () => {
 
     showConfirmation(
       `${isActive ? "Deactivate" : "Activate"} News`,
-      `Are you sure you want to ${action} "${title}"? ${isActive
-        ? "This news will no longer be visible to users."
-        : "This news will become visible to users."
+      `Are you sure you want to ${action} "${title}"? ${
+        isActive
+          ? "This news will no longer be visible to users."
+          : "This news will become visible to users."
       }`,
       isActive ? "Deactivate" : "Activate",
       isActive ? "warning" : "success",
       async () => {
         try {
-          const token = localStorage.getItem("token");
+          const token = getCookie("token");
+          if (!token) {
+            toast.error("Authentication token not found");
+            return;
+          }
+
           await axios.put(
             `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/admin/${id}/toggle`,
             {},
@@ -106,7 +132,9 @@ const NewsManagement = () => {
           );
           fetchNews();
           setActionMenu(null);
-          toast.success(`News ${!isActive ? 'activated' : 'deactivated'} successfully!`);
+          toast.success(
+            `News ${!isActive ? "activated" : "deactivated"} successfully!`
+          );
         } catch (err) {
           console.error("Toggle news error:", err);
           toast.error("Failed to update news status");
@@ -122,7 +150,7 @@ const NewsManagement = () => {
       description: newsItem.description || "",
       location: newsItem.location || "",
       credit: newsItem.credit || "",
-      isActive: newsItem.isActive || false
+      isActive: newsItem.isActive || false,
     });
     setActionMenu(null);
   };
@@ -130,15 +158,20 @@ const NewsManagement = () => {
   const handleSave = async (id) => {
     setSaveLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
+      if (!token) {
+        toast.error("Authentication token not found");
+        return;
+      }
+
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/admin/${id}`,
         formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+            "Content-Type": "application/json",
+          },
         }
       );
 
@@ -153,7 +186,7 @@ const NewsManagement = () => {
       if (err.response?.data?.message) {
         toast.error(`Error: ${err.response.data.message}`);
       } else {
-        toast.error('Error updating news');
+        toast.error("Error updating news");
       }
     } finally {
       setSaveLoading(false);
@@ -166,9 +199,9 @@ const NewsManagement = () => {
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -180,7 +213,12 @@ const NewsManagement = () => {
       "danger",
       async () => {
         try {
-          const token = localStorage.getItem("token");
+          const token = getCookie("token");
+          if (!token) {
+            toast.error("Authentication token not found");
+            return;
+          }
+
           await axios.delete(
             `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/admin/${id}`,
             {
@@ -215,12 +253,14 @@ const NewsManagement = () => {
     fetchNews();
   }, [page, statusFilter, locationFilter]);
 
-  const locations = [...new Set(newsList.map(item => item.location).filter(Boolean))];
+  const locations = [
+    ...new Set(newsList.map((item) => item.location).filter(Boolean)),
+  ];
 
   const stats = {
     total: newsList.length,
-    active: newsList.filter(n => n.isActive).length,
-    inactive: newsList.filter(n => !n.isActive).length,
+    active: newsList.filter((n) => n.isActive).length,
+    inactive: newsList.filter((n) => !n.isActive).length,
     thisMonth: Math.floor(newsList.length * 0.25),
   };
 
@@ -249,7 +289,8 @@ const NewsManagement = () => {
                 News Management
               </h1>
               <p className="text-gray-600 mt-2">
-                Manage news articles, publish content, and engage with your audience
+                Manage news articles, publish content, and engage with your
+                audience
               </p>
             </div>
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">

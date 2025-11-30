@@ -15,8 +15,18 @@ export default function CalendarBoard() {
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
   const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
@@ -32,7 +42,7 @@ export default function CalendarBoard() {
         const data = await res.json();
 
         if (res.ok && data.success) {
-          const formattedEvents = data.data.events.map(event => ({
+          const formattedEvents = data.data.events.map((event) => ({
             id: event.id,
             fullDate: event.date,
             date: new Date(event.date).getUTCDate(),
@@ -42,10 +52,12 @@ export default function CalendarBoard() {
             venue: event.venue,
             desc: `Performance by ${event.title} at ${event.venue}`,
             tag: "Show",
-            banner: "https://images.unsplash.com/photo-1515169067865-5387ec356754?auto=format&fit=crop&w=900&q=60",
+            image: event.image?.url || event.image || fallback,
           }));
 
-          formattedEvents.sort((a, b) => new Date(a.fullDate) - new Date(b.fullDate));
+          formattedEvents.sort(
+            (a, b) => new Date(a.fullDate) - new Date(b.fullDate)
+          );
           setEvents(formattedEvents);
         } else {
           console.error("API Error:", data.message);
@@ -63,8 +75,16 @@ export default function CalendarBoard() {
   }, [selectedCity, API_BASE]);
 
   // calendar helpers
-  const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-  const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+  const firstDay = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth(),
+    1
+  );
+  const lastDay = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth() + 1,
+    0
+  );
   const startDay = firstDay.getDay();
   const daysInMonth = lastDay.getDate();
 
@@ -80,16 +100,21 @@ export default function CalendarBoard() {
   };
 
   const handlePrev = () =>
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+    );
   const handleNext = () =>
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+    );
   const handleToday = () => setCurrentDate(new Date());
 
   // Format city name for display
   const formatCityName = (city) => {
-    return city.split(' ').map(word =>
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
+    return city
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   // ---- JSX ----
@@ -111,27 +136,32 @@ export default function CalendarBoard() {
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center gap-2 border border-gray-300 rounded-md px-4 py-2 text-sm text-gray-700 bg-white hover:border-yellow-400 hover:bg-yellow-50 transition"
             >
-              <span className="font-medium">{formatCityName(selectedCity)}</span>
+              <span className="font-medium">
+                {formatCityName(selectedCity)}
+              </span>
               <ChevronDownIcon open={dropdownOpen} />
             </button>
 
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
-                {["mobile", "biloxi", "new orleans", "pensacola"].map((city) => (
-                  <button
-                    key={city}
-                    onClick={() => {
-                      setSelectedCity(city);
-                      setDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 transition ${selectedCity === city
-                      ? "bg-yellow-50 font-semibold text-gray-800"
-                      : "text-gray-600"
+                {["mobile", "biloxi", "new orleans", "pensacola"].map(
+                  (city) => (
+                    <button
+                      key={city}
+                      onClick={() => {
+                        setSelectedCity(city);
+                        setDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 transition ${
+                        selectedCity === city
+                          ? "bg-yellow-50 font-semibold text-gray-800"
+                          : "text-gray-600"
                       }`}
-                  >
-                    {formatCityName(city)}
-                  </button>
-                ))}
+                    >
+                      {formatCityName(city)}
+                    </button>
+                  )
+                )}
               </div>
             )}
           </div>
@@ -162,7 +192,9 @@ export default function CalendarBoard() {
 
           <h3 className="text-lg font-semibold text-gray-800">
             {view === "month" &&
-              `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
+              `${
+                monthNames[currentDate.getMonth()]
+              } ${currentDate.getFullYear()}`}
             {view === "week" && (
               <>
                 {getWeekDates()[0].toLocaleDateString("en-US", {
@@ -178,7 +210,9 @@ export default function CalendarBoard() {
               </>
             )}
             {view === "day" &&
-              `${monthNames[currentDate.getMonth()]} ${currentDate.getDate()}, ${currentDate.getFullYear()}`}
+              `${
+                monthNames[currentDate.getMonth()]
+              } ${currentDate.getDate()}, ${currentDate.getFullYear()}`}
           </h3>
 
           <div className="flex gap-2">
@@ -186,10 +220,11 @@ export default function CalendarBoard() {
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`px-3 py-1 rounded-md border text-sm text-gray-600 capitalize transition ${view === v
-                  ? "bg-yellow-300 border-yellow-400"
-                  : "bg-white border-gray-300 hover:bg-yellow-100"
-                  }`}
+                className={`px-3 py-1 rounded-md border text-sm text-gray-600 capitalize transition ${
+                  view === v
+                    ? "bg-yellow-300 border-yellow-400"
+                    : "bg-white border-gray-300 hover:bg-yellow-100"
+                }`}
               >
                 {v}
               </button>
@@ -242,7 +277,9 @@ export default function CalendarBoard() {
           <div className="text-center py-8 text-gray-500">
             <CalendarDays className="w-12 h-12 mx-auto mb-4 text-gray-300" />
             <p>No events found for {formatCityName(selectedCity)}</p>
-            <p className="text-sm">Try selecting a different city or check back later.</p>
+            <p className="text-sm">
+              Try selecting a different city or check back later.
+            </p>
           </div>
         )}
 
@@ -263,7 +300,14 @@ export default function CalendarBoard() {
 
 /* ------------ Sub-components ------------ */
 
-const MonthView = ({ weekDays, startDay, daysInMonth, events, currentDate, onSelect }) => (
+const MonthView = ({
+  weekDays,
+  startDay,
+  daysInMonth,
+  events,
+  currentDate,
+  onSelect,
+}) => (
   <div className="grid grid-cols-7 border border-gray-200 rounded-xl overflow-hidden text-sm">
     {weekDays.map((d) => (
       <div
@@ -292,8 +336,9 @@ const MonthView = ({ weekDays, startDay, daysInMonth, events, currentDate, onSel
       return (
         <div
           key={day}
-          className={`relative border h-24 p-2 ${dayEvents.length > 0 ? "cursor-pointer hover:bg-yellow-50" : ""} transition ${dayEvents.length > 0 ? "bg-yellow-50" : "bg-white"
-            }`}
+          className={`relative border h-24 p-2 ${
+            dayEvents.length > 0 ? "cursor-pointer hover:bg-yellow-50" : ""
+          } transition ${dayEvents.length > 0 ? "bg-yellow-50" : "bg-white"}`}
         >
           <span className="absolute top-1 right-2 text-xs text-gray-500 font-medium">
             {day}
@@ -307,11 +352,10 @@ const MonthView = ({ weekDays, startDay, daysInMonth, events, currentDate, onSel
                 backgroundColor: event.color,
                 color: "white",
                 borderLeft: "3px solid rgba(0,0,0,0.25)",
-                bottom: `${(index * 28) + 2}px`,
+                bottom: `${index * 28 + 2}px`,
                 fontSize: "11px",
-                filter: "brightness(0.95)"
+                filter: "brightness(0.95)",
               }}
-
             >
               • {event.title}
             </div>
@@ -329,7 +373,10 @@ const WeekView = ({ weekDays, hours, events, onSelect }) => (
         <tr>
           <th className="border p-2 text-left w-24">Time</th>
           {weekDays.map((d, i) => (
-            <th key={i} className="border p-2 text-center font-medium text-gray-600">
+            <th
+              key={i}
+              className="border p-2 text-center font-medium text-gray-600"
+            >
               {d.toLocaleDateString("en-US", {
                 weekday: "short",
                 month: "numeric",
@@ -354,16 +401,13 @@ const WeekView = ({ weekDays, hours, events, onSelect }) => (
               });
 
               // Filter events for this specific hour
-              const hourEvents = dateEvents.filter(event => {
-                const eventHour = event.time.split(':')[0];
-                return eventHour === h.split(':')[0];
+              const hourEvents = dateEvents.filter((event) => {
+                const eventHour = event.time.split(":")[0];
+                return eventHour === h.split(":")[0];
               });
 
               return (
-                <td
-                  key={i}
-                  className="border border-gray-200 h-8 relative p-0"
-                >
+                <td key={i} className="border border-gray-200 h-8 relative p-0">
                   {hourEvents.map((event, index) => (
                     <div
                       key={event.id}
@@ -374,8 +418,7 @@ const WeekView = ({ weekDays, hours, events, onSelect }) => (
                         color: "white",
                         borderLeft: "2px solid rgba(0,0,0,0.25)",
                         top: `${index * 20}px`,
-                        filter: "brightness(0.95)"
-
+                        filter: "brightness(0.95)",
                       }}
                     >
                       {event.title}
@@ -419,9 +462,9 @@ const DayView = ({ date, hours, events, onSelect }) => {
         </thead>
         <tbody>
           {hours.map((h) => {
-            const hourEvents = dayEvents.filter(event => {
-              const eventHour = event.time.split(':')[0];
-              return eventHour === h.split(':')[0];
+            const hourEvents = dayEvents.filter((event) => {
+              const eventHour = event.time.split(":")[0];
+              return eventHour === h.split(":")[0];
             });
 
             return (
@@ -438,11 +481,13 @@ const DayView = ({ date, hours, events, onSelect }) => {
                         color: "white",
                         borderLeft: "3px solid rgba(0,0,0,0.25)",
                         minHeight: "40px",
-                        filter: "brightness(0.92)"
+                        filter: "brightness(0.92)",
                       }}
                     >
                       <div className="font-semibold">{event.title}</div>
-                      <div className="text-xs opacity-75">{event.time} • {event.venue}</div>
+                      <div className="text-xs opacity-75">
+                        {event.time} • {event.venue}
+                      </div>
                     </div>
                   ))}
                 </td>
@@ -469,7 +514,7 @@ const EventModal = ({ event, city, monthNames, currentDate, onClose }) => {
         </button>
         <div className="w-full h-52 md:h-64 bg-gray-200 overflow-hidden">
           <Image
-            src={event.banner}
+            src={event.image}
             width={800}
             height={400}
             alt="Event Banner"
@@ -480,13 +525,16 @@ const EventModal = ({ event, city, monthNames, currentDate, onClose }) => {
           <h2 className="text-2xl font-bold text-gray-900">{event.title}</h2>
           <p className="text-gray-600 text-sm">
             {eventDate.toLocaleDateString("en-US", {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric'
-            })} • {event.time} • {city.split(' ').map(word =>
-              word.charAt(0).toUpperCase() + word.slice(1)
-            ).join(' ')}
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })}{" "}
+            • {event.time} •{" "}
+            {city
+              .split(" ")
+              .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(" ")}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-sm text-gray-700">
             <div className="flex items-center gap-2">
@@ -503,7 +551,7 @@ const EventModal = ({ event, city, monthNames, currentDate, onClose }) => {
             style={{
               backgroundColor: `${event.color}20`,
               color: event.color,
-              border: `1px solid ${event.color}`
+              border: `1px solid ${event.color}`,
             }}
           >
             {event.tag}
@@ -527,12 +575,18 @@ const EventModal = ({ event, city, monthNames, currentDate, onClose }) => {
 const ChevronDownIcon = ({ open }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    className={`w-4 h-4 ml-1 transform transition-transform ${open ? "rotate-180" : ""
-      }`}
+    className={`w-4 h-4 ml-1 transform transition-transform ${
+      open ? "rotate-180" : ""
+    }`}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"
   >
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+      d="M19 9l-7 7-7-7"
+    />
   </svg>
 );

@@ -11,6 +11,16 @@ import { Mic2, Plus, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
+// Function to get cookie value by name
+const getCookie = (name) => {
+  if (typeof document === "undefined") return null;
+
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return null;
+};
+
 export default function WaveManagementPage() {
   const [token, setToken] = useState(null);
   const [waves, setWaves] = useState([]);
@@ -33,14 +43,14 @@ export default function WaveManagementPage() {
     message: "",
     confirmText: "",
     type: "warning",
-    onConfirm: null
+    onConfirm: null,
   });
 
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setToken(localStorage.getItem("token"));
+      setToken(getCookie("token"));
     }
   }, []);
 
@@ -53,13 +63,13 @@ export default function WaveManagementPage() {
       type,
       onConfirm: () => {
         onConfirm();
-        setConfirmationModal(prev => ({ ...prev, isOpen: false }));
-      }
+        setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
+      },
     });
   };
 
   const closeConfirmation = () => {
-    setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+    setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
   };
 
   // Fetch all waves
@@ -85,9 +95,15 @@ export default function WaveManagementPage() {
     setSaveLoading(true);
 
     try {
+      const currentToken = token || getCookie("token");
+      if (!currentToken) {
+        toast.error("Authentication token not found");
+        return;
+      }
+
       const headers = {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${currentToken}`,
+        "Content-Type": "application/json",
       };
 
       let response;
@@ -98,7 +114,9 @@ export default function WaveManagementPage() {
           { headers }
         );
       } else {
-        response = await axios.post(`${API_BASE}/api/waves`, formData, { headers });
+        response = await axios.post(`${API_BASE}/api/waves`, formData, {
+          headers,
+        });
       }
 
       if (response.data.success) {
@@ -141,7 +159,13 @@ export default function WaveManagementPage() {
       "danger",
       async () => {
         try {
-          const headers = { Authorization: `Bearer ${token}` };
+          const currentToken = token || getCookie("token");
+          if (!currentToken) {
+            toast.error("Authentication token not found");
+            return;
+          }
+
+          const headers = { Authorization: `Bearer ${currentToken}` };
           await axios.delete(`${API_BASE}/api/waves/${id}`, { headers });
           fetchWaves();
           setActionMenu(null);
@@ -177,15 +201,15 @@ export default function WaveManagementPage() {
 
   // Handle input change
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   // Handle view YouTube video
   const handleView = (youtubeUrl) => {
-    window.open(youtubeUrl, '_blank');
+    window.open(youtubeUrl, "_blank");
   };
 
   // Handle action menu toggle
@@ -194,7 +218,7 @@ export default function WaveManagementPage() {
   };
 
   // Filtered waves based on search
-  const filteredWaves = waves.filter(wave =>
+  const filteredWaves = waves.filter((wave) =>
     wave.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 

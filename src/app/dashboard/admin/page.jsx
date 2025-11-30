@@ -11,7 +11,7 @@ import {
   Mail,
   MapPin,
   Music,
-  Users
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -35,10 +35,27 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+
+      const getCookie = (name) => {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(";").shift();
+      };
+
+      const token = getCookie("token");
+
+      if (!token) {
+        toast.error("No authentication token found");
+        window.location.href = "/signin";
+        return;
+      }
 
       const res = await fetch(`${API_BASE}/api/admin/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -50,8 +67,10 @@ export default function AdminDashboard() {
         setUserStats(data.data.userStats || []);
       } else if (res.status === 401) {
         toast.error("Session expired. Please log in again.");
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        // Clear cookies and redirect
+        document.cookie = "token=; path=/; max-age=0";
+        document.cookie = "role=; path=/; max-age=0";
+        document.cookie = "user=; path=/; max-age=0";
         window.location.href = "/signin";
       } else {
         toast.error(data.message || "Failed to load dashboard data.");
@@ -64,34 +83,10 @@ export default function AdminDashboard() {
     }
   };
 
-  if (!user)
+  if (loading)
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-4">
-        <div className="text-center max-w-sm mx-auto">
-          {/* Icon */}
-          <div className="mb-6">
-            <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-red-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-            </div>
-          </div>
-
-          {/* Title */}
-          <h2 className="text-xl font-semibold text-white mb-3">
-            Authentication Required
-          </h2>
-        </div>
+      <div className="flex items-center justify-center min-h-screen text-yellow-400">
+        Loading...
       </div>
     );
 
@@ -102,7 +97,9 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Dashboard Overview
+            </h1>
             <p className="text-gray-600 mt-2">
               Welcome back! Here's what's happening with your platform today.
             </p>
@@ -148,8 +145,13 @@ export default function AdminDashboard() {
             {/* Recent Users */}
             <div className="bg-white rounded-xl shadow-sm border-gray-300 border p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Recent Users</h2>
-                <Link href="/dashboard/admin/users" className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Recent Users
+                </h2>
+                <Link
+                  href="/dashboard/admin/users"
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                >
                   View All
                 </Link>
               </div>
@@ -161,7 +163,9 @@ export default function AdminDashboard() {
           <div className="space-y-8">
             {/* User Distribution */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">User Distribution</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                User Distribution
+              </h2>
               <UserDistributionChart userStats={userStats} />
             </div>
 
@@ -198,10 +202,14 @@ const StatCard = ({ icon: Icon, label, value, change, color }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
-        <div className={`p-3 rounded-xl bg-gradient-to-r ${colorClasses[color]}`}>
+        <div
+          className={`p-3 rounded-xl bg-gradient-to-r ${colorClasses[color]}`}
+        >
           <Icon className="w-6 h-6 text-white" />
         </div>
-        <div className={`flex items-center space-x-1 text-sm font-medium ${changeColor}`}>
+        <div
+          className={`flex items-center space-x-1 text-sm font-medium ${changeColor}`}
+        >
           <span>{changeIcon}</span>
           <span>{Math.abs(change)}%</span>
         </div>
@@ -224,7 +232,9 @@ const QuickActionCard = ({ action }) => {
 
   return (
     <button className="flex items-center space-x-4 p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors group w-full text-left">
-      <div className={`p-3 rounded-lg ${colorClasses[color]} group-hover:scale-110 transition-transform`}>
+      <div
+        className={`p-3 rounded-lg ${colorClasses[color]} group-hover:scale-110 transition-transform`}
+      >
         <Icon className="w-6 h-6" />
       </div>
       <div className="flex-1">
@@ -257,10 +267,18 @@ const RecentUsersTable = ({ users }) => {
       <table className="w-full">
         <thead>
           <tr className="border-b border-gray-200">
-            <th className="text-left py-3 text-sm font-medium text-gray-600">User</th>
-            <th className="text-left py-3 text-sm font-medium text-gray-600">Type</th>
-            <th className="text-left py-3 text-sm font-medium text-gray-600">Status</th>
-            <th className="text-left py-3 text-sm font-medium text-gray-600">Action</th>
+            <th className="text-left py-3 text-sm font-medium text-gray-600">
+              User
+            </th>
+            <th className="text-left py-3 text-sm font-medium text-gray-600">
+              Type
+            </th>
+            <th className="text-left py-3 text-sm font-medium text-gray-600">
+              Status
+            </th>
+            <th className="text-left py-3 text-sm font-medium text-gray-600">
+              Action
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
@@ -278,11 +296,17 @@ const RecentUsersTable = ({ users }) => {
                 </div>
               </td>
               <td className="py-3">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${user.userType === 'admin' ? 'bg-red-100 text-red-800' :
-                  user.userType === 'artist' ? 'bg-purple-100 text-purple-800' :
-                    user.userType === 'venue' ? 'bg-green-100 text-green-800' :
-                      'bg-blue-100 text-blue-800'
-                  }`}>
+                <span
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                    user.userType === "admin"
+                      ? "bg-red-100 text-red-800"
+                      : user.userType === "artist"
+                      ? "bg-purple-100 text-purple-800"
+                      : user.userType === "venue"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-blue-100 text-blue-800"
+                  }`}
+                >
                   {user.userType}
                 </span>
               </td>
@@ -300,7 +324,10 @@ const RecentUsersTable = ({ users }) => {
                 )}
               </td>
               <td className="py-3">
-                <Link href="/dashboard/admin/users" className="rounded-2xl bg-gray-100 px-3 py-1 text-yellow-500 hover:text-yellow-600 text-sm">
+                <Link
+                  href="/dashboard/admin/users"
+                  className="rounded-2xl bg-gray-100 px-3 py-1 text-yellow-500 hover:text-yellow-600 text-sm"
+                >
                   Manage
                 </Link>
               </td>
@@ -319,13 +346,19 @@ const UserDistributionChart = ({ userStats }) => {
     <div className="space-y-4">
       {userStats.map((stat, index) => {
         const percentage = total > 0 ? (stat.count / total) * 100 : 0;
-        const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500'];
+        const colors = [
+          "bg-blue-500",
+          "bg-green-500",
+          "bg-purple-500",
+          "bg-orange-500",
+          "bg-pink-500",
+        ];
 
         return (
           <div key={stat._id} className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="font-medium text-gray-700 capitalize">
-                {stat._id === 'fan' ? 'Fans' : stat._id}s
+                {stat._id === "fan" ? "Fans" : stat._id}s
               </span>
               <span className="text-gray-500">
                 {stat.count} ({percentage.toFixed(1)}%)
@@ -333,7 +366,9 @@ const UserDistributionChart = ({ userStats }) => {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className={`h-2 rounded-full ${colors[index % colors.length]} transition-all duration-500`}
+                className={`h-2 rounded-full ${
+                  colors[index % colors.length]
+                } transition-all duration-500`}
                 style={{ width: `${percentage}%` }}
               ></div>
             </div>
@@ -364,20 +399,23 @@ const UpcomingEventsList = ({ events }) => {
   return (
     <div className="space-y-4">
       {events.slice(0, 4).map((event) => (
-        <div key={event._id} className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-200 transition-colors">
+        <div
+          key={event._id}
+          className="p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-200 transition-colors"
+        >
           <div className="flex justify-between items-start mb-2">
             <h4 className="font-semibold text-gray-900 line-clamp-1">
               {event.artistBandName || event.title}
             </h4>
             <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full whitespace-nowrap">
-              {event.date ? new Date(event.date).toLocaleDateString() : 'TBA'}
+              {event.date ? new Date(event.date).toLocaleDateString() : "TBA"}
             </span>
           </div>
 
           <div className="flex items-center space-x-4 text-sm text-gray-600">
             <div className="flex items-center space-x-1">
               <Clock className="w-4 h-4" />
-              <span>{event.time || 'TBA'}</span>
+              <span>{event.time || "TBA"}</span>
             </div>
             {event.venue && (
               <div className="flex items-center space-x-1">
@@ -394,9 +432,9 @@ const UpcomingEventsList = ({ events }) => {
 
 const StatusItem = ({ label, status }) => {
   const statusConfig = {
-    operational: { color: 'bg-green-500', text: 'Operational' },
-    warning: { color: 'bg-yellow-500', text: 'Degraded' },
-    critical: { color: 'bg-red-500', text: 'Outage' },
+    operational: { color: "bg-green-500", text: "Operational" },
+    warning: { color: "bg-yellow-500", text: "Degraded" },
+    critical: { color: "bg-red-500", text: "Outage" },
   };
 
   const config = statusConfig[status] || statusConfig.operational;

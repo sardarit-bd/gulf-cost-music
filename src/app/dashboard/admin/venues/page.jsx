@@ -5,11 +5,27 @@ import Filters from "@/components/modules/dashboard/venues/Filters";
 import StatCard from "@/components/modules/dashboard/venues/StatCard";
 import VenueDetailModal from "@/components/modules/dashboard/venues/VenueDetailModal";
 import VenueTable from "@/components/modules/dashboard/venues/VenueTable";
-// import VenueTable from "@/components/modules/dashboard/venues/VenueTable";
 import axios from "axios";
-import { Building2, CheckCircle, Power, RefreshCw, TrendingUp, Users } from "lucide-react";
+import {
+  Building2,
+  CheckCircle,
+  Power,
+  RefreshCw,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+
+// Function to get cookie value by name
+const getCookie = (name) => {
+  if (typeof document === "undefined") return null;
+
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return null;
+};
 
 const VenueManagement = () => {
   const [venues, setVenues] = useState([]);
@@ -31,7 +47,7 @@ const VenueManagement = () => {
     message: "",
     confirmText: "",
     type: "warning",
-    onConfirm: null
+    onConfirm: null,
   });
 
   const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content?type=venues`;
@@ -50,26 +66,30 @@ const VenueManagement = () => {
       type,
       onConfirm: () => {
         onConfirm();
-        setConfirmationModal(prev => ({ ...prev, isOpen: false }));
-      }
+        setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
+      },
     });
   };
 
   const closeConfirmation = () => {
-    setConfirmationModal(prev => ({ ...prev, isOpen: false }));
+    setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
   };
 
   const fetchVenues = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
+      if (!token) {
+        showToast("Authentication token not found", "error");
+        return;
+      }
 
       const params = new URLSearchParams({
         page,
         limit: 10,
         ...(search && { search }),
         ...(statusFilter !== "all" && { status: statusFilter }),
-        ...(cityFilter && { city: cityFilter })
+        ...(cityFilter && { city: cityFilter }),
       });
 
       const { data } = await axios.get(`${API_URL}&${params.toString()}`, {
@@ -95,15 +115,21 @@ const VenueManagement = () => {
 
     showConfirmation(
       `${currentStatus ? "Deactivate" : "Activate"} Venue`,
-      `Are you sure you want to ${action} "${venueName}"? ${currentStatus
-        ? "This venue will no longer be visible to users."
-        : "This venue will become visible to users."
+      `Are you sure you want to ${action} "${venueName}"? ${
+        currentStatus
+          ? "This venue will no longer be visible to users."
+          : "This venue will become visible to users."
       }`,
       currentStatus ? "Deactivate" : "Activate",
       currentStatus ? "warning" : "success",
       async () => {
         try {
-          const token = localStorage.getItem("token");
+          const token = getCookie("token");
+          if (!token) {
+            showToast("Authentication token not found", "error");
+            return;
+          }
+
           await axios.put(
             `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/admin/${id}`,
             { isActive: !currentStatus },
@@ -111,7 +137,11 @@ const VenueManagement = () => {
           );
           fetchVenues();
           setActionMenu(null);
-          showToast(`Venue ${!currentStatus ? 'activated' : 'deactivated'} successfully!`);
+          showToast(
+            `Venue ${
+              !currentStatus ? "activated" : "deactivated"
+            } successfully!`
+          );
         } catch (err) {
           console.error("Toggle venue error:", err);
           showToast("Failed to update venue status", "error");
@@ -132,7 +162,7 @@ const VenueManagement = () => {
       openDays: venue.openDays || "",
       phone: venue.phone || "",
       website: venue.website || "",
-      isActive: venue.isActive || false
+      isActive: venue.isActive || false,
     });
     setActionMenu(null);
   };
@@ -140,15 +170,20 @@ const VenueManagement = () => {
   const handleSave = async (id) => {
     setSaveLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
+      if (!token) {
+        showToast("Authentication token not found", "error");
+        return;
+      }
+
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/admin/${id}`,
         formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+            "Content-Type": "application/json",
+          },
         }
       );
 
@@ -160,7 +195,10 @@ const VenueManagement = () => {
       }
     } catch (err) {
       console.error("Update venue error:", err);
-      showToast(err.response?.data?.message || "Error updating venue profile", "error");
+      showToast(
+        err.response?.data?.message || "Error updating venue profile",
+        "error"
+      );
     } finally {
       setSaveLoading(false);
     }
@@ -172,9 +210,8 @@ const VenueManagement = () => {
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
-
 
   const verifyVenue = async (id, venueName) => {
     showConfirmation(
@@ -184,26 +221,31 @@ const VenueManagement = () => {
       "success",
       async () => {
         try {
-          const token = localStorage.getItem("token");
+          const token = getCookie("token");
+          if (!token) {
+            showToast("Authentication token not found", "error");
+            return;
+          }
 
           const response = await axios.put(
             `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/admin/${id}`,
             {
               isActive: true,
-
             },
             {
               headers: {
                 Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              }
+                "Content-Type": "application/json",
+              },
             }
           );
 
           if (response.data.success) {
             fetchVenues();
             setActionMenu(null);
-            showToast(`Venue "${venueName}" verified successfully with color ${response.data.data.venue.colorCode}!`);
+            showToast(
+              `Venue "${venueName}" verified successfully with color ${response.data.data.venue.colorCode}!`
+            );
           }
         } catch (err) {
           console.error("Verify venue error:", err);
@@ -221,7 +263,12 @@ const VenueManagement = () => {
       "danger",
       async () => {
         try {
-          const token = localStorage.getItem("token");
+          const token = getCookie("token");
+          if (!token) {
+            showToast("Authentication token not found", "error");
+            return;
+          }
+
           await axios.delete(
             `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/admin/${id}`,
             { headers: { Authorization: `Bearer ${token}` } }
@@ -253,13 +300,15 @@ const VenueManagement = () => {
     fetchVenues();
   }, [page, statusFilter, cityFilter]);
 
-  const cities = [...new Set(venues.map(venue => venue.city).filter(Boolean))];
+  const cities = [
+    ...new Set(venues.map((venue) => venue.city).filter(Boolean)),
+  ];
 
   const stats = {
     total: venues.length,
-    active: venues.filter(v => v.isActive).length,
-    inactive: venues.filter(v => !v.isActive).length,
-    verified: venues.filter(v => v.verifiedOrder > 0).length,
+    active: venues.filter((v) => v.isActive).length,
+    inactive: venues.filter((v) => !v.isActive).length,
+    verified: venues.filter((v) => v.verifiedOrder > 0).length,
     thisMonth: Math.floor(venues.length * 0.18),
   };
 
@@ -290,7 +339,8 @@ const VenueManagement = () => {
                 Venue Management
               </h1>
               <p className="text-gray-600 mt-2">
-                Manage venue profiles, activate/deactivate accounts, and monitor venue activities
+                Manage venue profiles, activate/deactivate accounts, and monitor
+                venue activities
               </p>
             </div>
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
@@ -306,11 +356,41 @@ const VenueManagement = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-            <StatCard icon={Building2} label="Total Venues" value={stats.total} change={8} color="blue" />
-            <StatCard icon={Users} label="Active Venues" value={stats.active} change={12} color="green" />
-            <StatCard icon={CheckCircle} label="Verified Venues" value={stats.verified} change={15} color="purple" />
-            <StatCard icon={Power} label="Inactive Venues" value={stats.inactive} change={-4} color="orange" />
-            <StatCard icon={TrendingUp} label="This Month" value={stats.thisMonth} change={18} color="cyan" />
+            <StatCard
+              icon={Building2}
+              label="Total Venues"
+              value={stats.total}
+              change={8}
+              color="blue"
+            />
+            <StatCard
+              icon={Users}
+              label="Active Venues"
+              value={stats.active}
+              change={12}
+              color="green"
+            />
+            <StatCard
+              icon={CheckCircle}
+              label="Verified Venues"
+              value={stats.verified}
+              change={15}
+              color="purple"
+            />
+            <StatCard
+              icon={Power}
+              label="Inactive Venues"
+              value={stats.inactive}
+              change={-4}
+              color="orange"
+            />
+            <StatCard
+              icon={TrendingUp}
+              label="This Month"
+              value={stats.thisMonth}
+              change={18}
+              color="cyan"
+            />
           </div>
 
           {/* Filters */}

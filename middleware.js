@@ -1,48 +1,35 @@
 import { NextResponse } from "next/server";
 
 export function middleware(req) {
-    const url = req.nextUrl;
-    const pathname = url.pathname;
+  const url = req.nextUrl;
+  const pathname = url.pathname;
 
-    const token = req.cookies.get("token")?.value;
-    const role = req.cookies.get("role")?.value;
+  const token = req.cookies.get("token")?.value || null;
+  const role = req.cookies.get("role")?.value || null;
+  const user = req.cookies.get("user")?.value || null;
 
-    // Protected routes
-    const protectedRoutes = ["/dashboard"];
+  if (pathname.startsWith("/dashboard") && (!token || !user)) {
+    return NextResponse.redirect(new URL("/signin", req.url));
+  }
 
-    const isProtected = protectedRoutes.some((path) =>
-        pathname.startsWith(path)
-    );
+  // Role-based access
+  const rolePaths = {
+    admin: "/dashboard/admin",
+    artist: "/dashboard/artist",
+    venue: "/dashboard/venue",
+    journalist: "/dashboard/journalist",
+    photographer: "/dashboard/photographer",
+  };
 
-    // If no token → signin
-    if (isProtected && !token) {
-        return NextResponse.redirect(new URL("/signin", req.url));
+  for (const [key, route] of Object.entries(rolePaths)) {
+    if (pathname.startsWith(route) && role !== key) {
+      return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
+  }
 
-    // Role-based checks:
-    if (pathname.startsWith("/dashboard/admin") && role !== "admin") {
-        return NextResponse.redirect(new URL("/unauthorized", req.url));
-    }
-
-    if (pathname.startsWith("/dashboard/artist") && role !== "artist") {
-        return NextResponse.redirect(new URL("/unauthorized", req.url));
-    }
-
-    if (pathname.startsWith("/dashboard/venue") && role !== "venue") {
-        return NextResponse.redirect(new URL("/unauthorized", req.url));
-    }
-
-    if (pathname.startsWith("/dashboard/journalist") && role !== "journalist") {
-        return NextResponse.redirect(new URL("/unauthorized", req.url));
-    }
-
-    if (pathname.startsWith("/dashboard/photographer") && role !== "photographer") {
-        return NextResponse.redirect(new URL("/unauthorized", req.url));
-    }
-
-    return NextResponse.next();
+  return NextResponse.next();
 }
 
 export const config = {
-    matcher: ["/dashboard/:path*"],
+  matcher: ["/dashboard/:path*"],
 };

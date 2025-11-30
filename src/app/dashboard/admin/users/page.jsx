@@ -7,15 +7,45 @@ import StatCard from "@/components/modules/dashboard/users/StatCard";
 import UserDetailModal from "@/components/modules/dashboard/users/UserDetailModal";
 import UserTable from "@/components/modules/dashboard/users/UserTable";
 import axios from "axios";
-import { Building2, CheckCircle, FileText, Music, RefreshCw, Shield, User } from "lucide-react";
+import {
+  Building2,
+  CheckCircle,
+  FileText,
+  Music,
+  RefreshCw,
+  Shield,
+  User,
+} from "lucide-react";
 import { useEffect, useState } from "react";
-// import AdminLayout from "@/components/modules/dashboard/AdminLayout";
-// import StatCard from "@/components/modules/dashboard/users/StatCard";
-// import Filters from "@/components/modules/dashboard/users/Filters";
-// import UserTable from "@/components/modules/dashboard/users/UserTable";
-// import UserDetailModal from "@/components/modules/dashboard/users/UserDetailModal";
-// import PromoteModal from "@/components/modules/dashboard/users/PromoteModal";
-// import DeleteConfirmationModal from "@/components/modules/dashboard/users/DeleteConfirmationModal";
+
+// Function to get cookie value by name
+const getCookie = (name) => {
+  if (typeof document === "undefined") return null;
+
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return null;
+};
+
+// Function to get user data from cookies
+const getUserFromCookies = () => {
+  if (typeof document === "undefined") return null;
+
+  try {
+    const userCookie = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("user="));
+
+    if (userCookie) {
+      const userData = decodeURIComponent(userCookie.split("=")[1]);
+      return JSON.parse(userData);
+    }
+  } catch (error) {
+    console.error("Error parsing user cookie:", error);
+  }
+  return null;
+};
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -49,7 +79,12 @@ const UserManagement = () => {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
+      if (!token) {
+        console.error("Authentication token not found");
+        return;
+      }
+
       const { data } = await axios.get(STATS_URL, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -57,12 +92,18 @@ const UserManagement = () => {
       if (data.success) {
         const dashboardData = data.data;
         const userStats = dashboardData.userStats || [];
-        const artistsCount = userStats.find((stat) => stat._id === "artist")?.count || 0;
-        const venuesCount = userStats.find((stat) => stat._id === "venue")?.count || 0;
-        const adminsCount = userStats.find((stat) => stat._id === "admin")?.count || 0;
-        const journalistsCount = userStats.find((stat) => stat._id === "journalist")?.count || 0;
+        const artistsCount =
+          userStats.find((stat) => stat._id === "artist")?.count || 0;
+        const venuesCount =
+          userStats.find((stat) => stat._id === "venue")?.count || 0;
+        const adminsCount =
+          userStats.find((stat) => stat._id === "admin")?.count || 0;
+        const journalistsCount =
+          userStats.find((stat) => stat._id === "journalist")?.count || 0;
 
-        const totalUsers = dashboardData.stats?.totalUsers || artistsCount + venuesCount + adminsCount + journalistsCount;
+        const totalUsers =
+          dashboardData.stats?.totalUsers ||
+          artistsCount + venuesCount + adminsCount + journalistsCount;
         const verifiedUsersCount = await fetchVerifiedUsersCount();
 
         setStats({
@@ -85,7 +126,12 @@ const UserManagement = () => {
 
   const fetchVerifiedUsersCount = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
+      if (!token) {
+        console.error("Authentication token not found");
+        return 0;
+      }
+
       const { data } = await axios.get(`${USERS_URL}?verified=true&limit=1`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -100,7 +146,12 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
+      if (!token) {
+        console.error("Authentication token not found");
+        return;
+      }
+
       const params = new URLSearchParams({ page, limit: 10 });
       if (search) params.append("search", search);
       if (userType !== "all") params.append("userType", userType);
@@ -133,7 +184,8 @@ const UserManagement = () => {
       artists: users.filter((user) => user.userType === "artist").length,
       venues: users.filter((user) => user.userType === "venue").length,
       admins: users.filter((user) => user.userType === "admin").length,
-      journalists: users.filter((user) => user.userType === "journalist").length,
+      journalists: users.filter((user) => user.userType === "journalist")
+        .length,
       totalAdmins: users.filter((user) => user.userType === "admin").length,
     };
   };
@@ -167,7 +219,12 @@ const UserManagement = () => {
 
   const handleVerify = async (id) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
+      if (!token) {
+        console.error("Authentication token not found");
+        return;
+      }
+
       await axios.put(
         `${USERS_URL}/${id}/verify`,
         {},
@@ -183,7 +240,12 @@ const UserManagement = () => {
 
   const handleDelete = async (id) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
+      if (!token) {
+        console.error("Authentication token not found");
+        return;
+      }
+
       await axios.delete(`${USERS_URL}/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -198,7 +260,12 @@ const UserManagement = () => {
 
   const handlePromoteToAdmin = async (userId, role = "content_admin") => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
+      if (!token) {
+        console.error("Authentication token not found");
+        return;
+      }
+
       const response = await axios.post(
         `${USERS_URL}/${userId}/promote`,
         { role, permissions: ["manage_users", "manage_content"] },
@@ -240,7 +307,12 @@ const UserManagement = () => {
   const handleSave = async (id) => {
     setSaveLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
+      if (!token) {
+        console.error("Authentication token not found");
+        return;
+      }
+
       const response = await axios.put(`${USERS_URL}/${id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -250,15 +322,16 @@ const UserManagement = () => {
 
       if (response.data.success) {
         const updatedUser = response.data.data?.user;
-        const loggedInUser = JSON.parse(localStorage.getItem("user"));
+        const loggedInUser = getUserFromCookies();
 
         if (
           loggedInUser?.id === updatedUser?._id &&
           loggedInUser?.userType === "admin"
         ) {
           alert("Email updated successfully. Please log in again.");
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
+          document.cookie = "token=; path=/; max-age=0";
+          document.cookie = "user=; path=/; max-age=0";
+          document.cookie = "role=; path=/; max-age=0";
           window.location.href = "/signin";
           return;
         }
