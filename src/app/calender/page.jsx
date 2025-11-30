@@ -35,7 +35,7 @@ export default function CalendarBoard() {
           const formattedEvents = data.data.events.map(event => ({
             id: event.id,
             fullDate: event.date,
-            date: new Date(event.date).getDate(),
+            date: new Date(event.date).getUTCDate(),
             title: event.title,
             color: event.color,
             time: event.time,
@@ -283,7 +283,7 @@ const MonthView = ({ weekDays, startDay, daysInMonth, events, currentDate, onSel
       const dayEvents = events.filter((e) => {
         const evDate = new Date(e.fullDate);
         return (
-          evDate.getDate() === day &&
+          evDate.getUTCDate() === day &&
           evDate.getMonth() === currentDate.getMonth() &&
           evDate.getFullYear() === currentDate.getFullYear()
         );
@@ -347,7 +347,7 @@ const WeekView = ({ weekDays, hours, events, onSelect }) => (
               const dateEvents = events.filter((e) => {
                 const evDate = new Date(e.fullDate);
                 return (
-                  evDate.getDate() === date.getDate() &&
+                  evDate.getUTCDate() === date.getUTCDate() &&
                   evDate.getMonth() === date.getMonth() &&
                   evDate.getFullYear() === date.getFullYear()
                 );

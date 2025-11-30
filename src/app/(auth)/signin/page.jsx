@@ -35,15 +35,22 @@ export default function SignIn() {
 
       const data = await res.json();
 
+
+
       // SUCCESS
       if (res.ok && data.success) {
-        toast.success(data.message || "Login successful!", { id: toastId });
 
         const user = data.data.user;
-        localStorage.setItem("token", data.data.token);
-        login(user);
+        const token = data.data.token;
 
-        // Role & Redirect Map
+        // ------- SET COOKIES -------
+        document.cookie = `token=${token}; path=/; max-age=86400`;
+        document.cookie = `role=${user.userType}; path=/; max-age=86400`;
+        document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=86400`;
+        // ----------------------------
+
+        login({ ...user, token });
+
         const redirectMap = {
           admin: "/dashboard/admin",
           artist: "/dashboard/artist",
@@ -52,15 +59,8 @@ export default function SignIn() {
           fan: "/"
         };
 
-        const redirectTo = redirectMap[user.userType] || "/";
-
-        setTimeout(() => router.push(redirectTo), 800);
-
-        setEmail("");
-        setPassword("");
-        return;
+        router.push(redirectMap[user.userType] || "/");
       }
-
 
 
       let newFieldErrors = { email: "", password: "" };

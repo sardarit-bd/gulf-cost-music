@@ -5,81 +5,55 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // On mount, load from localStorage
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
-
-    if (storedUser && token) {
+    const fetchMe = async () => {
       try {
-        const userData = JSON.parse(storedUser);
-        // Ensure user data has proper structure
-        setUser(normalizeUserData(userData));
-      } catch (error) {
-        console.error("Error parsing stored user data:", error);
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
+        const res = await fetch("/api/auth/me");
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        } else {
+          setUser(null);
+        }
+      } catch {
+        setUser(null);
       }
-    }
+      setLoading(false);
+    };
+
+    fetchMe();
   }, []);
 
-  // Normalize user data from API response
-  const normalizeUserData = (userData) => {
-    // If userData is from API response with data property
-    if (userData.data) {
-      const normalized = {
-        ...userData.data,
-        // Ensure role field exists - use userType if role doesn't exist
-        role: userData.data.role || userData.data.userType || "user"
-      };
-      return normalized;
-    }
-
-    // If userData is direct user object
-    return {
-      ...userData,
-      // Ensure role field exists
-      role: userData.role || userData.userType || "user"
-    };
-  };
-
   const login = (userData) => {
-    const normalizedUser = normalizeUserData(userData);
-    setUser(normalizedUser);
-    localStorage.setItem("user", JSON.stringify(normalizedUser));
-
-    // Also store token if available in response
-    if (userData.token) {
-      localStorage.setItem("token", userData.token);
-    }
+    setUser(userData);
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("user");
+
+    // Clear cookies
+    document.cookie = "token=; path=/; max-age=0";
+    document.cookie = "role=; path=/; max-age=0";
+    document.cookie = "user=; path=/; max-age=0";
+
+    // Clear all local storage related to auth
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("auth-storage"); // <-- THIS IS THE FIX
+
+    // Optional: Clear everything
+    localStorage.clear();
   };
 
-  // Update user data (for profile updates etc.)
+
   const updateUser = (updatedData) => {
-    const updatedUser = {
-      ...user,
-      ...updatedData,
-      // Ensure role is preserved
-      role: updatedData.role || user.role || updatedData.userType || user.userType || "user"
-    };
-    setUser(updatedUser);
-    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setUser((prev) => ({ ...prev, ...updatedData }));
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      login,
-      logout,
-      updateUser
-    }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

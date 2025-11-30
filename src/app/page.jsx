@@ -6,7 +6,6 @@ import CalendarBoard from "./calender/page";
 import CastsSection from "./casts/page";
 import ContactSection from "./contact/page";
 import Footer from "./footer/page";
-import ArtistGallery from "./gallery/page";
 import WavesSection from "./waves/page";
 
 const HomePage = () => {
@@ -19,7 +18,7 @@ const HomePage = () => {
         <CalendarBoard />
         <RecentMerchSection />
         <CastsSection />
-        <ArtistGallery />
+        {/* <ArtistGallery /> */}
         <WavesSection />
         <Sponsorships />
         <ContactSection />
