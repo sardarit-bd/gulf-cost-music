@@ -25,7 +25,6 @@ export default function SignIn() {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/login`,
-
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -35,84 +34,75 @@ export default function SignIn() {
 
       const data = await res.json();
 
-
-
       // SUCCESS
       if (res.ok && data.success) {
-
         const user = data.data.user;
         const token = data.data.token;
 
-        // ------- SET COOKIES -------
-        document.cookie = `token=${token}; path=/; max-age=86400`;
-        document.cookie = `role=${user.userType}; path=/; max-age=86400`;
-        document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=86400`;
-        // ----------------------------
+        const cookieSettings =
+          "path=/; max-age=86400; SameSite=Lax" +
+          (process.env.NODE_ENV === "production" ? "; Secure" : "");
+
+        document.cookie = `token=${token}; ${cookieSettings}`;
+        document.cookie = `role=${user.userType}; ${cookieSettings}`;
+        document.cookie = `user=${encodeURIComponent(
+          JSON.stringify(user)
+        )}; ${cookieSettings}`;
 
         login({ ...user, token });
 
-        const redirectMap = {
-          admin: "/dashboard/admin",
-          artist: "/dashboard/artist",
-          venue: "/dashboard/venue",
-          journalist: "/dashboard/journalist",
-          fan: "/"
-        };
+        setTimeout(() => {
+          const redirectMap = {
+            admin: "/dashboard/admin",
+            artist: "/dashboard/artist",
+            venue: "/dashboard/venue",
+            journalist: "/dashboard/journalist",
+            fan: "/",
+          };
 
-        router.push(redirectMap[user.userType] || "/");
+          window.location.href = redirectMap[user.userType] || "/";
+        }, 500);
+
+        return;
       }
 
-
+      // Handle errors
       let newFieldErrors = { email: "", password: "" };
 
-      // Case 1: Handle the double details structure
-      if (data.errors?.details?.details && Array.isArray(data.errors.details.details)) {
-
+      // Case 1: details.details array
+      if (
+        data.errors?.details?.details &&
+        Array.isArray(data.errors.details.details)
+      ) {
         data.errors.details.details.forEach((err) => {
           const field = err.field?.toLowerCase();
           const message = err.message;
-
-          if (field === 'email') {
-            newFieldErrors.email = message;
-          } else if (field === 'password') {
-            newFieldErrors.password = message;
-          }
+          if (field === "email") newFieldErrors.email = message;
+          if (field === "password") newFieldErrors.password = message;
         });
       }
-      // Case 2: Handle single details structure
+      // Case 2: simple details array
       else if (data.errors?.details && Array.isArray(data.errors.details)) {
-
         data.errors.details.forEach((err) => {
           const field = err.field?.toLowerCase();
           const message = err.message;
-
-          if (field === 'email') {
-            newFieldErrors.email = message;
-          } else if (field === 'password') {
-            newFieldErrors.password = message;
-          }
+          if (field === "email") newFieldErrors.email = message;
+          if (field === "password") newFieldErrors.password = message;
         });
       }
-      // Case 3: Handle simple errors array
+      // Case 3: simple errors array
       else if (data.errors && Array.isArray(data.errors)) {
-
         data.errors.forEach((err) => {
           const field = err.field?.toLowerCase();
           const message = err.message;
-
-          if (field === 'email') {
-            newFieldErrors.email = message;
-          } else if (field === 'password') {
-            newFieldErrors.password = message;
-          }
+          if (field === "email") newFieldErrors.email = message;
+          if (field === "password") newFieldErrors.password = message;
         });
       }
 
-      // Set field errors and show appropriate messages
       toast.dismiss(toastId);
       setFieldErrors(newFieldErrors);
 
-      // Show specific toast messages
       if (newFieldErrors.email && newFieldErrors.password) {
         toast.error("Please check your email and password");
       } else if (newFieldErrors.email) {
@@ -120,10 +110,8 @@ export default function SignIn() {
       } else if (newFieldErrors.password) {
         toast.error(newFieldErrors.password);
       } else {
-        // Fallback to general message
         toast.error(data.message || "Something went wrong");
       }
-
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Server error! Please try again later.", { id: toastId });
@@ -132,15 +120,15 @@ export default function SignIn() {
     }
   };
 
-  // Clear field error when user starts typing
   const handleInputChange = (field) => (e) => {
     const value = e.target.value;
-    if (field === 'email') {
+    if (field === "email") {
       setEmail(value);
-      if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: '' }));
+      if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: "" }));
     } else {
       setPassword(value);
-      if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: '' }));
+      if (fieldErrors.password)
+        setFieldErrors((prev) => ({ ...prev, password: "" }));
     }
   };
 
@@ -158,12 +146,13 @@ export default function SignIn() {
               type="email"
               placeholder="Email"
               value={email}
-              onChange={handleInputChange('email')}
+              onChange={handleInputChange("email")}
               required
-              className={`w-full border ${fieldErrors.email
-                ? "border-red-500 focus:ring-red-400"
-                : "border-gray-300 focus:ring-yellow-400"
-                } rounded-md px-4 py-2 text-gray-700 focus:outline-none focus:ring-2`}
+              className={`w-full border ${
+                fieldErrors.email
+                  ? "border-red-500 focus:ring-red-400"
+                  : "border-gray-300 focus:ring-yellow-400"
+              } rounded-md px-4 py-2 text-gray-700 focus:outline-none focus:ring-2`}
             />
             {fieldErrors.email && (
               <p className="text-red-500 text-sm mt-1">{fieldErrors.email}</p>
@@ -176,12 +165,13 @@ export default function SignIn() {
               type="password"
               placeholder="Password"
               value={password}
-              onChange={handleInputChange('password')}
+              onChange={handleInputChange("password")}
               required
-              className={`w-full border ${fieldErrors.password
-                ? "border-red-500 focus:ring-red-400"
-                : "border-gray-300 focus:ring-yellow-400"
-                } rounded-md px-4 py-2 text-gray-700 focus:outline-none focus:ring-2`}
+              className={`w-full border ${
+                fieldErrors.password
+                  ? "border-red-500 focus:ring-red-400"
+                  : "border-gray-300 focus:ring-yellow-400"
+              } rounded-md px-4 py-2 text-gray-700 focus:outline-none focus:ring-2`}
             />
             {fieldErrors.password && (
               <p className="text-red-500 text-sm mt-1">
@@ -200,7 +190,6 @@ export default function SignIn() {
           </button>
         </form>
 
-        {/* Links */}
         <div className="mt-4">
           <Link
             href="/forget"

@@ -8,15 +8,18 @@ import DeactivateModal from "@/components/modules/dashboard/artists/DeactivateMo
 import Filters from "@/components/modules/dashboard/artists/Filters";
 import StatCard from "@/components/modules/dashboard/artists/StatCard";
 import axios from "axios";
-import {
-  Music,
-  Pause,
-  Play,
-  TrendingUp,
-  User
-} from "lucide-react";
+import { Music, Pause, Play, TrendingUp, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+
+// Utility function for getting cookies
+const getCookie = (name) => {
+  if (typeof document === "undefined") return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return null;
+};
 
 const ArtistManagement = () => {
   const [artists, setArtists] = useState([]);
@@ -34,8 +37,14 @@ const ArtistManagement = () => {
   const [viewingArtist, setViewingArtist] = useState(null);
 
   // Modal states
-  const [deactivateModal, setDeactivateModal] = useState({ isOpen: false, artist: null });
-  const [activateModal, setActivateModal] = useState({ isOpen: false, artist: null });
+  const [deactivateModal, setDeactivateModal] = useState({
+    isOpen: false,
+    artist: null,
+  });
+  const [activateModal, setActivateModal] = useState({
+    isOpen: false,
+    artist: null,
+  });
   const [modalLoading, setModalLoading] = useState(false);
 
   const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content?type=artists`;
@@ -45,10 +54,23 @@ const ArtistManagement = () => {
     else toast.success(message);
   };
 
+  const handleUnauthorized = () => {
+    document.cookie = "token=; path=/; max-age=0";
+    document.cookie = "role=; path=/; max-age=0";
+    document.cookie = "user=; path=/; max-age=0";
+    window.location.href = "/signin";
+  };
+
   const fetchArtists = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
+      const token = getCookie("token"); // ✅ cookies থেকে token নিন
+
+      if (!token) {
+        showToast("No authentication token found", "error");
+        handleUnauthorized();
+        return;
+      }
 
       const params = new URLSearchParams({
         page,
@@ -59,12 +81,17 @@ const ArtistManagement = () => {
 
       const { data } = await axios.get(`${API_URL}&${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
+        credentials: "include", // ✅ credentials include করুন
       });
 
       setArtists(data.data.content);
       setPages(data.data.pagination.pages);
     } catch (err) {
       console.error("Fetch artists error:", err);
+      if (err.response?.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       showToast("Failed to fetch artists", "error");
     } finally {
       setLoading(false);
@@ -98,18 +125,33 @@ const ArtistManagement = () => {
   };
 
   // Handle Deactivate Confirmation
-  const handleDeactivateConfirm = async (id, currentStatus, reason, notifyUser) => {
+  const handleDeactivateConfirm = async (
+    id,
+    currentStatus,
+    reason,
+    notifyUser
+  ) => {
     setModalLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token"); // ✅ cookies থেকে token নিন
+
+      if (!token) {
+        showToast("No authentication token found", "error");
+        handleUnauthorized();
+        return;
+      }
+
       await axios.put(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/${id}`,
         {
           isActive: false,
           deactivationReason: reason,
-          notifyUser
+          notifyUser,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include", // ✅ credentials include করুন
+        }
       );
 
       fetchArtists();
@@ -122,6 +164,10 @@ const ArtistManagement = () => {
       }
     } catch (err) {
       console.error("Deactivate artist error:", err);
+      if (err.response?.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       showToast("Failed to deactivate artist", "error");
     } finally {
       setModalLoading(false);
@@ -132,14 +178,24 @@ const ArtistManagement = () => {
   const handleActivateConfirm = async (id, notifyUser) => {
     setModalLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token"); // ✅ cookies থেকে token নিন
+
+      if (!token) {
+        showToast("No authentication token found", "error");
+        handleUnauthorized();
+        return;
+      }
+
       await axios.put(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/${id}`,
         {
           isActive: true,
-          notifyUser
+          notifyUser,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include", // ✅ credentials include করুন
+        }
       );
 
       fetchArtists();
@@ -151,6 +207,10 @@ const ArtistManagement = () => {
       }
     } catch (err) {
       console.error("Activate artist error:", err);
+      if (err.response?.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       showToast("Failed to activate artist", "error");
     } finally {
       setModalLoading(false);
@@ -161,22 +221,36 @@ const ArtistManagement = () => {
   const toggleActive = async (id, currentStatus) => {
     if (currentStatus) {
       // For deactivation, open modal
-      const artist = artists.find(a => a._id === id);
+      const artist = artists.find((a) => a._id === id);
       openDeactivateModal(artist);
     } else {
       // For activation, do simple toggle
       try {
-        const token = localStorage.getItem("token");
+        const token = getCookie("token"); // ✅ cookies থেকে token নিন
+
+        if (!token) {
+          showToast("No authentication token found", "error");
+          handleUnauthorized();
+          return;
+        }
+
         await axios.put(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/${id}`,
           { isActive: true },
-          { headers: { Authorization: `Bearer ${token}` } }
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            credentials: "include", // ✅ credentials include করুন
+          }
         );
         fetchArtists();
         setActionMenu(null);
         showToast("Artist activated successfully!");
       } catch (err) {
         console.error("Toggle artist error:", err);
+        if (err.response?.status === 401) {
+          handleUnauthorized();
+          return;
+        }
         showToast("Failed to update artist status", "error");
       }
     }
@@ -199,7 +273,14 @@ const ArtistManagement = () => {
   const handleSave = async (id) => {
     setSaveLoading(true);
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token"); // ✅ cookies থেকে token নিন
+
+      if (!token) {
+        showToast("No authentication token found", "error");
+        handleUnauthorized();
+        return;
+      }
+
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/${id}`,
         formData,
@@ -208,6 +289,7 @@ const ArtistManagement = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          credentials: "include", // ✅ credentials include করুন
         }
       );
 
@@ -219,6 +301,10 @@ const ArtistManagement = () => {
       }
     } catch (err) {
       console.error("Update artist error:", err);
+      if (err.response?.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       showToast(
         err.response?.data?.message || "Error updating artist profile",
         "error"
@@ -244,16 +330,30 @@ const ArtistManagement = () => {
     )
       return;
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token"); // ✅ cookies থেকে token নিন
+
+      if (!token) {
+        showToast("No authentication token found", "error");
+        handleUnauthorized();
+        return;
+      }
+
       await axios.delete(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include", // ✅ credentials include করুন
+        }
       );
       fetchArtists();
       setActionMenu(null);
       showToast("Artist profile deleted successfully!");
     } catch (err) {
       console.error("Delete artist error:", err);
+      if (err.response?.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       showToast("Failed to delete artist profile", "error");
     }
   };
@@ -299,19 +399,67 @@ const ArtistManagement = () => {
                 Artist Management
               </h1>
               <p className="text-gray-600 mt-2">
-                Manage artist profiles, activate/deactivate accounts, and monitor artist activities
+                Manage artist profiles, activate/deactivate accounts, and
+                monitor artist activities
               </p>
             </div>
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
+              {/* Tabs for All Artists and Deactivated Artists */}
+              <div className="flex bg-gray-200 rounded-lg p-1">
+                <button
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "all"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                  onClick={() => setActiveTab("all")}
+                >
+                  All Artists
+                </button>
+                <button
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === "deactivated"
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                  onClick={() => setActiveTab("deactivated")}
+                >
+                  Deactivated ({deactivatedArtists.length})
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatCard icon={User} label="Total Artists" value={stats.total} change={12} color="purple" />
-            <StatCard icon={Play} label="Active Artists" value={stats.active} change={8} color="green" />
-            <StatCard icon={Pause} label="Inactive Artists" value={stats.inactive} change={-4} color="orange" />
-            <StatCard icon={TrendingUp} label="This Month" value={stats.thisMonth} change={15} color="blue" />
+            <StatCard
+              icon={User}
+              label="Total Artists"
+              value={stats.total}
+              change={12}
+              color="purple"
+            />
+            <StatCard
+              icon={Play}
+              label="Active Artists"
+              value={stats.active}
+              change={8}
+              color="green"
+            />
+            <StatCard
+              icon={Pause}
+              label="Inactive Artists"
+              value={stats.inactive}
+              change={-4}
+              color="orange"
+            />
+            <StatCard
+              icon={TrendingUp}
+              label="This Month"
+              value={stats.thisMonth}
+              change={15}
+              color="blue"
+            />
           </div>
 
           {activeTab === "all" ? (

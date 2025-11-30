@@ -26,11 +26,10 @@ export default function MerchCard({ limit = null }) {
     try {
       const res = await fetch(`${API_BASE}/api/merch`);
       const data = await res.json();
-      console.log(data)
 
       if (res.ok && data.success) {
         let items = Array.isArray(data.data) ? data.data : [];
-        items = items.filter(item => item.isActive !== false);
+        items = items.filter((item) => item.isActive !== false);
         items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
         if (limit) {
@@ -50,12 +49,16 @@ export default function MerchCard({ limit = null }) {
     }
   };
 
+  // Get token from cookies
+  const getTokenFromCookies = () => {
+    if (typeof document === "undefined") return null;
+    const cookies = document.cookie.split("; ");
+    const tokenCookie = cookies.find((row) => row.startsWith("token="));
+    return tokenCookie ? tokenCookie.split("=")[1] : null;
+  };
+
   const isLoggedIn = () => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem("token");
-      return !!token;
-    }
-    return false;
+    return !!getTokenFromCookies();
   };
 
   const handleViewDetails = (item) => {
@@ -82,7 +85,8 @@ export default function MerchCard({ limit = null }) {
   const handleCreateOrder = async (orderData) => {
     if (!selectedItem || !orderData.paymentMethod) return;
 
-    if (!isLoggedIn()) {
+    const token = getTokenFromCookies();
+    if (!token) {
       toast.error("Your session has expired. Please login again.");
       router.push("/signin");
       return;
@@ -90,13 +94,11 @@ export default function MerchCard({ limit = null }) {
 
     setOrderLoading(true);
     try {
-      const token = localStorage.getItem("token");
-
       const finalOrderData = {
         merchId: selectedItem._id,
         quantity: orderData.quantity,
         paymentMethod: orderData.paymentMethod,
-        shippingInfo: orderData.shippingInfo
+        shippingInfo: orderData.shippingInfo,
       };
 
       const response = await fetch(`${API_BASE}/api/orders`, {
@@ -114,7 +116,9 @@ export default function MerchCard({ limit = null }) {
         if (orderData.paymentMethod === "stripe" && data.data.stripeSession) {
           window.location.href = data.data.stripeSession.url;
         } else {
-          toast.success("Order placed successfully! For COD, you'll pay when delivered.");
+          toast.success(
+            "Order placed successfully! For COD, you'll pay when delivered."
+          );
           setShowOrderModal(false);
           fetchMerch();
         }
@@ -184,7 +188,9 @@ export default function MerchCard({ limit = null }) {
           <div className="text-center mt-12">
             <div className="inline-flex flex-col items-center gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
-              <p className="text-gray-600 font-medium">Loading merchandise...</p>
+              <p className="text-gray-600 font-medium">
+                Loading merchandise...
+              </p>
             </div>
           </div>
         </div>
@@ -197,12 +203,16 @@ export default function MerchCard({ limit = null }) {
       <Toaster />
       <div className="container mx-auto">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Merchandise</h2>
-        <p className="text-gray-600 mb-8">Exclusive Gulf Coast Music Collection</p>
+        <p className="text-gray-600 mb-8">
+          Exclusive Gulf Coast Music Collection
+        </p>
 
         {merchItems.length === 0 ? (
           <div className="text-center py-12">
             <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">No merchandise available at the moment.</p>
+            <p className="text-gray-500 text-lg">
+              No merchandise available at the moment.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -231,11 +241,16 @@ export default function MerchCard({ limit = null }) {
                     <span className="text-2xl font-bold text-[var(--primary)]">
                       ${item.price}
                     </span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${item.stock > 0
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
-                      }`}>
-                      {item.stock > 0 ? `${item.stock} in stock` : "Out of stock"}
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        item.stock > 0
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {item.stock > 0
+                        ? `${item.stock} in stock`
+                        : "Out of stock"}
                     </span>
                   </div>
 
@@ -274,13 +289,25 @@ export default function MerchCard({ limit = null }) {
           <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto z-10 animate-fadeInScale">
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">{selectedItem.name}</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {selectedItem.name}
+                </h2>
                 <button
                   onClick={() => setShowModal(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -296,7 +323,9 @@ export default function MerchCard({ limit = null }) {
 
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Description</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Description
+                    </h3>
                     <p className="text-gray-600">
                       {selectedItem.description || "No description available."}
                     </p>
@@ -305,13 +334,22 @@ export default function MerchCard({ limit = null }) {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Price</p>
-                      <p className="text-2xl font-bold text-[var(--primary)]">${selectedItem.price}</p>
+                      <p className="text-2xl font-bold text-[var(--primary)]">
+                        ${selectedItem.price}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Stock</p>
-                      <p className={`text-lg font-semibold ${selectedItem.stock > 0 ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                        {selectedItem.stock > 0 ? `${selectedItem.stock} available` : 'Out of stock'}
+                      <p
+                        className={`text-lg font-semibold ${
+                          selectedItem.stock > 0
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {selectedItem.stock > 0
+                          ? `${selectedItem.stock} available`
+                          : "Out of stock"}
                       </p>
                     </div>
                   </div>
@@ -324,7 +362,7 @@ export default function MerchCard({ limit = null }) {
                     disabled={selectedItem.stock <= 0}
                     className="w-full bg-[var(--primary)] text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-[var(--primary)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {selectedItem.stock > 0 ? 'Purchase Now' : 'Out of Stock'}
+                    {selectedItem.stock > 0 ? "Purchase Now" : "Out of Stock"}
                   </button>
                 </div>
               </div>

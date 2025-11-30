@@ -1,7 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Footer from "../footer/page";
+
+// Utility to get cookie safely
+const getCookie = (name) => {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+  return match ? match[2] : null;
+};
 
 export default function ProfilePage() {
   const [role, setRole] = useState("artist");
@@ -38,25 +45,28 @@ export default function ProfilePage() {
 
   const fetchUserData = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
       if (!token) {
         window.location.href = "/signin";
         return;
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/me`, {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/me`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (response.ok) {
         const userData = await response.json();
         setUser(userData.data.user);
         setRole(userData.data.user.userType);
-        
+
         // Load existing profile data
         await loadProfileData(userData.data.user);
       } else {
@@ -72,24 +82,30 @@ export default function ProfilePage() {
 
   const loadProfileData = async (userData) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
       let profileData = {};
 
       // Fetch profile data based on user type
       switch (userData.userType) {
         case "artist":
-          const artistResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/${userData._id}`, {
-            headers: { "Authorization": `Bearer ${token}` }
-          });
+          const artistResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/${userData._id}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
           if (artistResponse.ok) {
             profileData = await artistResponse.json();
           }
           break;
 
         case "venue":
-          const venueResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/${userData._id}`, {
-            headers: { "Authorization": `Bearer ${token}` }
-          });
+          const venueResponse = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/${userData._id}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
           if (venueResponse.ok) {
             profileData = await venueResponse.json();
           }
@@ -102,7 +118,7 @@ export default function ProfilePage() {
 
       // Populate form with existing data
       if (profileData.data) {
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           name: profileData.data.name || userData.username || "",
           city: profileData.data.city || "",
@@ -120,7 +136,7 @@ export default function ProfilePage() {
         }
       } else {
         // If no profile exists, set basic user info
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           name: userData.username || "",
           genre: userData.genre || "",
@@ -133,12 +149,15 @@ export default function ProfilePage() {
   };
 
   const handlePhotoUpload = (e) => {
-    const files = Array.from(e.target.files).slice(0, 5 - existingPhotos.length);
-    setFormData(prev => ({ ...prev, photos: [...prev.photos, ...files] }));
-    
+    const files = Array.from(e.target.files).slice(
+      0,
+      5 - existingPhotos.length
+    );
+    setFormData((prev) => ({ ...prev, photos: [...prev.photos, ...files] }));
+
     // Create preview URLs
-    const newPreviews = files.map(file => URL.createObjectURL(file));
-    setPreviewPhotos(prev => [...prev, ...newPreviews]);
+    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setPreviewPhotos((prev) => [...prev, ...newPreviews]);
 
     // Simulate upload progress
     let progress = 0;
@@ -161,7 +180,12 @@ export default function ProfilePage() {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getCookie("token");
+      if (!token) {
+        alert("Authentication token not found. Please log in again.");
+        return;
+      }
+
       let endpoint = "";
       let payload = {};
 
@@ -205,7 +229,7 @@ export default function ProfilePage() {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
@@ -213,7 +237,7 @@ export default function ProfilePage() {
 
       if (response.ok) {
         const result = await response.json();
-        
+
         // Handle file uploads if there are new photos
         if (formData.photos.length > 0) {
           await uploadPhotos(token);
@@ -225,7 +249,7 @@ export default function ProfilePage() {
         }
 
         alert(`🎉 Profile updated successfully!`);
-        
+
         // Refresh data
         await fetchUserData();
       } else {
@@ -242,18 +266,21 @@ export default function ProfilePage() {
 
   const uploadPhotos = async (token) => {
     const photoFormData = new FormData();
-    formData.photos.forEach(photo => {
-      photoFormData.append('photos', photo);
+    formData.photos.forEach((photo) => {
+      photoFormData.append("photos", photo);
     });
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/upload/photos`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-        body: photoFormData,
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/upload/photos`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: photoFormData,
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Photo upload failed");
@@ -265,16 +292,19 @@ export default function ProfilePage() {
 
   const uploadMP3 = async (token) => {
     const mp3FormData = new FormData();
-    mp3FormData.append('mp3', formData.mp3);
+    mp3FormData.append("mp3", formData.mp3);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/upload/mp3`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-        body: mp3FormData,
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/upload/mp3`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: mp3FormData,
+        }
+      );
 
       if (!response.ok) {
         throw new Error("MP3 upload failed");
@@ -306,18 +336,18 @@ export default function ProfilePage() {
     artist: {
       tabs: ["basic", "music", "media"],
       icon: "🎤",
-      color: "from-purple-500 to-pink-500"
+      color: "from-purple-500 to-pink-500",
     },
     venue: {
       tabs: ["basic", "details", "media"],
       icon: "🏟️",
-      color: "from-blue-500 to-cyan-500"
+      color: "from-blue-500 to-cyan-500",
     },
     journalist: {
       tabs: ["basic", "content", "media"],
       icon: "📰",
-      color: "from-green-500 to-emerald-500"
-    }
+      color: "from-green-500 to-emerald-500",
+    },
   };
 
   const renderBasicFields = () => (
@@ -325,13 +355,20 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            {role === "journalist" ? "News Title" : `${role.charAt(0).toUpperCase() + role.slice(1)} Name`} *
+            {role === "journalist"
+              ? "News Title"
+              : `${role.charAt(0).toUpperCase() + role.slice(1)} Name`}{" "}
+            *
           </label>
           <input
             name="name"
             value={formData.name}
             onChange={handleChange}
-            placeholder={role === "journalist" ? "Enter news title..." : `Enter ${role} name...`}
+            placeholder={
+              role === "journalist"
+                ? "Enter news title..."
+                : `Enter ${role} name...`
+            }
             className="text-gray-400 w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white placeholder:text-gray-400"
             required
           />
@@ -365,8 +402,20 @@ export default function ProfilePage() {
             required
           >
             <option value="">Select your genre</option>
-            {["Rap", "Country", "Pop", "Rock", "Jazz", "Reggae", "EDM", "Classical", "Other"].map((g) => (
-              <option key={g} value={g}>{g}</option>
+            {[
+              "Rap",
+              "Country",
+              "Pop",
+              "Rock",
+              "Jazz",
+              "Reggae",
+              "EDM",
+              "Classical",
+              "Other",
+            ].map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
             ))}
           </select>
         </div>
@@ -380,7 +429,11 @@ export default function ProfilePage() {
           name="biography"
           value={formData.biography}
           onChange={handleChange}
-          placeholder={role === "journalist" ? "Write your news description..." : `Tell us about this ${role}...`}
+          placeholder={
+            role === "journalist"
+              ? "Write your news description..."
+              : `Tell us about this ${role}...`
+          }
           rows="4"
           className="text-gray-400 w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white resize-none placeholder:text-gray-400"
           required
@@ -402,18 +455,24 @@ export default function ProfilePage() {
                 <input
                   type="file"
                   accept=".mp3"
-                  onChange={(e) => setFormData({...formData, mp3: e.target.files[0]})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, mp3: e.target.files[0] })
+                  }
                   className="hidden"
                   id="mp3-upload"
                 />
                 <label htmlFor="mp3-upload" className="cursor-pointer">
                   <div className="text-4xl mb-2">🎵</div>
                   <p className="text-gray-600 mb-2">Upload MP3 file</p>
-                  <p className="text-sm text-gray-400">Max 10MB • MP3 format only</p>
+                  <p className="text-sm text-gray-400">
+                    Max 10MB • MP3 format only
+                  </p>
                 </label>
                 {formData.mp3 && (
                   <div className="mt-4 p-3 bg-green-50 rounded-lg">
-                    <p className="text-green-700 font-medium">✓ File selected</p>
+                    <p className="text-green-700 font-medium">
+                      ✓ File selected
+                    </p>
                   </div>
                 )}
               </div>
@@ -498,9 +557,13 @@ export default function ProfilePage() {
                   required
                 >
                   <option value="">Select location</option>
-                  {["New Orleans", "Biloxi", "Mobile", "Pensacola"].map((loc) => (
-                    <option key={loc} value={loc}>{loc}</option>
-                  ))}
+                  {["New Orleans", "Biloxi", "Mobile", "Pensacola"].map(
+                    (loc) => (
+                      <option key={loc} value={loc}>
+                        {loc}
+                      </option>
+                    )
+                  )}
                 </select>
               </div>
             </div>
@@ -529,13 +592,16 @@ export default function ProfilePage() {
     <div className="space-y-6">
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-4">
-          Upload Photos (Max 5) - {existingPhotos.length + previewPhotos.length}/5 used
+          Upload Photos (Max 5) - {existingPhotos.length + previewPhotos.length}
+          /5 used
         </label>
-        
+
         {/* Show existing photos */}
         {existingPhotos.length > 0 && (
           <div className="mb-6">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Existing Photos:</h4>
+            <h4 className="text-sm font-medium text-gray-700 mb-3">
+              Existing Photos:
+            </h4>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {existingPhotos.map((photo, index) => (
                 <div key={`existing-${index}`} className="relative group">
@@ -558,7 +624,7 @@ export default function ProfilePage() {
         )}
 
         {/* Upload Area for new photos */}
-        {(existingPhotos.length + previewPhotos.length) < 5 && (
+        {existingPhotos.length + previewPhotos.length < 5 && (
           <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors duration-200 mb-6">
             <input
               type="file"
@@ -570,19 +636,25 @@ export default function ProfilePage() {
             />
             <label htmlFor="photo-upload" className="cursor-pointer">
               <div className="text-4xl mb-3">📸</div>
-              <p className="text-gray-600 mb-2 font-medium">Click to upload photos</p>
-              <p className="text-sm text-gray-400">PNG, JPG, GIF up to 5MB each</p>
+              <p className="text-gray-600 mb-2 font-medium">
+                Click to upload photos
+              </p>
+              <p className="text-sm text-gray-400">
+                PNG, JPG, GIF up to 5MB each
+              </p>
             </label>
-            
+
             {uploadProgress > 0 && (
               <div className="mt-4">
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                     style={{ width: `${uploadProgress}%` }}
                   ></div>
                 </div>
-                <p className="text-sm text-gray-600 mt-2">Uploading... {uploadProgress}%</p>
+                <p className="text-sm text-gray-600 mt-2">
+                  Uploading... {uploadProgress}%
+                </p>
               </div>
             )}
           </div>
@@ -591,7 +663,9 @@ export default function ProfilePage() {
         {/* New Photo Previews */}
         {previewPhotos.length > 0 && (
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">New Photos:</h4>
+            <h4 className="text-sm font-medium text-gray-700 mb-3">
+              New Photos:
+            </h4>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {previewPhotos.map((preview, index) => (
                 <div key={`new-${index}`} className="relative group">
@@ -652,7 +726,9 @@ export default function ProfilePage() {
               Profile Management
             </h1>
             <p className="text-gray-600 text-lg">
-              {user ? `Welcome back, ${user.username}!` : "Create and manage your profile"}
+              {user
+                ? `Welcome back, ${user.username}!`
+                : "Create and manage your profile"}
             </p>
           </div>
 
@@ -662,7 +738,9 @@ export default function ProfilePage() {
             <div className="border-b border-gray-200">
               <div className="flex flex-col sm:flex-row justify-between items-center p-6">
                 <div className="flex items-center space-x-3 mb-4 sm:mb-0">
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${roleConfig[role].color} flex items-center justify-center text-white text-xl`}>
+                  <div
+                    className={`w-12 h-12 rounded-xl bg-gradient-to-r ${roleConfig[role].color} flex items-center justify-center text-white text-xl`}
+                  >
                     {roleConfig[role].icon}
                   </div>
                   <div>
@@ -670,13 +748,16 @@ export default function ProfilePage() {
                       {role.charAt(0).toUpperCase() + role.slice(1)} Profile
                     </h2>
                     <p className="text-gray-500 text-sm">
-                      {user?.isVerified ? "✓ Verified Profile" : "Complete your profile to get featured"}
+                      {user?.isVerified
+                        ? "✓ Verified Profile"
+                        : "Complete your profile to get featured"}
                     </p>
                   </div>
                 </div>
 
                 <div className="text-sm text-gray-600">
-                  Member since: {user ? new Date(user.createdAt).toLocaleDateString() : ""}
+                  Member since:{" "}
+                  {user ? new Date(user.createdAt).toLocaleDateString() : ""}
                 </div>
               </div>
             </div>
@@ -690,7 +771,13 @@ export default function ProfilePage() {
                     onClick={() => setActiveTab(tab)}
                     className={`flex-1 px-6 py-4 text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                       activeTab === tab
-                        ? `border-b-2 ${role === 'artist' ? 'border-purple-500 text-purple-600' : role === 'venue' ? 'border-blue-500 text-blue-600' : 'border-green-500 text-green-600'}`
+                        ? `border-b-2 ${
+                            role === "artist"
+                              ? "border-purple-500 text-purple-600"
+                              : role === "venue"
+                              ? "border-blue-500 text-blue-600"
+                              : "border-green-500 text-green-600"
+                          }`
                         : "text-gray-500 hover:text-gray-700 border-b-2 border-transparent"
                     }`}
                   >
@@ -708,7 +795,9 @@ export default function ProfilePage() {
                 <div className="flex space-x-4 pt-6 border-t border-gray-200">
                   <button
                     type="button"
-                    onClick={() => window.location.href = `/artists/${user?._id}`}
+                    onClick={() =>
+                      (window.location.href = `/artists/${user?._id}`)
+                    }
                     className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-all duration-200"
                   >
                     View Public Profile
@@ -741,7 +830,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </section>
   );
 }

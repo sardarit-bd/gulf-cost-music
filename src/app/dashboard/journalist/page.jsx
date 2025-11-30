@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "@/lib/auth";
+import { useAuth } from "@/context/AuthContext";
 import {
   Calendar,
   Camera,
@@ -57,12 +57,20 @@ function NewsDetailModal({ news, isOpen, onClose }) {
           {/* Images Gallery */}
           {news.photos?.length > 0 && (
             <div className="p-6 border-b border-gray-700">
-              <div className={`grid gap-4 ${news.photos.length === 1 ? "grid-cols-1" :
-                news.photos.length === 2 ? "grid-cols-2" :
-                  "grid-cols-1 md:grid-cols-2"
-                }`}>
+              <div
+                className={`grid gap-4 ${
+                  news.photos.length === 1
+                    ? "grid-cols-1"
+                    : news.photos.length === 2
+                    ? "grid-cols-2"
+                    : "grid-cols-1 md:grid-cols-2"
+                }`}
+              >
                 {news.photos.map((photo, index) => (
-                  <div key={index} className="relative aspect-video rounded-lg overflow-hidden bg-gray-900">
+                  <div
+                    key={index}
+                    className="relative aspect-video rounded-lg overflow-hidden bg-gray-900"
+                  >
                     <Image
                       src={photo.url}
                       alt={`${news.title} - Image ${index + 1}`}
@@ -87,12 +95,12 @@ function NewsDetailModal({ news, isOpen, onClose }) {
               <div className="flex flex-wrap gap-4 text-sm text-gray-400 mb-4">
                 <div className="flex items-center gap-2 bg-gray-700 px-3 py-1 rounded-full">
                   <Calendar size={14} />
-                  {new Date(news.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
+                  {new Date(news.createdAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
                   })}
                 </div>
                 <div className="flex items-center gap-2 bg-gray-700 px-3 py-1 rounded-full">
@@ -121,23 +129,30 @@ function NewsDetailModal({ news, isOpen, onClose }) {
             {/* Additional Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-700">
               <div>
-                <h4 className="text-sm font-medium text-gray-400 mb-2">Status</h4>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${news.published ?
-                  'bg-green-500/20 text-green-400' :
-                  'bg-yellow-500/20 text-yellow-400'
-                  }`}>
-                  {news.published ? 'Published' : 'Draft'}
+                <h4 className="text-sm font-medium text-gray-400 mb-2">
+                  Status
+                </h4>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    news.published
+                      ? "bg-green-500/20 text-green-400"
+                      : "bg-yellow-500/20 text-yellow-400"
+                  }`}
+                >
+                  {news.published ? "Published" : "Draft"}
                 </span>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-400 mb-2">Last Updated</h4>
+                <h4 className="text-sm font-medium text-gray-400 mb-2">
+                  Last Updated
+                </h4>
                 <p className="text-gray-300 text-sm">
-                  {new Date(news.updatedAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
+                  {new Date(news.updatedAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
                   })}
                 </p>
               </div>
@@ -160,7 +175,7 @@ function NewsDetailModal({ news, isOpen, onClose }) {
 }
 
 export default function JournalistDashboard() {
-  const { user, loading } = useSession();
+  const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState("news");
   const [journalist, setJournalist] = useState({
     fullName: "",
@@ -186,7 +201,7 @@ export default function JournalistDashboard() {
   // === Fetch Journalist Profile & News ===
   useEffect(() => {
     if (!user) return;
-    const token = localStorage.getItem("token");
+    const token = getCookie("token");
     if (!token) return;
 
     const fetchData = async () => {
@@ -234,7 +249,7 @@ export default function JournalistDashboard() {
 
   // === Save Profile ===
   const handleSaveProfile = async () => {
-    const token = getCookie("token") || localStorage.getItem("token");
+    const token = getCookie("token");
     if (!token) return toast.error("You are not logged in!");
 
     const toastId = toast.loading("Saving profile...");
@@ -242,11 +257,14 @@ export default function JournalistDashboard() {
       const formData = new FormData();
       formData.append("bio", journalist.bio);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/journalists/profile`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/journalists/profile`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        }
+      );
 
       const data = await res.json();
       if (res.ok) {
@@ -266,7 +284,7 @@ export default function JournalistDashboard() {
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
@@ -280,19 +298,21 @@ export default function JournalistDashboard() {
     setPreviewAvatar(URL.createObjectURL(file));
 
     try {
-      const token = getCookie("token") || localStorage.getItem("token");
+      const token = getCookie("token");
       if (!token) return toast.error("You are not logged in!");
 
       const formData = new FormData();
       formData.append("bio", journalist.bio || "");
       formData.append("profilePhoto", file);
 
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/journalists/profile`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/journalists/profile`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        }
+      );
 
       const data = await res.json();
       if (res.ok) toast.success("Profile photo updated!");
@@ -308,8 +328,8 @@ export default function JournalistDashboard() {
     const files = Array.from(e.target.files).slice(0, 5);
 
     // Validate files
-    const validFiles = files.filter(file => {
-      if (!file.type.startsWith('image/')) {
+    const validFiles = files.filter((file) => {
+      if (!file.type.startsWith("image/")) {
         toast.error(`${file.name} is not an image file`);
         return false;
       }
@@ -326,8 +346,8 @@ export default function JournalistDashboard() {
     }
 
     const urls = validFiles.map((f) => URL.createObjectURL(f));
-    setPreviewImages(prev => [...prev, ...urls]);
-    setForm(prev => ({ ...prev, photos: [...prev.photos, ...validFiles] }));
+    setPreviewImages((prev) => [...prev, ...urls]);
+    setForm((prev) => ({ ...prev, photos: [...prev.photos, ...validFiles] }));
 
     if (validFiles.length > 0) {
       toast.success(`Added ${validFiles.length} photo(s)`);
@@ -356,11 +376,13 @@ export default function JournalistDashboard() {
       return;
     }
 
-    const toastId = toast.loading(editingNews ? "Updating news..." : "Publishing news...");
+    const toastId = toast.loading(
+      editingNews ? "Updating news..." : "Publishing news..."
+    );
 
     try {
       setSaving(true);
-      const token = getCookie("token") || localStorage.getItem("token");
+      const token = getCookie("token");
       if (!token) return toast.error("You are not logged in!");
 
       const formData = new FormData();
@@ -385,12 +407,17 @@ export default function JournalistDashboard() {
 
       if (!res.ok) throw new Error(data.message || "Failed to save news");
 
-      toast.success(editingNews ? "News updated!" : "News published!", { id: toastId });
+      toast.success(editingNews ? "News updated!" : "News published!", {
+        id: toastId,
+      });
 
       // Refresh list
-      const listRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/my-news`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const listRes = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/my-news`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const listData = await listRes.json();
       setNewsList(listData.data?.news || []);
 
@@ -407,7 +434,9 @@ export default function JournalistDashboard() {
       setPreviewImages([]);
     } catch (err) {
       console.error("Save news error:", err);
-      toast.error(err.message || "Server error while saving news", { id: toastId });
+      toast.error(err.message || "Server error while saving news", {
+        id: toastId,
+      });
     } finally {
       setSaving(false);
     }
@@ -437,13 +466,21 @@ export default function JournalistDashboard() {
   };
 
   const deleteNews = async (id) => {
-    if (!confirm("Are you sure you want to delete this news item? This action cannot be undone.")) return;
+    if (
+      !confirm(
+        "Are you sure you want to delete this news item? This action cannot be undone."
+      )
+    )
+      return;
     try {
-      const token = getCookie("token") || localStorage.getItem("token");
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const token = getCookie("token");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/${id}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to delete news");
@@ -463,39 +500,8 @@ export default function JournalistDashboard() {
       </div>
     );
 
-  if (!user)
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen px-4">
-        <div className="text-center max-w-sm mx-auto">
-          {/* Icon */}
-          <div className="mb-6">
-            <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-red-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-            </div>
-          </div>
-
-          {/* Title */}
-          <h2 className="text-xl font-semibold text-white mb-3">
-            Authentication Required
-          </h2>
-        </div>
-      </div>
-    );
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br py-8 px-4">
       <Toaster />
 
       {/* News Detail Modal */}
@@ -527,15 +533,20 @@ export default function JournalistDashboard() {
               {[
                 { id: "news", label: "My News", icon: Newspaper },
                 { id: "profile", label: "Profile", icon: User },
-                { id: "edit", label: editingNews ? "Edit News" : "Create News", icon: FileText },
+                {
+                  id: "edit",
+                  label: editingNews ? "Edit News" : "Create News",
+                  icon: FileText,
+                },
               ].map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
                   onClick={() => setActiveTab(id)}
-                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === id
-                    ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
-                    : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
-                    }`}
+                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${
+                    activeTab === id
+                      ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
+                      : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
+                  }`}
                 >
                   <Icon size={18} />
                   {label}
@@ -547,7 +558,7 @@ export default function JournalistDashboard() {
           <div className="p-6 md:p-8">
             {/* PROFILE TAB - Unchanged from original */}
             {activeTab === "profile" && (
-              <div className="animate-fadeIn max-w-4xl mx-auto">
+              <div className="">
                 <div className="grid lg:grid-cols-3 gap-8">
                   {/* Profile Card */}
                   <div className="lg:col-span-1">
@@ -588,7 +599,12 @@ export default function JournalistDashboard() {
 
                         <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-medium">
                           <Upload size={16} /> Change Photo
-                          <input type="file" accept="image/*" hidden onChange={handleAvatarUpload} />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            hidden
+                            onChange={handleAvatarUpload}
+                          />
                         </label>
                       </div>
                     </div>
@@ -609,7 +625,12 @@ export default function JournalistDashboard() {
                           </label>
                           <input
                             value={journalist.fullName}
-                            onChange={(e) => setJournalist({ ...journalist, fullName: e.target.value })}
+                            onChange={(e) =>
+                              setJournalist({
+                                ...journalist,
+                                fullName: e.target.value,
+                              })
+                            }
                             placeholder="Enter your full name"
                             className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition"
                           />
@@ -624,7 +645,9 @@ export default function JournalistDashboard() {
                             disabled
                             className="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600 text-gray-400 cursor-not-allowed"
                           />
-                          <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Email cannot be changed
+                          </p>
                         </div>
 
                         <div>
@@ -634,7 +657,12 @@ export default function JournalistDashboard() {
                           <textarea
                             rows={4}
                             value={journalist.bio}
-                            onChange={(e) => setJournalist({ ...journalist, bio: e.target.value })}
+                            onChange={(e) =>
+                              setJournalist({
+                                ...journalist,
+                                bio: e.target.value,
+                              })
+                            }
                             placeholder="Tell us about yourself, your experience, and your focus areas..."
                             className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition resize-vertical"
                           />
@@ -666,7 +694,9 @@ export default function JournalistDashboard() {
                         <Newspaper size={24} className="text-blue-400" />
                       </div>
                       <div>
-                        <p className="text-2xl font-bold text-white">{newsList.length}</p>
+                        <p className="text-2xl font-bold text-white">
+                          {newsList.length}
+                        </p>
                         <p className="text-gray-400">Total News</p>
                       </div>
                     </div>
@@ -679,7 +709,10 @@ export default function JournalistDashboard() {
                       </div>
                       <div>
                         <p className="text-2xl font-bold text-white">
-                          {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          {new Date().toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
                         </p>
                         <p className="text-gray-400">Today</p>
                       </div>
@@ -720,8 +753,12 @@ export default function JournalistDashboard() {
                     <div className="w-24 h-24 mx-auto mb-4 bg-gray-800 rounded-full flex items-center justify-center">
                       <Newspaper size={40} className="text-gray-500" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-300 mb-2">No news articles yet</h3>
-                    <p className="text-gray-500 mb-6">Start by creating your first news story</p>
+                    <h3 className="text-xl font-semibold text-gray-300 mb-2">
+                      No news articles yet
+                    </h3>
+                    <p className="text-gray-500 mb-6">
+                      Start by creating your first news story
+                    </p>
                     <button
                       onClick={() => setActiveTab("edit")}
                       className="inline-flex items-center gap-2 bg-yellow-500 text-black px-6 py-3 rounded-lg hover:bg-yellow-400 transition font-semibold"
@@ -732,7 +769,9 @@ export default function JournalistDashboard() {
                 ) : (
                   <div className="grid gap-6">
                     {newsList
-                      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                      .sort(
+                        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+                      )
                       .map((item) => (
                         <div
                           key={item._id}
@@ -752,7 +791,10 @@ export default function JournalistDashboard() {
                                   className="object-cover hover:scale-105 transition-transform duration-300"
                                 />
                                 <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-all flex items-center justify-center">
-                                  <Eye size={24} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  <Eye
+                                    size={24}
+                                    className="text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                  />
                                 </div>
                               </div>
                             )}
@@ -794,7 +836,9 @@ export default function JournalistDashboard() {
                               <div className="flex flex-wrap gap-4 text-sm text-gray-400 mb-3">
                                 <div className="flex items-center gap-1">
                                   <Calendar size={14} />
-                                  {new Date(item.createdAt).toLocaleDateString()}
+                                  {new Date(
+                                    item.createdAt
+                                  ).toLocaleDateString()}
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <MapPin size={14} />
@@ -852,14 +896,16 @@ export default function JournalistDashboard() {
 
             {/* ADD / EDIT NEWS - Unchanged from original */}
             {activeTab === "edit" && (
-              <div className="animate-fadeIn max-w-4xl mx-auto">
+              <div className="">
                 <div className="bg-gray-900 rounded-xl p-6 border border-gray-700 mb-6">
                   <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
                     <FileText size={24} />
                     {editingNews ? "Edit News Story" : "Create New News Story"}
                   </h2>
                   <p className="text-gray-400">
-                    {editingNews ? "Update your news story details" : "Fill in the details below to publish a new story"}
+                    {editingNews
+                      ? "Update your news story details"
+                      : "Fill in the details below to publish a new story"}
                   </p>
                   <p className="text-yellow-400 text-sm mt-2">
                     📅 Date will be automatically set when published
@@ -897,7 +943,9 @@ export default function JournalistDashboard() {
                             className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition"
                           >
                             {cityOptions.map((loc) => (
-                              <option key={loc} value={loc}>{loc}</option>
+                              <option key={loc} value={loc}>
+                                {loc}
+                              </option>
                             ))}
                           </select>
                         </div>
@@ -943,13 +991,18 @@ export default function JournalistDashboard() {
                         Photos ({previewImages.length}/5)
                       </h3>
 
-                      <label className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg transition ${previewImages.length >= 5
-                        ? 'border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed'
-                        : 'border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20'
-                        }`}>
+                      <label
+                        className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg transition ${
+                          previewImages.length >= 5
+                            ? "border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed"
+                            : "border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20"
+                        }`}
+                      >
                         <Upload size={24} />
                         <span className="text-sm font-medium">
-                          {previewImages.length >= 5 ? 'Maximum Reached' : 'Upload Photos'}
+                          {previewImages.length >= 5
+                            ? "Maximum Reached"
+                            : "Upload Photos"}
                         </span>
                         <input
                           type="file"
@@ -991,7 +1044,9 @@ export default function JournalistDashboard() {
 
                     {/* Actions */}
                     <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-                      <h3 className="text-lg font-semibold text-white mb-4">Actions</h3>
+                      <h3 className="text-lg font-semibold text-white mb-4">
+                        Actions
+                      </h3>
                       <div className="space-y-3">
                         <button
                           disabled={saving}
@@ -999,13 +1054,11 @@ export default function JournalistDashboard() {
                           className="w-full flex items-center justify-center gap-2 bg-yellow-500 text-black py-3 rounded-lg hover:bg-yellow-400 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Save size={18} />
-                          {saving ? (
-                            "Saving..."
-                          ) : editingNews ? (
-                            "Update News"
-                          ) : (
-                            "Publish News"
-                          )}
+                          {saving
+                            ? "Saving..."
+                            : editingNews
+                            ? "Update News"
+                            : "Publish News"}
                         </button>
 
                         <button

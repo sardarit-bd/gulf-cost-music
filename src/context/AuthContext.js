@@ -10,6 +10,20 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchMe = async () => {
       try {
+        const userCookie = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("user="));
+
+        if (userCookie) {
+          const userData = JSON.parse(
+            decodeURIComponent(userCookie.split("=")[1])
+          );
+          setUser(userData);
+          setLoading(false);
+          return;
+        }
+
+        // Fallback: API call
         const res = await fetch("/api/auth/me");
         if (res.ok) {
           const data = await res.json();
@@ -17,7 +31,8 @@ export const AuthProvider = ({ children }) => {
         } else {
           setUser(null);
         }
-      } catch {
+      } catch (error) {
+        console.error("Auth check failed:", error);
         setUser(null);
       }
       setLoading(false);
@@ -46,7 +61,6 @@ export const AuthProvider = ({ children }) => {
     // Optional: Clear everything
     localStorage.clear();
   };
-
 
   const updateUser = (updatedData) => {
     setUser((prev) => ({ ...prev, ...updatedData }));
