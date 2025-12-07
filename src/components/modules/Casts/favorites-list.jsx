@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import FavoriteItem from "./favorite-item";
 
-export default function FavoritesList({ setCast }) {
+export default function FavoritesList({ setCast, activeCast }) {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
@@ -12,12 +12,13 @@ export default function FavoritesList({ setCast }) {
       try {
         const res = await fetch(`${API_BASE}/api/casts`, { cache: "no-store" });
         const data = await res.json();
+        console.log("list:", data);
 
         if (res.ok && data.success && Array.isArray(data.data.casts)) {
           setFavorites(data.data.casts);
-          setCast(data.data.casts[0])
+          setCast(data.data.casts[0]);
         } else {
-          console.warn("⚠️ No valid podcast data found");
+          console.warn("No valid podcast data found");
           setFavorites([]);
         }
       } catch (err) {
@@ -29,7 +30,8 @@ export default function FavoritesList({ setCast }) {
     };
 
     fetchFavorites();
-  }, [API_BASE]);
+  }, [API_BASE, setCast]);
+
 
   if (loading)
     return <p className="text-gray-600 animate-pulse">Loading podcasts...</p>;
@@ -42,11 +44,17 @@ export default function FavoritesList({ setCast }) {
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-black">Your Favorites</h2>
 
-      {/* Scrollable list */}
       <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
         {favorites.map((favorite) => (
-          <div key={favorite._id} onClick={() => setCast(favorite)}>
-            <FavoriteItem key={favorite._id} favorite={favorite} />
+          <div
+            key={favorite._id}
+            onClick={() => setCast(favorite)}
+            className="cursor-pointer"
+          >
+            <FavoriteItem
+              favorite={favorite}
+              isActive={activeCast?._id === favorite._id}
+            />
           </div>
         ))}
       </div>

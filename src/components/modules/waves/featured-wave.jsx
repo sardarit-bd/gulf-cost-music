@@ -1,9 +1,15 @@
 "use client";
-import { useState, useEffect } from "react";
+import YouTubePlayer from "@/components/modules/Casts/youtube-player";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
-export default function FeaturedWave({wave}) {
-  
+export default function FeaturedWave({ wave }) {
+  const [autoPlay, setAutoPlay] = useState(false);
+
+  useEffect(() => {
+    if (wave) setAutoPlay(true);
+  }, [wave]);
+
   if (!wave) {
     return (
       <div className="text-center text-gray-500">
@@ -11,6 +17,16 @@ export default function FeaturedWave({wave}) {
       </div>
     );
   }
+
+  const getYouTubeVideoId = (url) => {
+    if (!url) return null;
+    const match = url.match(
+      /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/
+    );
+    return match ? match[1] : null;
+  };
+
+  const videoId = getYouTubeVideoId(wave.youtubeUrl);
 
   return (
     <div className="space-y-9">
@@ -21,36 +37,42 @@ export default function FeaturedWave({wave}) {
         </p>
       </div>
 
-      <div className="relative rounded-xl overflow-hidden shadow-lg">
-        <div className="relative h-[550px] w-full">
-          <Image
-            src={wave.thumbnail || "/placeholder.svg"}
-            alt={wave.title}
-            fill
-            className="object-cover"
-            priority
-          />
-        </div>
+      <div className="relative rounded-xl overflow-hidden shadow-lg bg-black">
 
-        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent space-y-4">
-          <div>
-            <h3 className="text-xl font-bold text-white mb-2">
-              {wave.title}
-            </h3>
-            <div className="flex items-center gap-2 text-cyan-400 text-sm font-semibold">
-              <span>🌊</span>
-              <span>WAVE</span>
-            </div>
+        {/* CASE 1: YouTube video available */}
+        {videoId ? (
+          <YouTubePlayer videoId={videoId} autoPlay={autoPlay} />
+        ) : wave.audioUrl ? (
+
+          /* CASE 2: Audio URL available */
+          <audio
+            src={wave.audioUrl}
+            controls
+            autoPlay={autoPlay}
+            className="w-full h-[80px] bg-black text-white"
+          />
+
+        ) : (
+
+          /* CASE 3: Thumbnail fallback */
+          <div className="relative h-[550px] w-full">
+            <Image
+              src={wave.thumbnail || "/placeholder.svg"}
+              alt={wave.title}
+              fill
+              className="object-cover"
+            />
           </div>
 
-          <a
-            href={wave.audioUrl || wave.youtubeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full text-center bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-2 rounded-lg transition"
-          >
-            Listen Now 🎧
-          </a>
+        )}
+
+        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent space-y-4">
+          <h3 className="text-xl font-bold text-white">{wave.title}</h3>
+
+          <div className="flex items-center gap-2 text-cyan-400 text-sm font-semibold">
+            <span>🌊</span>
+            <span>{videoId ? "VIDEO WAVE" : wave.audioUrl ? "AUDIO WAVE" : "NO MEDIA"}</span>
+          </div>
         </div>
       </div>
     </div>

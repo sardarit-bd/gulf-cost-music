@@ -273,7 +273,7 @@ export default function Header() {
             >
               Merch
             </Link>
-            <Link
+            {/* <Link
               href="/casts"
               className="hover:text-yellow-400 transition-colors duration-200 font-medium text-sm xl:text-base"
             >
@@ -284,7 +284,7 @@ export default function Header() {
               className="hover:text-yellow-400 transition-colors duration-200 font-medium text-sm xl:text-base"
             >
               Waves
-            </Link>
+            </Link> */}
           </nav>
 
           {/* Tablet Nav */}
@@ -358,7 +358,7 @@ export default function Header() {
             >
               Merch
             </Link>
-            <Link
+            {/* <Link
               href="/casts"
               className="hover:text-yellow-400 transition-colors duration-200 text-sm"
               onClick={closeAllDropdowns}
@@ -371,7 +371,7 @@ export default function Header() {
               onClick={closeAllDropdowns}
             >
               Waves
-            </Link>
+            </Link> */}
           </nav>
 
           {/* Auth Buttons & Dashboard */}
@@ -648,7 +648,7 @@ export default function Header() {
                 >
                   Merch
                 </Link>
-                <Link
+                {/* <Link
                   href="/casts"
                   className="text-white hover:text-yellow-400 transition-colors duration-200 py-4 px-4 rounded-lg hover:bg-white/5 font-medium text-lg text-left border-b border-gray-700"
                   onClick={closeMobileMenu}
@@ -661,7 +661,7 @@ export default function Header() {
                   onClick={closeMobileMenu}
                 >
                   Waves
-                </Link>
+                </Link> */}
 
                 <div className="pt-6 mt-4 border-t border-gray-700">
                   {isLoggedIn ? (

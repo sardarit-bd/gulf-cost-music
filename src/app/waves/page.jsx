@@ -4,7 +4,9 @@ import WavesFavoritesList from "@/components/modules/waves/waves-favorites-list"
 import { useState } from "react";
 
 export default function WavesSection() {
-  const [selectedWaves, setSelectedWaves] = useState("")
+  const [selectedWave, setSelectedWave] = useState(null);
+  const [playingWaveId, setPlayingWaveId] = useState(null);
+
   return (
     <div
       style={{
@@ -15,12 +17,16 @@ export default function WavesSection() {
       <div className="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Favorites */}
         <div className="lg:col-span-1">
-          <WavesFavoritesList setWave = {setSelectedWaves} />
+          <WavesFavoritesList
+            setWave={setSelectedWave}
+            playingWaveId={playingWaveId}
+            setPlayingWaveId={setPlayingWaveId}
+          />
         </div>
 
         {/* Right Column - Featured Wave */}
         <div className="lg:col-span-2">
-          <FeaturedWave wave={selectedWaves} />
+          <FeaturedWave wave={selectedWave} />
         </div>
       </div>
     </div>
