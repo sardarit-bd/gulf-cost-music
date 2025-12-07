@@ -127,7 +127,7 @@ export default function CalendarBoard() {
             <div className="p-2 rounded-lg bg-gray-100">
               <CalendarDays className="w-6 h-6 text-gray-700" />
             </div>
-            <h1 className="text-2xl font-bold brandColor">Calendar Board</h1>
+            <h1 className="text-black text-2xl font-bold brandColor">Calendar Board</h1>
           </div>
 
           {/* city dropdown */}
@@ -152,11 +152,10 @@ export default function CalendarBoard() {
                         setSelectedCity(city);
                         setDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 transition ${
-                        selectedCity === city
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 transition ${selectedCity === city
                           ? "bg-yellow-50 font-semibold text-gray-800"
                           : "text-gray-600"
-                      }`}
+                        }`}
                     >
                       {formatCityName(city)}
                     </button>
@@ -192,8 +191,7 @@ export default function CalendarBoard() {
 
           <h3 className="text-lg font-semibold text-gray-800">
             {view === "month" &&
-              `${
-                monthNames[currentDate.getMonth()]
+              `${monthNames[currentDate.getMonth()]
               } ${currentDate.getFullYear()}`}
             {view === "week" && (
               <>
@@ -210,8 +208,7 @@ export default function CalendarBoard() {
               </>
             )}
             {view === "day" &&
-              `${
-                monthNames[currentDate.getMonth()]
+              `${monthNames[currentDate.getMonth()]
               } ${currentDate.getDate()}, ${currentDate.getFullYear()}`}
           </h3>
 
@@ -220,11 +217,10 @@ export default function CalendarBoard() {
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`px-3 py-1 rounded-md border text-sm text-gray-600 capitalize transition ${
-                  view === v
+                className={`px-3 py-1 rounded-md border text-sm text-gray-600 capitalize transition ${view === v
                     ? "bg-yellow-300 border-yellow-400"
                     : "bg-white border-gray-300 hover:bg-yellow-100"
-                }`}
+                  }`}
               >
                 {v}
               </button>
@@ -336,9 +332,8 @@ const MonthView = ({
       return (
         <div
           key={day}
-          className={`relative border h-24 p-2 ${
-            dayEvents.length > 0 ? "cursor-pointer hover:bg-yellow-50" : ""
-          } transition ${dayEvents.length > 0 ? "bg-yellow-50" : "bg-white"}`}
+          className={`relative border h-24 p-2 ${dayEvents.length > 0 ? "cursor-pointer hover:bg-yellow-50" : ""
+            } transition ${dayEvents.length > 0 ? "bg-yellow-50" : "bg-white"}`}
         >
           <span className="absolute top-1 right-2 text-xs text-gray-500 font-medium">
             {day}
@@ -575,9 +570,8 @@ const EventModal = ({ event, city, monthNames, currentDate, onClose }) => {
 const ChevronDownIcon = ({ open }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    className={`w-4 h-4 ml-1 transform transition-transform ${
-      open ? "rotate-180" : ""
-    }`}
+    className={`w-4 h-4 ml-1 transform transition-transform ${open ? "rotate-180" : ""
+      }`}
     fill="none"
     viewBox="0 0 24 24"
     stroke="currentColor"

@@ -2,8 +2,11 @@
 import { useEffect, useState } from "react";
 import WaveItem from "./wave-item";
 
-
-export default function WavesFavoritesList({ setWave }) {
+export default function WavesFavoritesList({
+  setWave,
+  playingWaveId,
+  setPlayingWaveId
+}) {
   const [waves, setWaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
@@ -15,9 +18,10 @@ export default function WavesFavoritesList({ setWave }) {
         const data = await res.json();
         if (res.ok && data.success && Array.isArray(data.data.waves)) {
           setWaves(data.data.waves);
-          setWave(data.data.waves[0])
+          if (data.data.waves.length > 0) {
+            setWave(data.data.waves[0]);
+          }
         } else {
-          console.warn("⚠️ No valid wave data found");
           setWaves([]);
         }
       } catch (err) {
@@ -31,6 +35,15 @@ export default function WavesFavoritesList({ setWave }) {
     fetchWaves();
   }, [API_BASE]);
 
+  const handlePlayClick = (waveId) => {
+    setPlayingWaveId(waveId);
+    // Find and set the wave
+    const selected = waves.find(w => w._id === waveId);
+    if (selected) {
+      setWave(selected);
+    }
+  };
+
   if (loading)
     return <p className="text-gray-600 animate-pulse">Loading waves...</p>;
 
@@ -43,9 +56,12 @@ export default function WavesFavoritesList({ setWave }) {
 
       <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
         {waves.map((wave) => (
-          <div key={wave._id} onClick={() => setWave(wave)}>
-            <WaveItem key={wave._id} wave={wave} />
-          </div>
+          <WaveItem
+            key={wave._id}
+            wave={wave}
+            isPlaying={playingWaveId === wave._id}
+            onPlayClick={handlePlayClick}
+          />
         ))}
       </div>
     </div>
