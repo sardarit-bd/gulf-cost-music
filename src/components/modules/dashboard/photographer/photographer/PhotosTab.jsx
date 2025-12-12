@@ -117,7 +117,7 @@ export default function PhotosTab({
                         <p className="text-gray-400 text-sm mb-4">
                             {photos.length} photo(s) - Click on any photo to remove it
                         </p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             {photos.map((photo, index) => (
                                 <div
                                     key={photo._id || index}

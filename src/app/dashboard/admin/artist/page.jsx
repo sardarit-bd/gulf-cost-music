@@ -7,8 +7,9 @@ import DeactivatedUsers from "@/components/modules/dashboard/artists/Deactivated
 import DeactivateModal from "@/components/modules/dashboard/artists/DeactivateModal";
 import Filters from "@/components/modules/dashboard/artists/Filters";
 import StatCard from "@/components/modules/dashboard/artists/StatCard";
+import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
-import { Music, Pause, Play, TrendingUp, User } from "lucide-react";
+import { Crown, Music, Pause, Play, TrendingUp, User, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -22,6 +23,7 @@ const getCookie = (name) => {
 };
 
 const ArtistManagement = () => {
+  const { user, updateUser } = useAuth();
   const [artists, setArtists] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -29,12 +31,18 @@ const ArtistManagement = () => {
   const [search, setSearch] = useState("");
   const [deactivatedSearch, setDeactivatedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [planFilter, setPlanFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("all");
   const [actionMenu, setActionMenu] = useState(null);
   const [editingArtist, setEditingArtist] = useState(null);
   const [formData, setFormData] = useState({});
   const [saveLoading, setSaveLoading] = useState(false);
   const [viewingArtist, setViewingArtist] = useState(null);
+  const [planChangeModal, setPlanChangeModal] = useState({
+    isOpen: false,
+    artist: null,
+    newPlan: "",
+  });
 
   // Modal states
   const [deactivateModal, setDeactivateModal] = useState({
@@ -47,7 +55,7 @@ const ArtistManagement = () => {
   });
   const [modalLoading, setModalLoading] = useState(false);
 
-  const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content?type=artists`;
+  const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/artists`;
 
   const showToast = (message, type = "success") => {
     if (type === "error") toast.error(message);
@@ -64,7 +72,7 @@ const ArtistManagement = () => {
   const fetchArtists = async () => {
     try {
       setLoading(true);
-      const token = getCookie("token"); // ✅ cookies থেকে token নিন
+      const token = getCookie("token");
 
       if (!token) {
         showToast("No authentication token found", "error");
@@ -77,22 +85,30 @@ const ArtistManagement = () => {
         limit: 10,
         ...(search && { search }),
         ...(statusFilter !== "all" && { status: statusFilter }),
+        ...(planFilter !== "all" && { plan: planFilter }),
       });
 
-      const { data } = await axios.get(`${API_URL}&${params.toString()}`, {
+      // Correct API endpoint
+      const { data } = await axios.get(`${API_URL}?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
-        credentials: "include", // ✅ credentials include করুন
+        credentials: "include",
       });
 
-      setArtists(data.data.content);
-      setPages(data.data.pagination.pages);
+      console.log("Fetched artists:", data);
+
+      if (data.success) {
+        setArtists(data.data.content);
+        setPages(data.data.pagination.pages);
+      } else {
+        showToast(data.message || "Failed to fetch artists", "error");
+      }
     } catch (err) {
       console.error("Fetch artists error:", err);
       if (err.response?.status === 401) {
         handleUnauthorized();
         return;
       }
-      showToast("Failed to fetch artists", "error");
+      showToast(err.response?.data?.message || "Failed to fetch artists", "error");
     } finally {
       setLoading(false);
     }
@@ -124,6 +140,15 @@ const ArtistManagement = () => {
     setActivateModal({ isOpen: true, artist });
   };
 
+  // Open Plan Change Modal
+  const openPlanChangeModal = (artist, newPlan) => {
+    setPlanChangeModal({
+      isOpen: true,
+      artist,
+      newPlan,
+    });
+  };
+
   // Handle Deactivate Confirmation
   const handleDeactivateConfirm = async (
     id,
@@ -133,7 +158,7 @@ const ArtistManagement = () => {
   ) => {
     setModalLoading(true);
     try {
-      const token = getCookie("token"); // ✅ cookies থেকে token নিন
+      const token = getCookie("token");
 
       if (!token) {
         showToast("No authentication token found", "error");
@@ -150,7 +175,7 @@ const ArtistManagement = () => {
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-          credentials: "include", // ✅ credentials include করুন
+          credentials: "include",
         }
       );
 
@@ -178,7 +203,7 @@ const ArtistManagement = () => {
   const handleActivateConfirm = async (id, notifyUser) => {
     setModalLoading(true);
     try {
-      const token = getCookie("token"); // ✅ cookies থেকে token নিন
+      const token = getCookie("token");
 
       if (!token) {
         showToast("No authentication token found", "error");
@@ -194,7 +219,7 @@ const ArtistManagement = () => {
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-          credentials: "include", // ✅ credentials include করুন
+          credentials: "include",
         }
       );
 
@@ -217,6 +242,96 @@ const ArtistManagement = () => {
     }
   };
 
+  // Handle Plan Change Confirmation
+  const handlePlanChangeConfirm = async (id, newPlan, notifyUser) => {
+    setModalLoading(true);
+    try {
+      const token = getCookie("token");
+
+      if (!token) {
+        showToast("No authentication token found", "error");
+        handleUnauthorized();
+        return;
+      }
+
+      console.log("Changing plan for artist:", { id, newPlan, notifyUser });
+
+      // Correct API endpoint
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/${id}/plan`,
+        {
+          subscriptionPlan: newPlan,
+          notifyUser: notifyUser || false,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
+
+      console.log("Plan change response:", response.data);
+
+      if (response.data.success) {
+        fetchArtists();
+        setPlanChangeModal({ isOpen: false, artist: null, newPlan: "" });
+        setActionMenu(null);
+        showToast(
+          response.data.message ||
+          `Plan changed to ${newPlan.toUpperCase()} successfully!`
+        );
+
+        if (notifyUser) {
+          showToast("Notification email sent to artist");
+        }
+
+        const updatedArtistUser = response.data?.data?.artist?.user;
+        if (updatedArtistUser && updatedArtistUser._id === user?._id) {
+          updateUser({
+            subscriptionPlan: updatedArtistUser.subscriptionPlan,
+            subscriptionStatus: updatedArtistUser.subscriptionStatus,
+          });
+        }
+      } else {
+        showToast(
+          response.data.message || "Failed to change plan",
+          "error"
+        );
+      }
+    } catch (err) {
+      console.error("Change plan error:", err);
+
+      // Detailed error logging
+      if (err.response) {
+        console.error("Error response:", err.response.data);
+        console.error("Error status:", err.response.status);
+        showToast(
+          err.response.data?.message ||
+          `Server error: ${err.response.status}`,
+          "error"
+        );
+      } else if (err.request) {
+        console.error("No response received:", err.request);
+        showToast(
+          "No response from server. Please check your connection.",
+          "error"
+        );
+      } else {
+        console.error("Error setting up request:", err.message);
+        showToast("Request setup error: " + err.message, "error");
+      }
+
+      if (err.response?.status === 401) {
+        handleUnauthorized();
+      }
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+
   // Simple toggle for table (without modal)
   const toggleActive = async (id, currentStatus) => {
     if (currentStatus) {
@@ -226,7 +341,7 @@ const ArtistManagement = () => {
     } else {
       // For activation, do simple toggle
       try {
-        const token = getCookie("token"); // ✅ cookies থেকে token নিন
+        const token = getCookie("token");
 
         if (!token) {
           showToast("No authentication token found", "error");
@@ -239,7 +354,7 @@ const ArtistManagement = () => {
           { isActive: true },
           {
             headers: { Authorization: `Bearer ${token}` },
-            credentials: "include", // ✅ credentials include করুন
+            credentials: "include",
           }
         );
         fetchArtists();
@@ -262,10 +377,11 @@ const ArtistManagement = () => {
       name: artist.name || "",
       genre: artist.genre || "",
       city: artist.city || "",
-      bio: artist.bio || "",
+      biography: artist.biography || "",
       website: artist.website || "",
       phone: artist.phone || "",
       isActive: artist.isActive || false,
+      subscriptionPlan: artist.user?.subscriptionPlan || "free",
     });
     setActionMenu(null);
   };
@@ -273,7 +389,7 @@ const ArtistManagement = () => {
   const handleSave = async (id) => {
     setSaveLoading(true);
     try {
-      const token = getCookie("token"); // ✅ cookies থেকে token নিন
+      const token = getCookie("token");
 
       if (!token) {
         showToast("No authentication token found", "error");
@@ -289,7 +405,7 @@ const ArtistManagement = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          credentials: "include", // ✅ credentials include করুন
+          credentials: "include",
         }
       );
 
@@ -330,7 +446,7 @@ const ArtistManagement = () => {
     )
       return;
     try {
-      const token = getCookie("token"); // ✅ cookies থেকে token নিন
+      const token = getCookie("token");
 
       if (!token) {
         showToast("No authentication token found", "error");
@@ -342,7 +458,7 @@ const ArtistManagement = () => {
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          credentials: "include", // ✅ credentials include করুন
+          credentials: "include",
         }
       );
       fetchArtists();
@@ -361,6 +477,7 @@ const ArtistManagement = () => {
   const clearFilters = () => {
     setSearch("");
     setStatusFilter("all");
+    setPlanFilter("all");
     setPage(1);
   };
 
@@ -369,9 +486,16 @@ const ArtistManagement = () => {
 
   const handlePageChange = (newPage) => setPage(newPage);
 
+  // Plan statistics
+  const planStats = {
+    pro: artists.filter(a => a.user?.subscriptionPlan === "pro").length,
+    free: artists.filter(a => a.user?.subscriptionPlan === "free").length,
+    total: artists.length,
+  };
+
   useEffect(() => {
     fetchArtists();
-  }, [page, statusFilter]);
+  }, [page, statusFilter, planFilter]);
 
   const activeArtists = artists.filter((a) => a.isActive);
   const deactivatedArtists = artists.filter((a) => !a.isActive);
@@ -399,29 +523,26 @@ const ArtistManagement = () => {
                 Artist Management
               </h1>
               <p className="text-gray-600 mt-2">
-                Manage artist profiles, activate/deactivate accounts, and
-                monitor artist activities
+                Manage artist profiles, subscription plans, activate/deactivate accounts
               </p>
             </div>
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
               {/* Tabs for All Artists and Deactivated Artists */}
               <div className="flex bg-gray-200 rounded-lg p-1">
                 <button
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === "all"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "all"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                    }`}
                   onClick={() => setActiveTab("all")}
                 >
                   All Artists
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === "deactivated"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "deactivated"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-600 hover:text-gray-900"
+                    }`}
                   onClick={() => setActiveTab("deactivated")}
                 >
                   Deactivated ({deactivatedArtists.length})
@@ -431,7 +552,7 @@ const ArtistManagement = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
             <StatCard
               icon={User}
               label="Total Artists"
@@ -454,11 +575,27 @@ const ArtistManagement = () => {
               color="orange"
             />
             <StatCard
+              icon={Crown}
+              label="Pro Plan"
+              value={planStats.pro}
+              change={5}
+              color="yellow"
+              plan="pro"
+            />
+            <StatCard
+              icon={Users}
+              label="Free Plan"
+              value={planStats.free}
+              change={-2}
+              color="blue"
+              plan="free"
+            />
+            <StatCard
               icon={TrendingUp}
               label="This Month"
               value={stats.thisMonth}
               change={15}
-              color="blue"
+              color="indigo"
             />
           </div>
 
@@ -467,8 +604,10 @@ const ArtistManagement = () => {
               <Filters
                 search={search}
                 statusFilter={statusFilter}
+                planFilter={planFilter}
                 onSearchChange={setSearch}
                 onStatusFilterChange={setStatusFilter}
+                onPlanFilterChange={setPlanFilter}
                 onApply={fetchArtists}
                 onClear={clearFilters}
               />
@@ -486,6 +625,7 @@ const ArtistManagement = () => {
                 onViewProfile={handleViewProfile}
                 onToggleActive={toggleActive}
                 onOpenDeactivateModal={openDeactivateModal}
+                onOpenPlanChangeModal={openPlanChangeModal}
                 onEdit={handleEdit}
                 onSave={handleSave}
                 onCancel={handleCancel}
@@ -499,6 +639,7 @@ const ArtistManagement = () => {
               deactivatedArtists={filteredDeactivatedArtists}
               loading={loading}
               onActivateUser={openActivateModal}
+              onOpenPlanChangeModal={openPlanChangeModal}
               onViewProfile={handleViewProfile}
               onEdit={handleEdit}
               onDeleteArtist={deleteArtist}
@@ -525,11 +666,62 @@ const ArtistManagement = () => {
             loading={modalLoading}
           />
 
+          {/* Plan Change Modal */}
+          {planChangeModal.isOpen && planChangeModal.artist && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Change Subscription Plan
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Change <span className="font-semibold">{planChangeModal.artist.name}</span>'s plan from{" "}
+                  <span className={`font-semibold ${planChangeModal.artist.user?.subscriptionPlan === "pro" ? "text-yellow-600" : "text-blue-600"}`}>
+                    {planChangeModal.artist.user?.subscriptionPlan?.toUpperCase() || "FREE"}
+                  </span> to{" "}
+                  <span className={`font-semibold ${planChangeModal.newPlan === "pro" ? "text-yellow-600" : "text-blue-600"}`}>
+                    {planChangeModal.newPlan.toUpperCase()}
+                  </span>
+                </p>
+
+                <div className="mb-4">
+                  <label className="flex items-center mb-2">
+                    <input type="checkbox" className="mr-2" />
+                    <span className="text-sm text-gray-700">Notify user via email</span>
+                  </label>
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setPlanChangeModal({ isOpen: false, artist: null, newPlan: "" })}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handlePlanChangeConfirm(
+                      planChangeModal.artist._id,
+                      planChangeModal.newPlan,
+                      true
+                    )}
+                    disabled={modalLoading}
+                    className={`px-4 py-2 text-sm font-medium text-white rounded-lg ${planChangeModal.newPlan === "pro"
+                      ? "bg-yellow-500 hover:bg-yellow-600"
+                      : "bg-blue-500 hover:bg-blue-600"
+                      }`}
+                  >
+                    {modalLoading ? "Changing..." : `Change to ${planChangeModal.newPlan.toUpperCase()}`}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {viewingArtist && (
             <ArtistDetailModal
               artist={viewingArtist}
               onClose={() => setViewingArtist(null)}
               onEdit={handleEdit}
+              onPlanChange={openPlanChangeModal}
             />
           )}
         </div>

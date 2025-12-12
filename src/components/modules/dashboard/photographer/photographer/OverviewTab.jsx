@@ -141,7 +141,7 @@ export default function OverviewTab({ photographer, previewImages }) {
                     </h3>
 
                     {photographer.photos && photographer.photos.length > 0 ? (
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
                             {photographer.photos.map((photo, idx) => (
                                 <div
                                     key={photo._id || idx}

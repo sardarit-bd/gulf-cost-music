@@ -1,6 +1,7 @@
 "use client";
 import {
     Calendar,
+    Crown,
     Edit,
     Eye,
     Mail,
@@ -11,6 +12,7 @@ import {
     Search,
     Trash2,
     User,
+    Users,
     X
 } from "lucide-react";
 import { useState } from "react";
@@ -19,6 +21,7 @@ const DeactivatedUsers = ({
     deactivatedArtists,
     loading,
     onActivateUser,
+    onOpenPlanChangeModal,
     onViewProfile,
     onEdit,
     onDeleteArtist,
@@ -102,6 +105,9 @@ const DeactivatedUsers = ({
                                 Artist
                             </th>
                             <th className="px-6 py-4 text-left text-xs font-medium text-red-800 uppercase tracking-wider">
+                                Plan
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-medium text-red-800 uppercase tracking-wider">
                                 Details
                             </th>
                             <th className="px-6 py-4 text-left text-xs font-medium text-red-800 uppercase tracking-wider">
@@ -124,6 +130,7 @@ const DeactivatedUsers = ({
                                     actionMenu={actionMenu}
                                     onActionMenuToggle={handleActionMenuToggle}
                                     onActivate={handleActivate}
+                                    onOpenPlanChangeModal={onOpenPlanChangeModal}
                                     onViewProfile={onViewProfile}
                                     onEdit={onEdit}
                                     onDeleteArtist={onDeleteArtist}
@@ -131,7 +138,7 @@ const DeactivatedUsers = ({
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="5" className="px-6 py-12 text-center">
+                                <td colSpan="6" className="px-6 py-12 text-center">
                                     <div className="text-gray-500">
                                         <User className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                                         <p className="text-lg font-medium text-gray-900 mb-2">
@@ -159,6 +166,7 @@ const DeactivatedArtistRow = ({
     actionMenu,
     onActionMenuToggle,
     onActivate,
+    onOpenPlanChangeModal,
     onViewProfile,
     onEdit,
     onDeleteArtist
@@ -176,6 +184,8 @@ const DeactivatedArtistRow = ({
         if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
         return `${Math.floor(diffDays / 365)} years ago`;
     };
+
+    const currentPlan = artist.user?.subscriptionPlan || "free";
 
     return (
         <tr className="hover:bg-red-50 transition-colors group border-l-4 border-l-red-400">
@@ -195,6 +205,50 @@ const DeactivatedArtistRow = ({
                     </div>
                 </div>
             </td>
+
+            {/* 🔥 Plan Column */}
+            <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex flex-col gap-2">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${currentPlan === "pro"
+                            ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                            : "bg-blue-100 text-blue-800 border border-blue-200"
+                        }`}>
+                        {currentPlan === "pro" ? (
+                            <>
+                                <Crown className="w-3 h-3 mr-1" />
+                                Pro Plan
+                            </>
+                        ) : (
+                            <>
+                                <Users className="w-3 h-3 mr-1" />
+                                Free Plan
+                            </>
+                        )}
+                    </span>
+
+                    {/* Quick Plan Change Buttons */}
+                    <div className="flex gap-1">
+                        {currentPlan === "free" ? (
+                            <button
+                                onClick={() => onOpenPlanChangeModal(artist, "pro")}
+                                className="inline-flex items-center px-2 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
+                                title="Upgrade to Pro"
+                            >
+                                <Crown className="w-3 h-3" />
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => onOpenPlanChangeModal(artist, "free")}
+                                className="inline-flex items-center px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                                title="Downgrade to Free"
+                            >
+                                <Users className="w-3 h-3" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </td>
+
             <td className="px-6 py-4">
                 <div className="space-y-1">
                     {artist.genre && (
@@ -264,6 +318,30 @@ const DeactivatedArtistRow = ({
                                     <Edit className="w-4 h-4 mr-2" />
                                     Edit Profile
                                 </button>
+
+                                {/* 🔥 Plan Change Option */}
+                                <button
+                                    onClick={() => {
+                                        onOpenPlanChangeModal(artist,
+                                            currentPlan === "pro" ? "free" : "pro"
+                                        );
+                                        onActionMenuToggle(null);
+                                    }}
+                                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                >
+                                    {currentPlan === "pro" ? (
+                                        <>
+                                            <Users className="w-4 h-4 mr-2" />
+                                            Downgrade to Free
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Crown className="w-4 h-4 mr-2" />
+                                            Upgrade to Pro
+                                        </>
+                                    )}
+                                </button>
+
                                 <button
                                     onClick={() => {
                                         onDeleteArtist(artist._id);

@@ -6,6 +6,7 @@ import {
   CheckCircle,
   Clock,
   Package,
+  PackageOpen,
   RefreshCw,
   Truck,
   XCircle,
@@ -97,9 +98,9 @@ export default function UserOrderTracking() {
   const getIndex = (status) => statuses.findIndex((s) => s.value === status);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-900 mb-6">📦 My Orders</h1>
+    <div className="min-h-screen  p-6">
+      <div className="">
+        <h1 className="text-4xl font-bold text-white mb-6 flex justify-center items-center gap-3"><span className="text-yellow-500 "> <PackageOpen className="w-14 h-14" /></span> My Orders</h1>
 
         {loading ? (
           <div className="text-center py-10">
@@ -120,13 +121,13 @@ export default function UserOrderTracking() {
               return (
                 <div
                   key={order._id}
-                  className="bg-white p-6 rounded-2xl shadow-md border border-gray-200"
+                  className=" p-6 rounded-2xl shadow-md border bg-[#2c3133] border-gray-500"
                 >
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-gray-900">
+                    <h2 className="text-xl font-bold text-white">
                       Order #{order._id.slice(-6).toUpperCase()}
                     </h2>
-                    <span className="flex items-center text-gray-600 gap-2">
+                    <span className="flex items-center text-white gap-2">
                       <Calendar className="w-4 h-4" />
                       {new Date(order.createdAt).toLocaleDateString()}
                     </span>
@@ -139,10 +140,10 @@ export default function UserOrderTracking() {
                       className="w-20 h-20 rounded-xl border object-cover"
                     />
                     <div>
-                      <p className="font-semibold text-gray-900 text-lg">
+                      <p className="font-semibold text-white text-lg">
                         {order.merch?.name}
                       </p>
-                      <p className="text-gray-500">
+                      <p className="text-white">
                         {order.quantity} × ${order.merch?.price}
                       </p>
                       <p className="font-bold text-emerald-600 text-lg mt-1">
@@ -165,18 +166,16 @@ export default function UserOrderTracking() {
                           >
                             <div
                               className={`w-8 h-8 flex items-center justify-center rounded-full border
-                                                                ${
-                                                                  active
-                                                                    ? "bg-blue-600 text-white border-blue-600"
-                                                                    : "bg-gray-100 text-gray-400 border-gray-300"
-                                                                }`}
+                                                                ${active
+                                  ? "bg-yellow-500 text-white border-yellow-600"
+                                  : "bg-gray-100 text-gray-400 border-gray-300"
+                                }`}
                             >
                               <Icon className="w-4 h-4" />
                             </div>
                             <p
-                              className={`text-xs mt-2 ${
-                                active ? "text-gray-900" : "text-gray-400"
-                              }`}
+                              className={`text-xs mt-2 ${active ? "text-white" : "text-gray-400"
+                                }`}
                             >
                               {item.label}
                             </p>
@@ -185,9 +184,9 @@ export default function UserOrderTracking() {
                       })}
                     </div>
 
-                    <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 -z-10"></div>
+                    <div className="absolute top-4 left-0 right-0 h-1 bg-red-600 -z-10"></div>
                     <div
-                      className="absolute top-4 left-0 h-1 bg-blue-600 transition-all -z-10"
+                      className="absolute top-4 left-0 h-1 bg-yellow-500 transition-all -z-10"
                       style={{ width: `${(current / 5) * 100}%` }}
                     ></div>
                   </div>

@@ -10,36 +10,38 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchMe = async () => {
       try {
-        const userCookie = document.cookie
+        const token = document.cookie
           .split("; ")
-          .find((row) => row.startsWith("user="));
+          .find((row) => row.startsWith("token="))
+          ?.split("=")[1];
 
-        if (userCookie) {
-          const userData = JSON.parse(
-            decodeURIComponent(userCookie.split("=")[1])
-          );
-          setUser(userData);
+        if (!token) {
+          setUser(null);
           setLoading(false);
           return;
         }
 
-        // Fallback: API call
-        const res = await fetch("/api/auth/me");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
         if (res.ok) {
           const data = await res.json();
-          setUser(data.user);
+          setUser(data.data.user);
         } else {
           setUser(null);
         }
-      } catch (error) {
-        console.error("Auth check failed:", error);
+      } catch (err) {
+        console.log(err);
         setUser(null);
       }
+
       setLoading(false);
     };
 
     fetchMe();
   }, []);
+
 
   const login = (userData) => {
     setUser(userData);
@@ -56,7 +58,7 @@ export const AuthProvider = ({ children }) => {
     // Clear all local storage related to auth
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    localStorage.removeItem("auth-storage"); // <-- THIS IS THE FIX
+    localStorage.removeItem("auth-storage");
 
     // Optional: Clear everything
     localStorage.clear();

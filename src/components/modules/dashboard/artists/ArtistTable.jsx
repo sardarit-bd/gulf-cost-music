@@ -1,6 +1,7 @@
 "use client";
 import {
     Calendar,
+    Crown,
     Edit,
     Eye,
     Mail,
@@ -10,6 +11,7 @@ import {
     Power,
     Save,
     Trash2,
+    Users,
     X
 } from "lucide-react";
 
@@ -25,6 +27,8 @@ const ArtistTable = ({
     onPageChange,
     onViewProfile,
     onToggleActive,
+    onOpenDeactivateModal,
+    onOpenPlanChangeModal,
     onEdit,
     onSave,
     onCancel,
@@ -80,6 +84,9 @@ const ArtistTable = ({
                                 Artist
                             </th>
                             <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Plan
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Details
                             </th>
                             <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -107,6 +114,8 @@ const ArtistTable = ({
                                     availableGenres={availableGenres}
                                     onViewProfile={onViewProfile}
                                     onToggleActive={onToggleActive}
+                                    onOpenDeactivateModal={onOpenDeactivateModal}
+                                    onOpenPlanChangeModal={onOpenPlanChangeModal}
                                     onEdit={onEdit}
                                     onSave={onSave}
                                     onCancel={onCancel}
@@ -117,7 +126,7 @@ const ArtistTable = ({
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="5" className="px-6 py-12 text-center">
+                                <td colSpan="6" className="px-6 py-12 text-center">
                                     <div className="text-gray-500">
                                         <Music className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                                         <p className="text-lg font-medium text-gray-900 mb-2">No artists found</p>
@@ -152,6 +161,8 @@ const ArtistRow = ({
     availableGenres,
     onViewProfile,
     onToggleActive,
+    onOpenDeactivateModal,
+    onOpenPlanChangeModal,
     onEdit,
     onSave,
     onCancel,
@@ -160,6 +171,7 @@ const ArtistRow = ({
     onActionMenuToggle
 }) => {
     const isEditing = editingArtist === artist._id;
+    const currentPlan = artist.user?.subscriptionPlan || "free";
 
     return (
         <tr className="hover:bg-gray-50 transition-colors group">
@@ -189,6 +201,63 @@ const ArtistRow = ({
                     </div>
                 </div>
             </td>
+
+            {/* Plan Column */}
+            <td className="px-6 py-4 whitespace-nowrap">
+                {isEditing ? (
+                    <select
+                        value={formData.subscriptionPlan || 'free'}
+                        onChange={(e) => onInputChange('subscriptionPlan', e.target.value)}
+                        className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 w-full"
+                    >
+                        <option value="free">Free Plan</option>
+                        <option value="pro">Pro Plan</option>
+                    </select>
+                ) : (
+                    <div className="flex flex-col gap-2">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${currentPlan === "pro"
+                            ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                            : "bg-blue-100 text-blue-800 border border-blue-200"
+                            }`}>
+                            {currentPlan === "pro" ? (
+                                <>
+                                    <Crown className="w-3 h-3 mr-1" />
+                                    Pro Plan
+                                </>
+                            ) : (
+                                <>
+                                    <Users className="w-3 h-3 mr-1" />
+                                    Free Plan
+                                </>
+                            )}
+                        </span>
+
+                        {/* Quick Plan Change Buttons */}
+                        <div className="flex gap-1">
+                            {currentPlan === "free" ? (
+                                <button
+                                    onClick={() => onOpenPlanChangeModal(artist, "pro")}
+                                    className="inline-flex items-center gap-2 px-2 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
+                                    title="Upgrade to Pro"
+                                >
+                                    <Crown className="w-3 h-3" />
+                                    Pro
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => onOpenPlanChangeModal(artist, "free")}
+                                    className="inline-flex items-center gap-2 px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                                    title="Downgrade to Free"
+                                >
+                                    <Users className="w-3 h-3" />
+                                    Free
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </td>
+
             <td className="px-6 py-4">
                 <div className="space-y-2">
                     {isEditing ? (
@@ -293,10 +362,13 @@ const ArtistRow = ({
                             </button>
 
                             <button
-                                onClick={() => onToggleActive(artist._id, artist.isActive)}
+                                onClick={() => artist.isActive
+                                    ? onOpenDeactivateModal(artist)
+                                    : onToggleActive(artist._id, false)
+                                }
                                 className={`p-2 rounded-lg transition-colors ${artist.isActive
-                                        ? "bg-orange-100 text-orange-600 hover:bg-orange-200"
-                                        : "bg-green-100 text-green-600 hover:bg-green-200"
+                                    ? "bg-orange-100 text-orange-600 hover:bg-orange-200"
+                                    : "bg-green-100 text-green-600 hover:bg-green-200"
                                     }`}
                                 title={artist.isActive ? "Deactivate" : "Activate"}
                             >
@@ -320,6 +392,30 @@ const ArtistRow = ({
                                             <Edit className="w-4 h-4 mr-2" />
                                             Edit Profile
                                         </button>
+
+                                        {/* Plan Change in Action Menu */}
+                                        <button
+                                            onClick={() => {
+                                                onOpenPlanChangeModal(artist,
+                                                    currentPlan === "pro" ? "free" : "pro"
+                                                );
+                                                onActionMenuToggle(null);
+                                            }}
+                                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                        >
+                                            {currentPlan === "pro" ? (
+                                                <>
+                                                    <Users className="w-4 h-4 mr-2" />
+                                                    Downgrade to Free
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Crown className="w-4 h-4 mr-2" />
+                                                    Upgrade to Pro
+                                                </>
+                                            )}
+                                        </button>
+
                                         <button
                                             onClick={() => onDeleteArtist(artist._id)}
                                             className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
@@ -360,8 +456,8 @@ const Pagination = ({ page, pages, artistsCount, onPageChange }) => {
                                 key={pageNumber}
                                 onClick={() => onPageChange(pageNumber)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${page === pageNumber
-                                        ? "bg-purple-600 text-white shadow-sm"
-                                        : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                                    ? "bg-purple-600 text-white shadow-sm"
+                                    : "border border-gray-300 text-gray-700 hover:bg-gray-50"
                                     }`}
                             >
                                 {pageNumber}
