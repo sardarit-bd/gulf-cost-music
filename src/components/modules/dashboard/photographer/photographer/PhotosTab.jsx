@@ -1,15 +1,33 @@
-import {
-    ImageIcon,
-    Loader2,
-    Trash2,
-    Upload
-} from "lucide-react";
+"use client";
+
+import { Crown, ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
+// Upgrade Prompt Component
+const UpgradePrompt = ({ feature }) => (
+    <div className="mt-4 p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
+        <div className="flex items-start gap-3">
+            <Crown className="text-yellow-500 mt-0.5 flex-shrink-0" size={16} />
+            <div>
+                <p className="text-sm text-gray-300">
+                    <span className="font-medium">{feature}</span> is available for Pro users
+                </p>
+                <button
+                    onClick={() => window.open("/pricing", "_blank")}
+                    className="mt-2 text-sm bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1.5 rounded font-medium transition"
+                >
+                    Upgrade to Pro
+                </button>
+            </div>
+        </div>
+    </div>
+);
+
 export default function PhotosTab({
     photos,
+    subscriptionPlan,
     removeImage,
     handleImageUpload,
     uploadingPhotos,
@@ -18,14 +36,20 @@ export default function PhotosTab({
     const [isUploading, setIsUploading] = useState(false);
 
     const handleFileUpload = async (e) => {
-        const files = Array.from(e.target.files);
+        if (subscriptionPlan === "free") {
+            toast.error("Photo uploads require Pro plan. Upgrade to Pro.");
+            e.target.value = "";
+            return;
+        }
 
+        const files = Array.from(e.target.files);
         if (files.length === 0) return;
 
         // Check photo limit
         const totalAfterUpload = photos.length + files.length;
         if (totalAfterUpload > MAX_PHOTOS) {
-            toast.error(`You can only upload maximum ${MAX_PHOTOS} photos. You have ${photos.length} already.`);
+            toast.error(`Maximum ${MAX_PHOTOS} photos allowed. You have ${photos.length} already.`);
+            e.target.value = "";
             return;
         }
 
@@ -43,6 +67,42 @@ export default function PhotosTab({
         }
     };
 
+    if (subscriptionPlan === "free") {
+        return (
+            <div className="animate-fadeIn">
+                <div className="bg-gray-900 rounded-2xl p-8 border border-gray-700">
+                    <div className="text-center">
+                        <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-500/10 rounded-full mb-6">
+                            <ImageIcon size={32} className="text-yellow-500" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white mb-4">
+                            Photo Portfolio <span className="text-yellow-500">(Pro Feature)</span>
+                        </h3>
+                        <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                            Upgrade to Pro to upload and manage your portfolio photos.
+                            Showcase your best work to attract more clients.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <button
+                                onClick={() => window.open("/pricing", "_blank")}
+                                className="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-3 rounded-lg font-semibold transition"
+                            >
+                                <Crown size={18} />
+                                Upgrade to Pro Plan
+                            </button>
+                            <button
+                                onClick={() => window.open("/features", "_blank")}
+                                className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition"
+                            >
+                                View All Features
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="animate-fadeIn space-y-6">
             {/* Upload Section */}
@@ -57,8 +117,8 @@ export default function PhotosTab({
 
                 {/* Upload Area */}
                 <label className={`cursor-pointer flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed rounded-xl transition ${photos.length >= MAX_PHOTOS || uploadingPhotos || isUploading
-                    ? 'border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed'
-                    : 'border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20'
+                        ? 'border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed'
+                        : 'border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20'
                     }`}>
                     {uploadingPhotos || isUploading ? (
                         <>

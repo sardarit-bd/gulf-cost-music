@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Plus, Trash2, Upload, Video, X } from "lucide-react";
+import { Crown, Loader2, Plus, Trash2, Upload, Video, X } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -11,8 +11,29 @@ const getCookie = (name) => {
   return match ? match[2] : null;
 };
 
+// Upgrade Prompt Component
+const UpgradePrompt = ({ feature }) => (
+  <div className="mt-4 p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
+    <div className="flex items-start gap-3">
+      <Crown className="text-yellow-500 mt-0.5 flex-shrink-0" size={16} />
+      <div>
+        <p className="text-sm text-gray-300">
+          <span className="font-medium">{feature}</span> is available for Pro users
+        </p>
+        <button
+          onClick={() => window.open("/pricing", "_blank")}
+          className="mt-2 text-sm bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1.5 rounded font-medium transition"
+        >
+          Upgrade to Pro
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
 export default function VideosTab({
   videos = [],
+  subscriptionPlan = "free",
   onVideoAdded,
   onVideoDeleted,
 }) {
@@ -68,8 +89,21 @@ export default function VideosTab({
 
   // Handle File Upload to Cloudinary
   const handleVideoFileUpload = async (e) => {
+    if (subscriptionPlan === "free") {
+      toast.error("Video uploads require Pro plan. Upgrade to Pro.");
+      e.target.value = "";
+      return;
+    }
+
     const file = e.target.files[0];
     if (!file) return;
+
+    // Check video limit for pro users
+    if (subscriptionPlan === "pro" && videos.length >= 5) {
+      toast.error("Maximum 5 videos allowed for Pro plan");
+      e.target.value = "";
+      return;
+    }
 
     // Validation
     if (!file.type.startsWith("video/")) {
@@ -144,8 +178,19 @@ export default function VideosTab({
   const handleAddVideoUrl = async (e) => {
     e.preventDefault();
 
+    if (subscriptionPlan === "free") {
+      toast.error("Adding videos requires Pro plan. Upgrade to Pro.");
+      return;
+    }
+
     if (!newVideo.url || !newVideo.title) {
       toast.error("Video title and URL are required");
+      return;
+    }
+
+    // Check video limit for pro users
+    if (subscriptionPlan === "pro" && videos.length >= 5) {
+      toast.error("Maximum 5 videos allowed for Pro plan");
       return;
     }
 
@@ -172,6 +217,11 @@ export default function VideosTab({
 
   // Handle Video Deletion
   const handleDeleteVideo = async (videoId, public_id) => {
+    if (subscriptionPlan === "free") {
+      toast.error("Managing videos requires Pro plan. Upgrade to Pro.");
+      return;
+    }
+
     if (!confirm("Are you sure you want to delete this video?")) return;
 
     try {
@@ -228,6 +278,43 @@ export default function VideosTab({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+  // If free user, show upgrade prompt
+  if (subscriptionPlan === "free") {
+    return (
+      <div className="animate-fadeIn">
+        <div className="bg-gray-900 rounded-2xl p-8 border border-gray-700">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-purple-500/10 rounded-full mb-6">
+              <Video size={32} className="text-purple-500" />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-4">
+              Video Portfolio <span className="text-yellow-500">(Pro Feature)</span>
+            </h3>
+            <p className="text-gray-400 mb-6 max-w-md mx-auto">
+              Upgrade to Pro to upload and manage your video portfolio.
+              Showcase your work through videos to attract more clients.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => window.open("/pricing", "_blank")}
+                className="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-3 rounded-lg font-semibold transition"
+              >
+                <Crown size={18} />
+                Upgrade to Pro Plan
+              </button>
+              <button
+                onClick={() => window.open("/features", "_blank")}
+                className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition"
+              >
+                View All Features
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-fadeIn space-y-6">
       {/* Upload Section */}
@@ -237,18 +324,17 @@ export default function VideosTab({
             <Video size={24} />
             Video Portfolio
             <span className="bg-purple-500 text-white px-2 py-1 rounded-full text-sm font-medium ml-2">
-              {videos.length} videos
+              {videos.length}/5 videos
             </span>
           </h3>
 
           <div className="flex gap-3">
             {/* Cloudinary File Upload */}
             <label
-              className={`cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg transition ${
-                uploadingVideos
+              className={`cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg transition ${uploadingVideos || videos.length >= 5
                   ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                   : "bg-purple-600 text-white hover:bg-purple-500"
-              }`}
+                }`}
             >
               {uploadingVideos ? (
                 <Loader2 size={18} className="animate-spin" />
@@ -261,14 +347,18 @@ export default function VideosTab({
                 accept="video/*"
                 hidden
                 onChange={handleVideoFileUpload}
-                disabled={uploadingVideos}
+                disabled={uploadingVideos || videos.length >= 5}
               />
             </label>
 
             {/* URL Add Button */}
             <button
               onClick={() => setShowUploadForm(!showUploadForm)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition"
+              disabled={videos.length >= 5}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${videos.length >= 5
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-500"
+                }`}
             >
               <Plus size={18} />
               Add URL
@@ -327,8 +417,11 @@ export default function VideosTab({
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  disabled={uploadingVideos}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition disabled:opacity-50"
+                  disabled={uploadingVideos || videos.length >= 5}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${uploadingVideos || videos.length >= 5
+                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                      : "bg-green-600 text-white hover:bg-green-500"
+                    }`}
                 >
                   {uploadingVideos ? (
                     <Loader2 size={18} className="animate-spin" />
@@ -427,6 +520,15 @@ export default function VideosTab({
             <span>Uploading video to Cloudinary...</span>
           </div>
         )}
+
+        {/* Limit Warning */}
+        {videos.length >= 5 && (
+          <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+            <p className="text-yellow-400 text-sm">
+              You have reached the maximum limit of 5 videos for Pro plan.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Instructions */}
@@ -449,6 +551,9 @@ export default function VideosTab({
             • Keep videos under <strong>10 minutes</strong> for best performance
           </li>
           <li>• Ensure you have rights to use the videos</li>
+          <li className="text-yellow-400 font-medium">
+            • Pro plan limit: <strong>5 videos</strong>
+          </li>
         </ul>
       </div>
     </div>

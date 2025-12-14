@@ -2,14 +2,12 @@
 
 import PhotographerDashboard from "@/components/modules/dashboard/photographer/PhotographerDashboard";
 import { useAuth } from "@/context/AuthContext";
-// import { useSession } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 // Function to get cookie value by name
 const getCookie = (name) => {
   if (typeof document === "undefined") return null;
-
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) return parts.pop().split(";").shift();
@@ -18,7 +16,7 @@ const getCookie = (name) => {
 
 export default function PhotographerPage() {
   const [activeTab, setActiveTab] = useState("overview");
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [photographer, setPhotographer] = useState({
     name: "",
     city: "",
@@ -27,11 +25,13 @@ export default function PhotographerPage() {
     photos: [],
     videos: [],
   });
+
   const [previewImages, setPreviewImages] = useState([]);
   const [newService, setNewService] = useState({ service: "", price: "" });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [subscriptionPlan, setSubscriptionPlan] = useState("free");
 
   const cityOptions = [
     { value: "new orleans", label: "New Orleans" },
@@ -41,34 +41,52 @@ export default function PhotographerPage() {
   ];
 
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
-  const MAX_PHOTOS = 5;
+
+  // Set subscription plan
+  useEffect(() => {
+    if (user?.subscriptionPlan) {
+      setSubscriptionPlan(user.subscriptionPlan);
+    }
+  }, [user]);
 
   // === Fetch Photographer Profile ===
   useEffect(() => {
     const fetchPhotographer = async () => {
+      if (authLoading) return;
+
       try {
         setLoading(true);
         const token = getCookie("token");
-        if (!token) return toast.error("You must be logged in.");
+        if (!token) {
+          toast.error("You must be logged in.");
+          setLoading(false);
+          return;
+        }
 
         const res = await fetch(`${API_BASE}/api/photographers/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const data = await res.json();
 
-        if (!res.ok)
+        if (!res.ok) {
+          const data = await res.json();
           throw new Error(data.message || "Failed to fetch profile.");
+        }
+
+        const data = await res.json();
 
         if (data.data?.photographer) {
           const p = data.data.photographer;
+          console.log("Fetched photographer:", p);
+
           setPhotographer({
-            name: p.name,
-            city: p.city,
-            biography: p.biography,
+            name: p.name || "",
+            city: p.city || "",
+            biography: p.biography || "",
             services: p.services || [],
             photos: p.photos || [],
             videos: p.videos || [],
           });
+
           setPreviewImages(p.photos?.map((p) => p.url) || []);
         }
       } catch (error) {
@@ -78,25 +96,32 @@ export default function PhotographerPage() {
         setLoading(false);
       }
     };
-    fetchPhotographer();
-  }, []);
+
+    if (!authLoading) {
+      fetchPhotographer();
+    }
+  }, [authLoading, API_BASE]);
 
   // === Handle Input ===
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setPhotographer({ ...photographer, [name]: value });
+
+    // Check subscription restrictions
+    if (subscriptionPlan === "free" && name === "biography") {
+      toast.error("Biography feature requires Pro plan. Upgrade to Pro.");
+      return;
+    }
+
+    setPhotographer(prev => ({ ...prev, [name]: value }));
   };
 
   // === Image Upload ===
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
 
-    // Check total photo limit
-    const totalAfterUpload = previewImages.length + files.length;
-    if (totalAfterUpload > MAX_PHOTOS) {
-      toast.error(
-        `You can only upload maximum ${MAX_PHOTOS} photos. You have ${previewImages.length} already.`
-      );
+    if (subscriptionPlan === "free") {
+      toast.error("Photo uploads require Pro plan. Upgrade to Pro.");
+      e.target.value = "";
       return;
     }
 
@@ -105,67 +130,59 @@ export default function PhotographerPage() {
     setUploadingPhotos(true);
 
     try {
-      // Create preview URLs for immediate display
-      const newPreviewUrls = files.map((file) => URL.createObjectURL(file));
+      const token = getCookie("token");
+      if (!token) {
+        toast.error("Not authenticated");
+        return;
+      }
 
-      setPreviewImages((prev) => [...prev, ...newPreviewUrls]);
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append("photos", file);
+      });
 
-      // Upload photos to backend
-      await uploadPhotosToBackend(files);
+      const response = await fetch(`${API_BASE}/api/photographers/photos`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Upload failed");
+      }
+
+      // Update photographer state with new photos from backend
+      if (data.data?.photos) {
+        setPhotographer(prev => ({
+          ...prev,
+          photos: data.data.photos,
+        }));
+
+        // Update preview images with actual URLs from backend
+        setPreviewImages(data.data.photos.map((p) => p.url));
+      }
 
       toast.success(`${files.length} photo(s) uploaded successfully!`);
     } catch (error) {
       console.error("Photo upload error:", error);
-      toast.error("Failed to upload photos");
-
-      // Remove failed uploads from preview
-      setPreviewImages((prev) => prev.slice(0, prev.length - files.length));
+      toast.error(error.message || "Failed to upload photos");
     } finally {
       setUploadingPhotos(false);
-      // Clear file input
       e.target.value = "";
     }
   };
 
-  // === Upload Photos to Backend ===
-  const uploadPhotosToBackend = async (files) => {
-    const token = getCookie("token");
-    if (!token) throw new Error("Not authenticated");
-
-    const formData = new FormData();
-    files.forEach((file) => {
-      formData.append("photos", file);
-    });
-
-    const response = await fetch(`${API_BASE}/api/photographers/photos`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || "Upload failed");
-    }
-
-    // Update photographer state with new photos from backend
-    if (data.data?.photos) {
-      setPhotographer((prev) => ({
-        ...prev,
-        photos: data.data.photos,
-      }));
-      // Update preview images with actual URLs from backend
-      setPreviewImages(data.data.photos.map((p) => p.url));
-    }
-
-    return data;
-  };
-
   // === Remove Image ===
   const removeImage = async (index) => {
+    if (subscriptionPlan === "free") {
+      toast.error("Photo management requires Pro plan. Upgrade to Pro.");
+      return;
+    }
+
     const photoToDelete = photographer.photos[index];
     if (!photoToDelete) {
       // If it's just a preview (not saved to backend yet)
@@ -202,7 +219,7 @@ export default function PhotographerPage() {
       toast.success("Photo deleted successfully!");
     } catch (error) {
       console.error("Delete photo error:", error);
-      toast.error("Failed to delete photo");
+      toast.error(error.message || "Failed to delete photo");
     }
   };
 
@@ -210,7 +227,16 @@ export default function PhotographerPage() {
   const handleSave = async () => {
     try {
       const token = getCookie("token");
-      if (!token) return toast.error("You are not logged in.");
+      if (!token) {
+        toast.error("You are not logged in.");
+        return;
+      }
+
+      // Check subscription restrictions
+      if (subscriptionPlan === "free" && photographer.biography) {
+        toast.error("Biography feature requires Pro plan. Upgrade to Pro.");
+        return;
+      }
 
       setSaving(true);
       const saveToast = toast.loading("Saving profile...");
@@ -223,8 +249,8 @@ export default function PhotographerPage() {
         },
         body: JSON.stringify({
           name: photographer.name,
-          city: photographer.city.toLowerCase(),
-          biography: photographer.biography,
+          city: photographer.city?.toLowerCase(),
+          biography: subscriptionPlan === "pro" ? photographer.biography : "",
         }),
       });
 
@@ -234,6 +260,17 @@ export default function PhotographerPage() {
       if (!res.ok) throw new Error(data.message || "Failed to save profile.");
 
       toast.success("Profile updated successfully!");
+
+      // Update local state with response if available
+      if (data.data?.photographer) {
+        const p = data.data.photographer;
+        setPhotographer(prev => ({
+          ...prev,
+          name: p.name || "",
+          city: p.city || "",
+          biography: p.biography || "",
+        }));
+      }
     } catch (error) {
       console.error("Save error:", error);
       toast.error(error.message || "Server error while saving profile.");
@@ -246,9 +283,17 @@ export default function PhotographerPage() {
   const handleAddService = async (e) => {
     e.preventDefault();
 
+    if (subscriptionPlan === "free") {
+      toast.error("Adding services requires Pro plan. Upgrade to Pro.");
+      return;
+    }
+
     try {
       const token = getCookie("token");
-      if (!token) return toast.error("You are not logged in.");
+      if (!token) {
+        toast.error("You are not logged in.");
+        return;
+      }
 
       setLoading(true);
       const res = await fetch(`${API_BASE}/api/photographers/services`, {
@@ -268,6 +313,7 @@ export default function PhotographerPage() {
         ...prev,
         services: data.data.services,
       }));
+
       setNewService({ service: "", price: "" });
       toast.success("Service added successfully!");
     } catch (error) {
@@ -280,6 +326,11 @@ export default function PhotographerPage() {
 
   // === Delete Service ===
   const handleDeleteService = async (serviceId) => {
+    if (subscriptionPlan === "free") {
+      toast.error("Managing services requires Pro plan. Upgrade to Pro.");
+      return;
+    }
+
     if (!confirm("Are you sure you want to delete this service?")) return;
 
     try {
@@ -309,50 +360,61 @@ export default function PhotographerPage() {
     }
   };
 
-  // === Add Video ===
-  const handleAddVideo = async (updatedVideos) => {
+  // === Video Management Callbacks ===
+  const handleAddVideo = (updatedVideos) => {
+    if (subscriptionPlan === "free") {
+      toast.error("Video uploads require Pro plan. Upgrade to Pro.");
+      return;
+    }
+
     setPhotographer((prev) => ({
       ...prev,
       videos: updatedVideos,
     }));
   };
 
-  // === Delete Video ===
-  const handleDeleteVideo = async (updatedVideos) => {
+  const handleDeleteVideo = (updatedVideos) => {
     setPhotographer((prev) => ({
       ...prev,
       videos: updatedVideos,
     }));
   };
 
-  if (loading)
+  if (authLoading || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-yellow-400">
-        Loading...
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading photographer dashboard...</p>
+        </div>
       </div>
     );
+  }
 
   return (
-    <PhotographerDashboard
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-      photographer={photographer}
-      previewImages={previewImages}
-      newService={newService}
-      setNewService={setNewService}
-      loading={loading}
-      saving={saving}
-      uploadingPhotos={uploadingPhotos}
-      cityOptions={cityOptions}
-      MAX_PHOTOS={MAX_PHOTOS}
-      handleChange={handleChange}
-      handleImageUpload={handleImageUpload}
-      removeImage={removeImage}
-      handleSave={handleSave}
-      handleAddService={handleAddService}
-      handleDeleteService={handleDeleteService}
-      handleAddVideo={handleAddVideo}
-      handleDeleteVideo={handleDeleteVideo}
-    />
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4 md:px-16">
+      <PhotographerDashboard
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        photographer={photographer}
+        previewImages={previewImages}
+        newService={newService}
+        setNewService={setNewService}
+        loading={loading}
+        saving={saving}
+        uploadingPhotos={uploadingPhotos}
+        subscriptionPlan={subscriptionPlan}
+        cityOptions={cityOptions}
+        MAX_PHOTOS={subscriptionPlan === "pro" ? 5 : 0}
+        handleChange={handleChange}
+        handleImageUpload={handleImageUpload}
+        removeImage={removeImage}
+        handleSave={handleSave}
+        handleAddService={handleAddService}
+        handleDeleteService={handleDeleteService}
+        handleAddVideo={handleAddVideo}
+        handleDeleteVideo={handleDeleteVideo}
+      />
+    </div>
   );
 }

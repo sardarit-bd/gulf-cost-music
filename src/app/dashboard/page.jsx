@@ -39,7 +39,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-yellow-400">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-700">
         <div className="text-xl animate-pulse">Checking your session...</div>
       </div>
     )

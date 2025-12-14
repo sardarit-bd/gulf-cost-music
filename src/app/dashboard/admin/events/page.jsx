@@ -127,11 +127,10 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                     </span>
                   )}
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      event.isActive
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${event.isActive
                         ? "bg-green-100 text-green-800"
                         : "bg-red-100 text-red-800"
-                    }`}
+                      }`}
                   >
                     {event.isActive ? "Active" : "Inactive"}
                   </span>
@@ -327,16 +326,14 @@ const EventRow = ({ event, onToggleStatus, onDeleteEvent }) => {
             onClick={() =>
               onToggleStatus(event._id, event.isActive, event.artistBandName)
             }
-            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              event.isActive
+            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${event.isActive
                 ? "bg-green-100 text-green-800 border border-green-200 hover:bg-green-200"
                 : "bg-red-100 text-red-800 border border-red-200 hover:bg-red-200"
-            }`}
+              }`}
           >
             <div
-              className={`w-2 h-2 rounded-full mr-2 ${
-                event.isActive ? "bg-green-500" : "bg-red-500"
-              }`}
+              className={`w-2 h-2 rounded-full mr-2 ${event.isActive ? "bg-green-500" : "bg-red-500"
+                }`}
             ></div>
             {event.isActive ? "Active" : "Inactive"}
           </button>
@@ -534,7 +531,7 @@ const AdminEventsPage = () => {
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="">
           <Toaster />
 
           {/* Header */}
@@ -763,11 +760,10 @@ const AdminEventsPage = () => {
                         <button
                           key={pageNumber}
                           onClick={() => setPage(pageNumber)}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            page === pageNumber
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${page === pageNumber
                               ? "bg-blue-600 text-white shadow-sm"
                               : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                          }`}
+                            }`}
                         >
                           {pageNumber}
                         </button>

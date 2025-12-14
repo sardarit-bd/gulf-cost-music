@@ -242,7 +242,7 @@ export default function WaveManagementPage() {
           type={confirmationModal.type}
         />
 
-        <div className="max-w-7xl mx-auto">
+        <div className="">
           {/* Header */}
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 sm:mb-8">
             <div className="mb-4 lg:mb-0">

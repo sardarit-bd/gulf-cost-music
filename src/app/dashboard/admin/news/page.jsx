@@ -110,10 +110,9 @@ const NewsManagement = () => {
 
     showConfirmation(
       `${isActive ? "Deactivate" : "Activate"} News`,
-      `Are you sure you want to ${action} "${title}"? ${
-        isActive
-          ? "This news will no longer be visible to users."
-          : "This news will become visible to users."
+      `Are you sure you want to ${action} "${title}"? ${isActive
+        ? "This news will no longer be visible to users."
+        : "This news will become visible to users."
       }`,
       isActive ? "Deactivate" : "Activate",
       isActive ? "warning" : "success",
@@ -267,7 +266,7 @@ const NewsManagement = () => {
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="">
           <Toaster />
 
           <ConfirmationModal

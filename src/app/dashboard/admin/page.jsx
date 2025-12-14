@@ -297,15 +297,14 @@ const RecentUsersTable = ({ users }) => {
               </td>
               <td className="py-3">
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                    user.userType === "admin"
-                      ? "bg-red-100 text-red-800"
-                      : user.userType === "artist"
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${user.userType === "admin"
+                    ? "bg-red-100 text-red-800"
+                    : user.userType === "artist"
                       ? "bg-purple-100 text-purple-800"
                       : user.userType === "venue"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-blue-100 text-blue-800"
-                  }`}
+                        ? "bg-green-100 text-green-800"
+                        : "bg-blue-100 text-blue-800"
+                    }`}
                 >
                   {user.userType}
                 </span>
@@ -366,9 +365,8 @@ const UserDistributionChart = ({ userStats }) => {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className={`h-2 rounded-full ${
-                  colors[index % colors.length]
-                } transition-all duration-500`}
+                className={`h-2 rounded-full ${colors[index % colors.length]
+                  } transition-all duration-500`}
                 style={{ width: `${percentage}%` }}
               ></div>
             </div>

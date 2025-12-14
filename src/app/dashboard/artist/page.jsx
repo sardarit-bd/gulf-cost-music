@@ -488,7 +488,7 @@ export default function ArtistDashboard() {
               onAudioUpload={handleAudioUpload}
               onRemoveAudio={removeAudio}
               onSave={handleSave}
-              saving={saving} // optional: button disable/spinner
+              saving={saving}
             />
           )}
         </div>
