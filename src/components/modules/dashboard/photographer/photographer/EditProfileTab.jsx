@@ -3,7 +3,7 @@
 import Input from "@/ui/Input";
 import Select from "@/ui/Select";
 import Textarea from "@/ui/Textarea";
-import { Edit3, Loader2, MapPin, Save, User, Crown } from "lucide-react";
+import { Crown, Edit3, Loader2, MapPin, Save, User } from "lucide-react";
 
 // Upgrade Prompt Component
 const UpgradePrompt = ({ feature }) => (
@@ -46,7 +46,7 @@ export default function EditProfileTab({
 
                         <div className="grid md:grid-cols-2 gap-6">
                             <Input
-                                label="Photographer Name *"
+                                label="Photographer Name"
                                 name="name"
                                 value={photographer.name}
                                 onChange={handleChange}
@@ -56,7 +56,7 @@ export default function EditProfileTab({
                             />
 
                             <Select
-                                label="City *"
+                                label="City"
                                 name="city"
                                 value={photographer.city}
                                 options={cityOptions}

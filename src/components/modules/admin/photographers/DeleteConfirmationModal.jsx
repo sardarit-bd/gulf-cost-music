@@ -1,4 +1,5 @@
 import { AlertTriangle, Trash2, X } from "lucide-react";
+import { useState } from "react";
 
 export default function DeleteConfirmationModal({
     photographer,
@@ -6,6 +7,8 @@ export default function DeleteConfirmationModal({
     onClose,
     onConfirm
 }) {
+    const [confirmationText, setConfirmationText] = useState("");
+
     if (!isOpen || !photographer) return null;
 
     const getDeleteConsequences = () => {
@@ -27,6 +30,14 @@ export default function DeleteConfirmationModal({
         consequences.push("This action cannot be undone");
 
         return consequences;
+    };
+
+    const handleDelete = () => {
+        if (confirmationText === "DELETE") {
+            onConfirm();
+        } else {
+            alert('Please type "DELETE" to confirm deletion');
+        }
     };
 
     return (
@@ -59,6 +70,33 @@ export default function DeleteConfirmationModal({
                             <p className="text-sm text-gray-600">{photographer.user?.email}</p>
                         </div>
                     </div>
+
+                    {/* Consequences */}
+                    <div className="mb-6">
+                        <h3 className="font-semibold text-gray-900 mb-2">Consequences:</h3>
+                        <ul className="space-y-1 text-sm text-gray-600">
+                            {getDeleteConsequences().map((consequence, index) => (
+                                <li key={index} className="flex items-start gap-2">
+                                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5"></div>
+                                    <span>{consequence}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Confirmation Input */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Type <span className="font-mono text-red-600">DELETE</span> to confirm:
+                        </label>
+                        <input
+                            type="text"
+                            value={confirmationText}
+                            onChange={(e) => setConfirmationText(e.target.value)}
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
+                            placeholder="Type DELETE here"
+                        />
+                    </div>
                 </div>
 
                 {/* Footer */}
@@ -73,20 +111,15 @@ export default function DeleteConfirmationModal({
                         </div>
                     </button>
                     <button
-                        onClick={() => {
-                            const input = document.getElementById('delete-confirmation');
-                            if (input?.value === 'DELETE') {
-                                onConfirm();
-                            } else {
-                                alert('Please type "DELETE" to confirm deletion');
-                            }
-                        }}
-                        className="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium"
+                        onClick={handleDelete}
+                        disabled={confirmationText !== "DELETE"}
+                        className={`px-5 py-2.5 rounded-lg transition font-medium flex items-center gap-2 ${confirmationText === "DELETE"
+                            ? "bg-red-600 hover:bg-red-700 text-white"
+                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            }`}
                     >
-                        <div className="flex items-center gap-2">
-                            <Trash2 size={18} />
-                            Delete Permanently
-                        </div>
+                        <Trash2 size={18} />
+                        Delete Permanently
                     </button>
                 </div>
             </div>

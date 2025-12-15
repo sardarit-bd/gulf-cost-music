@@ -32,13 +32,12 @@ export default function PhotographerRow({ photographer, onRefresh }) {
         }
     };
 
-    const handlePlanChange = async (photographerId, newPlan, sendNotification) => {
+    const handlePlanChange = async (photographerId, newPlan, sendNotification = true) => {
         try {
             setLoading(true);
             await changePhotographerPlan(photographerId, newPlan, { sendNotification });
             toast.success(`Plan changed to ${newPlan.toUpperCase()} successfully`);
             onRefresh();
-            setShowPlanModal(false);
         } catch (err) {
             toast.error(err.message || "Failed to change plan");
         } finally {
@@ -133,8 +132,8 @@ export default function PhotographerRow({ photographer, onRefresh }) {
 
                 <td className="p-4">
                     <div className="flex items-center gap-2">
-                        <span className={`font-medium ${photographer.user?.subscriptionPlan === "pro" ? 'text-yellow-600' : 'text-gray-600'}`}>
-                            {photographer.user?.subscriptionPlan === "pro" ? "Pro" : "Free"}
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${photographer.user?.subscriptionPlan === "pro" ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
+                            {photographer.user?.subscriptionPlan === "pro" ? "PRO" : "FREE"}
                         </span>
                         {photographer.user?.subscriptionPlan === "pro" && (
                             <Crown className="w-4 h-4 text-yellow-500" />

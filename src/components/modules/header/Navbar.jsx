@@ -130,6 +130,11 @@ export default function Header() {
       title: "Cameras",
       items: ["New Orleans", "Biloxi", "Mobile", "Pensacola"],
     },
+    // New Market Section
+    market: {
+      title: "Market",
+      items: ["New Orleans", "Biloxi", "Mobile", "Pensacola"],
+    },
   };
 
   const handleDropdownEnter = (dropdown) => setActiveDropdown(dropdown);
@@ -242,14 +247,27 @@ export default function Header() {
                 {activeDropdown === key && (
                   <div className="absolute top-full left-0 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-3 z-50">
                     {dropdownData[key].items.map((item, index) => {
-                      const href =
-                        key === "artists"
-                          ? `/artists/${encodeURIComponent(item)}`
-                          : key === "venues"
-                            ? `/venues/${encodeURIComponent(item)}`
-                            : key === "cameras"
-                              ? `/cameras/${encodeURIComponent(item)}`
-                              : `/news/${encodeURIComponent(item)}`;
+                      // Generate appropriate href based on section
+                      let href;
+                      switch (key) {
+                        case "artists":
+                          href = `/artists/${encodeURIComponent(item)}`;
+                          break;
+                        case "venues":
+                          href = `/venues/${encodeURIComponent(item)}`;
+                          break;
+                        case "cameras":
+                          href = `/cameras/${encodeURIComponent(item)}`;
+                          break;
+                        case "news":
+                          href = `/news/${encodeURIComponent(item)}`;
+                          break;
+                        case "market": // New case for market
+                          href = `/market/${encodeURIComponent(item)}`;
+                          break;
+                        default:
+                          href = `/${key}/${encodeURIComponent(item)}`;
+                      }
 
                       return (
                         <Link
@@ -273,18 +291,6 @@ export default function Header() {
             >
               Merch
             </Link>
-            {/* <Link
-              href="/casts"
-              className="hover:text-yellow-400 transition-colors duration-200 font-medium text-sm xl:text-base"
-            >
-              Casts
-            </Link>
-            <Link
-              href="/waves"
-              className="hover:text-yellow-400 transition-colors duration-200 font-medium text-sm xl:text-base"
-            >
-              Waves
-            </Link> */}
           </nav>
 
           {/* Tablet Nav */}
@@ -326,14 +332,27 @@ export default function Header() {
                 {mobileDropdown === key && (
                   <div className="absolute top-full left-0 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-2 z-50">
                     {dropdownData[key].items.map((item, index) => {
-                      const href =
-                        key === "artists"
-                          ? `/artists/${encodeURIComponent(item)}`
-                          : key === "venues"
-                            ? `/venues/${encodeURIComponent(item)}`
-                            : key === "cameras"
-                              ? `/cameras/${encodeURIComponent(item)}`
-                              : `/news/${encodeURIComponent(item)}`;
+                      // Generate appropriate href based on section
+                      let href;
+                      switch (key) {
+                        case "artists":
+                          href = `/artists/${encodeURIComponent(item)}`;
+                          break;
+                        case "venues":
+                          href = `/venues/${encodeURIComponent(item)}`;
+                          break;
+                        case "cameras":
+                          href = `/cameras/${encodeURIComponent(item)}`;
+                          break;
+                        case "news":
+                          href = `/news/${encodeURIComponent(item)}`;
+                          break;
+                        case "market": // New case for market
+                          href = `/market/${encodeURIComponent(item)}`;
+                          break;
+                        default:
+                          href = `/${key}/${encodeURIComponent(item)}`;
+                      }
 
                       return (
                         <Link
@@ -358,20 +377,6 @@ export default function Header() {
             >
               Merch
             </Link>
-            {/* <Link
-              href="/casts"
-              className="hover:text-yellow-400 transition-colors duration-200 text-sm"
-              onClick={closeAllDropdowns}
-            >
-              Casts
-            </Link>
-            <Link
-              href="/waves"
-              className="hover:text-yellow-400 transition-colors duration-200 text-sm"
-              onClick={closeAllDropdowns}
-            >
-              Waves
-            </Link> */}
           </nav>
 
           {/* Auth Buttons & Dashboard */}
@@ -458,28 +463,6 @@ export default function Header() {
                       </svg>
                       My Orders
                     </Link>
-
-                    {/* Profile Link */}
-                    {/* <Link
-                      href="/profile"
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors duration-200"
-                      onClick={closeAllDropdowns}
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      </svg>
-                      My Profile
-                    </Link> */}
 
                     {/* Sign Out Button */}
                     <button
@@ -617,14 +600,27 @@ export default function Header() {
                         }`}
                     >
                       {dropdownData[key].items.map((item, index) => {
-                        const href =
-                          key === "artists"
-                            ? `/artists/${encodeURIComponent(item)}`
-                            : key === "venues"
-                              ? `/venues/${encodeURIComponent(item)}`
-                              : key === "cameras"
-                                ? `/cameras/${encodeURIComponent(item)}`
-                                : `/news/${encodeURIComponent(item)}`;
+                        // Generate appropriate href based on section
+                        let href;
+                        switch (key) {
+                          case "artists":
+                            href = `/artists/${encodeURIComponent(item)}`;
+                            break;
+                          case "venues":
+                            href = `/venues/${encodeURIComponent(item)}`;
+                            break;
+                          case "cameras":
+                            href = `/cameras/${encodeURIComponent(item)}`;
+                            break;
+                          case "news":
+                            href = `/news/${encodeURIComponent(item)}`;
+                            break;
+                          case "market": // New case for market
+                            href = `/market/${encodeURIComponent(item)}`;
+                            break;
+                          default:
+                            href = `/${key}/${encodeURIComponent(item)}`;
+                        }
 
                         return (
                           <Link
@@ -648,20 +644,6 @@ export default function Header() {
                 >
                   Merch
                 </Link>
-                {/* <Link
-                  href="/casts"
-                  className="text-white hover:text-yellow-400 transition-colors duration-200 py-4 px-4 rounded-lg hover:bg-white/5 font-medium text-lg text-left border-b border-gray-700"
-                  onClick={closeMobileMenu}
-                >
-                  Casts
-                </Link>
-                <Link
-                  href="/waves"
-                  className="text-white hover:text-yellow-400 transition-colors duration-200 py-4 px-4 rounded-lg hover:bg-white/5 font-medium text-lg text-left border-b border-gray-700"
-                  onClick={closeMobileMenu}
-                >
-                  Waves
-                </Link> */}
 
                 <div className="pt-6 mt-4 border-t border-gray-700">
                   {isLoggedIn ? (
@@ -716,27 +698,6 @@ export default function Header() {
                         </svg>
                         My Orders
                       </Link>
-
-                      {/* <Link
-                        href="/profile"
-                        className="flex items-center gap-3 text-white px-4 py-4 rounded-lg hover:bg-white/5 transition-colors duration-200 font-medium justify-center w-full mb-3 text-lg"
-                        onClick={closeMobileMenu}
-                      >
-                        <svg
-                          className="w-6 h-6"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
-                        My Profile
-                      </Link> */}
 
                       <button
                         onClick={() => {
