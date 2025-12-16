@@ -1,7 +1,8 @@
 "use client";
 
-import { Briefcase, Camera, Crown, Edit3, ImageIcon, Users, Video } from "lucide-react";
+import { Briefcase, Camera, Crown, Edit3, ImageIcon, ShoppingBag, Users, Video } from "lucide-react";
 import EditProfileTab from "./photographer/EditProfileTab";
+import MarketTab from "./photographer/MarketTab";
 import OverviewTab from "./photographer/OverviewTab";
 import PhotosTab from "./photographer/PhotosTab";
 import ServicesTab from "./photographer/ServicesTab";
@@ -10,8 +11,8 @@ import VideosTab from "./photographer/VideosTab";
 // Plan Badge Component
 const PlanBadge = ({ subscriptionPlan }) => (
     <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${subscriptionPlan === "pro"
-            ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-            : "bg-gray-700 text-gray-300 border border-gray-600"
+        ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+        : "bg-gray-700 text-gray-300 border border-gray-600"
         }`}>
         {subscriptionPlan === "pro" ? (
             <>
@@ -48,6 +49,8 @@ export default function PhotographerDashboard({
     handleDeleteService,
     handleAddVideo,
     handleDeleteVideo,
+    API_BASE,
+    user
 }) {
     return (
         <>
@@ -137,13 +140,14 @@ export default function PhotographerDashboard({
                             { id: "services", label: "Services", icon: Briefcase },
                             { id: "photos", label: "Photos", icon: ImageIcon },
                             { id: "videos", label: "Videos", icon: Video },
+                            { id: "market", label: "Market", icon: ShoppingBag },
                         ].map(({ id, label, icon: Icon }) => (
                             <button
                                 key={id}
                                 onClick={() => setActiveTab(id)}
                                 className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === id
-                                        ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
-                                        : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
+                                    ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
+                                    : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
                                     }`}
                             >
                                 <Icon size={18} />
@@ -216,6 +220,14 @@ export default function PhotographerDashboard({
                             onVideoDeleted={handleDeleteVideo}
                         />
                     )}
+                    {!loading && activeTab === "market" && (
+                        <MarketTab
+                            API_BASE={API_BASE}
+                            subscriptionPlan={subscriptionPlan}
+                            user={user}
+                        />
+                    )}
+
                 </div>
             </div>
         </>

@@ -414,6 +414,8 @@ export default function PhotographerPage() {
         handleDeleteService={handleDeleteService}
         handleAddVideo={handleAddVideo}
         handleDeleteVideo={handleDeleteVideo}
+        API_BASE={API_BASE}
+        user={user}
       />
     </div>
   );
