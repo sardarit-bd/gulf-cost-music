@@ -74,6 +74,7 @@ export const saveProfile = async (formData) => {
 /* ------------------------
    Marketplace Functions
 ------------------------ */
+
 export const fetchListings = async () => {
   const token = getCookie("token");
   if (!token) throw new Error("No authentication token found");
@@ -85,39 +86,44 @@ export const fetchListings = async () => {
     }
   );
 
-  // backend returns single item or null
   return res.data?.data ? [res.data.data] : [];
 };
-
 
 export const createListing = async (listingData) => {
   const token = getCookie("token");
   if (!token) throw new Error("No authentication token found");
 
-  const saveToast = toast.loading("Creating listing...");
+  const toastId = toast.loading("Creating listing...");
 
   try {
     const formData = new FormData();
-    Object.keys(listingData).forEach(key => {
-      if (key === 'photos' && Array.isArray(listingData[key])) {
-        listingData[key].forEach(file => {
-          if (file instanceof File) {
-            formData.append('photos', file);
-          }
-        });
-      } else if (key === 'videos' && Array.isArray(listingData[key])) {
-        listingData[key].forEach(file => {
-          if (file instanceof File) {
-            formData.append('videos', file);
-          }
-        });
-      } else {
-        formData.append(key, listingData[key]);
-      }
-    });
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketplace/listings`,
+    // basic fields
+    formData.append("title", listingData.title);
+    formData.append("description", listingData.description);
+    formData.append("price", listingData.price);
+    formData.append("location", listingData.location || "");
+    formData.append("status", listingData.status || "active");
+
+    // photos (max 5)
+    if (Array.isArray(listingData.photos)) {
+      listingData.photos.forEach((file) => {
+        if (file instanceof File) {
+          formData.append("photos", file);
+        }
+      });
+    }
+
+    // SINGLE video (backend supports only one)
+    if (
+      Array.isArray(listingData.videos) &&
+      listingData.videos[0] instanceof File
+    ) {
+      formData.append("video", listingData.videos[0]);
+    }
+
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/market/me`,
       {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
@@ -125,52 +131,52 @@ export const createListing = async (listingData) => {
       }
     );
 
-    const data = await response.json();
+    const data = await res.json();
 
-    if (response.ok) {
-      toast.dismiss(saveToast);
-      toast.success("Listing created successfully!");
-      return data.data?.listing;
-    } else {
-      toast.dismiss(saveToast);
-      toast.error(data.message || "Failed to create listing");
-      throw new Error(data.message || "Create failed");
-    }
-  } catch (error) {
-    toast.dismiss(saveToast);
-    toast.error("Network error while creating listing.");
-    throw error;
+    if (!res.ok) throw new Error(data.message || "Create failed");
+
+    toast.dismiss(toastId);
+    toast.success("Listing created successfully!");
+    return data.data;
+  } catch (err) {
+    toast.dismiss(toastId);
+    toast.error(err.message || "Failed to create listing");
+    throw err;
   }
 };
 
-export const updateListing = async (id, listingData) => {
+export const updateListing = async (listingData) => {
   const token = getCookie("token");
   if (!token) throw new Error("No authentication token found");
 
-  const saveToast = toast.loading("Updating listing...");
+  const toastId = toast.loading("Updating listing...");
 
   try {
     const formData = new FormData();
-    Object.keys(listingData).forEach(key => {
-      if (key === 'photos' && Array.isArray(listingData[key])) {
-        listingData[key].forEach(file => {
-          if (file instanceof File) {
-            formData.append('photos', file);
-          }
-        });
-      } else if (key === 'videos' && Array.isArray(listingData[key])) {
-        listingData[key].forEach(file => {
-          if (file instanceof File) {
-            formData.append('videos', file);
-          }
-        });
-      } else {
-        formData.append(key, listingData[key]);
-      }
-    });
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketplace/listings/${id}`,
+    formData.append("title", listingData.title);
+    formData.append("description", listingData.description);
+    formData.append("price", listingData.price);
+    formData.append("location", listingData.location || "");
+    formData.append("status", listingData.status || "active");
+
+    if (Array.isArray(listingData.photos)) {
+      listingData.photos.forEach((file) => {
+        if (file instanceof File) {
+          formData.append("photos", file);
+        }
+      });
+    }
+
+    if (
+      Array.isArray(listingData.videos) &&
+      listingData.videos[0] instanceof File
+    ) {
+      formData.append("video", listingData.videos[0]);
+    }
+
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/market/me`,
       {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
@@ -178,54 +184,44 @@ export const updateListing = async (id, listingData) => {
       }
     );
 
-    const data = await response.json();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Update failed");
 
-    if (response.ok) {
-      toast.dismiss(saveToast);
-      toast.success("Listing updated successfully!");
-      return data.data?.listing;
-    } else {
-      toast.dismiss(saveToast);
-      toast.error(data.message || "Failed to update listing");
-      throw new Error(data.message || "Update failed");
-    }
-  } catch (error) {
-    toast.dismiss(saveToast);
-    toast.error("Network error while updating listing.");
-    throw error;
+    toast.dismiss(toastId);
+    toast.success("Listing updated successfully!");
+    return data.data;
+  } catch (err) {
+    toast.dismiss(toastId);
+    toast.error(err.message || "Failed to update listing");
+    throw err;
   }
 };
 
-export const deleteListing = async (id) => {
+export const deleteListing = async () => {
   const token = getCookie("token");
   if (!token) throw new Error("No authentication token found");
 
-  const deleteToast = toast.loading("Deleting listing...");
+  const toastId = toast.loading("Deleting listing...");
 
   try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/marketplace/listings/${id}`,
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/market/me`,
       {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       }
     );
 
-    const data = await response.json();
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Delete failed");
 
-    if (response.ok) {
-      toast.dismiss(deleteToast);
-      toast.success("Listing deleted successfully!");
-      return true;
-    } else {
-      toast.dismiss(deleteToast);
-      toast.error(data.message || "Failed to delete listing");
-      throw new Error(data.message || "Delete failed");
-    }
-  } catch (error) {
-    toast.dismiss(deleteToast);
-    toast.error("Network error while deleting listing.");
-    throw error;
+    toast.dismiss(toastId);
+    toast.success("Listing deleted");
+    return true;
+  } catch (err) {
+    toast.dismiss(toastId);
+    toast.error(err.message || "Failed to delete listing");
+    throw err;
   }
 };
 
@@ -305,7 +301,7 @@ export default function ArtistDashboard() {
         photos: 0,
         audios: 0,
         biography: false,
-        marketplace: false
+        marketplace: false,
       });
     }
   }, [user]);
@@ -400,8 +396,15 @@ export default function ArtistDashboard() {
       const newPhotos = [...prev.photos];
       const removedItem = newPhotos[index];
 
-      if (removedItem && !(removedItem instanceof File) && removedItem.filename) {
-        setRemovedPhotos((prevRemoved) => [...prevRemoved, removedItem.filename]);
+      if (
+        removedItem &&
+        !(removedItem instanceof File) &&
+        removedItem.filename
+      ) {
+        setRemovedPhotos((prevRemoved) => [
+          ...prevRemoved,
+          removedItem.filename,
+        ]);
       }
 
       newPhotos.splice(index, 1);
@@ -434,12 +437,12 @@ export default function ArtistDashboard() {
 
     setAudioPreview((prev) => [
       ...prev,
-      ...newAudios.map(a => ({
+      ...newAudios.map((a) => ({
         url: a.url,
         name: a.name,
         id: a.id,
         isNew: true,
-      }))
+      })),
     ]);
 
     setArtist((prev) => ({
@@ -462,7 +465,10 @@ export default function ArtistDashboard() {
       const removedAudio = newAudios[index];
 
       if (removedAudio && !removedAudio.isNew && removedAudio.filename) {
-        setRemovedAudios((prevRemoved) => [...prevRemoved, removedAudio.filename]);
+        setRemovedAudios((prevRemoved) => [
+          ...prevRemoved,
+          removedAudio.filename,
+        ]);
       }
 
       newAudios.splice(index, 1);
@@ -514,15 +520,17 @@ export default function ArtistDashboard() {
       }
 
       if (subscriptionPlan === "pro") {
-        const newPhotos = artist.photos.filter(photo => photo instanceof File);
+        const newPhotos = artist.photos.filter(
+          (photo) => photo instanceof File
+        );
         newPhotos.forEach((file) => {
           formData.append("photos", file);
         });
       }
 
       if (subscriptionPlan === "pro") {
-        const newAudios = artist.audios.filter(audio =>
-          audio.isNew && audio.file instanceof File
+        const newAudios = artist.audios.filter(
+          (audio) => audio.isNew && audio.file instanceof File
         );
 
         newAudios.forEach((audio) => {
@@ -660,8 +668,14 @@ export default function ArtistDashboard() {
   };
 
   const handleCreateListing = async () => {
-    if (!currentListing.title || !currentListing.price || !currentListing.description) {
-      toast.error("Please fill all required fields (Title, Price, Description)");
+    if (
+      !currentListing.title ||
+      !currentListing.price ||
+      !currentListing.description
+    ) {
+      toast.error(
+        "Please fill all required fields (Title, Price, Description)"
+      );
       return;
     }
 
@@ -713,13 +727,19 @@ export default function ArtistDashboard() {
       videos: listing.videos || [],
       category: listing.category || "equipment",
     });
-    setListingPhotos(listing.photos?.map(p => p.url) || []);
-    setListingVideos(listing.videos?.map(v => v.url) || []);
+    setListingPhotos(listing.photos?.map((p) => p.url) || []);
+    setListingVideos(listing.videos?.map((v) => v.url) || []);
   };
 
   const handleUpdateListing = async () => {
-    if (!currentListing.title || !currentListing.price || !currentListing.description) {
-      toast.error("Please fill all required fields (Title, Price, Description)");
+    if (
+      !currentListing.title ||
+      !currentListing.price ||
+      !currentListing.description
+    ) {
+      toast.error(
+        "Please fill all required fields (Title, Price, Description)"
+      );
       return;
     }
 
