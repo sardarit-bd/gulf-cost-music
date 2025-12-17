@@ -1,47 +1,65 @@
-import { Crown, ImageIcon, Music2 } from "lucide-react";
+import { Camera, Music, ShoppingBag } from 'lucide-react';
 
-export default function PlanStats({ subscriptionPlan, photosCount, audiosCount }) {
+const PlanStats = ({
+    subscriptionPlan,
+    photosCount,
+    audiosCount,
+    listingsCount = 0,
+    hasMarketplaceAccess = false
+}) => {
     return (
-        <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-6">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="p-2 bg-blue-500/20 rounded-lg">
-                        <ImageIcon size={20} className="text-blue-400" />
-                    </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            {/* Photo Stats */}
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700">
+                <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-white font-medium">Photo Uploads</p>
-                        <p className="text-gray-400 text-sm">
-                            {subscriptionPlan === "pro"
-                                ? `${photosCount}/5 photos allowed`
-                                : "Not available in Free plan"}
+                        <p className="text-gray-400 text-sm">Photo Uploads</p>
+                        <p className="text-2xl font-bold text-white mt-1">
+                            {photosCount}/{subscriptionPlan === 'pro' ? '5' : '0'}
                         </p>
+                        <p className="text-gray-500 text-xs mt-1">photos allowed</p>
+                    </div>
+                    <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <Camera className="w-6 h-6 text-purple-500" />
                     </div>
                 </div>
+            </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="p-2 bg-purple-500/20 rounded-lg">
-                        <Music2 size={20} className="text-purple-400" />
-                    </div>
+            {/* Audio Stats */}
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700">
+                <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-white font-medium">Audio Uploads</p>
-                        <p className="text-gray-400 text-sm">
-                            {subscriptionPlan === "pro"
-                                ? `${audiosCount}/5 audio files allowed`
-                                : "Not available in Free plan"}
+                        <p className="text-gray-400 text-sm">Audio Uploads</p>
+                        <p className="text-2xl font-bold text-white mt-1">
+                            {audiosCount}/{subscriptionPlan === 'pro' ? '5' : '0'}
                         </p>
+                        <p className="text-gray-500 text-xs mt-1">audios allowed</p>
+                    </div>
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <Music className="w-6 h-6 text-blue-500" />
                     </div>
                 </div>
+            </div>
 
-                {subscriptionPlan === "free" && (
-                    <button
-                        onClick={() => window.open("/pricing", "_blank")}
-                        className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg font-semibold transition"
-                    >
-                        <Crown size={16} />
-                        Upgrade to Pro
-                    </button>
-                )}
+            {/* Marketplace Stats */}
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 border border-gray-700">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-gray-400 text-sm">Marketplace</p>
+                        <p className="text-2xl font-bold text-white mt-1">
+                            {listingsCount} {hasMarketplaceAccess ? 'active' : 'locked'}
+                        </p>
+                        <p className="text-gray-500 text-xs mt-1">
+                            {hasMarketplaceAccess ? 'listings active' : 'upgrade to pro'}
+                        </p>
+                    </div>
+                    <div className={`w-12 h-12 ${hasMarketplaceAccess ? 'bg-green-500/20' : 'bg-gray-700'} rounded-lg flex items-center justify-center`}>
+                        <ShoppingBag className={`w-6 h-6 ${hasMarketplaceAccess ? 'text-green-500' : 'text-gray-500'}`} />
+                    </div>
+                </div>
             </div>
         </div>
     );
-}
+};
+
+export default PlanStats;
