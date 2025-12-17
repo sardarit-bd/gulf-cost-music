@@ -131,8 +131,8 @@ export default function Header() {
       items: ["New Orleans", "Biloxi", "Mobile", "Pensacola"],
     },
     // New Market Section
-    market: {
-      title: "Market",
+    markets: {
+      title: "Markets",
       items: ["New Orleans", "Biloxi", "Mobile", "Pensacola"],
     },
   };
@@ -262,8 +262,8 @@ export default function Header() {
                         case "news":
                           href = `/news/${encodeURIComponent(item)}`;
                           break;
-                        case "market": // New case for market
-                          href = `/market/${encodeURIComponent(item)}`;
+                        case "markets":
+                          href = `/markets/${encodeURIComponent(item)}`;
                           break;
                         default:
                           href = `/${key}/${encodeURIComponent(item)}`;
