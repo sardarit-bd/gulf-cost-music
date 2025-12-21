@@ -3,6 +3,7 @@
 import AddShowTab from "@/components/modules/dashboard/venues/AddShowTab";
 import EditProfileTab from "@/components/modules/dashboard/venues/EditProfileTab";
 import OverviewTab from "@/components/modules/dashboard/venues/OverviewTab";
+import MarketplaceTab from "@/components/modules/venues/MarketplaceTab";
 import { useAuth } from "@/context/AuthContext";
 import {
   Building2,
@@ -10,8 +11,9 @@ import {
   Edit3,
   ImageIcon,
   Music,
+  ShoppingBag,
   Users,
-  XCircle
+  XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
@@ -42,7 +44,7 @@ export default function VenueDashboard() {
     artist: "",
     date: "",
     time: "",
-    image: null
+    image: null,
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -50,6 +52,28 @@ export default function VenueDashboard() {
   const [subscriptionPlan, setSubscriptionPlan] = useState("free");
   const [removedPhotos, setRemovedPhotos] = useState([]);
 
+  // ========== NEW MARKETPLACE STATES ==========
+  const [marketplaceListings, setMarketplaceListings] = useState([]);
+  const [marketplaceLoading, setMarketplaceLoading] = useState(false);
+  const [currentListing, setCurrentListing] = useState({
+    title: "",
+    price: "",
+    location: "",
+    description: "",
+    status: "active",
+    photos: [],
+    videos: [],
+    category: "equipment",
+    itemCondition: "excellent",
+    contactPhone: "",
+    contactEmail: "",
+  });
+  const [listingPhotos, setListingPhotos] = useState([]);
+  const [listingVideos, setListingVideos] = useState([]);
+  const [isEditingListing, setIsEditingListing] = useState(false);
+  const [editingListingId, setEditingListingId] = useState(null);
+  const [activeMarketSection, setActiveMarketSection] = useState("create");
+  // ============================================
 
   const cityOptions = ["New Orleans", "Biloxi", "Mobile", "Pensacola"];
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
@@ -60,7 +84,6 @@ export default function VenueDashboard() {
       setSubscriptionPlan(user.subscriptionPlan);
     }
   }, [user]);
-
 
   // === Fetch Venue Profile ===
   useEffect(() => {
@@ -106,6 +129,11 @@ export default function VenueDashboard() {
 
         // Fetch shows count for this month
         await fetchShowsCount(token);
+
+        // Load marketplace listings if Pro user
+        if (user?.subscriptionPlan === "pro") {
+          await loadMarketplaceListings();
+        }
       } catch (error) {
         console.error("Error fetching venue:", error);
         toast.error(error.message || "Server error while loading venue.");
@@ -115,7 +143,7 @@ export default function VenueDashboard() {
     };
 
     fetchVenue();
-  }, [API_BASE]);
+  }, [API_BASE, user?.subscriptionPlan]);
 
   // === Fetch Shows Count for Free Plan ===
   const fetchShowsCount = async (token) => {
@@ -133,11 +161,554 @@ export default function VenueDashboard() {
     }
   };
 
+  // === Marketplace API Functions ===
+  const fetchVenueMarketplaceListings = async () => {
+    try {
+      const token = getCookie("token");
+      if (!token) throw new Error("No authentication token found");
+
+      const response = await fetch(`${API_BASE}/api/market/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return data.data ? [data.data] : [];
+      } else if (response.status === 404) {
+        return [];
+      } else {
+        throw new Error(data.message || "Failed to fetch listings");
+      }
+    } catch (error) {
+      console.error("Error fetching marketplace listings:", error);
+      throw error;
+    }
+  };
+
+  const createMarketplaceListing = async (listingData) => {
+    try {
+      const token = getCookie("token");
+      if (!token) throw new Error("No authentication token found");
+
+      const formData = new FormData();
+
+      formData.append("title", listingData.title);
+      formData.append("description", listingData.description);
+      formData.append("price", listingData.price);
+      formData.append("category", listingData.category);
+      formData.append("status", listingData.status);
+      formData.append("itemCondition", listingData.itemCondition);
+
+      if (listingData.location) {
+        formData.append("location", listingData.location);
+      }
+      if (listingData.contactPhone) {
+        formData.append("contactPhone", listingData.contactPhone);
+      }
+      if (listingData.contactEmail) {
+        formData.append("contactEmail", listingData.contactEmail);
+      }
+
+      if (listingData.photos && listingData.photos.length > 0) {
+        listingData.photos.forEach((file, index) => {
+          if (file instanceof File) {
+            formData.append("photos", file);
+          }
+        });
+      }
+
+      if (listingData.videos && listingData.videos.length > 0) {
+        const videoFile = listingData.videos[0];
+        if (videoFile instanceof File) {
+          formData.append("video", videoFile);
+        }
+      }
+
+      const saveToast = toast.loading("Creating listing...");
+
+      const response = await fetch(`${API_BASE}/api/market/me`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await response.json();
+      toast.dismiss(saveToast);
+
+      if (response.ok) {
+        toast.success("Listing created successfully!");
+        return data.data;
+      } else {
+        throw new Error(data.message || "Failed to create listing");
+      }
+    } catch (error) {
+      toast.error(error.message || "Network error while creating listing");
+      throw error;
+    }
+  };
+
+  const updateMarketplaceListing = async (id, listingData) => {
+    try {
+      const token = getCookie("token");
+      if (!token) throw new Error("No authentication token found");
+
+      const formData = new FormData();
+
+      formData.append("title", listingData.title);
+      formData.append("description", listingData.description);
+      formData.append("price", listingData.price);
+      formData.append("category", listingData.category);
+      formData.append("status", listingData.status);
+      formData.append("itemCondition", listingData.itemCondition);
+
+      if (listingData.location) {
+        formData.append("location", listingData.location);
+      }
+      if (listingData.contactPhone) {
+        formData.append("contactPhone", listingData.contactPhone);
+      }
+      if (listingData.contactEmail) {
+        formData.append("contactEmail", listingData.contactEmail);
+      }
+
+      if (listingData.photos && listingData.photos.length > 0) {
+        const newPhotos = listingData.photos.filter(
+          (file) => file instanceof File
+        );
+        newPhotos.forEach((file) => {
+          formData.append("photos", file);
+        });
+      }
+
+      if (listingData.videos && listingData.videos.length > 0) {
+        const videoFile = listingData.videos[0];
+        if (videoFile instanceof File) {
+          formData.append("video", videoFile);
+        }
+      }
+
+      const saveToast = toast.loading("Updating listing...");
+
+      const response = await fetch(`${API_BASE}/api/market/me`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await response.json();
+      toast.dismiss(saveToast);
+
+      if (response.ok) {
+        toast.success("Listing updated successfully!");
+        return data.data;
+      } else {
+        throw new Error(data.message || "Failed to update listing");
+      }
+    } catch (error) {
+      toast.error(error.message || "Network error while updating listing");
+      throw error;
+    }
+  };
+
+  const deleteMarketplaceListing = async (id) => {
+    try {
+      const token = getCookie("token");
+      if (!token) throw new Error("No authentication token found");
+
+      if (
+        !window.confirm(
+          "Are you sure you want to delete this listing? This action cannot be undone."
+        )
+      ) {
+        return false;
+      }
+
+      const deleteToast = toast.loading("Deleting listing...");
+
+      const response = await fetch(`${API_BASE}/api/market/me`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await response.json();
+      toast.dismiss(deleteToast);
+
+      if (response.ok) {
+        toast.success("Listing deleted successfully!");
+        return true;
+      } else {
+        throw new Error(data.message || "Failed to delete listing");
+      }
+    } catch (error) {
+      toast.error(error.message || "Network error while deleting listing");
+      throw error;
+    }
+  };
+
+  const deleteMarketplacePhoto = async (photoIndex) => {
+    try {
+      const token = getCookie("token");
+      if (!token) throw new Error("No authentication token found");
+
+      const deleteToast = toast.loading("Deleting photo...");
+
+      const response = await fetch(
+        `${API_BASE}/api/market/me/photos/${photoIndex}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const data = await response.json();
+      toast.dismiss(deleteToast);
+
+      if (response.ok) {
+        toast.success("Photo deleted successfully!");
+        return data.data;
+      } else {
+        throw new Error(data.message || "Failed to delete photo");
+      }
+    } catch (error) {
+      toast.error(error.message || "Network error while deleting photo");
+      throw error;
+    }
+  };
+
+  // === Marketplace Handlers ===
+  const loadMarketplaceListings = async () => {
+    if (subscriptionPlan !== "pro") return;
+
+    try {
+      setMarketplaceLoading(true);
+      const data = await fetchVenueMarketplaceListings();
+      setMarketplaceListings(data);
+
+      if (data.length > 0) {
+        setActiveMarketSection("listings");
+      } else {
+        setActiveMarketSection("create");
+      }
+    } catch (error) {
+      console.error("Failed to load marketplace listings:", error);
+    } finally {
+      setMarketplaceLoading(false);
+    }
+  };
+
+  const handleListingChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentListing((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleListingPhotoUpload = (files) => {
+    if (subscriptionPlan !== "pro") {
+      toast.error("Marketplace is available only for Pro users");
+      return;
+    }
+
+    const availableSlots =
+      5 -
+      (listingPhotos.length +
+        currentListing.photos?.filter((p) => !(p instanceof File))?.length ||
+        0);
+    const limitedFiles = files.slice(0, Math.max(0, availableSlots));
+
+    if (limitedFiles.length === 0) {
+      toast.error("Maximum 5 photos allowed");
+      return;
+    }
+
+    const urls = limitedFiles.map((file) => URL.createObjectURL(file));
+    setListingPhotos((prev) => [...prev, ...urls]);
+    setCurrentListing((prev) => ({
+      ...prev,
+      photos: [...(prev.photos || []), ...limitedFiles],
+    }));
+  };
+
+  const handleListingVideoUpload = (files) => {
+    if (subscriptionPlan !== "pro") {
+      toast.error("Marketplace is available only for Pro users");
+      return;
+    }
+
+    const availableSlots =
+      1 - (listingVideos.length + (currentListing.video ? 1 : 0));
+    const limitedFiles = files.slice(0, Math.max(0, availableSlots));
+
+    if (limitedFiles.length === 0) {
+      toast.error("Maximum 1 video allowed");
+      return;
+    }
+
+    const urls = limitedFiles.map((file) => URL.createObjectURL(file));
+    setListingVideos((prev) => [...prev, ...urls]);
+    setCurrentListing((prev) => ({
+      ...prev,
+      videos: [...(prev.videos || []), ...limitedFiles],
+    }));
+  };
+
+  const removeListingPhoto = async (index) => {
+    try {
+      const photoToRemove = listingPhotos[index];
+
+      if (photoToRemove?.startsWith("blob:")) {
+        URL.revokeObjectURL(photoToRemove);
+
+        setCurrentListing((prev) => {
+          const newPhotos = [...prev.photos];
+          const fileIndex = newPhotos.findIndex((p) => p instanceof File);
+          if (fileIndex !== -1) {
+            newPhotos.splice(fileIndex, 1);
+          }
+          return { ...prev, photos: newPhotos };
+        });
+
+        setListingPhotos((prev) => {
+          const newList = [...prev];
+          newList.splice(index, 1);
+          return newList;
+        });
+      } else {
+        const updatedListing = await deleteMarketplacePhoto(index);
+
+        if (updatedListing) {
+          setCurrentListing((prev) => ({
+            ...prev,
+            photos: updatedListing.photos || [],
+          }));
+
+          if (activeTab === "marketplace") {
+            await loadMarketplaceListings();
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to remove photo:", error);
+    }
+  };
+
+  const removeListingVideo = (index) => {
+    if (listingVideos[index]?.startsWith("blob:")) {
+      URL.revokeObjectURL(listingVideos[index]);
+    }
+
+    setCurrentListing((prev) => {
+      const newVideos = [...prev.videos];
+      newVideos.splice(index, 1);
+      return { ...prev, videos: newVideos };
+    });
+
+    setListingVideos((prev) => {
+      const newList = [...prev];
+      newList.splice(index, 1);
+      return newList;
+    });
+  };
+
+  const handleCreateListing = async () => {
+    if (subscriptionPlan !== "pro") {
+      toast.error("Marketplace is available only for Pro users");
+      return;
+    }
+
+    if (!currentListing.title?.trim()) {
+      toast.error("Please enter a title");
+      return;
+    }
+
+    if (!currentListing.price || parseFloat(currentListing.price) <= 0) {
+      toast.error("Please enter a valid price");
+      return;
+    }
+
+    if (!currentListing.description?.trim()) {
+      toast.error("Please enter a description");
+      return;
+    }
+
+    const totalPhotos = listingPhotos.length;
+    if (totalPhotos === 0) {
+      toast.error("Please upload at least one photo");
+      return;
+    }
+
+    try {
+      if (marketplaceListings.length > 0 && !isEditingListing) {
+        toast.error(
+          "You can only have one active listing. Please edit or delete your existing listing."
+        );
+        return;
+      }
+
+      const listingData = {
+        ...currentListing,
+        price: parseFloat(currentListing.price),
+        category: currentListing.category || "equipment",
+        status: currentListing.status || "active",
+      };
+
+      const newListing = await createMarketplaceListing(listingData);
+
+      setMarketplaceListings([newListing]);
+
+      setCurrentListing({
+        title: "",
+        price: "",
+        location: "",
+        description: "",
+        status: "active",
+        photos: [],
+        videos: [],
+        category: "equipment",
+        itemCondition: "excellent",
+        contactPhone: "",
+        contactEmail: "",
+      });
+      setListingPhotos([]);
+      setListingVideos([]);
+
+      toast.success("Listing created successfully!");
+      setActiveMarketSection("listings");
+    } catch (error) {
+      console.error("Failed to create listing:", error);
+    }
+  };
+
+  const handleEditListing = (listing) => {
+    setIsEditingListing(true);
+    setEditingListingId(listing._id);
+    setCurrentListing({
+      title: listing.title,
+      price: listing.price.toString(),
+      location: listing.location || "",
+      description: listing.description,
+      status: listing.status,
+      category: listing.category || "equipment",
+      itemCondition: listing.itemCondition || "excellent",
+      contactPhone: listing.contactPhone || "",
+      contactEmail: listing.contactEmail || "",
+      photos: listing.photos || [],
+      videos: listing.video ? [listing.video] : [],
+    });
+
+    setListingPhotos(listing.photos || []);
+    setListingVideos(listing.video ? [listing.video] : []);
+
+    setActiveMarketSection("create");
+  };
+
+  const handleUpdateListing = async () => {
+    if (subscriptionPlan !== "pro") {
+      toast.error("Marketplace is available only for Pro users");
+      return;
+    }
+
+    if (!currentListing.title?.trim()) {
+      toast.error("Please enter a title");
+      return;
+    }
+
+    if (!currentListing.price || parseFloat(currentListing.price) <= 0) {
+      toast.error("Please enter a valid price");
+      return;
+    }
+
+    if (!currentListing.description?.trim()) {
+      toast.error("Please enter a description");
+      return;
+    }
+
+    const totalPhotos = listingPhotos.length;
+    if (totalPhotos === 0) {
+      toast.error("Please upload at least one photo");
+      return;
+    }
+
+    try {
+      const listingData = {
+        ...currentListing,
+        price: parseFloat(currentListing.price),
+        category: currentListing.category || "equipment",
+        status: currentListing.status || "active",
+      };
+
+      const updatedListing = await updateMarketplaceListing(
+        editingListingId,
+        listingData
+      );
+
+      setMarketplaceListings([updatedListing]);
+
+      setIsEditingListing(false);
+      setEditingListingId(null);
+      setCurrentListing({
+        title: "",
+        price: "",
+        location: "",
+        description: "",
+        status: "active",
+        photos: [],
+        videos: [],
+        category: "equipment",
+        itemCondition: "excellent",
+        contactPhone: "",
+        contactEmail: "",
+      });
+      setListingPhotos([]);
+      setListingVideos([]);
+
+      toast.success("Listing updated successfully!");
+      setActiveMarketSection("listings");
+    } catch (error) {
+      console.error("Failed to update listing:", error);
+    }
+  };
+
+  const handleDeleteListing = async (id) => {
+    if (subscriptionPlan !== "pro") {
+      toast.error("Marketplace is available only for Pro users");
+      return;
+    }
+
+    try {
+      await deleteMarketplaceListing(id);
+      setMarketplaceListings([]);
+      toast.success("Listing deleted successfully!");
+      setActiveMarketSection("create");
+    } catch (error) {
+      console.error("Failed to delete listing:", error);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingListing(false);
+    setEditingListingId(null);
+    setCurrentListing({
+      title: "",
+      price: "",
+      location: "",
+      description: "",
+      status: "active",
+      photos: [],
+      videos: [],
+      category: "equipment",
+      itemCondition: "excellent",
+      contactPhone: "",
+      contactEmail: "",
+    });
+    setListingPhotos([]);
+    setListingVideos([]);
+    setActiveMarketSection("listings");
+  };
+
   // === Handle Input ===
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    // Free plan restrictions
     if (subscriptionPlan === "free") {
       if (name === "biography" || name === "openHours") {
         toast.error(`Free plan users cannot update ${name}. Upgrade to Pro.`);
@@ -157,7 +728,6 @@ export default function VenueDashboard() {
 
     const files = Array.from(e.target.files);
 
-    // Pro plan limit: 5 photos
     if (previewImages.length + files.length > 5) {
       toast.error("Pro plan allows maximum 5 photos.");
       return;
@@ -165,30 +735,28 @@ export default function VenueDashboard() {
 
     const urls = files.map((file) => URL.createObjectURL(file));
     setPreviewImages([...previewImages, ...urls]);
-    setVenue(prev => ({
+    setVenue((prev) => ({
       ...prev,
-      photos: [...prev.photos, ...files]
+      photos: [...prev.photos, ...files],
     }));
   };
 
   const removeImage = (index) => {
     const urlToRemove = previewImages[index];
 
-    const photoObj = venue.photos.find(p => p.url === urlToRemove);
+    const photoObj = venue.photos.find((p) => p.url === urlToRemove);
 
     if (photoObj?.filename) {
-      setRemovedPhotos(prev => [...prev, photoObj.filename]);
+      setRemovedPhotos((prev) => [...prev, photoObj.filename]);
     }
 
-    setPreviewImages(prev => prev.filter((_, i) => i !== index));
+    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
 
-    setVenue(prev => ({
+    setVenue((prev) => ({
       ...prev,
-      photos: prev.photos.filter(p => p.url !== urlToRemove)
+      photos: prev.photos.filter((p) => p.url !== urlToRemove),
     }));
   };
-
-
 
   // === Save Venue with Plan Validation ===
   const handleSave = async () => {
@@ -205,15 +773,17 @@ export default function VenueDashboard() {
       formData.append("address", venue.address);
       formData.append("seatingCapacity", venue.seating);
 
-      // Pro user fields
       if (subscriptionPlan === "pro") {
         formData.append("biography", venue.biography || "");
         formData.append("openHours", venue.openHours);
         formData.append("openDays", "Mon-Sat");
       }
 
-      // NEW PHOTOS
-      if (venue.photos && venue.photos.length > 0 && subscriptionPlan === "pro") {
+      if (
+        venue.photos &&
+        venue.photos.length > 0 &&
+        subscriptionPlan === "pro"
+      ) {
         venue.photos.forEach((file) => {
           if (file instanceof File) {
             formData.append("photos", file);
@@ -221,7 +791,7 @@ export default function VenueDashboard() {
         });
       }
 
-      removedPhotos.forEach(filename => {
+      removedPhotos.forEach((filename) => {
         formData.append("removedPhotos", filename);
       });
 
@@ -248,9 +818,8 @@ export default function VenueDashboard() {
       setRemovedPhotos([]);
 
       if (data.data?.venue?.photos) {
-        setPreviewImages(data.data.venue.photos.map(p => p.url));
+        setPreviewImages(data.data.venue.photos.map((p) => p.url));
       }
-
     } catch (error) {
       console.error("Save error:", error);
       toast.error(error.message);
@@ -259,12 +828,10 @@ export default function VenueDashboard() {
     }
   };
 
-
   // === Add Show with Free Plan Limit ===
   const handleAddShow = async (e) => {
     e.preventDefault();
 
-    // Free plan validation
     if (subscriptionPlan === "free" && showsThisMonth >= 1) {
       toast.error(
         "Free plan allows only 1 show per month. Upgrade to Pro for unlimited shows."
@@ -272,7 +839,6 @@ export default function VenueDashboard() {
       return;
     }
 
-    // Validation
     if (!newShow.artist || !newShow.date || !newShow.time || !newShow.image) {
       toast.error("Please fill all fields including the show image.");
       return;
@@ -317,9 +883,8 @@ export default function VenueDashboard() {
       toast.success("🎤 Show added successfully!");
       setNewShow({ artist: "", date: "", time: "", image: null });
 
-      // Update shows count for free plan
       if (subscriptionPlan === "free") {
-        setShowsThisMonth(prev => prev + 1);
+        setShowsThisMonth((prev) => prev + 1);
       }
     } catch (error) {
       console.error("Add show error:", error);
@@ -331,7 +896,13 @@ export default function VenueDashboard() {
 
   // === Plan Badge Component ===
   const PlanBadge = () => (
-    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${subscriptionPlan === "pro" ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" : "bg-gray-700 text-gray-300 border border-gray-600"}`}>
+    <div
+      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
+        subscriptionPlan === "pro"
+          ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+          : "bg-gray-700 text-gray-300 border border-gray-600"
+      }`}
+    >
       {subscriptionPlan === "pro" ? (
         <>
           <Crown size={14} />
@@ -353,7 +924,8 @@ export default function VenueDashboard() {
         <Crown className="text-yellow-500 mt-0.5 flex-shrink-0" size={16} />
         <div>
           <p className="text-sm text-gray-300">
-            <span className="font-medium">{feature}</span> is available for Pro users
+            <span className="font-medium">{feature}</span> is available for Pro
+            users
           </p>
           <button
             onClick={() => window.open("/pricing", "_blank")}
@@ -427,7 +999,18 @@ export default function VenueDashboard() {
                 </div>
                 <div>
                   <p className="text-white font-medium">Photo Uploads</p>
-                  <p className="text-gray-400 text-sm">Not available in Free plan</p>
+                  <p className="text-gray-400 text-sm">
+                    Not available in Free plan
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-yellow-500/20 rounded-lg">
+                  <ShoppingBag size={20} className="text-yellow-400" />
+                </div>
+                <div>
+                  <p className="text-white font-medium">Marketplace</p>
+                  <p className="text-gray-400 text-sm">Pro feature only</p>
                 </div>
               </div>
               <button
@@ -450,20 +1033,32 @@ export default function VenueDashboard() {
                 { id: "overview", label: "Overview", icon: Building2 },
                 { id: "edit", label: "Edit Profile", icon: Edit3 },
                 { id: "addshow", label: "Add Show", icon: Music },
+                { id: "marketplace", label: "Marketplace", icon: ShoppingBag }, // নতুন ট্যাব
               ].map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
-                  onClick={() => setActiveTab(id)}
-                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === id
-                    ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
-                    : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
-                    }`}
+                  onClick={() => {
+                    setActiveTab(id);
+                    if (id === "marketplace" && subscriptionPlan === "pro") {
+                      loadMarketplaceListings();
+                    }
+                  }}
+                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${
+                    activeTab === id
+                      ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
+                      : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
+                  }`}
                 >
                   <Icon size={18} />
                   {label}
                   {id === "addshow" && subscriptionPlan === "free" && (
                     <span className="text-xs bg-gray-700 px-1.5 py-0.5 rounded">
                       {showsThisMonth}/1
+                    </span>
+                  )}
+                  {id === "marketplace" && subscriptionPlan !== "pro" && (
+                    <span className="text-xs bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">
+                      Pro
                     </span>
                   )}
                 </button>
@@ -504,11 +1099,33 @@ export default function VenueDashboard() {
                 UpgradePrompt={UpgradePrompt}
               />
             )}
+            {activeTab === "marketplace" && (
+              <MarketplaceTab
+                subscriptionPlan={subscriptionPlan}
+                venue={venue}
+                marketplaceListings={marketplaceListings}
+                marketplaceLoading={marketplaceLoading}
+                currentListing={currentListing}
+                listingPhotos={listingPhotos}
+                listingVideos={listingVideos}
+                isEditingListing={isEditingListing}
+                activeMarketSection={activeMarketSection}
+                setActiveMarketSection={setActiveMarketSection}
+                handleListingChange={handleListingChange}
+                handleListingPhotoUpload={handleListingPhotoUpload}
+                handleListingVideoUpload={handleListingVideoUpload}
+                removeListingPhoto={removeListingPhoto}
+                removeListingVideo={removeListingVideo}
+                handleCreateListing={handleCreateListing}
+                handleUpdateListing={handleUpdateListing}
+                handleEditListing={handleEditListing}
+                handleDeleteListing={handleDeleteListing}
+                handleCancelEdit={handleCancelEdit}
+              />
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
-
-
