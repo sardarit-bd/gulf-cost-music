@@ -4,19 +4,7 @@ import { Edit2, Image as ImageIcon, Trash2, Upload, Video, X } from "lucide-reac
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
-/**
- * ✅ Single-item marketplace (matches /api/market/me backend)
- * - One seller can manage one active listing (create or update)
- *
- * Props (expected):
- * - subscriptionPlan, hasMarketplaceAccess
- * - listings: array but will contain max 1 item (or empty)
- * - loadingListings
- * - currentListing, listingPhotos, listingVideos
- * - isEditingListing
- * - handlers: onListingChange, onPhotoUpload, onVideoUpload, onRemovePhoto, onRemoveVideo
- * - onCreateListing, onUpdateListing, onEditListing, onDeleteListing, onCancelEdit
- */
+
 export default function ArtistMarketplaceTab({
     subscriptionPlan,
     hasMarketplaceAccess,
@@ -41,12 +29,10 @@ export default function ArtistMarketplaceTab({
 
     const existingItem = useMemo(() => (Array.isArray(listings) && listings.length ? listings[0] : null), [listings]);
 
-    // ✅ If item exists, default to "listings" tab so user sees their one listing
     useEffect(() => {
         if (existingItem) setActiveSection("listings");
     }, [existingItem]);
 
-    // ✅ enforce backend statuses (your schema: active/sold/hidden)
     const statusLabel = (s) => {
         if (s === "active") return "Active";
         if (s === "sold") return "Sold";
@@ -54,7 +40,6 @@ export default function ArtistMarketplaceTab({
         return "Active";
     };
 
-    // UI guard: your UI currently had "draft"—backend doesn't support it
     useEffect(() => {
         if (currentListing?.status === "draft") {
             toast.error("Draft status is not supported. Using Hidden instead.");
@@ -447,10 +432,10 @@ export default function ArtistMarketplaceTab({
                                     <div className="absolute top-3 right-3">
                                         <span
                                             className={`px-3 py-1 rounded-full text-xs font-semibold ${existingItem.status === "active"
-                                                    ? "bg-green-500/20 text-green-500"
-                                                    : existingItem.status === "sold"
-                                                        ? "bg-red-500/20 text-red-500"
-                                                        : "bg-gray-500/20 text-gray-300"
+                                                ? "bg-green-500/20 text-green-500"
+                                                : existingItem.status === "sold"
+                                                    ? "bg-red-500/20 text-red-500"
+                                                    : "bg-gray-500/20 text-gray-300"
                                                 }`}
                                         >
                                             {statusLabel(existingItem.status)}

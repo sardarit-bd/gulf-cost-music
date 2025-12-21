@@ -13,15 +13,12 @@ export default function OverviewTab({
     subscriptionPlan,
     uploadLimits,
 }) {
-    // ✅ ADD THIS
     const [playingIndex, setPlayingIndex] = useState(null);
 
-    // ✅ ADD THIS
     const togglePlay = (index) => {
         setPlayingIndex((prev) => (prev === index ? null : index));
     };
 
-    // ✅ ADD THIS
     const playNext = () => {
         if (!audioPreview?.length) return;
         setPlayingIndex((prev) =>
@@ -29,7 +26,6 @@ export default function OverviewTab({
         );
     };
 
-    // ✅ ADD THIS
     const playPrevious = () => {
         if (!audioPreview?.length) return;
         setPlayingIndex((prev) =>
