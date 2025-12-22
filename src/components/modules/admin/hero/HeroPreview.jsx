@@ -17,7 +17,7 @@ export default function HeroPreview({ heroData }) {
                         {heroData.subtitle ||
                             "Your compelling subtitle will appear here"}
                     </p>
-                    <button className="bg-[var(--primary)] text-black px-6 py-2 rounded-md font-medium transition-all inline-flex items-center gap-1 text-sm">
+                    <button className="bg-yellow-400 text-black px-6 py-2 rounded-md font-medium transition-all inline-flex items-center gap-1 text-sm">
                         {heroData.buttonText || "Get Started"}
                     </button>
                     {heroData.videoUrl && (

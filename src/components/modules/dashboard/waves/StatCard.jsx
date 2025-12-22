@@ -15,10 +15,10 @@ const StatCard = ({ icon: Icon, label, value, change, color }) => {
                 <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-r ${colorClasses[color]}`}>
                     <Icon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <div className={`flex items-center space-x-1 text-xs sm:text-sm font-medium ${changeColor}`}>
+                {/* <div className={`flex items-center space-x-1 text-xs sm:text-sm font-medium ${changeColor}`}>
                     <span>{changeIcon}</span>
                     <span>{Math.abs(change)}%</span>
-                </div>
+                </div> */}
             </div>
             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{value}</h3>
             <p className="text-gray-600 text-xs sm:text-sm">{label}</p>

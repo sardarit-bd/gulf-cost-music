@@ -128,8 +128,8 @@ const EventDetailModal = ({ event, isOpen, onClose }) => {
                   )}
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-medium ${event.isActive
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
                       }`}
                   >
                     {event.isActive ? "Active" : "Inactive"}
@@ -234,6 +234,7 @@ const EventRow = ({ event, onToggleStatus, onDeleteEvent }) => {
   const eventDate = new Date(event.date);
   const isUpcoming = eventDate > new Date();
   const isToday = eventDate.toDateString() === new Date().toDateString();
+  const isEventExpired = eventDate < new Date(); // Check if event date has passed
 
   const handleDeleteClick = () => {
     setShowDeleteModal(true);
@@ -252,11 +253,10 @@ const EventRow = ({ event, onToggleStatus, onDeleteEvent }) => {
     setShowDetailModal(true);
   };
 
-  const handleEditClick = () => {
-    // Edit functionality - you can implement this based on your needs
-    toast.success(
-      `Edit functionality for "${event.artistBandName}" would open here`
-    );
+  const handleToggleStatus = () => {
+    if (!isEventExpired) {
+      onToggleStatus(event._id, event.isActive, event.artistBandName);
+    }
   };
 
   return (
@@ -313,6 +313,11 @@ const EventRow = ({ event, onToggleStatus, onDeleteEvent }) => {
                   Upcoming
                 </span>
               )}
+              {isEventExpired && !isToday && (
+                <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">
+                  Past
+                </span>
+              )}
             </div>
             <div className="flex items-center text-sm text-gray-500">
               <Clock className="w-3 h-3 mr-2 text-gray-400" />
@@ -323,25 +328,37 @@ const EventRow = ({ event, onToggleStatus, onDeleteEvent }) => {
 
         <td className="px-6 py-4">
           <button
-            onClick={() =>
-              onToggleStatus(event._id, event.isActive, event.artistBandName)
-            }
+            onClick={handleToggleStatus}
+            disabled={isEventExpired}
             className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-colors ${event.isActive
-                ? "bg-green-100 text-green-800 border border-green-200 hover:bg-green-200"
-                : "bg-red-100 text-red-800 border border-red-200 hover:bg-red-200"
+              ? "bg-green-100 text-green-800 border border-green-200 hover:bg-green-200"
+              : "bg-red-100 text-red-800 border border-red-200 hover:bg-red-200"
+              } ${isEventExpired
+                ? "opacity-50 cursor-not-allowed hover:bg-gray-100 hover:text-gray-800"
+                : "cursor-pointer"
               }`}
+            title={
+              isEventExpired
+                ? "Cannot modify status of past events"
+                : event.isActive
+                  ? "Deactivate event"
+                  : "Activate event"
+            }
           >
             <div
               className={`w-2 h-2 rounded-full mr-2 ${event.isActive ? "bg-green-500" : "bg-red-500"
                 }`}
             ></div>
             {event.isActive ? "Active" : "Inactive"}
+            {isEventExpired && (
+              <span className="ml-2 text-xs text-gray-500">(Expired)</span>
+            )}
           </button>
         </td>
 
         <td className="px-6 py-4 text-right">
           <div className="flex justify-end items-center space-x-2">
-            {/* View Button - NOW WORKING */}
+            {/* View Button */}
             <button
               onClick={handleViewClick}
               className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
@@ -761,8 +778,8 @@ const AdminEventsPage = () => {
                           key={pageNumber}
                           onClick={() => setPage(pageNumber)}
                           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${page === pageNumber
-                              ? "bg-blue-600 text-white shadow-sm"
-                              : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                            ? "bg-blue-600 text-white shadow-sm"
+                            : "border border-gray-300 text-gray-700 hover:bg-gray-50"
                             }`}
                         >
                           {pageNumber}
@@ -807,12 +824,12 @@ const StatCard = ({ icon: Icon, label, value, change, color }) => {
         >
           <Icon className="w-6 h-6 text-white" />
         </div>
-        <div
+        {/* <div
           className={`flex items-center space-x-1 text-sm font-medium ${changeColor}`}
         >
           <span>{changeIcon}</span>
           <span>{Math.abs(change)}%</span>
-        </div>
+        </div> */}
       </div>
       <h3 className="text-2xl font-bold text-gray-900 mb-1">{value}</h3>
       <p className="text-gray-600 text-sm">{label}</p>

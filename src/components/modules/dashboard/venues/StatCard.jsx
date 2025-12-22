@@ -29,10 +29,6 @@ const StatCard = ({ icon: Icon, label, value, change, color }) => {
                 <div className={`p-3 rounded-xl bg-gradient-to-r ${colorClasses[color]}`}>
                     {renderIcon()}
                 </div>
-                {/* <div className={`flex items-center space-x-1 text-sm font-medium ${changeColor}`}>
-                    <span>{changeIcon}</span>
-                    <span>{Math.abs(change)}%</span>
-                </div> */}
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-1">{value || 0}</h3>
             <p className="text-gray-600 text-sm">{label}</p>

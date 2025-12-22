@@ -26,10 +26,6 @@ const StatCard = ({ icon: Icon, label, value, change, color, plan }) => {
                         <Icon className="w-6 h-6 text-white" />
                     )}
                 </div>
-                {/* <div className={`flex items-center space-x-1 text-sm font-medium ${changeColor}`}>
-                    <span>{changeIcon}</span>
-                    <span>{Math.abs(change)}%</span>
-                </div> */}
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-1">{value || 0}</h3>
             <p className="text-gray-600 text-sm">{label}</p>

@@ -135,7 +135,7 @@ export default function HeroSection() {
           {hero?.subtitle || "Experience the best with stunning venues and powerful performances."}
         </p>
 
-        <button className="bg-[var(--primary)] hover:bg-[var(--primary)]/90 text-black px-4 py-2 rounded-lg font-bold hover:bg-primary/90 transition text-lg">
+        <button className="bg-[#FAEE71] hover:bg-[#FAEE71]/90 text-black px-4 py-2 rounded-lg font-bold hover:bg-[#FAEE71]/90 transition text-lg">
           <Link href="/venues">
             {hero?.buttonText || "Get Started"}
           </Link>

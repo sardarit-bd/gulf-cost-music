@@ -13,7 +13,7 @@ import OverviewTab from "../../artist/OverviewTab";
 import PlanStats from "../../artist/PlanStats";
 import Tabs from "../../artist/Tabs";
 
-export default function DashboardPage() {
+export default function ArtistDashboard() {
     const { user, loading: authLoading } = useAuth();
     const [activeTab, setActiveTab] = useState("overview");
     const [artist, setArtist] = useState({

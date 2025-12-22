@@ -90,12 +90,12 @@ export default function PhotosTab({
                                 <Crown size={18} />
                                 Upgrade to Pro Plan
                             </button>
-                            <button
+                            {/* <button
                                 onClick={() => window.open("/features", "_blank")}
                                 className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition"
                             >
                                 View All Features
-                            </button>
+                            </button> */}
                         </div>
                     </div>
                 </div>
@@ -117,8 +117,8 @@ export default function PhotosTab({
 
                 {/* Upload Area */}
                 <label className={`cursor-pointer flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed rounded-xl transition ${photos.length >= MAX_PHOTOS || uploadingPhotos || isUploading
-                        ? 'border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed'
-                        : 'border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20'
+                    ? 'border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed'
+                    : 'border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20'
                     }`}>
                     {uploadingPhotos || isUploading ? (
                         <>
