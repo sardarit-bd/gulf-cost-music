@@ -9,6 +9,7 @@ import ArtistMarketplaceTab from "../../artist/MarketplaceTab";
 import OverviewTab from "../../artist/OverviewTab";
 import PlanStats from "../../artist/PlanStats";
 import Tabs from "../../artist/Tabs";
+import BillingTab from "./BillingTab";
 
 const API_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
 
@@ -114,9 +115,72 @@ const api = {
       if (!res.ok) throw new Error(data.message || "Failed to delete photo");
       return data;
     }),
+
+  // Billing
+  getBillingStatus: () =>
+    fetch(`${API_URL}/api/subscription/status`, { headers: getHeaders() }).then(
+      async (res) => {
+        const data = await res.json();
+        if (!res.ok)
+          throw new Error(data.message || "Failed to fetch billing status");
+        return data;
+      }
+    ),
+
+  createCheckoutSession: () =>
+    fetch(`${API_URL}/api/subscription/checkout/pro`, {
+      method: "POST",
+      headers: getHeaders(),
+    }).then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to create checkout");
+      return data;
+    }),
+
+  createBillingPortal: () =>
+    fetch(`${API_URL}/api/subscription/portal`, {
+      method: "POST",
+      headers: getHeaders(),
+    }).then(async (res) => {
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(data.message || "Failed to create billing portal");
+      return data;
+    }),
+
+  cancelSubscription: () =>
+    fetch(`${API_URL}/api/subscription/cancel`, {
+      method: "POST",
+      headers: getHeaders(),
+    }).then(async (res) => {
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(data.message || "Failed to cancel subscription");
+      return data;
+    }),
+
+  resumeSubscription: () =>
+    fetch(`${API_URL}/api/subscription/resume`, {
+      method: "POST",
+      headers: getHeaders(),
+    }).then(async (res) => {
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(data.message || "Failed to resume subscription");
+      return data;
+    }),
+
+  getInvoices: () =>
+    fetch(`${API_URL}/api/subscription/invoices`, {
+      headers: getHeaders(),
+    }).then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to fetch invoices");
+      return data;
+    }),
 };
 
-// Subscription Rules (Can also be inline)
+// Subscription Rules
 const SUBSCRIPTION_RULES = {
   artist: {
     free: {
@@ -147,12 +211,16 @@ export default function ArtistDashboard() {
     biography: "",
     photos: [],
     mp3Files: [],
+    isVerified: false,
   });
 
   const [previewImages, setPreviewImages] = useState([]);
   const [audioPreview, setAudioPreview] = useState([]);
   const [listings, setListings] = useState([]);
   const [loadingListings, setLoadingListings] = useState(false);
+  const [billingData, setBillingData] = useState(null);
+  const [invoices, setInvoices] = useState([]);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   const [currentListing, setCurrentListing] = useState({
     title: "",
@@ -175,10 +243,11 @@ export default function ArtistDashboard() {
 
   const subscriptionPlan = user?.subscriptionPlan || "free";
 
-  // Load artist profile
+  // Load all data
   useEffect(() => {
     loadArtistProfile();
     loadMarketplaceData();
+    loadBillingData();
   }, []);
 
   // Update upload limits when plan changes
@@ -238,6 +307,196 @@ export default function ArtistDashboard() {
     }
   };
 
+  const loadBillingData = async () => {
+    try {
+      setBillingLoading(true);
+      const [billingRes, invoicesRes] = await Promise.allSettled([
+        api.getBillingStatus(),
+        api.getInvoices(),
+      ]);
+
+      if (billingRes.status === "fulfilled") {
+        setBillingData(billingRes.value.data);
+      }
+
+      if (invoicesRes.status === "fulfilled") {
+        setInvoices(invoicesRes.value.data || []);
+      }
+    } catch (error) {
+      console.error("Error loading billing data:", error);
+    } finally {
+      setBillingLoading(false);
+    }
+  };
+
+  // Billing Handlers
+  const handleUpgradeToPro = async () => {
+    try {
+      const response = await api.createCheckoutSession();
+      if (response.success && response.url) {
+        // Open Stripe checkout
+        const checkoutWindow = window.open(
+          response.url,
+          "stripe_checkout",
+          "width=500,height=700,scrollbars=yes"
+        );
+
+        if (!checkoutWindow || checkoutWindow.closed) {
+          toast.error("Popup blocked! Please allow popups for this site.");
+          return;
+        }
+
+        // Check for payment completion
+        const checkInterval = setInterval(() => {
+          if (checkoutWindow.closed) {
+            clearInterval(checkInterval);
+            toast.success("Payment completed!");
+            setTimeout(() => {
+              loadBillingData();
+              refreshUser();
+            }, 2000);
+          }
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Upgrade error:", error);
+      toast.error(error.message || "Failed to create checkout");
+    }
+  };
+
+  const handleOpenBillingPortal = async () => {
+    try {
+      const response = await api.createBillingPortal();
+      if (response.success && response.url) {
+        window.open(response.url, "_blank");
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to open billing portal");
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (
+      !confirm(
+        "Your subscription will remain active until the end of the current billing period. Continue?"
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await api.cancelSubscription();
+      if (response.success) {
+        toast.success("Subscription cancelled successfully");
+        loadBillingData();
+        refreshUser();
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to cancel subscription");
+    }
+  };
+
+  const handleResumeSubscription = async () => {
+    try {
+      const response = await api.resumeSubscription();
+      if (response.success) {
+        toast.success("Subscription resumed successfully");
+        loadBillingData();
+        refreshUser();
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to resume subscription");
+    }
+  };
+
+  const handleDownloadInvoice = async (invoiceId, invoiceNumber) => {
+    try {
+      toast.success(`Downloading invoice ${invoiceNumber}...`);
+
+      // Create printable invoice view
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Invoice ${invoiceNumber}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+              .header { text-align: center; margin-bottom: 40px; }
+              .company { font-size: 24px; font-weight: bold; color: #333; }
+              .invoice-title { font-size: 32px; margin: 20px 0; color: #666; }
+              .details { margin: 30px 0; }
+              .detail-row { display: flex; justify-content: space-between; margin: 10px 0; }
+              .table { width: 100%; border-collapse: collapse; margin: 30px 0; }
+              .table th { background: #f5f5f5; padding: 12px; text-align: left; }
+              .table td { padding: 12px; border-bottom: 1px solid #eee; }
+              .total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 30px; }
+              .footer { margin-top: 50px; text-align: center; color: #666; font-size: 12px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div class="company">Gulf Music Platform</div>
+              <div class="invoice-title">INVOICE</div>
+            </div>
+            
+            <div class="details">
+              <div class="detail-row">
+                <span>Invoice Number:</span>
+                <span><strong>${invoiceNumber}</strong></span>
+              </div>
+              <div class="detail-row">
+                <span>Date:</span>
+                <span>${new Date().toLocaleDateString()}</span>
+              </div>
+              <div class="detail-row">
+                <span>Customer:</span>
+                <span>${user?.username || "User"}</span>
+              </div>
+              <div class="detail-row">
+                <span>User Type:</span>
+                <span>Artist</span>
+              </div>
+            </div>
+            
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Pro Subscription - Monthly Plan</td>
+                  <td>$10.00</td>
+                </tr>
+                <tr>
+                  <td>Tax</td>
+                  <td>$0.00</td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <div class="total">
+              Total: <span style="color: #10b981;">$10.00</span>
+            </div>
+            
+            <div class="footer">
+              <p>Thank you for supporting Gulf Music Platform!</p>
+              <p>Gulf Music Platform • support@gulfmusic.com</p>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download invoice");
+    }
+  };
+
+  // Profile Handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
     setArtist((prev) => ({ ...prev, [name]: value }));
@@ -289,7 +548,7 @@ export default function ArtistDashboard() {
     }
   };
 
-  // Marketplace Handlers
+  // Marketplace Handlers (existing code remains same...)
   const handleListingChange = (e) => {
     const { name, value } = e.target;
     setCurrentListing((prev) => ({ ...prev, [name]: value }));
@@ -423,7 +682,6 @@ export default function ArtistDashboard() {
 
   const handleCancelEdit = () => {
     setIsEditingListing(false);
-    // Reset to current listing data
     if (listings.length > 0) {
       const listing = listings[0];
       setCurrentListing({
@@ -481,7 +739,6 @@ export default function ArtistDashboard() {
   const removeListingPhoto = async (index) => {
     const photo = listingPhotos[index];
 
-    // If it's a URL (already uploaded), delete from server
     if (typeof photo === "string" && photo.startsWith("http")) {
       try {
         await api.deleteMarketPhoto(index);
@@ -492,7 +749,6 @@ export default function ArtistDashboard() {
       }
     }
 
-    // Remove from local state
     const newPhotos = [...listingPhotos];
     newPhotos.splice(index, 1);
     setListingPhotos(newPhotos);
@@ -502,7 +758,7 @@ export default function ArtistDashboard() {
     setListingVideos([]);
   };
 
-  // Image and Audio Upload Handlers (for EditProfileTab)
+  // Image and Audio Upload Handlers
   const handleImageUpload = async (files) => {
     if (subscriptionPlan !== "pro") {
       toast.error("Upgrade to Pro to upload photos");
@@ -517,7 +773,6 @@ export default function ArtistDashboard() {
       return;
     }
 
-    // Create preview URLs
     const newImages = [...previewImages];
     const newPhotoFiles = [];
 
@@ -528,8 +783,6 @@ export default function ArtistDashboard() {
     });
 
     setPreviewImages(newImages);
-
-    // Add to artist state for saving
     setArtist((prev) => ({
       ...prev,
       photos: [...(prev.photos || []), ...newPhotoFiles],
@@ -566,7 +819,6 @@ export default function ArtistDashboard() {
     newImages.splice(index, 1);
     setPreviewImages(newImages);
 
-    // Also remove from artist.photos
     setArtist((prev) => {
       const newPhotos = [...(prev.photos || [])];
       newPhotos.splice(index, 1);
@@ -578,6 +830,62 @@ export default function ArtistDashboard() {
     const newAudios = [...audioPreview];
     newAudios.splice(index, 1);
     setAudioPreview(newAudios);
+  };
+
+  const handleProCheckout = async () => {
+    try {
+      const token = getToken();
+
+      if (!token) {
+        toast.error("Please login first");
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/subscription/checkout/pro`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Checkout failed");
+      }
+
+      if (data.success && data.url) {
+        // Open Stripe checkout
+        const checkoutWindow = window.open(
+          data.url,
+          "stripe_checkout",
+          "width=500,height=700,scrollbars=yes"
+        );
+
+        if (!checkoutWindow || checkoutWindow.closed) {
+          toast.error("Popup blocked! Please allow popups for this site.");
+          return;
+        }
+
+        // Check for payment completion
+        const checkInterval = setInterval(() => {
+          if (checkoutWindow.closed) {
+            clearInterval(checkInterval);
+            toast.success("Payment completed!");
+            // Refresh user data
+            setTimeout(() => {
+              refreshUser();
+              loadBillingData();
+              if (loadArtistProfile) loadArtistProfile();
+            }, 2000);
+          }
+        }, 1000);
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      toast.error(error.message || "Failed to create checkout");
+    }
   };
 
   if (!user) {
@@ -593,17 +901,7 @@ export default function ArtistDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4 md:px-16">
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: "#1f2937",
-            color: "#fff",
-            border: "1px solid #374151",
-          },
-        }}
-      />
+      <Toaster />
 
       <Header subscriptionPlan={subscriptionPlan} />
 
@@ -613,13 +911,15 @@ export default function ArtistDashboard() {
         audiosCount={audioPreview.length}
         listingsCount={listings.length}
         hasMarketplaceAccess={uploadLimits.marketplace}
+        handleProCheckout={handleProCheckout}
       />
 
       <div className="bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-700 mt-8">
         <Tabs
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          hasMarketplaceAccess={uploadLimits.marketplace}
+          isVerified={user?.isVerified}
+          isProUser={user?.subscriptionPlan === "pro"}
         />
 
         <div className="p-6 md:p-8">
@@ -690,6 +990,24 @@ export default function ArtistDashboard() {
                 Upgrade to Pro
               </button>
             </div>
+          )}
+
+          {activeTab === "billing" && (
+            <BillingTab
+              user={user}
+              billingData={billingData}
+              invoices={invoices}
+              loading={billingLoading}
+              onUpgrade={handleUpgradeToPro}
+              onOpenPortal={handleOpenBillingPortal}
+              onCancel={handleCancelSubscription}
+              onResume={handleResumeSubscription}
+              onDownloadInvoice={handleDownloadInvoice}
+              onRefresh={() => {
+                loadBillingData();
+                refreshUser();
+              }}
+            />
           )}
         </div>
       </div>

@@ -1,35 +1,40 @@
-import { Edit2, Home, ShoppingBag } from 'lucide-react';
+export default function Tabs({
+  activeTab,
+  setActiveTab,
+  isVerified = false,
+  isProUser = false,
+}) {
+  const tabs = [
+    { id: "overview", label: "Overview", icon: "📊" },
+    { id: "edit", label: "Edit Profile", icon: "✏️" },
+  ];
 
-const Tabs = ({ activeTab, setActiveTab, hasMarketplaceAccess }) => {
-    return (
-        <div className="flex border-b border-gray-700 overflow-x-auto">
-            <button
-                className={`flex items-center px-6 py-4 text-sm font-medium transition ${activeTab === 'overview' ? 'text-white border-b-2 border-yellow-500' : 'text-gray-400 hover:text-white'}`}
-                onClick={() => setActiveTab('overview')}
-            >
-                <Home className="w-4 h-4 mr-2" />
-                Overview
-            </button>
+  // Marketplace → only if verified
+  if (isVerified) {
+    tabs.push({ id: "marketplace", label: "Marketplace", icon: "🛒" });
+  }
 
-            <button
-                className={`flex items-center px-6 py-4 text-sm font-medium transition ${activeTab === 'edit' ? 'text-white border-b-2 border-yellow-500' : 'text-gray-400 hover:text-white'}`}
-                onClick={() => setActiveTab('edit')}
-            >
-                <Edit2 className="w-4 h-4 mr-2" />
-                Edit Profile
-            </button>
+  // Billing → only if pro
+  if (isProUser) {
+    tabs.push({ id: "billing", label: "Billing", icon: "💰" });
+  }
 
-            {hasMarketplaceAccess && (
-                <button
-                    className={`flex items-center px-6 py-4 text-sm font-medium transition ${activeTab === 'marketplace' ? 'text-white border-b-2 border-yellow-500' : 'text-gray-400 hover:text-white'}`}
-                    onClick={() => setActiveTab('marketplace')}
-                >
-                    <ShoppingBag className="w-4 h-4 mr-2" />
-                    Marketplace
-                </button>
-            )}
-        </div>
-    );
-};
-
-export default Tabs;
+  return (
+    <div className="flex border-b border-gray-700 overflow-x-auto">
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          onClick={() => setActiveTab(tab.id)}
+          className={`flex items-center gap-2 px-6 py-4 font-medium text-sm whitespace-nowrap transition-all ${
+            activeTab === tab.id
+              ? "text-white border-b-2 border-yellow-500 bg-gray-900/50"
+              : "text-gray-400 hover:text-white hover:bg-gray-900/30"
+          }`}
+        >
+          <span>{tab.icon}</span>
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+}

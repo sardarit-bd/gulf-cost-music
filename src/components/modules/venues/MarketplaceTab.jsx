@@ -17,7 +17,7 @@ import {
   Trash2,
   Upload,
   Video,
-  X
+  X,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -122,49 +122,6 @@ const MarketplaceTab = ({
     }
   };
 
-  // If not Pro user, show upgrade prompt
-  // if (subscriptionPlan !== "pro") {
-  //   return (
-  //     <div className="text-center py-12">
-  //       <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl p-8 max-w-md mx-auto border border-gray-800">
-  //         <div className="w-20 h-20 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
-  //           <Shield className="w-10 h-10 text-gray-900" />
-  //         </div>
-  //         <h3 className="text-2xl font-bold text-white mb-3">Pro Feature</h3>
-  //         <p className="text-gray-400 mb-6 text-sm">
-  //           Sell your venue equipment, furniture, or services in our exclusive
-  //           marketplace. List items directly to other venues and artists.
-  //         </p>
-  //         <div className="space-y-4">
-  //           <div className="text-left">
-  //             <h4 className="text-white font-semibold mb-2">Pro Benefits:</h4>
-  //             <ul className="space-y-2 text-gray-400 text-sm">
-  //               <li className="flex items-center gap-2">
-  //                 <CheckCircle className="w-4 h-4 text-green-500" />
-  //                 List venue equipment and services
-  //               </li>
-  //               <li className="flex items-center gap-2">
-  //                 <CheckCircle className="w-4 h-4 text-green-500" />
-  //                 Reach other venues and artists
-  //               </li>
-  //               <li className="flex items-center gap-2">
-  //                 <CheckCircle className="w-4 h-4 text-green-500" />
-  //                 Higher visibility with verified badge
-  //               </li>
-  //             </ul>
-  //           </div>
-  //           <button
-  //             onClick={() => window.open("/pricing", "_blank")}
-  //             className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-all duration-300 hover:scale-105 shadow-lg shadow-orange-500/20"
-  //           >
-  //             Upgrade to Pro
-  //           </button>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
   if (!venue?.isActive) {
     return (
       <div className="text-center py-12">
@@ -176,8 +133,8 @@ const MarketplaceTab = ({
           </h3>
 
           <p className="text-gray-400 mb-6 text-sm">
-            Only verified venues can list one item on the marketplace.
-            Please complete verification to continue.
+            Only verified venues can list one item on the marketplace. Please
+            complete verification to continue.
           </p>
 
           <button
@@ -285,31 +242,38 @@ const MarketplaceTab = ({
       {/* Navigation Tabs */}
       <div className="flex flex-wrap border-b border-gray-800">
         <button
-          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeMarketSection === "create"
-            ? "text-white border-b-2 border-yellow-500"
-            : "text-gray-400 hover:text-white"
-            }`}
+          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${
+            activeMarketSection === "create"
+              ? "text-white border-b-2 border-yellow-500"
+              : "text-gray-400 hover:text-white"
+          }`}
           onClick={() => setActiveMarketSection("create")}
         >
-          {isEditingListing ? "✏️ Edit Listing" : hasListing ? "✏️ Edit Listing" : "➕ Create New Listing"}
+          {isEditingListing
+            ? "✏️ Edit Listing"
+            : hasListing
+            ? "✏️ Edit Listing"
+            : "➕ Create New Listing"}
         </button>
 
         {/* সবসময় My Listing ট্যাব দেখান */}
         <button
-          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeMarketSection === "listings"
-            ? "text-white border-b-2 border-yellow-500"
-            : "text-gray-400 hover:text-white"
-            }`}
+          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${
+            activeMarketSection === "listings"
+              ? "text-white border-b-2 border-yellow-500"
+              : "text-gray-400 hover:text-white"
+          }`}
           onClick={() => setActiveMarketSection("listings")}
         >
           📋 My Listing {hasListing && `(1)`}
         </button>
 
         <button
-          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeMarketSection === "guidelines"
-            ? "text-white border-b-2 border-yellow-500"
-            : "text-gray-400 hover:text-white"
-            }`}
+          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${
+            activeMarketSection === "guidelines"
+              ? "text-white border-b-2 border-yellow-500"
+              : "text-gray-400 hover:text-white"
+          }`}
           onClick={() => setActiveMarketSection("guidelines")}
         >
           📚 Guidelines
@@ -340,8 +304,9 @@ const MarketplaceTab = ({
                   value={currentListing.title}
                   onChange={handleListingChange}
                   placeholder="e.g., Professional PA System, Stage Lighting Kit, Venue Chairs"
-                  className={`w-full bg-gray-800 border ${formErrors.title ? "border-red-500" : "border-gray-700"
-                    } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition`}
+                  className={`w-full bg-gray-800 border ${
+                    formErrors.title ? "border-red-500" : "border-gray-700"
+                  } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition`}
                 />
                 {formErrors.title && (
                   <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
@@ -368,8 +333,9 @@ const MarketplaceTab = ({
                     placeholder="0.00"
                     step="0.01"
                     min="0"
-                    className={`w-full bg-gray-800 border ${formErrors.price ? "border-red-500" : "border-gray-700"
-                      } rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition`}
+                    className={`w-full bg-gray-800 border ${
+                      formErrors.price ? "border-red-500" : "border-gray-700"
+                    } rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition`}
                   />
                 </div>
                 {formErrors.price && (
@@ -527,10 +493,11 @@ const MarketplaceTab = ({
 • Reason for selling
 • Pickup/delivery options
 • Any known issues or repairs needed"
-                  className={`w-full bg-gray-800 border ${formErrors.description
-                    ? "border-red-500"
-                    : "border-gray-700"
-                    } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition`}
+                  className={`w-full bg-gray-800 border ${
+                    formErrors.description
+                      ? "border-red-500"
+                      : "border-gray-700"
+                  } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition`}
                 />
                 {formErrors.description && (
                   <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
@@ -735,36 +702,39 @@ const MarketplaceTab = ({
             <div className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800">
               {/* Status Banner */}
               <div
-                className={`px-6 py-3 ${listing.status === "active"
-                  ? "bg-green-500/20"
-                  : listing.status === "sold"
+                className={`px-6 py-3 ${
+                  listing.status === "active"
+                    ? "bg-green-500/20"
+                    : listing.status === "sold"
                     ? "bg-red-500/20"
                     : listing.status === "reserved"
-                      ? "bg-orange-500/20"
-                      : "bg-yellow-500/20"
-                  }`}
+                    ? "bg-orange-500/20"
+                    : "bg-yellow-500/20"
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`w-2 h-2 rounded-full ${listing.status === "active"
-                        ? "bg-green-500"
-                        : listing.status === "sold"
+                      className={`w-2 h-2 rounded-full ${
+                        listing.status === "active"
+                          ? "bg-green-500"
+                          : listing.status === "sold"
                           ? "bg-red-500"
                           : listing.status === "reserved"
-                            ? "bg-orange-500"
-                            : "bg-yellow-500"
-                        }`}
+                          ? "bg-orange-500"
+                          : "bg-yellow-500"
+                      }`}
                     ></span>
                     <span
-                      className={`text-sm font-medium ${listing.status === "active"
-                        ? "text-green-500"
-                        : listing.status === "sold"
+                      className={`text-sm font-medium ${
+                        listing.status === "active"
+                          ? "text-green-500"
+                          : listing.status === "sold"
                           ? "text-red-500"
                           : listing.status === "reserved"
-                            ? "text-orange-500"
-                            : "text-yellow-500"
-                        }`}
+                          ? "text-orange-500"
+                          : "text-yellow-500"
+                      }`}
                     >
                       {listing.status.charAt(0).toUpperCase() +
                         listing.status.slice(1)}
