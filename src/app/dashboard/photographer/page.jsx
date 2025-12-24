@@ -58,7 +58,7 @@ export default function PhotographerPage() {
         setLoading(true);
         const token = getCookie("token");
         if (!token) {
-          toast.error("You must be logged in.");
+          // toast.error("You must be logged in.");
           setLoading(false);
           return;
         }

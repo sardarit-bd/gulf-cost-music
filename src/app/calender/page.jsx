@@ -230,10 +230,10 @@ export default function CalendarBoard() {
                 setCurrentDate(new Date());
               }}
             >
-              <SelectTrigger className="w-[180px] bg-white border-gray-300">
+              <SelectTrigger className="w-[180px] bg-white border-gray-300 text-black">
                 <SelectValue placeholder="Select city" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white text-black border border-gray-200">
                 {CITIES.map((city) => (
                   <SelectItem
                     key={city.key}
@@ -565,19 +565,19 @@ export default function CalendarBoard() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Total Events:</span>
-                    <span className="font-medium">{events.length}</span>
+                    <span className="font-medium text-gray-600">{events.length}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Active Venues:</span>
-                    <span className="font-medium">{venues.length}</span>
+                    <span className="font-medium text-gray-600">{venues.length}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Filtered:</span>
-                    <span className="font-medium">{filteredVenueIds.length} venue(s)</span>
+                    <span className="font-medium text-gray-600">{filteredVenueIds.length} venue(s)</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Current Month:</span>
-                    <span className="font-medium">
+                    <span className="font-medium text-gray-600">
                       {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                     </span>
                   </div>

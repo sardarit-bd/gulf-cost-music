@@ -4,6 +4,7 @@ import {
   AlertCircle,
   Building2,
   CheckCircle,
+  Crown,
   DollarSign,
   Edit2,
   ImageIcon,
@@ -15,9 +16,8 @@ import {
   Tag,
   Trash2,
   Upload,
-  Users,
   Video,
-  X,
+  X
 } from "lucide-react";
 import { useState } from "react";
 
@@ -123,43 +123,69 @@ const MarketplaceTab = ({
   };
 
   // If not Pro user, show upgrade prompt
-  if (subscriptionPlan !== "pro") {
+  // if (subscriptionPlan !== "pro") {
+  //   return (
+  //     <div className="text-center py-12">
+  //       <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl p-8 max-w-md mx-auto border border-gray-800">
+  //         <div className="w-20 h-20 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
+  //           <Shield className="w-10 h-10 text-gray-900" />
+  //         </div>
+  //         <h3 className="text-2xl font-bold text-white mb-3">Pro Feature</h3>
+  //         <p className="text-gray-400 mb-6 text-sm">
+  //           Sell your venue equipment, furniture, or services in our exclusive
+  //           marketplace. List items directly to other venues and artists.
+  //         </p>
+  //         <div className="space-y-4">
+  //           <div className="text-left">
+  //             <h4 className="text-white font-semibold mb-2">Pro Benefits:</h4>
+  //             <ul className="space-y-2 text-gray-400 text-sm">
+  //               <li className="flex items-center gap-2">
+  //                 <CheckCircle className="w-4 h-4 text-green-500" />
+  //                 List venue equipment and services
+  //               </li>
+  //               <li className="flex items-center gap-2">
+  //                 <CheckCircle className="w-4 h-4 text-green-500" />
+  //                 Reach other venues and artists
+  //               </li>
+  //               <li className="flex items-center gap-2">
+  //                 <CheckCircle className="w-4 h-4 text-green-500" />
+  //                 Higher visibility with verified badge
+  //               </li>
+  //             </ul>
+  //           </div>
+  //           <button
+  //             onClick={() => window.open("/pricing", "_blank")}
+  //             className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-all duration-300 hover:scale-105 shadow-lg shadow-orange-500/20"
+  //           >
+  //             Upgrade to Pro
+  //           </button>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
+  if (!venue?.isActive) {
     return (
       <div className="text-center py-12">
-        <div className="bg-gradient-to-br from-gray-900 to-black rounded-2xl p-8 max-w-md mx-auto border border-gray-800">
-          <div className="w-20 h-20 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Shield className="w-10 h-10 text-gray-900" />
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-3">Pro Feature</h3>
+        <div className="bg-gray-900 rounded-2xl p-8 max-w-md mx-auto border border-gray-800">
+          <Shield className="w-14 h-14 text-yellow-500 mx-auto mb-4" />
+
+          <h3 className="text-xl font-bold text-white mb-2">
+            Verification Required
+          </h3>
+
           <p className="text-gray-400 mb-6 text-sm">
-            Sell your venue equipment, furniture, or services in our exclusive
-            marketplace. List items directly to other venues and artists.
+            Only verified venues can list one item on the marketplace.
+            Please complete verification to continue.
           </p>
-          <div className="space-y-4">
-            <div className="text-left">
-              <h4 className="text-white font-semibold mb-2">Pro Benefits:</h4>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  List venue equipment and services
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Reach other venues and artists
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  Higher visibility with verified badge
-                </li>
-              </ul>
-            </div>
-            <button
-              onClick={() => window.open("/pricing", "_blank")}
-              className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-all duration-300 hover:scale-105 shadow-lg shadow-orange-500/20"
-            >
-              Upgrade to Pro
-            </button>
-          </div>
+
+          <button
+            onClick={() => window.open("/verification", "_blank")}
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 rounded-xl transition"
+          >
+            Get Verified
+          </button>
         </div>
       </div>
     );
@@ -256,37 +282,34 @@ const MarketplaceTab = ({
       </div>
 
       {/* Navigation Tabs */}
+      {/* Navigation Tabs */}
       <div className="flex flex-wrap border-b border-gray-800">
         <button
-          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${
-            activeMarketSection === "create"
-              ? "text-white border-b-2 border-yellow-500"
-              : "text-gray-400 hover:text-white"
-          }`}
+          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeMarketSection === "create"
+            ? "text-white border-b-2 border-yellow-500"
+            : "text-gray-400 hover:text-white"
+            }`}
           onClick={() => setActiveMarketSection("create")}
         >
-          {isEditingListing ? "✏️ Edit Listing" : "➕ Create New Listing"}
+          {isEditingListing ? "✏️ Edit Listing" : hasListing ? "✏️ Edit Listing" : "➕ Create New Listing"}
         </button>
 
-        {hasListing && (
-          <button
-            className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${
-              activeMarketSection === "listings"
-                ? "text-white border-b-2 border-yellow-500"
-                : "text-gray-400 hover:text-white"
+        {/* সবসময় My Listing ট্যাব দেখান */}
+        <button
+          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeMarketSection === "listings"
+            ? "text-white border-b-2 border-yellow-500"
+            : "text-gray-400 hover:text-white"
             }`}
-            onClick={() => setActiveMarketSection("listings")}
-          >
-            📋 My Listing
-          </button>
-        )}
+          onClick={() => setActiveMarketSection("listings")}
+        >
+          📋 My Listing {hasListing && `(1)`}
+        </button>
 
         <button
-          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${
-            activeMarketSection === "guidelines"
-              ? "text-white border-b-2 border-yellow-500"
-              : "text-gray-400 hover:text-white"
-          }`}
+          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeMarketSection === "guidelines"
+            ? "text-white border-b-2 border-yellow-500"
+            : "text-gray-400 hover:text-white"
+            }`}
           onClick={() => setActiveMarketSection("guidelines")}
         >
           📚 Guidelines
@@ -317,9 +340,8 @@ const MarketplaceTab = ({
                   value={currentListing.title}
                   onChange={handleListingChange}
                   placeholder="e.g., Professional PA System, Stage Lighting Kit, Venue Chairs"
-                  className={`w-full bg-gray-800 border ${
-                    formErrors.title ? "border-red-500" : "border-gray-700"
-                  } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition`}
+                  className={`w-full bg-gray-800 border ${formErrors.title ? "border-red-500" : "border-gray-700"
+                    } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition`}
                 />
                 {formErrors.title && (
                   <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
@@ -346,9 +368,8 @@ const MarketplaceTab = ({
                     placeholder="0.00"
                     step="0.01"
                     min="0"
-                    className={`w-full bg-gray-800 border ${
-                      formErrors.price ? "border-red-500" : "border-gray-700"
-                    } rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition`}
+                    className={`w-full bg-gray-800 border ${formErrors.price ? "border-red-500" : "border-gray-700"
+                      } rounded-xl pl-10 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition`}
                   />
                 </div>
                 {formErrors.price && (
@@ -360,7 +381,7 @@ const MarketplaceTab = ({
               </div>
 
               {/* Category */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Category *
                 </label>
@@ -379,10 +400,10 @@ const MarketplaceTab = ({
                   <option value="security">🛡️ Security Equipment</option>
                   <option value="other">📦 Other Venue Items</option>
                 </select>
-              </div>
+              </div> */}
 
               {/* Condition */}
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Item Condition *
                 </label>
@@ -398,24 +419,32 @@ const MarketplaceTab = ({
                   <option value="fair">🔄 Fair (Shows Wear)</option>
                   <option value="needs-repair">🔧 Needs Repair</option>
                 </select>
-              </div>
+              </div> */}
 
               {/* Location */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   <span className="flex items-center gap-2">
                     <MapPin className="w-4 h-4" />
-                    Pickup Location
+                    Pickup Location *
                   </span>
                 </label>
-                <input
-                  type="text"
+                <select
                   name="location"
-                  value={currentListing.location || venue.address}
+                  value={currentListing.location || ""}
                   onChange={handleListingChange}
-                  placeholder={venue.address || "Enter pickup address"}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
-                />
+                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
+                  required
+                >
+                  <option value="">Select a location</option>
+                  <option value="New Orleans">New Orleans</option>
+                  <option value="Biloxi">Biloxi</option>
+                  <option value="Mobile">Mobile</option>
+                  <option value="Pensacola">Pensacola</option>
+                </select>
+                <p className="mt-2 text-sm text-gray-400">
+                  Select where the item can be picked up
+                </p>
               </div>
 
               {/* Status */}
@@ -429,15 +458,15 @@ const MarketplaceTab = ({
                   onChange={handleListingChange}
                   className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition"
                 >
-                  <option value="active">🟢 Active</option>
-                  <option value="draft">🟡 Draft</option>
-                  <option value="sold">🔴 Sold</option>
-                  <option value="reserved">🟠 Reserved</option>
+                  <option value="active">Active</option>
+                  <option value="draft">Draft</option>
+                  <option value="sold">Sold</option>
+                  <option value="reserved">Reserved</option>
                 </select>
               </div>
 
               {/* Contact Information */}
-              <div className="md:col-span-2">
+              {/* <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-300 mb-3">
                   <span className="flex items-center gap-2">
                     <Users className="w-4 h-4" />
@@ -479,7 +508,7 @@ const MarketplaceTab = ({
                 <p className="mt-2 text-sm text-gray-400">
                   This information will be visible to potential buyers
                 </p>
-              </div>
+              </div> */}
 
               {/* Description */}
               <div className="md:col-span-2">
@@ -498,11 +527,10 @@ const MarketplaceTab = ({
 • Reason for selling
 • Pickup/delivery options
 • Any known issues or repairs needed"
-                  className={`w-full bg-gray-800 border ${
-                    formErrors.description
-                      ? "border-red-500"
-                      : "border-gray-700"
-                  } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition`}
+                  className={`w-full bg-gray-800 border ${formErrors.description
+                    ? "border-red-500"
+                    : "border-gray-700"
+                    } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition`}
                 />
                 {formErrors.description && (
                   <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
@@ -707,39 +735,36 @@ const MarketplaceTab = ({
             <div className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800">
               {/* Status Banner */}
               <div
-                className={`px-6 py-3 ${
-                  listing.status === "active"
-                    ? "bg-green-500/20"
-                    : listing.status === "sold"
+                className={`px-6 py-3 ${listing.status === "active"
+                  ? "bg-green-500/20"
+                  : listing.status === "sold"
                     ? "bg-red-500/20"
                     : listing.status === "reserved"
-                    ? "bg-orange-500/20"
-                    : "bg-yellow-500/20"
-                }`}
+                      ? "bg-orange-500/20"
+                      : "bg-yellow-500/20"
+                  }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`w-2 h-2 rounded-full ${
-                        listing.status === "active"
-                          ? "bg-green-500"
-                          : listing.status === "sold"
+                      className={`w-2 h-2 rounded-full ${listing.status === "active"
+                        ? "bg-green-500"
+                        : listing.status === "sold"
                           ? "bg-red-500"
                           : listing.status === "reserved"
-                          ? "bg-orange-500"
-                          : "bg-yellow-500"
-                      }`}
+                            ? "bg-orange-500"
+                            : "bg-yellow-500"
+                        }`}
                     ></span>
                     <span
-                      className={`text-sm font-medium ${
-                        listing.status === "active"
-                          ? "text-green-500"
-                          : listing.status === "sold"
+                      className={`text-sm font-medium ${listing.status === "active"
+                        ? "text-green-500"
+                        : listing.status === "sold"
                           ? "text-red-500"
                           : listing.status === "reserved"
-                          ? "text-orange-500"
-                          : "text-yellow-500"
-                      }`}
+                            ? "text-orange-500"
+                            : "text-yellow-500"
+                        }`}
                     >
                       {listing.status.charAt(0).toUpperCase() +
                         listing.status.slice(1)}

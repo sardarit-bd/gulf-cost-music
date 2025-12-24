@@ -1,12 +1,14 @@
 "use client";
 
 import AddShowTab from "@/components/modules/dashboard/venues/AddShowTab";
+import BillingTab from "@/components/modules/dashboard/venues/BillingTab";
 import EditProfileTab from "@/components/modules/dashboard/venues/EditProfileTab";
 import OverviewTab from "@/components/modules/dashboard/venues/OverviewTab";
 import MarketplaceTab from "@/components/modules/venues/MarketplaceTab";
 import { useAuth } from "@/context/AuthContext";
 import {
   Building2,
+  CreditCard,
   Crown,
   Edit3,
   ImageIcon,
@@ -92,7 +94,7 @@ export default function VenueDashboard() {
         setLoading(true);
         const token = getCookie("token");
         if (!token) {
-          toast.error("You must be logged in.");
+          // toast.error("You must be logged in.");
           return;
         }
 
@@ -131,7 +133,7 @@ export default function VenueDashboard() {
         await fetchShowsCount(token);
 
         // Load marketplace listings if Pro user
-        if (user?.subscriptionPlan === "pro") {
+        if (data.data?.venue?.isActive) {
           await loadMarketplaceListings();
         }
       } catch (error) {
@@ -174,8 +176,24 @@ export default function VenueDashboard() {
       const data = await response.json();
 
       if (response.ok) {
-        return data.data ? [data.data] : [];
-      } else if (response.status === 404) {
+        // CASE 1: backend returns array
+        if (Array.isArray(data.data)) {
+          return data.data;
+        }
+
+        // CASE 2: backend returns { listing: {...} }
+        if (data.data?.listing) {
+          return [data.data.listing];
+        }
+
+        // CASE 3: backend returns single object
+        if (data.data?._id) {
+          return [data.data];
+        }
+
+        return [];
+      }
+      else if (response.status === 404) {
         return [];
       } else {
         throw new Error(data.message || "Failed to fetch listings");
@@ -378,7 +396,7 @@ export default function VenueDashboard() {
 
   // === Marketplace Handlers ===
   const loadMarketplaceListings = async () => {
-    if (subscriptionPlan !== "pro") return;
+    if (!venue?.isActive) return;
 
     try {
       setMarketplaceLoading(true);
@@ -403,8 +421,8 @@ export default function VenueDashboard() {
   };
 
   const handleListingPhotoUpload = (files) => {
-    if (subscriptionPlan !== "pro") {
-      toast.error("Marketplace is available only for Pro users");
+    if (!venue?.isActive) {
+      toast.error("Only verified venues can use the marketplace");
       return;
     }
 
@@ -429,8 +447,8 @@ export default function VenueDashboard() {
   };
 
   const handleListingVideoUpload = (files) => {
-    if (subscriptionPlan !== "pro") {
-      toast.error("Marketplace is available only for Pro users");
+    if (!venue?.isActive) {
+      toast.error("Only verified venues can use the marketplace");
       return;
     }
 
@@ -510,8 +528,8 @@ export default function VenueDashboard() {
   };
 
   const handleCreateListing = async () => {
-    if (subscriptionPlan !== "pro") {
-      toast.error("Marketplace is available only for Pro users");
+    if (!venue?.isActive) {
+      toast.error("Only verified venues can use the marketplace");
       return;
     }
 
@@ -602,8 +620,8 @@ export default function VenueDashboard() {
   };
 
   const handleUpdateListing = async () => {
-    if (subscriptionPlan !== "pro") {
-      toast.error("Marketplace is available only for Pro users");
+    if (!venue?.isActive) {
+      toast.error("Only verified venues can use the marketplace");
       return;
     }
 
@@ -669,8 +687,8 @@ export default function VenueDashboard() {
   };
 
   const handleDeleteListing = async (id) => {
-    if (subscriptionPlan !== "pro") {
-      toast.error("Marketplace is available only for Pro users");
+    if (!venue?.isActive) {
+      toast.error("Only verified venues can use the marketplace");
       return;
     }
 
@@ -894,14 +912,48 @@ export default function VenueDashboard() {
     }
   };
 
+  const handleProCheckout = async () => {
+    try {
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("token="))
+        ?.split("=")[1];
+
+      if (!token) {
+        alert("You must be logged in to upgrade.");
+        return;
+      }
+
+      const res = await fetch(
+        `${API_BASE}/api/subscription/checkout/pro`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        throw new Error(data.message || "Checkout failed");
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error("Checkout error:", error);
+      alert("Unable to start checkout. Please try again.");
+    }
+  };
+
   // === Plan Badge Component ===
   const PlanBadge = () => (
     <div
-      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-        subscriptionPlan === "pro"
-          ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-          : "bg-gray-700 text-gray-300 border border-gray-600"
-      }`}
+      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${subscriptionPlan === "pro"
+        ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+        : "bg-gray-700 text-gray-300 border border-gray-600"
+        }`}
     >
       {subscriptionPlan === "pro" ? (
         <>
@@ -1014,11 +1066,14 @@ export default function VenueDashboard() {
                 </div>
               </div>
               <button
-                onClick={() => window.open("/pricing", "_blank")}
-                className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg font-semibold transition"
+                onClick={handleProCheckout}
+                className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 
+             hover:from-yellow-500 hover:to-yellow-700 
+             text-black px-5 py-2.5 rounded-xl font-semibold 
+             shadow-md hover:shadow-lg transition-all"
               >
                 <Crown size={16} />
-                Upgrade to Pro
+                Upgrade to Pro · $10/month
               </button>
             </div>
           </div>
@@ -1033,35 +1088,38 @@ export default function VenueDashboard() {
                 { id: "overview", label: "Overview", icon: Building2 },
                 { id: "edit", label: "Edit Profile", icon: Edit3 },
                 { id: "addshow", label: "Add Show", icon: Music },
-                { id: "marketplace", label: "Marketplace", icon: ShoppingBag }, // নতুন ট্যাব
+                { id: "marketplace", label: "Marketplace", icon: ShoppingBag },
+                { id: "billing", label: "Billing", icon: CreditCard },
               ].map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
                   onClick={() => {
                     setActiveTab(id);
-                    if (id === "marketplace" && subscriptionPlan === "pro") {
+                    if (id === "marketplace" && venue?.isActive) {
                       loadMarketplaceListings();
                     }
                   }}
-                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${
-                    activeTab === id
-                      ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
-                      : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
-                  }`}
+                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === id
+                    ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
+                    : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
+                    }`}
                 >
                   <Icon size={18} />
                   {label}
+
                   {id === "addshow" && subscriptionPlan === "free" && (
                     <span className="text-xs bg-gray-700 px-1.5 py-0.5 rounded">
                       {showsThisMonth}/1
                     </span>
                   )}
-                  {id === "marketplace" && subscriptionPlan !== "pro" && (
-                    <span className="text-xs bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">
-                      Pro
+
+                  {id === "marketplace" && !venue.isActive && (
+                    <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">
+                      Verify
                     </span>
                   )}
                 </button>
+
               ))}
             </div>
           </div>
@@ -1123,9 +1181,12 @@ export default function VenueDashboard() {
                 handleCancelEdit={handleCancelEdit}
               />
             )}
+
+            {activeTab === "billing" && <BillingTab />}
+
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
