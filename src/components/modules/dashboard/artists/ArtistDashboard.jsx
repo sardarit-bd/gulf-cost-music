@@ -9,7 +9,7 @@ import ArtistMarketplaceTab from "../../artist/MarketplaceTab";
 import OverviewTab from "../../artist/OverviewTab";
 import PlanStats from "../../artist/PlanStats";
 import Tabs from "../../artist/Tabs";
-import BillingTab from "./BillingTab";
+import BillingTab from "../billing/BillingTab";
 
 const API_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
 
@@ -330,39 +330,40 @@ export default function ArtistDashboard() {
   };
 
   // Billing Handlers
-  const handleUpgradeToPro = async () => {
-    try {
-      const response = await api.createCheckoutSession();
-      if (response.success && response.url) {
-        // Open Stripe checkout
-        const checkoutWindow = window.open(
-          response.url,
-          "stripe_checkout",
-          "width=500,height=700,scrollbars=yes"
-        );
+  // const handleProCheckout = async () => {
+  //   try {
+  //     const token = document.cookie
+  //       .split("; ")
+  //       .find((row) => row.startsWith("token="))
+  //       ?.split("=")[1];
 
-        if (!checkoutWindow || checkoutWindow.closed) {
-          toast.error("Popup blocked! Please allow popups for this site.");
-          return;
-        }
+  //     if (!token) {
+  //       alert("You must be logged in to upgrade.");
+  //       return;
+  //     }
 
-        // Check for payment completion
-        const checkInterval = setInterval(() => {
-          if (checkoutWindow.closed) {
-            clearInterval(checkInterval);
-            toast.success("Payment completed!");
-            setTimeout(() => {
-              loadBillingData();
-              refreshUser();
-            }, 2000);
-          }
-        }, 1000);
-      }
-    } catch (error) {
-      console.error("Upgrade error:", error);
-      toast.error(error.message || "Failed to create checkout");
-    }
-  };
+  //     const res = await fetch(
+  //       `${API_BASE}/api/subscription/checkout/pro`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+
+  //     const data = await res.json();
+
+  //     if (!res.ok || !data.url) {
+  //       throw new Error(data.message || "Checkout failed");
+  //     }
+
+  //     window.location.href = data.url;
+  //   } catch (error) {
+  //     console.error("Checkout error:", error);
+  //     alert("Unable to start checkout. Please try again.");
+  //   }
+  // };
 
   const handleOpenBillingPortal = async () => {
     try {
@@ -834,57 +835,35 @@ export default function ArtistDashboard() {
 
   const handleProCheckout = async () => {
     try {
-      const token = getToken();
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("token="))
+        ?.split("=")[1];
 
       if (!token) {
-        toast.error("Please login first");
+        alert("You must be logged in to upgrade.");
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/subscription/checkout/pro`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await fetch(
+        `${API_URL}/api/subscription/checkout/pro`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (!response.ok) {
+      if (!res.ok || !data.url) {
         throw new Error(data.message || "Checkout failed");
       }
 
-      if (data.success && data.url) {
-        // Open Stripe checkout
-        const checkoutWindow = window.open(
-          data.url,
-          "stripe_checkout",
-          "width=500,height=700,scrollbars=yes"
-        );
-
-        if (!checkoutWindow || checkoutWindow.closed) {
-          toast.error("Popup blocked! Please allow popups for this site.");
-          return;
-        }
-
-        // Check for payment completion
-        const checkInterval = setInterval(() => {
-          if (checkoutWindow.closed) {
-            clearInterval(checkInterval);
-            toast.success("Payment completed!");
-            // Refresh user data
-            setTimeout(() => {
-              refreshUser();
-              loadBillingData();
-              if (loadArtistProfile) loadArtistProfile();
-            }, 2000);
-          }
-        }, 1000);
-      }
+      window.location.href = data.url;
     } catch (error) {
-      console.error("Checkout error:", error);
-      toast.error(error.message || "Failed to create checkout");
+      toast.error("Unable to start checkout. Please try again.");
     }
   };
 
@@ -952,10 +931,10 @@ export default function ArtistDashboard() {
             />
           )}
 
-          {activeTab === "marketplace" && uploadLimits.marketplace && (
+          {activeTab === "marketplace" && user?.isVerified && (
             <ArtistMarketplaceTab
               subscriptionPlan={subscriptionPlan}
-              hasMarketplaceAccess={uploadLimits.marketplace}
+              hasMarketplaceAccess={true}
               listings={listings}
               loadingListings={loadingListings}
               currentListing={currentListing}
@@ -975,40 +954,20 @@ export default function ArtistDashboard() {
             />
           )}
 
-          {activeTab === "marketplace" && !uploadLimits.marketplace && (
-            <div className="text-center py-12">
-              <h3 className="text-xl font-bold text-white mb-4">
-                Marketplace Access Required
-              </h3>
-              <p className="text-gray-400 mb-6">
-                Upgrade to Pro plan to access the marketplace features
-              </p>
-              <button
-                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-                onClick={() => window.open("/pricing", "_blank")}
-              >
-                Upgrade to Pro
-              </button>
-            </div>
-          )}
-
           {activeTab === "billing" && (
             <BillingTab
               user={user}
               billingData={billingData}
               invoices={invoices}
               loading={billingLoading}
-              onUpgrade={handleUpgradeToPro}
+              onUpgrade={handleProCheckout}
               onOpenPortal={handleOpenBillingPortal}
               onCancel={handleCancelSubscription}
               onResume={handleResumeSubscription}
               onDownloadInvoice={handleDownloadInvoice}
-              onRefresh={() => {
-                loadBillingData();
-                refreshUser();
-              }}
             />
           )}
+
         </div>
       </div>
     </div>

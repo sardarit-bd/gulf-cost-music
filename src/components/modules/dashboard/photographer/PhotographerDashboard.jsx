@@ -1,12 +1,13 @@
 "use client";
 
-import { Briefcase, Camera, Crown, Edit3, ImageIcon, ShoppingBag, Users, Video } from "lucide-react";
+import { Briefcase, Camera, CreditCard, Crown, Edit3, ImageIcon, ShoppingBag, Users, Video } from "lucide-react";
 import EditProfileTab from "./photographer/EditProfileTab";
 import MarketTab from "./photographer/MarketTab";
 import OverviewTab from "./photographer/OverviewTab";
 import PhotosTab from "./photographer/PhotosTab";
 import ServicesTab from "./photographer/ServicesTab";
 import VideosTab from "./photographer/VideosTab";
+import BillingTab from "../billing/BillingTab";
 
 // Plan Badge Component
 const PlanBadge = ({ subscriptionPlan }) => (
@@ -50,7 +51,14 @@ export default function PhotographerDashboard({
     handleAddVideo,
     handleDeleteVideo,
     API_BASE,
-    user
+    user,
+    billingData,
+    billingLoading,
+    onUpgrade,
+    onOpenPortal,
+    onCancel,
+    onResume,
+    onRefresh,
 }) {
     return (
         <>
@@ -141,6 +149,7 @@ export default function PhotographerDashboard({
                             { id: "photos", label: "Photos", icon: ImageIcon },
                             { id: "videos", label: "Videos", icon: Video },
                             { id: "market", label: "Market", icon: ShoppingBag },
+                            { id: "billing", label: "Billing", icon: CreditCard },
                         ].map(({ id, label, icon: Icon }) => (
                             <button
                                 key={id}
@@ -227,6 +236,21 @@ export default function PhotographerDashboard({
                             user={user}
                         />
                     )}
+                    {!loading && activeTab === "billing" && (
+                        <BillingTab
+                            user={user}
+                            billingData={billingData}
+                            loading={billingLoading}
+                            onUpgrade={onUpgrade}
+                            onOpenPortal={onOpenPortal}
+                            onCancel={onCancel}
+                            onResume={onResume}
+                            onRefresh={onRefresh}
+                            invoices={[]}
+                            onDownloadInvoice={() => { }}
+                        />
+                    )}
+
 
                 </div>
             </div>

@@ -87,13 +87,12 @@ export default function BillingTab({
           </div>
           <div className="flex items-center gap-3">
             <span
-              className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                isPro
-                  ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 border border-yellow-500/30"
-                  : "bg-gray-800 text-gray-300 border border-gray-700"
-              }`}
+              className={`px-4 py-2 rounded-full text-sm font-semibold ${isPro
+                ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 border border-yellow-500/30"
+                : "bg-gray-800 text-gray-300 border border-gray-700"
+                }`}
             >
-              {isPro ? "Pro Plan" : "Free Plan"}
+              {isPro ? "Pro Plan" : "Free   Plan"}
             </span>
           </div>
         </div>
@@ -114,15 +113,14 @@ export default function BillingTab({
                 </h2>
                 <div className="flex items-center gap-3 mb-4">
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      status === "active"
-                        ? "bg-green-500/20 text-green-500"
-                        : status === "trialing"
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${status === "active"
+                      ? "bg-green-500/20 text-green-500"
+                      : status === "trialing"
                         ? "bg-blue-500/20 text-blue-500"
                         : status === "canceled"
-                        ? "bg-red-500/20 text-red-500"
-                        : "bg-gray-500/20 text-gray-400"
-                    }`}
+                          ? "bg-red-500/20 text-red-500"
+                          : "bg-gray-500/20 text-gray-400"
+                      }`}
                   >
                     {status.charAt(0).toUpperCase() + status.slice(1)}
                   </span>
@@ -136,13 +134,13 @@ export default function BillingTab({
               {!isPro && (
                 <button
                   onClick={onUpgrade}
-                  className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 
-                           hover:from-yellow-600 hover:to-orange-600 
-                           text-black font-semibold px-5 py-2.5 rounded-xl 
-                           transition-all duration-300"
+                  className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 
+             hover:from-yellow-500 hover:to-yellow-700 
+             text-black px-5 py-2.5 rounded-xl font-semibold 
+             shadow-md hover:shadow-lg transition-all"
                 >
-                  <Zap className="w-4 h-4" />
-                  Upgrade to Pro
+                  <Crown size={16} />
+                  Upgrade to Pro · $10/month
                 </button>
               )}
             </div>
@@ -182,9 +180,8 @@ export default function BillingTab({
                       {isCanceled ? "Subscription Ends" : "Next Billing Date"}
                     </span>
                     <span
-                      className={`font-medium ${
-                        isCanceled ? "text-red-400" : "text-white"
-                      }`}
+                      className={`font-medium ${isCanceled ? "text-red-400" : "text-white"
+                        }`}
                     >
                       {new Date(currentPeriodEnd).toLocaleDateString()}
                     </span>
@@ -268,13 +265,12 @@ export default function BillingTab({
                             {invoice.number}
                           </span>
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              invoice.status === "paid"
-                                ? "bg-green-500/20 text-green-400"
-                                : invoice.status === "pending"
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${invoice.status === "paid"
+                              ? "bg-green-500/20 text-green-400"
+                              : invoice.status === "pending"
                                 ? "bg-yellow-500/20 text-yellow-400"
                                 : "bg-red-500/20 text-red-400"
-                            }`}
+                              }`}
                           >
                             {invoice.status.charAt(0).toUpperCase() +
                               invoice.status.slice(1)}
@@ -372,22 +368,21 @@ export default function BillingTab({
                 <p className="text-xs text-gray-500">Status</p>
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-2 h-2 rounded-full ${
-                      status === "active"
-                        ? "bg-green-500"
-                        : status === "trialing"
+                    className={`w-2 h-2 rounded-full ${status === "active"
+                      ? "bg-green-500"
+                      : status === "trialing"
                         ? "bg-blue-500"
                         : status === "canceled"
-                        ? "bg-red-500"
-                        : "bg-gray-500"
-                    }`}
+                          ? "bg-red-500"
+                          : "bg-gray-500"
+                      }`}
                   ></div>
                   <p className="text-white capitalize">{status}</p>
                 </div>
               </div>
               <div>
                 <p className="text-xs text-gray-500">User Type</p>
-                <p className="text-white capitalize">Artist</p>
+                <p className="text-white capitalize">{user?.userType || "User"}</p>
               </div>
             </div>
           </div>

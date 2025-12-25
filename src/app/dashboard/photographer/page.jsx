@@ -1,5 +1,6 @@
 "use client";
 
+import { useBilling } from "@/components/modules/dashboard/billing/useBilling";
 import PhotographerDashboard from "@/components/modules/dashboard/photographer/PhotographerDashboard";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
@@ -41,6 +42,25 @@ export default function PhotographerPage() {
   ];
 
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
+
+  const {
+    billingData,
+    loading: billingLoading,
+    fetchBilling,
+    upgrade,
+    openPortal,
+    cancel,
+    resume,
+  } = useBilling(API_BASE);
+
+
+  useEffect(() => {
+    if (activeTab === "billing") {
+      fetchBilling();
+    }
+  }, [activeTab]);
+
+
 
   // Set subscription plan
   useEffect(() => {
@@ -416,6 +436,13 @@ export default function PhotographerPage() {
         handleDeleteVideo={handleDeleteVideo}
         API_BASE={API_BASE}
         user={user}
+        billingData={billingData}
+        billingLoading={billingLoading}
+        onUpgrade={upgrade}
+        onOpenPortal={openPortal}
+        onCancel={cancel}
+        onResume={resume}
+        onRefresh={fetchBilling}
       />
     </div>
   );

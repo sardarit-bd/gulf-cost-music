@@ -1,16 +1,25 @@
 "use client";
 
 import {
-    AlertCircle, Camera,
+    AlertCircle,
+    ArrowRight,
+    BadgeCheck,
     CheckCircle,
     DollarSign,
-    Eye, EyeOff,
-    FileVideo,
+    Edit2,
+    Edit3,
+    FileText,
+    Image as ImageIcon,
+    List,
     MapPin,
     Package,
-    Save, ShoppingBag, Tag, Trash2, Upload,
-    User,
-    Video, X
+    Plus,
+    PlusCircle,
+    Sparkles,
+    Trash2,
+    Upload,
+    Video,
+    X
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -28,13 +37,14 @@ const getToken = () => {
     return null;
 };
 
-
 export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [deletingPhotoIndex, setDeletingPhotoIndex] = useState(null);
     const [existingItem, setExistingItem] = useState(null);
+    const [activeSection, setActiveSection] = useState("create");
+    const [formErrors, setFormErrors] = useState({});
 
     // Modal states
     const [showDeleteItemModal, setShowDeleteItemModal] = useState(false);
@@ -47,17 +57,15 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
     const [price, setPrice] = useState("");
     const [location, setLocation] = useState("");
     const [status, setStatus] = useState("active");
-
     const [photoFiles, setPhotoFiles] = useState([]);
     const [videoFile, setVideoFile] = useState(null);
-    const [showVideoPreview, setShowVideoPreview] = useState(false);
 
     // Check permissions
     const isVerified = !!user?.isVerified;
     const isAllowedSeller = ["artist", "venue", "photographer"].includes(
         String(user?.userType || "").toLowerCase()
     );
-    const canUseMarket = isVerified && isAllowedSeller;
+    const hasMarketplaceAccess = isVerified && isAllowedSeller;
 
     // Calculate total photos
     const totalExistingPhotos = existingItem?.photos?.length || 0;
@@ -65,6 +73,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
     const totalPhotos = totalExistingPhotos + totalNewPhotos;
     const isPhotoLimitReached = totalPhotos >= 5;
     const remainingPhotoSlots = 5 - totalPhotos;
+    const activeCount = existingItem?.status === "active" ? 1 : 0;
 
     // Load my item
     useEffect(() => {
@@ -92,6 +101,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                     setPrice(String(data.data.price ?? ""));
                     setLocation(data.data.location || "");
                     setStatus(data.data.status || "active");
+                    setActiveSection("listings");
                 }
             } catch (error) {
                 console.error("Load error:", error);
@@ -103,12 +113,36 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
             }
         };
 
-        if (API_BASE && canUseMarket) {
+        if (API_BASE && hasMarketplaceAccess) {
             loadMyItem();
         } else {
             setLoading(false);
         }
-    }, [API_BASE, canUseMarket]);
+    }, [API_BASE, hasMarketplaceAccess]);
+
+    // Validate form
+    const validateForm = () => {
+        const errors = {};
+
+        if (!title.trim()) {
+            errors.title = "Title is required";
+        }
+
+        if (!price || parseFloat(price) <= 0) {
+            errors.price = "Please enter a valid price";
+        }
+
+        if (!description.trim()) {
+            errors.description = "Description is required";
+        }
+
+        if (totalPhotos === 0) {
+            errors.photos = "At least one photo is required";
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
 
     const handlePhotoUpload = (e) => {
         const files = Array.from(e.target.files || []);
@@ -122,32 +156,142 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
             return;
         }
 
-        setPhotoFiles(prev => [...prev, ...files]);
-        e.target.value = ""; // Reset input
+        const validTypes = ["image/jpeg", "image/png", "image/webp"];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+
+        const validFiles = files.filter((file) => {
+            if (!validTypes.includes(file.type)) {
+                toast.error(`Invalid file type: ${file.name}. Only JPEG, PNG, WebP allowed.`);
+                return false;
+            }
+            if (file.size > maxSize) {
+                toast.error(`File too large: ${file.name}. Max size is 5MB.`);
+                return false;
+            }
+            return true;
+        });
+
+        setPhotoFiles(prev => [...prev, ...validFiles]);
+        e.target.value = "";
     };
 
     const handleVideoUpload = (e) => {
         const file = e.target.files?.[0] || null;
+
+        if (file) {
+            const validTypes = ["video/mp4", "video/quicktime"];
+            const maxSize = 50 * 1024 * 1024; // 50MB
+
+            if (!validTypes.includes(file.type)) {
+                toast.error(`Invalid file type. Only MP4, MOV allowed.`);
+                return;
+            }
+            if (file.size > maxSize) {
+                toast.error(`File too large. Max size is 50MB.`);
+                return;
+            }
+        }
+
         setVideoFile(file);
-        setShowVideoPreview(!!file);
     };
 
-    const removeLocalPhoto = (index) => {
-        setPhotoFiles(prev => prev.filter((_, i) => i !== index));
+    const handleCreateOrUpdate = async () => {
+        if (!validateForm()) {
+            return;
+        }
+
+        const token = getToken();
+        if (!token) {
+            toast.error("Please sign in again");
+            return;
+        }
+
+        try {
+            setSaving(true);
+            const formData = new FormData();
+            formData.append("title", title.trim());
+            formData.append("description", description.trim());
+            formData.append("price", parseFloat(price).toFixed(2));
+            formData.append("location", location.trim());
+            formData.append("status", status);
+
+            // Append new photos only
+            photoFiles.forEach(file => {
+                formData.append("photos", file);
+            });
+
+            if (videoFile) {
+                formData.append("video", videoFile);
+            }
+
+            const endpoint = `${API_BASE}/api/market/me`;
+            const method = existingItem ? "PUT" : "POST";
+
+            const res = await fetch(endpoint, {
+                method,
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData,
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message || `Save failed (${res.status})`);
+            }
+
+            setExistingItem(data.data);
+            setVideoFile(null);
+            setPhotoFiles([]);
+            setActiveSection("listings");
+
+            toast.success(existingItem ? "Item updated successfully!" : "Item listed successfully!");
+
+        } catch (error) {
+            console.error("Save error:", error);
+            toast.error(error.message || "Failed to save item");
+        } finally {
+            setSaving(false);
+        }
     };
 
-    const removeLocalVideo = () => {
-        setVideoFile(null);
-        setShowVideoPreview(false);
+    const deleteItem = async () => {
+        const token = getToken();
+        if (!token) {
+            toast.error("Please sign in again");
+            return;
+        }
+
+        try {
+            setDeleting(true);
+            const res = await fetch(`${API_BASE}/api/market/me`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.message || "Delete failed");
+            }
+
+            setExistingItem(null);
+            setTitle("");
+            setDescription("");
+            setPrice("");
+            setLocation("");
+            setStatus("active");
+            setPhotoFiles([]);
+            setVideoFile(null);
+            setActiveSection("create");
+
+            toast.success("Market item deleted successfully");
+        } catch (error) {
+            console.error("Delete error:", error);
+            toast.error(error.message || "Failed to delete item");
+        } finally {
+            setDeleting(false);
+        }
     };
 
-    // Function to open delete photo modal
-    const openDeletePhotoModal = (photoIndex) => {
-        setPhotoToDeleteIndex(photoIndex);
-        setShowDeletePhotoModal(true);
-    };
-
-    // Function to delete existing photo (after confirmation)
     const deleteExistingPhoto = async () => {
         if (photoToDeleteIndex === null) return;
 
@@ -209,147 +353,42 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
         }
     };
 
-    const handleSubmit = async (e) => {
-        e?.preventDefault();
-
-        if (!canUseMarket) {
-            toast.error("Only verified seller accounts can list items.");
-            return;
-        }
-
-        if (!title.trim()) {
-            toast.error("Title is required");
-            return;
-        }
-        if (!description.trim()) {
-            toast.error("Description is required");
-            return;
-        }
-        if (!price || isNaN(parseFloat(price)) || parseFloat(price) < 0) {
-            toast.error("Please enter a valid price");
-            return;
-        }
-
-        const token = getToken();
-        if (!token) {
-            toast.error("Please sign in again");
-            return;
-        }
-
-        try {
-            setSaving(true);
-            const formData = new FormData();
-            formData.append("title", title.trim());
-            formData.append("description", description.trim());
-            formData.append("price", parseFloat(price).toFixed(2));
-            formData.append("location", location.trim());
-            formData.append("status", status);
-
-            // Append new photos only
-            photoFiles.forEach(file => {
-                formData.append("photos", file);
-            });
-
-            if (videoFile) {
-                formData.append("video", videoFile);
-            }
-
-            const endpoint = `${API_BASE}/api/market/me`;
-            const method = existingItem ? "PUT" : "POST";
-
-            const res = await fetch(endpoint, {
-                method,
-                headers: { Authorization: `Bearer ${token}` },
-                body: formData,
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.message || `Save failed (${res.status})`);
-            }
-
-            setExistingItem(data.data);
-            setVideoFile(null);
-            setShowVideoPreview(false);
-            setPhotoFiles([]);
-
-            toast.success(existingItem ? "Item updated successfully!" : "Item listed successfully!");
-
-        } catch (error) {
-            console.error("Save error:", error);
-            toast.error(error.message || "Failed to save item");
-        } finally {
-            setSaving(false);
-        }
+    const removeLocalPhoto = (index) => {
+        setPhotoFiles(prev => prev.filter((_, i) => i !== index));
     };
 
-    // Function to delete item (after confirmation)
-    const deleteItem = async () => {
-        const token = getToken();
-        if (!token) {
-            toast.error("Please sign in again");
-            return;
-        }
-
-        try {
-            setDeleting(true);
-            const res = await fetch(`${API_BASE}/api/market/me`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` },
-            });
-
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.message || "Delete failed");
-            }
-
-            setExistingItem(null);
-            setTitle("");
-            setDescription("");
-            setPrice("");
-            setLocation("");
-            setStatus("active");
-            setPhotoFiles([]);
-            setVideoFile(null);
-            setShowVideoPreview(false);
-
-            toast.success("Market item deleted successfully");
-        } catch (error) {
-            console.error("Delete error:", error);
-            toast.error(error.message || "Failed to delete item");
-        } finally {
-            setDeleting(false);
-        }
+    const removeLocalVideo = () => {
+        setVideoFile(null);
     };
 
-    const getStatusBadge = (status) => {
-        const statusConfig = {
-            active: { bg: "bg-emerald-500/20", text: "text-emerald-300", icon: <Eye size={12} />, label: "Active" },
-            sold: { bg: "bg-purple-500/20", text: "text-purple-300", icon: <Package size={12} />, label: "Sold" },
-            hidden: { bg: "bg-gray-500/20", text: "text-gray-300", icon: <EyeOff size={12} />, label: "Hidden" }
-        };
+    const openDeletePhotoModal = (photoIndex) => {
+        setPhotoToDeleteIndex(photoIndex);
+        setShowDeletePhotoModal(true);
+    };
 
-        const config = statusConfig[status] || statusConfig.active;
+    if (!hasMarketplaceAccess) {
         return (
-            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-                {config.icon}
-                {config.label}
-            </span>
+            <div className="text-center py-12">
+                <div className="bg-gray-900 rounded-xl p-8 max-w-md mx-auto border border-gray-800">
+                    <div className="w-16 h-16 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Package className="w-8 h-8 text-gray-900" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2">
+                        Marketplace Access Required
+                    </h3>
+                    <p className="text-gray-400 mb-6">
+                        Upgrade to{" "}
+                        <span className="text-yellow-400 font-semibold">Pro</span> plan to
+                        list your music gear, services, or merchandise.
+                    </p>
+                    <button className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-2 px-6 rounded-lg hover:opacity-90 transition">
+                        Upgrade to Pro
+                    </button>
+                </div>
+            </div>
         );
-    };
+    }
 
-    const getPlanBadge = () => {
-        const isPro = subscriptionPlan === "pro";
-        return (
-            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${isPro ? 'bg-yellow-500/20 text-yellow-300' : 'bg-gray-500/20 text-gray-300'}`}>
-                <CheckCircle size={12} />
-                {isPro ? 'Pro Plan' : 'Free Plan'}
-            </span>
-        );
-    };
-
-    // ===== RENDER LOGIC =====
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-16 space-y-4">
@@ -358,47 +397,6 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                     <p className="text-white font-medium">Loading Marketplace</p>
                     <p className="text-gray-400 text-sm">Fetching your listing information...</p>
                 </div>
-            </div>
-        );
-    }
-
-    if (!canUseMarket) {
-        return (
-            <div className="rounded-2xl border border-gray-700 bg-gradient-to-br from-gray-900 to-gray-950 p-10 text-center">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-yellow-500/10 rounded-full mb-6">
-                    <ShoppingBag className="w-10 h-10 text-yellow-400" />
-                </div>
-                <h2 className="text-white text-2xl font-bold mb-3">Marketplace Access Required</h2>
-                <div className="max-w-md mx-auto space-y-4 mb-8">
-                    <p className="text-gray-300">
-                        To list items in the marketplace, your account needs to meet these requirements:
-                    </p>
-                    <div className="space-y-3 text-left">
-                        <div className={`flex items-center gap-3 p-3 rounded-lg ${isVerified ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
-                            <div className={`p-1.5 rounded-full ${isVerified ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
-                                {isVerified ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <X className="w-4 h-4 text-red-400" />}
-                            </div>
-                            <span className={`text-sm ${isVerified ? 'text-emerald-300' : 'text-red-300'}`}>
-                                {isVerified ? 'Account Verified ✓' : 'Account Not Verified'}
-                            </span>
-                        </div>
-                        <div className={`flex items-center gap-3 p-3 rounded-lg ${isAllowedSeller ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
-                            <div className={`p-1.5 rounded-full ${isAllowedSeller ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
-                                {isAllowedSeller ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <X className="w-4 h-4 text-red-400" />}
-                            </div>
-                            <span className={`text-sm ${isAllowedSeller ? 'text-emerald-300' : 'text-red-300'}`}>
-                                {isAllowedSeller ? 'Seller Account ✓' : 'Invalid Account Type'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <button
-                    onClick={() => window.open("/contact", "_blank")}
-                    className="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-6 py-3 rounded-lg transition"
-                >
-                    <User size={16} />
-                    Contact Support for Verification
-                </button>
             </div>
         );
     }
@@ -433,602 +431,720 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
             />
 
             <div className="space-y-8">
-                {/* Dashboard Header */}
-                <div className="rounded-2xl bg-gradient-to-r from-gray-900 to-gray-950 border border-gray-700 p-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="flex items-start gap-4">
-                            <div className="p-3 bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 rounded-xl">
-                                <ShoppingBag className="w-8 h-8 text-yellow-400" />
+                {/* Marketplace Header */}
+                <div className="bg-gradient-to-r from-gray-900 to-black rounded-2xl p-6 border border-gray-800">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h1 className="text-2xl font-bold text-white mb-2">
+                                Artist Marketplace
+                            </h1>
+                            <p className="text-gray-400">
+                                {existingItem
+                                    ? "Sell your music gear, services, or merchandise"
+                                    : "List music gear, services, or merchandise for sale"}
+                            </p>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-2 bg-green-500/20 text-green-500 px-4 py-2 rounded-full text-sm font-medium">
+                                <Package className="w-4 h-4" />
+                                Verified Artist
+                            </span>
+
+                            {!existingItem && (
+                                <button
+                                    onClick={() => {
+                                        setActiveSection("create");
+                                    }}
+                                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                    Edit Listing
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Quick Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                <Package className="w-6 h-6 text-purple-500" />
                             </div>
-                            <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <h1 className="text-white text-2xl font-bold">Marketplace Dashboard</h1>
-                                    {getPlanBadge()}
-                                </div>
-                                <p className="text-gray-400">
-                                    List your photography equipment, services, or merchandise. Verified sellers can manage one active listing.
+                            <div>
+                                <p className="text-gray-400 text-sm">Active Listing</p>
+                                <p className="text-2xl font-bold text-white">
+                                    {activeCount}
                                 </p>
                             </div>
                         </div>
+                    </div>
 
-                        <div className="flex flex-wrap gap-3">
-                            <div className="text-center bg-gray-800/50 rounded-lg p-3 min-w-[120px]">
-                                <p className="text-gray-400 text-sm mb-1">Your Plan</p>
-                                <p className="text-white font-bold">{subscriptionPlan.toUpperCase()}</p>
+                    <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <DollarSign className="w-6 h-6 text-green-500" />
                             </div>
-                            <div className="text-center bg-gray-800/50 rounded-lg p-3 min-w-[120px]">
-                                <p className="text-gray-400 text-sm mb-1">Photos</p>
-                                <p className="text-white font-bold">{totalExistingPhotos}/5</p>
+                            <div>
+                                <p className="text-gray-400 text-sm">Your Price</p>
+                                <p className="text-2xl font-bold text-white">
+                                    {price
+                                        ? `$${parseFloat(price).toFixed(2)}`
+                                        : "$0.00"}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <ImageIcon className="w-6 h-6 text-blue-500" />
+                            </div>
+                            <div>
+                                <p className="text-gray-400 text-sm">Photos</p>
+                                <p className="text-lg font-bold text-white">
+                                    {totalPhotos}/5
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Current Listing Preview */}
-                {existingItem && (
-                    <div className="rounded-2xl border border-gray-700 bg-gray-900 overflow-hidden">
-                        <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-4 border-b border-gray-700">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <Tag className="text-yellow-400" size={20} />
-                                    <h3 className="text-white text-lg font-semibold">Current Listing</h3>
+                {/* Navigation Tabs */}
+                <div className="flex flex-wrap border-b border-gray-800">
+                    {/* Create / Edit Listing */}
+                    <button
+                        className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeSection === "create"
+                            ? "text-white border-b-2 border-yellow-500"
+                            : "text-gray-400 hover:text-white"
+                            }`}
+                        onClick={() => setActiveSection("create")}
+                    >
+                        {existingItem ? (
+                            <>
+                                <Edit3 className="w-4 h-4 text-yellow-400" />
+                                Edit Listing
+                            </>
+                        ) : (
+                            <>
+                                <PlusCircle className="w-4 h-4 text-yellow-400" />
+                                Create New Listing
+                            </>
+                        )}
+                    </button>
+
+                    {/* My Listing */}
+                    <button
+                        className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeSection === "listings"
+                            ? "text-white border-b-2 border-yellow-500"
+                            : "text-gray-400 hover:text-white"
+                            }`}
+                        onClick={() => setActiveSection("listings")}
+                    >
+                        <List className="w-4 h-4 text-yellow-400" />
+                        My Listing {existingItem && <span>(1)</span>}
+                    </button>
+                </div>
+
+                {/* Create/Edit Listing Form */}
+                {activeSection === "create" && (
+                    <div className="space-y-6">
+                        {/* Basic Information Card */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-[#101828] p-3 rounded-2xl">
+                            {/* Title */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Title *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    placeholder="e.g., Fender Stratocaster, Studio Session Service"
+                                    className={`w-full bg-gray-800 border ${formErrors.title ? "border-red-500" : "border-gray-700"
+                                        } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                                />
+                                {formErrors.title && (
+                                    <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                                        <AlertCircle className="w-4 h-4" />
+                                        {formErrors.title}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Price */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Price (USD) *
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <DollarSign className="h-5 w-5 text-gray-500" />
+                                    </div>
+                                    <input
+                                        type="number"
+                                        value={price}
+                                        onChange={(e) => setPrice(e.target.value)}
+                                        placeholder="0.00"
+                                        step="0.01"
+                                        min="0"
+                                        className={`w-full bg-gray-800 border ${formErrors.price ? "border-red-500" : "border-gray-700"
+                                            } rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                                    />
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    {getStatusBadge(existingItem.status)}
-                                    <button
-                                        onClick={() => setShowDeleteItemModal(true)}
-                                        disabled={deleting}
-                                        className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-300 px-4 py-2 rounded-lg border border-red-500/20 transition disabled:opacity-50"
-                                    >
-                                        <Trash2 size={16} />
-                                        {deleting ? "Deleting..." : "Delete Listing"}
-                                    </button>
-                                </div>
+                                {formErrors.price && (
+                                    <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                                        <AlertCircle className="w-4 h-4" />
+                                        {formErrors.price}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Location */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                                    <MapPin className="w-4 h-4" />
+                                    Pickup Location *
+                                </label>
+                                <select
+                                    value={location}
+                                    onChange={(e) => setLocation(e.target.value)}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                                >
+                                    <option value="">Select a location</option>
+                                    <option value="New Orleans">New Orleans</option>
+                                    <option value="Biloxi">Biloxi</option>
+                                    <option value="Mobile">Mobile</option>
+                                    <option value="Pensacola">Pensacola</option>
+                                </select>
+                            </div>
+
+                            {/* Listing Status */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Listing Status
+                                </label>
+                                <select
+                                    value={status}
+                                    onChange={(e) => setStatus(e.target.value)}
+                                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="hidden">Hidden</option>
+                                    <option value="sold">Sold</option>
+                                    <option value="reserved">Reserved</option>
+                                </select>
+                            </div>
+
+                            {/* Description (full width) */}
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    Description *
+                                </label>
+                                <textarea
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    rows="6"
+                                    className={`w-full bg-gray-800 border ${formErrors.description ? "border-red-500" : "border-gray-700"
+                                        } rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                                />
+                                <p className="mt-2 text-sm text-gray-400">
+                                    Detailed descriptions increase trust and sales
+                                </p>
                             </div>
                         </div>
 
-                        <div className="p-6">
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                {/* Left Column - Item Details */}
-                                <div className="lg:col-span-2 space-y-6">
+                        {/* Media Upload Section */}
+                        <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                    <ImageIcon className="w-5 h-5 text-purple-500" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-white">Media Upload</h3>
+                            </div>
+
+                            {/* Photos Upload */}
+                            <div className="mb-8">
+                                <div className="flex items-center justify-between mb-4">
                                     <div>
-                                        <h4 className="text-white font-bold text-2xl mb-3">{existingItem.title}</h4>
-                                        <div className="flex items-center gap-4 mb-4">
-                                            <div className="flex items-center gap-2 bg-yellow-500/10 text-yellow-300 px-3 py-1.5 rounded-lg">
-                                                <DollarSign size={16} />
-                                                <span className="font-bold text-lg">${existingItem.price}</span>
-                                            </div>
-                                            {existingItem.location && (
-                                                <div className="flex items-center gap-2 bg-blue-500/10 text-blue-300 px-3 py-1.5 rounded-lg">
-                                                    <MapPin size={16} />
-                                                    <span className="font-medium">{existingItem.location}</span>
-                                                </div>
-                                            )}
-                                        </div>
+                                        <label className="block text-sm font-medium text-gray-300">
+                                            Photos (Max 5) *
+                                        </label>
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            Clear photos from multiple angles increase sales
+                                        </p>
                                     </div>
-
-                                    <div className="bg-gray-800/50 rounded-xl p-5">
-                                        <h5 className="text-white font-semibold mb-3 flex items-center gap-2">
-                                            <Package size={18} /> Description
-                                        </h5>
-                                        <p className="text-gray-300 leading-relaxed">{existingItem.description}</p>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-gray-800/50 rounded-xl p-4">
-                                            <p className="text-gray-400 text-sm mb-1">Seller Type</p>
-                                            <p className="text-white font-medium capitalize">{existingItem.sellerType}</p>
-                                        </div>
-                                        <div className="bg-gray-800/50 rounded-xl p-4">
-                                            <p className="text-gray-400 text-sm mb-1">Listed On</p>
-                                            <p className="text-white font-medium">
-                                                {new Date(existingItem.createdAt).toLocaleDateString('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'short',
-                                                    day: 'numeric'
-                                                })}
-                                            </p>
-                                        </div>
-                                    </div>
+                                    <span className="text-sm font-medium text-gray-300">
+                                        {totalPhotos}/5 uploaded
+                                    </span>
                                 </div>
 
-                                {/* Right Column - Media Preview */}
-                                <div className="space-y-6">
-                                    {/* Photo Gallery */}
-                                    <div className="bg-gray-800/50 rounded-xl p-5">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h5 className="text-white font-semibold flex items-center gap-2">
-                                                <Camera size={18} /> Photos ({totalExistingPhotos}/5)
-                                            </h5>
-                                            <span className={`text-sm ${isPhotoLimitReached ? 'text-red-400' : 'text-gray-400'}`}>
-                                                {isPhotoLimitReached ? 'Limit Reached' : `${remainingPhotoSlots} slots left`}
-                                            </span>
+                                {/* Photo Grid */}
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                                    {/* Existing Photos */}
+                                    {existingItem?.photos?.map((photo, index) => (
+                                        <div key={`existing-${index}`} className="relative group">
+                                            <div className="aspect-square overflow-hidden rounded-xl border border-gray-700 bg-gray-800">
+                                                <img
+                                                    src={photo}
+                                                    alt={`Listing photo ${index + 1}`}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                />
+                                            </div>
+                                            <button
+                                                onClick={() => openDeletePhotoModal(index)}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition shadow-lg"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
                                         </div>
+                                    ))}
 
-                                        {totalExistingPhotos > 0 ? (
-                                            <div className="grid grid-cols-3 gap-3">
-                                                {existingItem.photos.map((url, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-700 group"
-                                                    >
-                                                        <img
-                                                            src={url}
-                                                            alt={`Listing photo ${index + 1}`}
-                                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                                        />
-                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => openDeletePhotoModal(index)}
-                                                            disabled={deletingPhotoIndex === index}
-                                                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
-                                                        >
-                                                            {deletingPhotoIndex === index ? (
-                                                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                            ) : (
-                                                                <Trash2 size={12} />
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                ))}
+                                    {/* New Photos */}
+                                    {photoFiles.map((file, index) => (
+                                        <div key={`new-${index}`} className="relative group">
+                                            <div className="aspect-square overflow-hidden rounded-xl border-2 border-yellow-500 bg-gray-800">
+                                                <img
+                                                    src={URL.createObjectURL(file)}
+                                                    alt={`New photo ${index + 1}`}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                />
                                             </div>
-                                        ) : (
-                                            <div className="text-center py-8">
-                                                <Camera className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                                                <p className="text-gray-400">No photos uploaded</p>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Video Preview */}
-                                    {existingItem.video && (
-                                        <div className="bg-gray-800/50 rounded-xl p-5">
-                                            <h5 className="text-white font-semibold mb-4 flex items-center gap-2">
-                                                <FileVideo size={18} /> Video Preview
-                                            </h5>
-                                            <div className="relative rounded-lg overflow-hidden bg-black">
-                                                <video
-                                                    controls
-                                                    className="w-full"
-                                                >
-                                                    <source src={existingItem.video} type="video/mp4" />
-                                                    Your browser does not support the video tag.
-                                                </video>
-                                            </div>
+                                            <button
+                                                onClick={() => removeLocalPhoto(index)}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition shadow-lg"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
                                         </div>
+                                    ))}
+
+                                    {/* Upload Button */}
+                                    {totalPhotos < 5 && (
+                                        <label className="cursor-pointer">
+                                            <div className="aspect-square border-2 border-dashed border-gray-600 rounded-xl flex flex-col items-center justify-center hover:border-yellow-500 hover:bg-gray-800/50 transition-all duration-300 group">
+                                                <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center mb-3 group-hover:bg-yellow-500/20 transition">
+                                                    <Upload className="w-6 h-6 text-gray-400 group-hover:text-yellow-500 transition" />
+                                                </div>
+                                                <span className="text-sm text-gray-400 group-hover:text-yellow-500 transition">
+                                                    Click to upload
+                                                </span>
+                                                <span className="text-xs text-gray-500 mt-1">
+                                                    JPEG, PNG, WebP
+                                                </span>
+                                            </div>
+                                            <input
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                multiple
+                                                onChange={handlePhotoUpload}
+                                                className="hidden"
+                                            />
+                                        </label>
                                     )}
                                 </div>
+
+                                {formErrors.photos && (
+                                    <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                                        <AlertCircle className="w-4 h-4" />
+                                        {formErrors.photos}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Videos Upload */}
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300">
+                                            Video (Optional)
+                                        </label>
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            Show equipment in action
+                                        </p>
+                                    </div>
+                                    <span className="text-sm font-medium text-gray-300">
+                                        {(videoFile || existingItem?.video) ? "1/1 uploaded" : "0/1 uploaded"}
+                                    </span>
+                                </div>
+
+                                {/* Video Upload Area */}
+                                {(!videoFile && !existingItem?.video) ? (
+                                    <label className="cursor-pointer block">
+                                        <div className="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center hover:border-yellow-500 hover:bg-gray-800/50 transition-all duration-300 group max-w-md">
+                                            <div className="w-14 h-14 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-yellow-500/20 transition">
+                                                <Video className="w-7 h-7 text-gray-400 group-hover:text-yellow-500 transition" />
+                                            </div>
+                                            <p className="text-gray-400 group-hover:text-yellow-500 transition text-sm">
+                                                Click to upload video
+                                            </p>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                MP4, MOV • Max 50MB • &lt; 2 min
+                                            </p>
+                                        </div>
+
+                                        <input
+                                            type="file"
+                                            accept="video/mp4,video/quicktime"
+                                            onChange={handleVideoUpload}
+                                            className="hidden"
+                                        />
+                                    </label>
+                                ) : (
+                                    <div className="relative max-w-md">
+                                        <div className="rounded-xl overflow-hidden border border-gray-700 bg-black">
+                                            <video
+                                                src={videoFile ? URL.createObjectURL(videoFile) : existingItem?.video}
+                                                controls
+                                                preload="metadata"
+                                                className="w-full h-auto max-h-[280px] object-contain"
+                                            />
+                                        </div>
+
+                                        {/* Remove Button */}
+                                        <button
+                                            onClick={removeLocalVideo}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition shadow-lg"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex justify-between items-center pt-6 border-t border-gray-800">
+                            <div>
+                                {existingItem && (
+                                    <button
+                                        onClick={() => {
+                                            setTitle(existingItem.title || "");
+                                            setDescription(existingItem.description || "");
+                                            setPrice(String(existingItem.price || ""));
+                                            setLocation(existingItem.location || "");
+                                            setStatus(existingItem.status || "active");
+                                            setPhotoFiles([]);
+                                            setVideoFile(null);
+                                        }}
+                                        className="px-6 py-3 border border-gray-600 text-gray-300 rounded-xl hover:bg-gray-800 transition"
+                                    >
+                                        Cancel Edit
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="flex gap-4">
+                                {existingItem && (
+                                    <button
+                                        onClick={() => setShowDeleteItemModal(true)}
+                                        className="px-6 py-3 bg-red-500/20 text-red-500 rounded-xl hover:bg-red-500/30 transition flex items-center gap-2"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                        Delete Listing
+                                    </button>
+                                )}
+
+                                <button
+                                    onClick={handleCreateOrUpdate}
+                                    className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold rounded-xl hover:opacity-90 hover:scale-105 transition-all duration-300 shadow-lg shadow-orange-500/20"
+                                >
+                                    {existingItem ? (
+                                        <span className="flex items-center gap-2">
+                                            <CheckCircle className="w-5 h-5" />
+                                            Update Listing
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-2">
+                                            <Upload className="w-5 h-5" />
+                                            Publish Listing
+                                        </span>
+                                    )}
+                                </button>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* Create/Edit Form */}
-                <div className="rounded-2xl border border-gray-700 bg-gradient-to-b from-gray-900 to-gray-950 overflow-hidden">
-                    <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-4 border-b border-gray-700">
-                        <h3 className="text-white text-xl font-bold flex items-center gap-3">
-                            {existingItem ? (
-                                <>
-                                    <Save size={20} /> Edit Listing
-                                </>
-                            ) : (
-                                <>
-                                    <ShoppingBag size={20} /> Create New Listing
-                                </>
-                            )}
-                        </h3>
-                        <p className="text-gray-400 text-sm mt-1">
-                            {existingItem ? 'Update your marketplace listing details' : 'Fill in the details below to list your item'}
-                        </p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="p-6 space-y-8">
-                        {/* Basic Information Section */}
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-blue-500/10 rounded-lg">
-                                    <Package className="w-5 h-5 text-blue-400" />
-                                </div>
-                                <h4 className="text-white text-lg font-semibold">Basic Information</h4>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Title */}
-                                <div className="md:col-span-2">
-                                    <label className="text-white font-medium mb-2 block flex items-center gap-2">
-                                        <span className="text-red-400">*</span> Title
-                                    </label>
-                                    <input
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition"
-                                        placeholder="Enter a descriptive title for your item..."
-                                        required
-                                    />
-                                    <p className="text-gray-400 text-sm mt-2">Make it clear and descriptive to attract buyers</p>
-                                </div>
-
-                                {/* Price */}
-                                <div>
-                                    <label className="text-white font-medium mb-2 block flex items-center gap-2">
-                                        <DollarSign size={16} /> <span className="text-red-400">*</span> Price (USD)
-                                    </label>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
-                                        <input
-                                            value={price}
-                                            onChange={(e) => setPrice(e.target.value)}
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            className="w-full bg-gray-800 border border-gray-700 rounded-xl pl-10 pr-4 py-3.5 text-white outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition"
-                                            placeholder="0.00"
-                                            required
-                                        />
-                                    </div>
-                                    <p className="text-gray-400 text-sm mt-2">Enter the price in US dollars</p>
-                                </div>
-
-                                {/* Status */}
-                                <div>
-                                    <label className="text-white font-medium mb-2 block flex items-center gap-2">
-                                        <Tag size={16} /> Status
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            value={status}
-                                            onChange={(e) => setStatus(e.target.value)}
-                                            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3.5 text-white appearance-none outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition"
-                                        >
-                                            <option value="active" className="bg-gray-800">Active</option>
-                                            <option value="sold" className="bg-gray-800">Sold</option>
-                                            <option value="hidden" className="bg-gray-800">Hidden</option>
-                                        </select>
-                                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                                            <X className="w-4 h-4 text-gray-400 rotate-45" />
-                                        </div>
-                                    </div>
-                                    <p className="text-gray-400 text-sm mt-2">Set listing visibility</p>
-                                </div>
-
-                                {/* Location */}
-                                <div className="md:col-span-2">
-                                    <label className="text-white font-medium mb-2 block flex items-center gap-2">
-                                        <MapPin size={16} /> Location (Optional)
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            value={location}
-                                            onChange={(e) => setLocation(e.target.value)}
-                                            className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3.5 text-white appearance-none outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition"
-                                        >
-                                            <option value="">Select a location</option>
-                                            <option value="New Orleans">New Orleans</option>
-                                            <option value="Biloxi">Biloxi</option>
-                                            <option value="Mobile">Mobile</option>
-                                            <option value="Pensacola">Pensacola</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                                            <X className="w-4 h-4 text-gray-400 rotate-45" />
-                                        </div>
-                                    </div>
-                                    <p className="text-gray-400 text-sm mt-2">Where is your item located?</p>
-                                </div>
-
-                                {/* Description */}
-                                <div className="md:col-span-2">
-                                    <label className="text-white font-medium mb-2 block flex items-center gap-2">
-                                        <span className="text-red-400">*</span> Description
-                                    </label>
-                                    <textarea
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        rows={6}
-                                        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 outline-none focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition resize-none"
-                                        placeholder="Describe your item in detail. Include condition, specifications, reason for selling, etc..."
-                                        required
-                                    />
-                                    <div className="flex justify-between items-center mt-2">
-                                        <p className="text-gray-400 text-sm">Detailed descriptions get more views</p>
-                                        <span className={`text-xs ${description.length > 500 ? 'text-red-400' : 'text-gray-400'}`}>
-                                            {description.length}/1000 characters
-                                        </span>
-                                    </div>
-                                </div>
+                {/* My Listing View */}
+                {activeSection === "listings" && (
+                    <div className="space-y-8">
+                        {/* Header Section */}
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h2 className="text-2xl font-bold text-white">Marketplace Listings</h2>
+                                <p className="text-gray-400 mt-1">Manage your active listings and track performance</p>
                             </div>
                         </div>
 
-                        {/* Media Upload Section */}
-                        <div className="space-y-6 pt-6 border-t border-gray-700">
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="p-2 bg-purple-500/10 rounded-lg">
-                                    <Camera className="w-5 h-5 text-purple-400" />
-                                </div>
-                                <h4 className="text-white text-lg font-semibold">Media Upload</h4>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                {/* Photo Upload */}
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-white font-medium mb-3 block flex items-center gap-2">
-                                            <Camera size={18} /> Photos (Max 5)
-                                            <span className={`text-sm font-normal ml-auto ${isPhotoLimitReached ? 'text-red-400' : 'text-gray-400'}`}>
-                                                {totalPhotos}/5 • {remainingPhotoSlots} slots available
-                                            </span>
-                                        </label>
-
+                        {/* Empty State */}
+                        {!existingItem ? (
+                            <div className="text-center py-20 bg-gradient-to-b from-gray-900/50 to-gray-900/20 rounded-2xl border border-gray-800">
+                                <div className="max-w-md mx-auto">
+                                    <div className="w-32 h-32 bg-gradient-to-br from-gray-900 to-gray-800 rounded-full flex items-center justify-center mx-auto mb-8 border-2 border-gray-800 shadow-2xl">
                                         <div className="relative">
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                multiple
-                                                onChange={handlePhotoUpload}
-                                                className="hidden"
-                                                id="photo-upload"
-                                                disabled={isPhotoLimitReached}
-                                            />
-                                            <label
-                                                htmlFor="photo-upload"
-                                                className={`block w-full border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-colors group ${isPhotoLimitReached
-                                                    ? 'border-red-500/50 bg-red-500/5 cursor-not-allowed'
-                                                    : 'border-gray-700 hover:border-yellow-500/50 hover:bg-gray-800/30'
-                                                    }`}
-                                            >
-                                                <div className="space-y-3">
-                                                    <div className={`inline-flex p-3 rounded-full group-hover:bg-yellow-500/20 transition-colors ${isPhotoLimitReached ? 'bg-red-500/10' : 'bg-yellow-500/10'}`}>
-                                                        <Upload className={`w-6 h-6 ${isPhotoLimitReached ? 'text-red-400' : 'text-yellow-400'}`} />
-                                                    </div>
-                                                    <div>
-                                                        {isPhotoLimitReached ? (
-                                                            <>
-                                                                <p className="text-red-300 font-medium">Photo Limit Reached</p>
-                                                                <p className="text-red-400/80 text-sm mt-1">
-                                                                    Delete existing photos to upload new ones
-                                                                </p>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <p className="text-white font-medium">Click to upload photos</p>
-                                                                <p className="text-gray-400 text-sm mt-1">or drag and drop</p>
-                                                            </>
-                                                        )}
-                                                        <p className="text-gray-500 text-xs mt-2">Supports JPG, PNG, WEBP (Max 5MB each)</p>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    {/* Photo Preview */}
-                                    {(photoFiles.length > 0 || totalExistingPhotos > 0) && (
-                                        <div className="space-y-3">
-                                            <p className="text-white font-medium">Photos Preview</p>
-                                            <div className="grid grid-cols-4 gap-2">
-                                                {/* Existing photos */}
-                                                {(existingItem?.photos || []).map((url, index) => (
-                                                    <div key={`existing-${index}`} className="relative group">
-                                                        <div className="aspect-square rounded-lg overflow-hidden border border-gray-700">
-                                                            <img
-                                                                src={url}
-                                                                alt={`Existing ${index + 1}`}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => openDeletePhotoModal(index)}
-                                                            disabled={deletingPhotoIndex === index}
-                                                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        >
-                                                            {deletingPhotoIndex === index ? (
-                                                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                            ) : (
-                                                                <X size={12} />
-                                                            )}
-                                                        </button>
-                                                        <span className="absolute bottom-1 left-1 text-[10px] bg-black/60 text-white px-1 rounded">
-                                                            Existing
-                                                        </span>
-                                                    </div>
-                                                ))}
-
-                                                {/* Newly selected photos */}
-                                                {photoFiles.map((file, index) => (
-                                                    <div key={`new-${index}`} className="relative">
-                                                        <div className="aspect-square rounded-lg overflow-hidden border-2 border-yellow-500">
-                                                            <img
-                                                                src={URL.createObjectURL(file)}
-                                                                alt={`New ${index + 1}`}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeLocalPhoto(index)}
-                                                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"
-                                                        >
-                                                            <X size={12} />
-                                                        </button>
-                                                        <span className="absolute bottom-1 left-1 text-[10px] bg-yellow-500/80 text-black px-1 rounded">
-                                                            New
-                                                        </span>
-                                                    </div>
-                                                ))}
-                                            </div>
-
-                                            {/* Photo Count Info */}
-                                            <div className="text-sm text-gray-400 flex items-center gap-2">
-                                                <div className="flex items-center gap-1">
-                                                    <div className="w-3 h-3 bg-gray-700 rounded"></div>
-                                                    <span>{totalExistingPhotos} existing</span>
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <div className="w-3 h-3 bg-yellow-500/80 rounded"></div>
-                                                    <span>{totalNewPhotos} new to upload</span>
-                                                </div>
+                                            <Package className="w-16 h-16 text-gray-600" />
+                                            <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                                                <Plus className="w-4 h-4 text-black" />
                                             </div>
                                         </div>
-                                    )}
-                                </div>
-
-                                {/* Video Upload */}
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-white font-medium mb-3 block flex items-center gap-2">
-                                            <Video size={18} /> Video (Optional)
-                                        </label>
-
-                                        <div className="relative">
-                                            <input
-                                                type="file"
-                                                accept="video/*"
-                                                onChange={handleVideoUpload}
-                                                className="hidden"
-                                                id="video-upload"
-                                            />
-                                            <label
-                                                htmlFor="video-upload"
-                                                className="block w-full border-2 border-dashed border-gray-700 rounded-2xl p-8 text-center cursor-pointer hover:border-blue-500/50 hover:bg-gray-800/30 transition-colors group"
-                                            >
-                                                <div className="space-y-3">
-                                                    <div className="inline-flex p-3 bg-blue-500/10 rounded-full group-hover:bg-blue-500/20 transition-colors">
-                                                        <FileVideo className="w-6 h-6 text-blue-400" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-white font-medium">Click to upload video</p>
-                                                        <p className="text-gray-400 text-sm mt-1">or drag and drop</p>
-                                                        <p className="text-gray-500 text-xs mt-2">Supports MP4, MOV (Max 50MB)</p>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        </div>
                                     </div>
-
-                                    {/* Video Preview */}
-                                    {(videoFile || existingItem?.video) && (
-                                        <div className="space-y-3">
-                                            <p className="text-white font-medium">Video Preview</p>
-                                            <div className="relative rounded-lg overflow-hidden bg-black">
-                                                {videoFile ? (
-                                                    <video
-                                                        controls
-                                                        className="w-full"
-                                                        src={URL.createObjectURL(videoFile)}
-                                                    />
-                                                ) : (
-                                                    existingItem?.video && (
-                                                        <video
-                                                            controls
-                                                            className="w-full"
-                                                        >
-                                                            <source src={existingItem.video} type="video/mp4" />
-                                                        </video>
-                                                    )
-                                                )}
-                                                {videoFile && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={removeLocalVideo}
-                                                        className="absolute top-3 right-3 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Media Guidelines */}
-                            <div className="bg-gradient-to-r from-gray-800/30 to-gray-900/30 rounded-xl p-4">
-                                <div className="flex items-start gap-3">
-                                    <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                                    <div className="space-y-1">
-                                        <p className="text-white font-medium">Upload Guidelines</p>
-                                        <ul className="text-gray-400 text-sm space-y-1">
-                                            <li>• Maximum 5 photos allowed per listing</li>
-                                            <li>• High-quality photos increase sales by up to 95%</li>
-                                            <li>• Use natural lighting for better product representation</li>
-                                            <li>• Show the item from multiple angles</li>
-                                            <li>• Videos should be under 2 minutes and showcase key features</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Form Actions */}
-                        <div className="pt-8 border-t border-gray-700">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-500 to-yellow-600 flex items-center justify-center">
-                                                <User className="w-4 h-4 text-black" />
-                                            </div>
-                                            <span className="text-white font-medium">{user?.username || user?.email}</span>
-                                        </div>
-                                        <span className="text-gray-400">•</span>
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${subscriptionPlan === 'pro' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-gray-700 text-gray-300'}`}>
-                                            {subscriptionPlan.toUpperCase()} PLAN
-                                        </span>
-                                    </div>
-                                    <p className="text-gray-400 text-sm">
-                                        {existingItem
-                                            ? 'Update your listing details and media to keep your item fresh'
-                                            : 'Review all information before publishing your listing'
-                                        }
+                                    <h3 className="text-3xl font-bold text-white mb-4">
+                                        No Active Listings
+                                    </h3>
+                                    <p className="text-gray-400 text-lg mb-10 leading-relaxed">
+                                        Start your marketplace journey by listing gear, services, or merchandise.
+                                        Reach thousands of music enthusiasts and professionals.
                                     </p>
-                                </div>
-
-                                <div className="flex items-center gap-4">
-                                    {existingItem && (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setTitle(existingItem.title || "");
-                                                setDescription(existingItem.description || "");
-                                                setPrice(String(existingItem.price || ""));
-                                                setLocation(existingItem.location || "");
-                                                setStatus(existingItem.status || "active");
-                                                setPhotoFiles([]);
-                                                setVideoFile(null);
-                                                setShowVideoPreview(false);
-                                            }}
-                                            className="px-5 py-2.5 border border-gray-600 text-gray-300 hover:text-white hover:bg-gray-800 rounded-xl font-medium transition"
-                                        >
-                                            Reset Changes
-                                        </button>
-                                    )}
                                     <button
-                                        type="submit"
-                                        disabled={saving}
-                                        className="relative bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-black font-bold px-8 py-3.5 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed group"
+                                        onClick={() => setActiveSection("create")}
+                                        className="group relative bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-500 text-white font-semibold px-10 py-4 rounded-2xl hover:shadow-2xl hover:shadow-yellow-500/30 transition-all duration-500 transform hover:-translate-y-1"
                                     >
-                                        <div className="flex items-center gap-2">
-                                            <Save size={18} />
-                                            {saving ? (
-                                                <span className="flex items-center gap-2">
-                                                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                                                    Processing...
-                                                </span>
-                                            ) : existingItem ? (
-                                                'Update Listing'
-                                            ) : (
-                                                'Publish to Marketplace'
-                                            )}
-                                        </div>
-                                        <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl opacity-0 group-hover:opacity-20 transition-opacity" />
+                                        <span className="flex items-center gap-3">
+                                            <Sparkles className="w-5 h-5" />
+                                            Create Your First Listing
+                                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                        </span>
                                     </button>
+                                    <div className="mt-12 grid grid-cols-3 gap-8 text-gray-500">
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-white mb-2">0%</div>
+                                            <div className="text-sm">Commission Fee</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-white mb-2">24h</div>
+                                            <div className="text-sm">Avg. Response Time</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-white mb-2">100%</div>
+                                            <div className="text-sm">Secure Transactions</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </form>
-                </div>
+                        ) : (
+                            /* Active Listing Details */
+                            <div className="bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl overflow-hidden border border-gray-800 shadow-2xl">
+                                {/* Status Header */}
+                                <div className={`px-8 py-4 backdrop-blur-sm ${existingItem.status === "active"
+                                    ? "bg-gradient-to-r from-green-500/10 to-emerald-500/5"
+                                    : existingItem.status === "sold"
+                                        ? "bg-gradient-to-r from-red-500/10 to-rose-500/5"
+                                        : existingItem.status === "reserved"
+                                            ? "bg-gradient-to-r from-orange-500/10 to-amber-500/5"
+                                            : "bg-gradient-to-r from-yellow-500/10 to-yellow-500/5"
+                                    }`}>
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`p-2 rounded-lg ${existingItem.status === "active"
+                                                ? "bg-green-500/20"
+                                                : existingItem.status === "sold"
+                                                    ? "bg-red-500/20"
+                                                    : existingItem.status === "reserved"
+                                                        ? "bg-orange-500/20"
+                                                        : "bg-yellow-500/20"
+                                                }`}>
+                                                <div className={`w-3 h-3 rounded-full ${existingItem.status === "active"
+                                                    ? "bg-green-500 animate-pulse"
+                                                    : existingItem.status === "sold"
+                                                        ? "bg-red-500"
+                                                        : existingItem.status === "reserved"
+                                                            ? "bg-orange-500"
+                                                            : "bg-yellow-500"
+                                                    }`}></div>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-semibold text-gray-300">Listing Status</h4>
+                                                <p className={`text-lg font-bold ${existingItem.status === "active"
+                                                    ? "text-green-400"
+                                                    : existingItem.status === "sold"
+                                                        ? "text-red-400"
+                                                        : existingItem.status === "reserved"
+                                                            ? "text-orange-400"
+                                                            : "text-yellow-400"
+                                                    }`}>
+                                                    {existingItem.status.charAt(0).toUpperCase() + existingItem.status.slice(1)}
+                                                    {existingItem.status === "active" && " • Accepting Offers"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-6">
+                                            <div className="text-right">
+                                                <p className="text-sm text-gray-400">Listed</p>
+                                                <p className="font-medium text-white">
+                                                    {new Date(existingItem.createdAt).toLocaleDateString('en-US', {
+                                                        month: 'long',
+                                                        day: 'numeric',
+                                                        year: 'numeric'
+                                                    })}
+                                                </p>
+                                            </div>
+                                            <div className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center">
+                                                <BadgeCheck className="w-5 h-5 text-yellow-500" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-8">
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                        {/* Left Column - Media & Details */}
+                                        <div className="lg:col-span-2 space-y-8">
+                                            {/* Title & Meta */}
+                                            <div>
+                                                <div className="flex items-start justify-between mb-4">
+                                                    <h2 className="text-3xl font-bold text-white pr-4">
+                                                        {existingItem.title}
+                                                    </h2>
+                                                    <span className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                                                        ${existingItem.price}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Main Image Gallery */}
+                                            <div className="space-y-4">
+                                                <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 to-black border-2 border-gray-800 shadow-xl">
+                                                    {existingItem.photos?.[0] ? (
+                                                        <img
+                                                            src={existingItem.photos[0]}
+                                                            alt={existingItem.title}
+                                                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                            <ImageIcon className="w-16 h-16 text-gray-700" />
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
+                                                        <span className="text-sm text-white font-medium">
+                                                            1 / {existingItem.photos?.length || 1}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Thumbnail Strip */}
+                                                {existingItem.photos && existingItem.photos.length > 1 && (
+                                                    <div className="flex gap-3 overflow-x-auto pb-2">
+                                                        {existingItem.photos.map((photo, index) => (
+                                                            <button
+                                                                key={index}
+                                                                className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-800 hover:border-yellow-500 transition-all duration-300"
+                                                            >
+                                                                <img
+                                                                    src={photo}
+                                                                    alt={`${existingItem.title} ${index + 1}`}
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Description */}
+                                            <div className="bg-gray-900/50 rounded-2xl p-6 border border-gray-800">
+                                                <div className="flex items-center gap-3 mb-6">
+                                                    <FileText className="w-6 h-6 text-yellow-500" />
+                                                    <h3 className="text-xl font-bold text-white">Description</h3>
+                                                </div>
+                                                <div className="prose prose-invert max-w-none">
+                                                    <p className="text-gray-300 leading-relaxed whitespace-pre-line">
+                                                        {existingItem.description}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Right Column - Actions & Stats */}
+                                        <div className="lg:col-span-1">
+                                            <div className="sticky top-8 space-y-6">
+                                                {/* Action Card */}
+                                                <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-800 shadow-xl">
+                                                    <h4 className="text-lg font-bold text-white mb-6">Manage Listing</h4>
+
+                                                    <div className="space-y-4">
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveSection("create");
+                                                            }}
+                                                            className="group w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-2 rounded-xl hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 flex items-center justify-center gap-3"
+                                                        >
+                                                            <div className="p-2 bg-blue-500/20 rounded-lg group-hover:scale-110 transition-transform">
+                                                                <Edit2 className="w-5 h-5" />
+                                                            </div>
+                                                            <span className="text-lg">Edit Listing</span>
+                                                        </button>
+
+                                                        <button
+                                                            onClick={() => setShowDeleteItemModal(true)}
+                                                            className="group w-full bg-gradient-to-r from-red-500/10 to-red-600/10 text-red-400 font-semibold py-2 rounded-xl hover:bg-red-500/20 border border-red-500/20 transition-all duration-300 flex items-center justify-center gap-3"
+                                                        >
+                                                            <div className="p-2 bg-red-500/20 rounded-lg group-hover:scale-110 transition-transform">
+                                                                <Trash2 className="w-5 h-5" />
+                                                            </div>
+                                                            <span className="text-lg">Delete Listing</span>
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Quick Stats */}
+                                                    <div className="mt-8 pt-6 border-t border-gray-800">
+                                                        <h4 className="text-sm font-semibold text-gray-400 mb-4 uppercase tracking-wider">
+                                                            Quick Stats
+                                                        </h4>
+
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            {/* Photos */}
+                                                            <div className="bg-gray-800/50 rounded-xl p-4">
+                                                                <p className="text-gray-400 text-sm">Photos</p>
+                                                                <p className="text-2xl font-bold text-white mt-1">
+                                                                    {existingItem.photos?.length || 0}
+                                                                    <span className="text-gray-500 text-sm ml-1">/5 max</span>
+                                                                </p>
+                                                            </div>
+
+                                                            {/* Videos */}
+                                                            <div className="bg-gray-800/50 rounded-xl p-4">
+                                                                <p className="text-gray-400 text-sm">Videos</p>
+                                                                <p className="text-2xl font-bold text-white mt-1">
+                                                                    {existingItem.video ? 1 : 0}
+                                                                    <span className="text-gray-500 text-sm ml-1">uploaded</span>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Listing Video */}
+                                                {existingItem.video && (
+                                                    <div className="bg-gray-900/50 rounded-2xl p-4 border border-gray-800">
+                                                        <h4 className="text-sm font-semibold text-gray-300 mb-3">
+                                                            Listing Video
+                                                        </h4>
+
+                                                        <div className="relative aspect-video rounded-xl overflow-hidden border border-gray-700">
+                                                            <video
+                                                                src={existingItem.video}
+                                                                controls
+                                                                className="w-full h-full object-cover"
+                                                                preload="metadata"
+                                                            >
+                                                                Your browser does not support the video tag.
+                                                            </video>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
         </>
     );
