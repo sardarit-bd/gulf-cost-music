@@ -270,12 +270,48 @@ export default function ArtistDashboard() {
       if (response.success && response.data.artist) {
         const artistData = response.data.artist;
         setArtist(artistData);
-        setPreviewImages(artistData.photos?.map((p) => p.url) || []);
-        setAudioPreview(artistData.mp3Files || []);
+
+        // Ensure we only set valid photos with URLs
+        const validPhotos = (artistData.photos || [])
+          .filter(photo =>
+            photo &&
+            photo.url &&
+            typeof photo.url === 'string' &&
+            photo.url.trim() !== "" &&
+            !photo.url.includes("undefined") &&
+            !photo.url.includes("null")
+          )
+          .map(p => ({
+            url: p.url,
+            filename: p.filename || p.url.split('/').pop(),
+            isNew: false
+          }));
+
+        setPreviewImages(validPhotos);
+
+        // Ensure valid audio files
+        const validAudios = (artistData.mp3Files || [])
+          .filter(audio =>
+            audio &&
+            audio.url &&
+            typeof audio.url === 'string' &&
+            audio.url.trim() !== "" &&
+            !audio.url.includes("undefined") &&
+            !audio.url.includes("null")
+          );
+
+        setAudioPreview(validAudios);
+      } else {
+        // Set empty arrays if no valid data
+        setPreviewImages([]);
+        setAudioPreview([]);
       }
     } catch (error) {
       console.error("Error loading artist profile:", error);
       toast.error("Failed to load profile");
+      // Set empty arrays on error
+      setPreviewImages([]);
+      setAudioPreview([]);
     }
   };
 
@@ -777,10 +813,13 @@ export default function ArtistDashboard() {
     const newImages = [...previewImages];
     const newPhotoFiles = [];
 
-    files.forEach((file) => {
-      const url = URL.createObjectURL(file);
-      newImages.push(url);
-      newPhotoFiles.push(file);
+    files.forEach(file => {
+      newImages.push({
+        url: URL.createObjectURL(file),
+        filename: file.name,
+        file,
+        isNew: true
+      });
     });
 
     setPreviewImages(newImages);

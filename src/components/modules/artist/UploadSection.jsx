@@ -1,7 +1,14 @@
-import { BoomBox, CheckCircle, CloudUpload, ImageIcon, Music2, Upload, X } from "lucide-react";
+"use client";
+
+import { BoomBox, CheckCircle, CloudUpload, Crown as CrownIcon, ImageIcon, Music2, Upload, X } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+
+// Custom Crown icon component
+const Crown = ({ size = 16 }) => (
+    <CrownIcon size={size} className="text-yellow-500" />
+);
 
 export default function UploadSection({
     type,
@@ -18,7 +25,26 @@ export default function UploadSection({
 
     const Icon = type === "image" ? ImageIcon : Music2;
     const isPro = subscriptionPlan === "pro";
-    const currentCount = currentFiles.length;
+
+    // Filter out files with empty/invalid URLs
+    const validCurrentFiles = useMemo(() => {
+        return currentFiles.filter(file => {
+            if (!file) return false;
+
+            // Check if file has valid URL for images
+            if (type === "image" && file.url) {
+                return file.url.trim() !== "" &&
+                    file.url !== "undefined" &&
+                    file.url !== "null" &&
+                    !file.url.startsWith("data:,");
+            }
+
+            // For audio files, we might not have URL yet
+            return true;
+        });
+    }, [currentFiles, type]);
+
+    const currentCount = validCurrentFiles.length;
     const canUpload = isPro && currentCount < maxFiles;
 
     const handleFileSelect = useCallback((e) => {
@@ -72,6 +98,17 @@ export default function UploadSection({
         const sizes = ["Bytes", "KB", "MB", "GB"];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    };
+
+    // Check if URL is valid for Image component
+    const isValidImageUrl = (url) => {
+        if (!url || typeof url !== 'string') return false;
+        const trimmedUrl = url.trim();
+        return trimmedUrl !== "" &&
+            trimmedUrl !== "undefined" &&
+            trimmedUrl !== "null" &&
+            !trimmedUrl.startsWith("data:,") &&
+            trimmedUrl.length > 10;
     };
 
     if (!isPro) {
@@ -172,56 +209,78 @@ export default function UploadSection({
                     </div>
 
                     <div className="grid grid-cols-5 gap-3">
-                        {currentFiles.map((file, index) => (
-                            <div
-                                key={file.id || index}
-                                className="flex items-center border border-gray-400 gap-3 p-3 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition group"
-                            >
-                                {/* File Icon/Preview */}
-                                {type === "image" && file.url ? (
-                                    <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0">
-                                        <Image
-                                            src={file.url}
-                                            alt={file.name}
-                                            fill
-                                            className="object-cover"
-                                            sizes="40px"
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="w-10 h-10 rounded bg-purple-500/20 flex items-center justify-center flex-shrink-0">
-                                        <BoomBox className="text-purple-400" size={18} />
-                                    </div>
-                                )}
+                        {validCurrentFiles.map((file, index) => {
+                            const showImage = type === "image" && file.url && isValidImageUrl(file.url);
 
-                                {/* File Info */}
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-white font-medium text-sm truncate">
-                                        {file.name || `File ${index + 1}`}
-                                    </p>
-                                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                                        {file.size && (
-                                            <span>{formatFileSize(file.size)}</span>
-                                        )}
-                                        {file.isNew && (
-                                            <span className="inline-flex items-center gap-1 text-green-400">
-                                                <CheckCircle size={10} />
-                                                New
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Remove Button */}
-                                <button
-                                    onClick={() => onRemove(index)}
-                                    className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded transition opacity-0 group-hover:opacity-100"
-                                    title="Remove"
+                            return (
+                                <div
+                                    key={file.id || index}
+                                    className="flex items-center border border-gray-400 gap-3 p-3 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition group"
                                 >
-                                    <X size={14} />
-                                </button>
-                            </div>
-                        ))}
+                                    {/* File Icon/Preview */}
+                                    {showImage ? (
+                                        <div className="relative w-10 h-10 rounded overflow-hidden flex-shrink-0">
+                                            <Image
+                                                src={file.url}
+                                                alt={file.name || `File ${index + 1}`}
+                                                fill
+                                                className="object-cover"
+                                                sizes="40px"
+                                                onError={(e) => {
+                                                    // Hide image and show fallback
+                                                    e.target.style.display = 'none';
+                                                    const parent = e.target.parentElement;
+                                                    if (parent) {
+                                                        const fallback = document.createElement('div');
+                                                        fallback.className = 'w-full h-full bg-gray-700 flex items-center justify-center';
+                                                        fallback.innerHTML = `
+                                                            <ImageIcon class="w-5 h-5 text-gray-500" />
+                                                        `;
+                                                        parent.appendChild(fallback);
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className={`w-10 h-10 rounded flex items-center justify-center flex-shrink-0 ${type === "image" ? "bg-gray-700" : "bg-purple-500/20"
+                                            }`}>
+                                            {type === "image" ? (
+                                                <ImageIcon className="text-gray-400" size={18} />
+                                            ) : (
+                                                <BoomBox className="text-purple-400" size={18} />
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* File Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-white font-medium text-sm truncate">
+                                            {file.name || `File ${index + 1}`}
+                                        </p>
+                                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                                            {file.size && (
+                                                <span>{formatFileSize(file.size)}</span>
+                                            )}
+                                            {file.isNew && (
+                                                <span className="inline-flex items-center gap-1 text-green-400">
+                                                    <CheckCircle size={10} />
+                                                    New
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Remove Button */}
+                                    <button
+                                        onClick={() => onRemove(index)}
+                                        className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded transition opacity-0 group-hover:opacity-100"
+                                        title="Remove"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            );
+                        })}
                     </div>
 
                     {/* Progress Bar */}
@@ -242,10 +301,3 @@ export default function UploadSection({
         </div>
     );
 }
-
-// Helper component
-const Crown = ({ size }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .55-.45 1-1 1H6c-.55 0-1-.45-1-1s.45-1 1-1h12c.55 0 1 .45 1 1z" />
-    </svg>
-);

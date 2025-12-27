@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, Crown, Image as ImageIcon, Music } from "lucide-react";
+import { CreditCard, Image as ImageIcon, Music } from "lucide-react";
 
 export default function PlanStats({
   subscriptionPlan,
@@ -18,35 +18,33 @@ export default function PlanStats({
   const limits = planLimits[subscriptionPlan] || planLimits.free;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
       {/* Plan Status with Upgrade Button */}
-      <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
+      {/* <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
         <div className="h-full flex">
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Crown
-                  className={`w-5 h-5 ${
-                    subscriptionPlan === "pro"
+                  className={`w-5 h-5 ${subscriptionPlan === "pro"
                       ? "text-yellow-500"
                       : "text-gray-500"
-                  }`}
+                    }`}
                 />
                 <span className="text-sm text-gray-400">Current Plan</span>
               </div>
               <span
-                className={`text-xs px-2 py-1 rounded ${
-                  subscriptionPlan === "pro"
+                className={`text-xs px-2 py-1 rounded ${subscriptionPlan === "pro"
                     ? "bg-green-500/20 text-green-400"
                     : "bg-gray-800 text-gray-400"
-                }`}
+                  }`}
               >
                 {subscriptionPlan === "pro" ? "Pro" : "Free"}
               </span>
             </div>
-            {/* <p className="text-2xl font-bold text-white capitalize">
+            <p className="text-2xl font-bold text-white capitalize">
               {subscriptionPlan}
-            </p> */}
+            </p>
 
             {subscriptionPlan === "free" && (
               <div className="mt-auto">
@@ -62,14 +60,14 @@ export default function PlanStats({
                     <div className="font-bold">Upgrade to Pro - $10/month</div>
                   </div>
                 </button>
-                {/* <p className="text-xs text-gray-400 text-center mt-2">
-                Get all Pro features
-              </p> */}
+                <p className="text-xs text-gray-400 text-center mt-2">
+                  Get all Pro features
+                </p>
               </div>
             )}
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Photos */}
       <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
@@ -110,9 +108,8 @@ export default function PlanStats({
           </div>
           <div className="flex items-center gap-2">
             <CreditCard
-              className={`w-5 h-5 ${
-                hasMarketplaceAccess ? "text-green-500" : "text-gray-500"
-              }`}
+              className={`w-5 h-5 ${hasMarketplaceAccess ? "text-green-500" : "text-gray-500"
+                }`}
             />
           </div>
         </div>

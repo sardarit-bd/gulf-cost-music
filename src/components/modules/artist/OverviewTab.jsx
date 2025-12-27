@@ -1,17 +1,19 @@
 "use client";
 
-import { ImageIcon, Music2 } from "lucide-react";
+import { ImageIcon, Music2, User } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AudioPlayer from "./AudioPlayer";
 import PhotoGallery from "./PhotoGallery";
 
 export default function OverviewTab({
     artist,
-    previewImages,
-    audioPreview,
+    previewImages = [],
+    audioPreview = [],
     subscriptionPlan,
     uploadLimits,
+    listings,
+    loadingListings,
 }) {
     const [playingIndex, setPlayingIndex] = useState(null);
 
@@ -33,41 +35,82 @@ export default function OverviewTab({
         );
     };
 
+    // Filter out empty/null image URLs
+    const validPreviewImages = useMemo(() => {
+        return previewImages.filter(img => {
+            if (!img) return false;
+            if (typeof img === 'string') {
+                return img.trim() !== "" && img !== "undefined" && img !== "null";
+            }
+            if (typeof img === 'object') {
+                return img.url && img.url.trim() !== "";
+            }
+            return true;
+        });
+    }, [previewImages]);
+
+    // Get first valid image for profile
+    const firstImage = useMemo(() => {
+        if (validPreviewImages.length > 0) {
+            const img = validPreviewImages[0];
+            if (typeof img === 'string') return img;
+            if (typeof img === 'object' && img.url) return img.url;
+        }
+        return null;
+    }, [validPreviewImages]);
+
+    // Filter out empty/null audio files
+    const validAudioPreview = useMemo(() => {
+        return audioPreview.filter(audio => {
+            if (!audio) return false;
+            if (typeof audio === 'string') {
+                return audio.trim() !== "" && audio !== "undefined" && audio !== "null";
+            }
+            if (typeof audio === 'object') {
+                return audio.url && audio.url.trim() !== "";
+            }
+            return true;
+        });
+    }, [audioPreview]);
+
     return (
         <div className="animate-fadeIn">
             {/* Profile Header */}
             <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-6 mb-8 border border-gray-700">
                 <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
                     <div className="relative w-24 h-24 rounded-full border-4 border-yellow-500 overflow-hidden bg-gray-700">
-                        {previewImages.length > 0 ? (
+                        {firstImage ? (
                             <Image
-                                src={previewImages[0]}
+                                src={firstImage}
                                 alt="Profile"
                                 fill
                                 className="object-cover"
                                 sizes="96px"
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                }}
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gray-600">
-                                <ImageIcon size={32} className="text-gray-400" />
+                                <User size={32} className="text-gray-400" />
                             </div>
                         )}
                     </div>
 
                     <div className="flex-1">
                         <h2 className="text-2xl font-bold text-white mb-2">
-                            {artist.name || "Unnamed Artist"}
+                            {artist?.name || "Unnamed Artist"}
                         </h2>
                         <div className="flex flex-wrap gap-4 text-sm">
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                                 <span className="text-gray-300 capitalize">
-                                    {artist.genre || "No genre"}
+                                    {artist?.genre || "No genre"}
                                 </span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <span className="text-gray-300">{artist.city || "No city"}</span>
+                                <span className="text-gray-300">{artist?.city || "No city"}</span>
                             </div>
                         </div>
                     </div>
@@ -75,13 +118,13 @@ export default function OverviewTab({
                     <div className="flex gap-6">
                         <div className="text-center">
                             <div className="text-2xl font-bold text-yellow-500">
-                                {previewImages.length}
+                                {validPreviewImages.length}
                             </div>
                             <div className="text-xs text-gray-400">Photos</div>
                         </div>
                         <div className="text-center">
                             <div className="text-2xl font-bold text-yellow-500">
-                                {audioPreview.length}
+                                {validAudioPreview.length}
                             </div>
                             <div className="text-xs text-gray-400">Tracks</div>
                         </div>
@@ -99,7 +142,7 @@ export default function OverviewTab({
                             Biography
                         </h3>
                         <div className="text-gray-300 leading-relaxed">
-                            {artist.biography ? (
+                            {artist?.biography ? (
                                 <p className="whitespace-pre-line">{artist.biography}</p>
                             ) : (
                                 <div className="text-center py-8 text-gray-500">
@@ -132,13 +175,13 @@ export default function OverviewTab({
                             <div className="w-1 h-6 bg-yellow-500 rounded"></div>
                             Audio Tracks
                             <span className="text-sm text-gray-400 ml-2">
-                                ({audioPreview.length})
+                                ({validAudioPreview.length})
                             </span>
                         </h3>
 
-                        {audioPreview.length > 0 ? (
+                        {validAudioPreview.length > 0 ? (
                             <div className="space-y-3">
-                                {audioPreview.map((audio, index) => (
+                                {validAudioPreview.map((audio, index) => (
                                     <AudioPlayer
                                         key={audio.id || index}
                                         audio={audio}
@@ -186,16 +229,16 @@ export default function OverviewTab({
                         <div className="space-y-4">
                             <div>
                                 <label className="text-sm text-gray-400">Name</label>
-                                <p className="text-white font-medium">{artist.name || "Not set"}</p>
+                                <p className="text-white font-medium">{artist?.name || "Not set"}</p>
                             </div>
                             <div>
                                 <label className="text-sm text-gray-400">City</label>
-                                <p className="text-white font-medium">{artist.city || "Not set"}</p>
+                                <p className="text-white font-medium">{artist?.city || "Not set"}</p>
                             </div>
                             <div>
                                 <label className="text-sm text-gray-400">Genre</label>
                                 <p className="text-white font-medium capitalize">
-                                    {artist.genre || "Not set"}
+                                    {artist?.genre || "Not set"}
                                 </p>
                             </div>
                         </div>
@@ -207,11 +250,14 @@ export default function OverviewTab({
                             <div className="w-1 h-6 bg-yellow-500 rounded"></div>
                             Photos
                             <span className="text-sm text-gray-400 ml-2">
-                                ({previewImages.length}/{uploadLimits.photos})
+                                ({validPreviewImages.length}/{uploadLimits?.photos || 0})
                             </span>
                         </h3>
 
-                        <PhotoGallery images={previewImages} subscriptionPlan={subscriptionPlan} />
+                        <PhotoGallery
+                            images={validPreviewImages}
+                            subscriptionPlan={subscriptionPlan}
+                        />
                     </div>
                 </div>
             </div>

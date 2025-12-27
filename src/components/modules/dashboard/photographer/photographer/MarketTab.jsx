@@ -571,10 +571,10 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                         </div>
 
                         <div className="flex items-center gap-3">
-              <span className="flex items-center gap-2 bg-green-500/20 text-green-500 px-4 py-2 rounded-full text-sm font-medium">
-                <Package className="w-4 h-4" />
-                Verified Artist
-              </span>
+                            <span className="flex items-center gap-2 bg-green-500/20 text-green-500 px-4 py-2 rounded-full text-sm font-medium">
+                                <Package className="w-4 h-4" />
+                                Verified Artist
+                            </span>
 
                             {/*{existingItem && !isEditing && (*/}
                             {/*    <button*/}
@@ -643,7 +643,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                         className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeSection === "create"
                             ? "text-white border-b-2 border-yellow-500"
                             : "text-gray-400 hover:text-white"
-                        }`}
+                            }`}
                         onClick={() => {
                             setActiveSection("create");
                             setIsEditing(true);
@@ -667,7 +667,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                         className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeSection === "listings"
                             ? "text-white border-b-2 border-yellow-500"
                             : "text-gray-400 hover:text-white"
-                        }`}
+                            }`}
                         onClick={() => {
                             setActiveSection("listings");
                             setIsEditing(false);
@@ -694,7 +694,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder="e.g., Fender Stratocaster, Studio Session Service"
                                     className={`w-full bg-gray-800 border ${formErrors.title ? "border-red-500" : "border-gray-700"
-                                    } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                                        } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500`}
                                 />
                                 {formErrors.title && (
                                     <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
@@ -721,7 +721,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                         step="0.01"
                                         min="0"
                                         className={`w-full bg-gray-800 border ${formErrors.price ? "border-red-500" : "border-gray-700"
-                                        } rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                                            } rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
                                     />
                                 </div>
                                 {formErrors.price && (
@@ -778,7 +778,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                     onChange={(e) => setDescription(e.target.value)}
                                     rows="6"
                                     className={`w-full bg-gray-800 border ${formErrors.description ? "border-red-500" : "border-gray-700"
-                                    } rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                                        } rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
                                 />
                                 <p className="mt-2 text-sm text-gray-400">
                                     Detailed descriptions increase trust and sales
@@ -807,8 +807,8 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                         </p>
                                     </div>
                                     <span className="text-sm font-medium text-gray-300">
-                    {totalPhotos}/5 uploaded
-                  </span>
+                                        {totalPhotos}/5 uploaded
+                                    </span>
                                 </div>
 
                                 {/* Photo Grid */}
@@ -859,11 +859,11 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                     <Upload className="w-6 h-6 text-gray-400 group-hover:text-yellow-500 transition" />
                                                 </div>
                                                 <span className="text-sm text-gray-400 group-hover:text-yellow-500 transition">
-                          Click to upload
-                        </span>
+                                                    Click to upload
+                                                </span>
                                                 <span className="text-xs text-gray-500 mt-1">
-                          JPEG, PNG, WebP
-                        </span>
+                                                    JPEG, PNG, WebP
+                                                </span>
                                             </div>
                                             <input
                                                 type="file"
@@ -896,8 +896,8 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                         </p>
                                     </div>
                                     <span className="text-sm font-medium text-gray-300">
-                    {(videoFile || hasExistingVideo) ? "1/1 uploaded" : "0/1 uploaded"}
-                  </span>
+                                        {(videoFile || hasExistingVideo) ? "1/1 uploaded" : "0/1 uploaded"}
+                                    </span>
                                 </div>
 
                                 {/* Video Upload Area */}
@@ -985,19 +985,19 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                 >
                                     {saving ? (
                                         <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                             {existingItem ? "Updating..." : "Creating..."}
-                    </span>
+                                        </span>
                                     ) : existingItem ? (
                                         <span className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5" />
-                      Update Listing
-                    </span>
+                                            <CheckCircle className="w-5 h-5" />
+                                            Update Listing
+                                        </span>
                                     ) : (
                                         <span className="flex items-center gap-2">
-                      <Upload className="w-5 h-5" />
-                      Publish Listing
-                    </span>
+                                            <Upload className="w-5 h-5" />
+                                            Publish Listing
+                                        </span>
                                     )}
                                 </button>
                             </div>
@@ -1031,10 +1031,6 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                     <h3 className="text-3xl font-bold text-white mb-4">
                                         No Active Listings
                                     </h3>
-                                    <p className="text-gray-400 text-lg mb-10 leading-relaxed">
-                                        Start your marketplace journey by listing gear, services, or merchandise.
-                                        Reach thousands of music enthusiasts and professionals.
-                                    </p>
                                     <button
                                         onClick={() => {
                                             setActiveSection("create");
@@ -1042,11 +1038,11 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                         }}
                                         className="group relative bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-500 text-white font-semibold px-10 py-4 rounded-2xl hover:shadow-2xl hover:shadow-yellow-500/30 transition-all duration-500 transform hover:-translate-y-1"
                                     >
-                    <span className="flex items-center gap-3">
-                      <Sparkles className="w-5 h-5" />
-                      Create Your First Listing
-                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </span>
+                                        <span className="flex items-center gap-3">
+                                            <Sparkles className="w-5 h-5" />
+                                            Create Your First Listing
+                                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                        </span>
                                     </button>
                                     <div className="mt-12 grid grid-cols-3 gap-8 text-gray-500">
                                         <div className="text-center">
@@ -1075,7 +1071,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                         : existingItem.status === "reserved"
                                             ? "bg-gradient-to-r from-orange-500/10 to-amber-500/5"
                                             : "bg-gradient-to-r from-yellow-500/10 to-yellow-500/5"
-                                }`}>
+                                    }`}>
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <div className="flex items-center gap-3">
                                             <div className={`p-2 rounded-lg ${existingItem.status === "active"
@@ -1085,7 +1081,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                     : existingItem.status === "reserved"
                                                         ? "bg-orange-500/20"
                                                         : "bg-yellow-500/20"
-                                            }`}>
+                                                }`}>
                                                 <div className={`w-3 h-3 rounded-full ${existingItem.status === "active"
                                                     ? "bg-green-500 animate-pulse"
                                                     : existingItem.status === "sold"
@@ -1093,7 +1089,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                         : existingItem.status === "reserved"
                                                             ? "bg-orange-500"
                                                             : "bg-yellow-500"
-                                                }`}></div>
+                                                    }`}></div>
                                             </div>
                                             <div>
                                                 <h4 className="text-sm font-semibold text-gray-300">Listing Status</h4>
@@ -1104,7 +1100,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                         : existingItem.status === "reserved"
                                                             ? "text-orange-400"
                                                             : "text-yellow-400"
-                                                }`}>
+                                                    }`}>
                                                     {existingItem.status.charAt(0).toUpperCase() + existingItem.status.slice(1)}
                                                     {existingItem.status === "active" && " • Accepting Offers"}
                                                 </p>
@@ -1139,8 +1135,8 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                         {existingItem.title}
                                                     </h2>
                                                     <span className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                            ${existingItem.price}
-                          </span>
+                                                        ${existingItem.price}
+                                                    </span>
                                                 </div>
                                             </div>
 
@@ -1161,9 +1157,9 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                     )}
 
                                                     <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
-                            <span className="text-sm text-white font-medium">
-                              {activePhotoIndex + 1} / {existingItem.photos.length}
-                            </span>
+                                                        <span className="text-sm text-white font-medium">
+                                                            {activePhotoIndex + 1} / {existingItem.photos.length}
+                                                        </span>
                                                     </div>
                                                 </div>
 
@@ -1176,9 +1172,9 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                                 onClick={() => setActivePhotoIndex(index)}
                                                                 className={`flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border-2 transition-all duration-300
             ${activePhotoIndex === index
-                                                                    ? "border-yellow-500"
-                                                                    : "border-gray-800 hover:border-yellow-500"
-                                                                }`}
+                                                                        ? "border-yellow-500"
+                                                                        : "border-gray-800 hover:border-yellow-500"
+                                                                    }`}
                                                             >
                                                                 <img
                                                                     src={photo}

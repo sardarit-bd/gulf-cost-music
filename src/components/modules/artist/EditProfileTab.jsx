@@ -1,8 +1,6 @@
 import SaveButton from "./SaveButton";
 import UpgradePrompt from "./UpgradePrompt";
 import UploadSection from "./UploadSection";
-// import UpgradePrompt from "./UpgradePrompt";
-// import UploadSection from "./UploadSection";
 
 const genreOptions = [
     "Pop", "Rock", "Rap", "Country", "Jazz",
@@ -13,10 +11,10 @@ const cityOptions = ["New Orleans", "Biloxi", "Mobile", "Pensacola"];
 
 export default function EditProfileTab({
     artist,
-    previewImages,
-    audioPreview,
+    previewImages = [],  // Add default value
+    audioPreview = [],   // Add default value
     subscriptionPlan,
-    uploadLimits,
+    uploadLimits = { photos: 0, audios: 0 }, // Add default value
     onChange,
     onImageUpload,
     onRemoveImage,
@@ -25,6 +23,18 @@ export default function EditProfileTab({
     onSave,
     saving = false
 }) {
+    // Filter out invalid image URLs
+    const validPreviewImages = previewImages.filter(img => {
+        if (!img) return false;
+        if (typeof img === 'string') {
+            return img.trim() !== "" && img !== "undefined" && img !== "null";
+        }
+        if (typeof img === 'object' && img.url) {
+            return img.url.trim() !== "";
+        }
+        return false;
+    });
+
     return (
         <div className="animate-fadeIn space-y-10">
             <div className="grid md:grid-cols-2 gap-8">
@@ -35,7 +45,7 @@ export default function EditProfileTab({
                     </label>
                     <input
                         name="name"
-                        value={artist.name}
+                        value={artist?.name || ""}
                         onChange={onChange}
                         placeholder="Enter your name"
                         className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 outline-none transition"
@@ -49,7 +59,7 @@ export default function EditProfileTab({
                     </label>
                     <select
                         name="city"
-                        value={artist.city.toLowerCase()}
+                        value={artist?.city?.toLowerCase() || ""}
                         onChange={onChange}
                         className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 outline-none transition"
                     >
@@ -69,7 +79,7 @@ export default function EditProfileTab({
                     </label>
                     <select
                         name="genre"
-                        value={artist.genre.toLowerCase()}
+                        value={artist?.genre?.toLowerCase() || ""}
                         onChange={onChange}
                         className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 outline-none transition"
                     >
@@ -92,7 +102,7 @@ export default function EditProfileTab({
                     </label>
                     <textarea
                         name="biography"
-                        value={artist.biography}
+                        value={artist?.biography || ""}
                         onChange={onChange}
                         rows={4}
                         placeholder={subscriptionPlan === "free"
@@ -117,12 +127,15 @@ export default function EditProfileTab({
                         type="image"
                         label="Upload Photos"
                         accept="image/*"
-                        maxFiles={uploadLimits.photos}
-                        currentFiles={previewImages.map((url, idx) => ({
-                            url,
-                            id: idx,
-                            name: `Photo ${idx + 1}`
-                        }))}
+                        maxFiles={uploadLimits.photos || 0}
+                        currentFiles={validPreviewImages.map((img, idx) => {
+                            const url = typeof img === 'string' ? img : img.url;
+                            return {
+                                url: url,
+                                id: idx,
+                                name: `Photo ${idx + 1}`
+                            };
+                        })}
                         onUpload={onImageUpload}
                         onRemove={onRemoveImage}
                         subscriptionPlan={subscriptionPlan}
@@ -136,8 +149,14 @@ export default function EditProfileTab({
                         type="audio"
                         label="Upload Audio"
                         accept="audio/*"
-                        maxFiles={uploadLimits.audios}
-                        currentFiles={audioPreview}
+                        maxFiles={uploadLimits.audios || 0}
+                        currentFiles={audioPreview.filter(audio =>
+                            audio && (
+                                typeof audio === 'string' ?
+                                    audio.trim() !== "" :
+                                    audio.url && audio.url.trim() !== ""
+                            )
+                        )}
                         onUpload={onAudioUpload}
                         onRemove={onRemoveAudio}
                         subscriptionPlan={subscriptionPlan}

@@ -431,9 +431,13 @@ export default function ArtistMarketplaceTab({
                   <div key={index} className="relative group">
                     <div className="aspect-square overflow-hidden rounded-xl border border-gray-700 bg-gray-800">
                       <img
-                        src={photo}
+                        src={
+                          photo instanceof File
+                            ? URL.createObjectURL(photo)
+                            : photo
+                        }
                         alt={`Listing photo ${index + 1}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover"
                       />
                     </div>
                     <button
