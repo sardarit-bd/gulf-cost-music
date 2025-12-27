@@ -211,8 +211,6 @@ export default function PhotographerPage() {
       return;
     }
 
-    if (!confirm("Are you sure you want to delete this photo?")) return;
-
     try {
       const token = getCookie("token");
       const response = await fetch(
@@ -351,7 +349,7 @@ export default function PhotographerPage() {
       return;
     }
 
-    if (!confirm("Are you sure you want to delete this service?")) return;
+    // if (!confirm("Are you sure you want to delete this service?")) return;
 
     try {
       const token = getCookie("token");

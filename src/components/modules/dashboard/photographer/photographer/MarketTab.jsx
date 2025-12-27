@@ -59,6 +59,8 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
     const [status, setStatus] = useState("active");
     const [photoFiles, setPhotoFiles] = useState([]);
     const [videoFile, setVideoFile] = useState(null);
+    const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+    const [isEditing, setIsEditing] = useState(false);
 
     // Check permissions
     const isVerified = !!user?.isVerified;
@@ -74,6 +76,10 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
     const isPhotoLimitReached = totalPhotos >= 5;
     const remainingPhotoSlots = 5 - totalPhotos;
     const activeCount = existingItem?.status === "active" ? 1 : 0;
+
+    // Calculate videos
+    const hasExistingVideo = existingItem?.videos && existingItem.videos.length > 0;
+    const existingVideoUrl = hasExistingVideo ? existingItem.videos[0] : null;
 
     // Load my item
     useEffect(() => {
@@ -93,6 +99,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                 }
 
                 const data = await res.json();
+                console.log("Loaded market item:", data.data);
                 setExistingItem(data.data || null);
 
                 if (data.data) {
@@ -102,6 +109,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                     setLocation(data.data.location || "");
                     setStatus(data.data.status || "active");
                     setActiveSection("listings");
+                    setIsEditing(false);
                 }
             } catch (error) {
                 console.error("Load error:", error);
@@ -119,6 +127,15 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
             setLoading(false);
         }
     }, [API_BASE, hasMarketplaceAccess]);
+
+    // Debug effect
+    useEffect(() => {
+        if (existingItem) {
+            console.log("Existing item videos:", existingItem.videos);
+            console.log("Has existing video:", hasExistingVideo);
+            console.log("Existing video URL:", existingVideoUrl);
+        }
+    }, [existingItem]);
 
     // Validate form
     const validateForm = () => {
@@ -208,6 +225,15 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
 
         try {
             setSaving(true);
+
+            // Show appropriate toast message
+            const toastId = toast.loading(
+                existingItem ? "Updating listing..." : "Creating listing...",
+                {
+                    duration: 5000
+                }
+            );
+
             const formData = new FormData();
             formData.append("title", title.trim());
             formData.append("description", description.trim());
@@ -236,19 +262,32 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
             const data = await res.json();
 
             if (!res.ok) {
+                toast.dismiss(toastId);
                 throw new Error(data.message || `Save failed (${res.status})`);
             }
+
+            console.log("Save/Update response:", data.data);
+
+            // Dismiss loading toast and show success
+            toast.dismiss(toastId);
+            toast.success(
+                existingItem ? "Listing updated successfully!" : "Listing created successfully!",
+                {
+                    duration: 3000
+                }
+            );
 
             setExistingItem(data.data);
             setVideoFile(null);
             setPhotoFiles([]);
             setActiveSection("listings");
-
-            toast.success(existingItem ? "Item updated successfully!" : "Item listed successfully!");
+            setIsEditing(false);
 
         } catch (error) {
             console.error("Save error:", error);
-            toast.error(error.message || "Failed to save item");
+            toast.error(error.message || "Failed to save item", {
+                duration: 5000
+            });
         } finally {
             setSaving(false);
         }
@@ -263,15 +302,25 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
 
         try {
             setDeleting(true);
+            const toastId = toast.loading("Deleting listing...", {
+                duration: 5000
+            });
+
             const res = await fetch(`${API_BASE}/api/market/me`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
             });
 
             if (!res.ok) {
+                toast.dismiss(toastId);
                 const errorData = await res.json().catch(() => ({}));
                 throw new Error(errorData.message || "Delete failed");
             }
+
+            toast.dismiss(toastId);
+            toast.success("Market item deleted successfully", {
+                duration: 3000
+            });
 
             setExistingItem(null);
             setTitle("");
@@ -282,11 +331,14 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
             setPhotoFiles([]);
             setVideoFile(null);
             setActiveSection("create");
+            setShowDeleteItemModal(false);
+            setIsEditing(false);
 
-            toast.success("Market item deleted successfully");
         } catch (error) {
             console.error("Delete error:", error);
-            toast.error(error.message || "Failed to delete item");
+            toast.error(error.message || "Failed to delete item", {
+                duration: 5000
+            });
         } finally {
             setDeleting(false);
         }
@@ -350,6 +402,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
         } finally {
             setDeletingPhotoIndex(null);
             setPhotoToDeleteIndex(null);
+            setShowDeletePhotoModal(false);
         }
     };
 
@@ -361,9 +414,81 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
         setVideoFile(null);
     };
 
+    const removeExistingVideo = async () => {
+        if (!hasExistingVideo) return;
+
+        const token = getToken();
+        if (!token) {
+            toast.error("Please sign in again");
+            return;
+        }
+
+        if (!confirm("Are you sure you want to delete this video?")) return;
+
+        try {
+            // Create a copy of existing item without video
+            const updatedItem = { ...existingItem };
+            updatedItem.videos = [];
+
+            const res = await fetch(`${API_BASE}/api/market/me`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    title: existingItem.title,
+                    description: existingItem.description,
+                    price: existingItem.price,
+                    location: existingItem.location,
+                    status: existingItem.status,
+                    photos: existingItem.photos,
+                    videos: [] // Empty array to remove video
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message || "Failed to delete video");
+            }
+
+            setExistingItem(data.data);
+            toast.success("Video deleted successfully");
+
+        } catch (error) {
+            console.error("Delete video error:", error);
+            toast.error(error.message || "Failed to delete video");
+        }
+    };
+
     const openDeletePhotoModal = (photoIndex) => {
         setPhotoToDeleteIndex(photoIndex);
         setShowDeletePhotoModal(true);
+    };
+
+    const handleCancelEdit = () => {
+        if (existingItem) {
+            // Reset form to original values
+            setTitle(existingItem.title || "");
+            setDescription(existingItem.description || "");
+            setPrice(String(existingItem.price || ""));
+            setLocation(existingItem.location || "");
+            setStatus(existingItem.status || "active");
+            setPhotoFiles([]);
+            setVideoFile(null);
+            setActiveSection("listings");
+            setIsEditing(false);
+
+            toast.success("Changes cancelled", {
+                duration: 2000
+            });
+        }
+    };
+
+    const handleEditListing = () => {
+        setActiveSection("create");
+        setIsEditing(true);
     };
 
     if (!hasMarketplaceAccess) {
@@ -446,22 +571,20 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <span className="flex items-center gap-2 bg-green-500/20 text-green-500 px-4 py-2 rounded-full text-sm font-medium">
-                                <Package className="w-4 h-4" />
-                                Verified Artist
-                            </span>
+              <span className="flex items-center gap-2 bg-green-500/20 text-green-500 px-4 py-2 rounded-full text-sm font-medium">
+                <Package className="w-4 h-4" />
+                Verified Artist
+              </span>
 
-                            {!existingItem && (
-                                <button
-                                    onClick={() => {
-                                        setActiveSection("create");
-                                    }}
-                                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-                                >
-                                    <Edit2 className="w-4 h-4" />
-                                    Edit Listing
-                                </button>
-                            )}
+                            {/*{existingItem && !isEditing && (*/}
+                            {/*    <button*/}
+                            {/*        onClick={handleEditListing}*/}
+                            {/*        className="flex items-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-400 transition"*/}
+                            {/*    >*/}
+                            {/*        <Edit2 className="w-4 h-4" />*/}
+                            {/*        Edit Listing*/}
+                            {/*    </button>*/}
+                            {/*)}*/}
                         </div>
                     </div>
                 </div>
@@ -520,8 +643,11 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                         className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeSection === "create"
                             ? "text-white border-b-2 border-yellow-500"
                             : "text-gray-400 hover:text-white"
-                            }`}
-                        onClick={() => setActiveSection("create")}
+                        }`}
+                        onClick={() => {
+                            setActiveSection("create");
+                            setIsEditing(true);
+                        }}
                     >
                         {existingItem ? (
                             <>
@@ -541,8 +667,11 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                         className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeSection === "listings"
                             ? "text-white border-b-2 border-yellow-500"
                             : "text-gray-400 hover:text-white"
-                            }`}
-                        onClick={() => setActiveSection("listings")}
+                        }`}
+                        onClick={() => {
+                            setActiveSection("listings");
+                            setIsEditing(false);
+                        }}
                     >
                         <List className="w-4 h-4 text-yellow-400" />
                         My Listing {existingItem && <span>(1)</span>}
@@ -565,7 +694,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder="e.g., Fender Stratocaster, Studio Session Service"
                                     className={`w-full bg-gray-800 border ${formErrors.title ? "border-red-500" : "border-gray-700"
-                                        } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                                    } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500`}
                                 />
                                 {formErrors.title && (
                                     <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
@@ -592,7 +721,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                         step="0.01"
                                         min="0"
                                         className={`w-full bg-gray-800 border ${formErrors.price ? "border-red-500" : "border-gray-700"
-                                            } rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                                        } rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
                                     />
                                 </div>
                                 {formErrors.price && (
@@ -649,7 +778,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                     onChange={(e) => setDescription(e.target.value)}
                                     rows="6"
                                     className={`w-full bg-gray-800 border ${formErrors.description ? "border-red-500" : "border-gray-700"
-                                        } rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                                    } rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
                                 />
                                 <p className="mt-2 text-sm text-gray-400">
                                     Detailed descriptions increase trust and sales
@@ -678,8 +807,8 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                         </p>
                                     </div>
                                     <span className="text-sm font-medium text-gray-300">
-                                        {totalPhotos}/5 uploaded
-                                    </span>
+                    {totalPhotos}/5 uploaded
+                  </span>
                                 </div>
 
                                 {/* Photo Grid */}
@@ -730,11 +859,11 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                     <Upload className="w-6 h-6 text-gray-400 group-hover:text-yellow-500 transition" />
                                                 </div>
                                                 <span className="text-sm text-gray-400 group-hover:text-yellow-500 transition">
-                                                    Click to upload
-                                                </span>
+                          Click to upload
+                        </span>
                                                 <span className="text-xs text-gray-500 mt-1">
-                                                    JPEG, PNG, WebP
-                                                </span>
+                          JPEG, PNG, WebP
+                        </span>
                                             </div>
                                             <input
                                                 type="file"
@@ -767,12 +896,12 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                         </p>
                                     </div>
                                     <span className="text-sm font-medium text-gray-300">
-                                        {(videoFile || existingItem?.video) ? "1/1 uploaded" : "0/1 uploaded"}
-                                    </span>
+                    {(videoFile || hasExistingVideo) ? "1/1 uploaded" : "0/1 uploaded"}
+                  </span>
                                 </div>
 
                                 {/* Video Upload Area */}
-                                {(!videoFile && !existingItem?.video) ? (
+                                {(!videoFile && !hasExistingVideo) ? (
                                     <label className="cursor-pointer block">
                                         <div className="border-2 border-dashed border-gray-600 rounded-xl p-6 text-center hover:border-yellow-500 hover:bg-gray-800/50 transition-all duration-300 group max-w-md">
                                             <div className="w-14 h-14 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-yellow-500/20 transition">
@@ -797,7 +926,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                     <div className="relative max-w-md">
                                         <div className="rounded-xl overflow-hidden border border-gray-700 bg-black">
                                             <video
-                                                src={videoFile ? URL.createObjectURL(videoFile) : existingItem?.video}
+                                                src={videoFile ? URL.createObjectURL(videoFile) : existingVideoUrl}
                                                 controls
                                                 preload="metadata"
                                                 className="w-full h-auto max-h-[280px] object-contain"
@@ -805,12 +934,21 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                         </div>
 
                                         {/* Remove Button */}
-                                        <button
-                                            onClick={removeLocalVideo}
-                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition shadow-lg"
-                                        >
-                                            <X className="w-4 h-4" />
-                                        </button>
+                                        {videoFile ? (
+                                            <button
+                                                onClick={removeLocalVideo}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition shadow-lg"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={removeExistingVideo}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition shadow-lg"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -821,15 +959,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                             <div>
                                 {existingItem && (
                                     <button
-                                        onClick={() => {
-                                            setTitle(existingItem.title || "");
-                                            setDescription(existingItem.description || "");
-                                            setPrice(String(existingItem.price || ""));
-                                            setLocation(existingItem.location || "");
-                                            setStatus(existingItem.status || "active");
-                                            setPhotoFiles([]);
-                                            setVideoFile(null);
-                                        }}
+                                        onClick={handleCancelEdit}
                                         className="px-6 py-3 border border-gray-600 text-gray-300 rounded-xl hover:bg-gray-800 transition"
                                     >
                                         Cancel Edit
@@ -850,18 +980,24 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
 
                                 <button
                                     onClick={handleCreateOrUpdate}
-                                    className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold rounded-xl hover:opacity-90 hover:scale-105 transition-all duration-300 shadow-lg shadow-orange-500/20"
+                                    disabled={saving}
+                                    className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold rounded-xl hover:opacity-90 hover:scale-105 transition-all duration-300 shadow-lg shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {existingItem ? (
+                                    {saving ? (
                                         <span className="flex items-center gap-2">
-                                            <CheckCircle className="w-5 h-5" />
-                                            Update Listing
-                                        </span>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            {existingItem ? "Updating..." : "Creating..."}
+                    </span>
+                                    ) : existingItem ? (
+                                        <span className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5" />
+                      Update Listing
+                    </span>
                                     ) : (
                                         <span className="flex items-center gap-2">
-                                            <Upload className="w-5 h-5" />
-                                            Publish Listing
-                                        </span>
+                      <Upload className="w-5 h-5" />
+                      Publish Listing
+                    </span>
                                     )}
                                 </button>
                             </div>
@@ -900,14 +1036,17 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                         Reach thousands of music enthusiasts and professionals.
                                     </p>
                                     <button
-                                        onClick={() => setActiveSection("create")}
+                                        onClick={() => {
+                                            setActiveSection("create");
+                                            setIsEditing(true);
+                                        }}
                                         className="group relative bg-gradient-to-r from-yellow-500 via-yellow-600 to-orange-500 text-white font-semibold px-10 py-4 rounded-2xl hover:shadow-2xl hover:shadow-yellow-500/30 transition-all duration-500 transform hover:-translate-y-1"
                                     >
-                                        <span className="flex items-center gap-3">
-                                            <Sparkles className="w-5 h-5" />
-                                            Create Your First Listing
-                                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                        </span>
+                    <span className="flex items-center gap-3">
+                      <Sparkles className="w-5 h-5" />
+                      Create Your First Listing
+                      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </span>
                                     </button>
                                     <div className="mt-12 grid grid-cols-3 gap-8 text-gray-500">
                                         <div className="text-center">
@@ -936,7 +1075,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                         : existingItem.status === "reserved"
                                             ? "bg-gradient-to-r from-orange-500/10 to-amber-500/5"
                                             : "bg-gradient-to-r from-yellow-500/10 to-yellow-500/5"
-                                    }`}>
+                                }`}>
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <div className="flex items-center gap-3">
                                             <div className={`p-2 rounded-lg ${existingItem.status === "active"
@@ -946,7 +1085,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                     : existingItem.status === "reserved"
                                                         ? "bg-orange-500/20"
                                                         : "bg-yellow-500/20"
-                                                }`}>
+                                            }`}>
                                                 <div className={`w-3 h-3 rounded-full ${existingItem.status === "active"
                                                     ? "bg-green-500 animate-pulse"
                                                     : existingItem.status === "sold"
@@ -954,7 +1093,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                         : existingItem.status === "reserved"
                                                             ? "bg-orange-500"
                                                             : "bg-yellow-500"
-                                                    }`}></div>
+                                                }`}></div>
                                             </div>
                                             <div>
                                                 <h4 className="text-sm font-semibold text-gray-300">Listing Status</h4>
@@ -965,7 +1104,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                         : existingItem.status === "reserved"
                                                             ? "text-orange-400"
                                                             : "text-yellow-400"
-                                                    }`}>
+                                                }`}>
                                                     {existingItem.status.charAt(0).toUpperCase() + existingItem.status.slice(1)}
                                                     {existingItem.status === "active" && " • Accepting Offers"}
                                                 </p>
@@ -1000,17 +1139,18 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                         {existingItem.title}
                                                     </h2>
                                                     <span className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                                                        ${existingItem.price}
-                                                    </span>
+                            ${existingItem.price}
+                          </span>
                                                 </div>
                                             </div>
 
                                             {/* Main Image Gallery */}
                                             <div className="space-y-4">
+                                                {/* Main Image */}
                                                 <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 to-black border-2 border-gray-800 shadow-xl">
-                                                    {existingItem.photos?.[0] ? (
+                                                    {existingItem.photos?.[activePhotoIndex] ? (
                                                         <img
-                                                            src={existingItem.photos[0]}
+                                                            src={existingItem.photos[activePhotoIndex]}
                                                             alt={existingItem.title}
                                                             className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                                                         />
@@ -1019,20 +1159,26 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                             <ImageIcon className="w-16 h-16 text-gray-700" />
                                                         </div>
                                                     )}
+
                                                     <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
-                                                        <span className="text-sm text-white font-medium">
-                                                            1 / {existingItem.photos?.length || 1}
-                                                        </span>
+                            <span className="text-sm text-white font-medium">
+                              {activePhotoIndex + 1} / {existingItem.photos.length}
+                            </span>
                                                     </div>
                                                 </div>
 
-                                                {/* Thumbnail Strip */}
-                                                {existingItem.photos && existingItem.photos.length > 1 && (
+                                                {/* Thumbnails */}
+                                                {existingItem.photos?.length > 1 && (
                                                     <div className="flex gap-3 overflow-x-auto pb-2">
                                                         {existingItem.photos.map((photo, index) => (
                                                             <button
                                                                 key={index}
-                                                                className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-800 hover:border-yellow-500 transition-all duration-300"
+                                                                onClick={() => setActivePhotoIndex(index)}
+                                                                className={`flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border-2 transition-all duration-300
+            ${activePhotoIndex === index
+                                                                    ? "border-yellow-500"
+                                                                    : "border-gray-800 hover:border-yellow-500"
+                                                                }`}
                                                             >
                                                                 <img
                                                                     src={photo}
@@ -1066,11 +1212,9 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                 <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-800 shadow-xl">
                                                     <h4 className="text-lg font-bold text-white mb-6">Manage Listing</h4>
 
-                                                    <div className="space-y-4">
+                                                    <div className="flex items-center gap-6">
                                                         <button
-                                                            onClick={() => {
-                                                                setActiveSection("create");
-                                                            }}
+                                                            onClick={handleEditListing}
                                                             className="group w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-2 rounded-xl hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 flex items-center justify-center gap-3"
                                                         >
                                                             <div className="p-2 bg-blue-500/20 rounded-lg group-hover:scale-110 transition-transform">
@@ -1110,7 +1254,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                             <div className="bg-gray-800/50 rounded-xl p-4">
                                                                 <p className="text-gray-400 text-sm">Videos</p>
                                                                 <p className="text-2xl font-bold text-white mt-1">
-                                                                    {existingItem.video ? 1 : 0}
+                                                                    {existingItem.videos?.length || 0}
                                                                     <span className="text-gray-500 text-sm ml-1">uploaded</span>
                                                                 </p>
                                                             </div>
@@ -1119,15 +1263,24 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                 </div>
 
                                                 {/* Listing Video */}
-                                                {existingItem.video && (
+                                                {hasExistingVideo && (
                                                     <div className="bg-gray-900/50 rounded-2xl p-4 border border-gray-800">
-                                                        <h4 className="text-sm font-semibold text-gray-300 mb-3">
-                                                            Listing Video
-                                                        </h4>
+                                                        <div className="flex items-center justify-between mb-3">
+                                                            <h4 className="text-sm font-semibold text-gray-300">
+                                                                Listing Video
+                                                            </h4>
+                                                            <button
+                                                                onClick={removeExistingVideo}
+                                                                className="text-red-400 hover:text-red-300 text-xs flex items-center gap-1"
+                                                            >
+                                                                <Trash2 className="w-3 h-3" />
+                                                                Delete
+                                                            </button>
+                                                        </div>
 
                                                         <div className="relative aspect-video rounded-xl overflow-hidden border border-gray-700">
                                                             <video
-                                                                src={existingItem.video}
+                                                                src={existingVideoUrl}
                                                                 controls
                                                                 className="w-full h-full object-cover"
                                                                 preload="metadata"
