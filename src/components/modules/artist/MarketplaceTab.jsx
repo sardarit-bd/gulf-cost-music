@@ -1,3 +1,5 @@
+// components/artist/ArtistMarketplaceTab.js
+
 "use client";
 
 import {
@@ -19,9 +21,11 @@ import {
   Trash2,
   Upload,
   Video,
-  X
+  X,
 } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
 
 export default function ArtistMarketplaceTab({
   subscriptionPlan,
@@ -42,9 +46,15 @@ export default function ArtistMarketplaceTab({
   onEditListing,
   onDeleteListing,
   onCancelEdit,
+  loadMarketplaceData,
+  setListingPhotos,
+  setIsEditingListing,
 }) {
   const [activeSection, setActiveSection] = useState("create");
   const [formErrors, setFormErrors] = useState({});
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [deletedPhotoIndexes, setDeletedPhotoIndexes] = useState([]);
 
   const existingItem = useMemo(
     () => (Array.isArray(listings) && listings.length ? listings[0] : null),
@@ -52,7 +62,9 @@ export default function ArtistMarketplaceTab({
   );
 
   useEffect(() => {
-    if (existingItem) setActiveSection("listings");
+    if (existingItem) {
+      setActiveSection("create");
+    }
   }, [existingItem]);
 
   const statusLabel = (s) => {
@@ -60,6 +72,90 @@ export default function ArtistMarketplaceTab({
     if (s === "sold") return "Sold";
     if (s === "hidden") return "Hidden";
     return "Active";
+  };
+
+  // নতুন handleUpdateListing ফাংশন
+  const handleUpdateListing = async () => {
+    try {
+      if (!validateForm()) return;
+
+      setSubmitting(true);
+
+      const formData = new FormData();
+      formData.append("title", currentListing.title);
+      formData.append("description", currentListing.description);
+      formData.append("price", currentListing.price);
+      formData.append("location", currentListing.location);
+      formData.append("status", currentListing.status);
+
+      // Add removed photos to formData
+      deletedPhotoIndexes.forEach((index) => {
+        const photoUrl = existingItem?.photos?.[index];
+        if (photoUrl) {
+          formData.append("removedPhotos[]", photoUrl);
+        }
+      });
+
+      // Add new photos
+      listingPhotos.forEach((photo) => {
+        if (photo instanceof File) {
+          formData.append("photos", photo);
+        }
+      });
+
+      // Handle video
+      if (listingVideos[0] instanceof File) {
+        formData.append("video", listingVideos[0]);
+      } else if (listingVideos.length === 0 && existingItem?.video) {
+        formData.append("removeVideo", "true");
+      }
+
+      // Call the onUpdateListing prop (which should call the API)
+      if (typeof onUpdateListing === "function") {
+        // You might need to adjust this based on how your parent component handles it
+        await onUpdateListing(formData);
+      } else {
+        // Or directly call API if needed
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/market/me`,
+          {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${getToken()}`,
+            },
+            body: formData,
+          }
+        );
+
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.message || "Failed to update listing");
+      }
+
+      toast.success("Listing updated successfully!");
+      setDeletedPhotoIndexes([]);
+      await loadMarketplaceData();
+      setIsEditingListing(false);
+    } catch (err) {
+      console.error("Update error:", err);
+      toast.error(err.message || "Failed to update listing");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // নতুন removeListingPhoto ফাংশন
+  const removeListingPhoto = (index) => {
+    const photo = listingPhotos[index];
+
+    // If it's an existing photo (string URL), track deletion
+    if (typeof photo === "string" && existingItem) {
+      setDeletedPhotoIndexes((prev) => [...prev, index]);
+    }
+
+    const newPhotos = [...listingPhotos];
+    newPhotos.splice(index, 1);
+    setListingPhotos(newPhotos);
   };
 
   // Validate form
@@ -87,22 +183,26 @@ export default function ArtistMarketplaceTab({
     return Object.keys(errors).length === 0;
   };
 
-  const handleCreateOrUpdate = () => {
-    if (!validateForm()) {
-      return;
-    }
+  const handleCreateOrUpdate = async () => {
+    if (!validateForm()) return;
 
-    if (isEditingListing) {
-      onUpdateListing();
-    } else {
-      onCreateListing();
+    try {
+      setSubmitting(true);
+
+      if (existingItem) {
+        await handleUpdateListing();
+      } else {
+        await onCreateListing();
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files);
     const validTypes = ["image/jpeg", "image/png", "image/webp"];
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 15 * 1024 * 1024;
 
     const validFiles = files.filter((file) => {
       if (!validTypes.includes(file.type)) {
@@ -122,7 +222,7 @@ export default function ArtistMarketplaceTab({
   const handleVideoUpload = (e) => {
     const files = Array.from(e.target.files);
     const validTypes = ["video/mp4", "video/quicktime"];
-    const maxSize = 50 * 1024 * 1024; // 50MB
+    const maxSize = 200 * 1024 * 1024; // 50MB
 
     const validFiles = files.filter((file) => {
       if (!validTypes.includes(file.type)) {
@@ -137,6 +237,17 @@ export default function ArtistMarketplaceTab({
     if (validFiles.length > 0) {
       onVideoUpload(validFiles);
     }
+  };
+
+  // Helper function to get token from cookie
+  const getToken = () => {
+    if (typeof document !== "undefined") {
+      return document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("token="))
+        ?.split("=")[1];
+    }
+    return null;
   };
 
   if (!hasMarketplaceAccess) {
@@ -211,9 +322,7 @@ export default function ArtistMarketplaceTab({
             </div>
             <div>
               <p className="text-gray-400 text-sm">Active Listing</p>
-              <p className="text-2xl font-bold text-white">
-                {activeCount}
-              </p>
+              <p className="text-2xl font-bold text-white">{activeCount}</p>
             </div>
           </div>
         </div>
@@ -253,10 +362,11 @@ export default function ArtistMarketplaceTab({
       <div className="flex flex-wrap border-b border-gray-800">
         {/* Create / Edit Listing */}
         <button
-          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeSection === "create"
-            ? "text-white border-b-2 border-yellow-500"
-            : "text-gray-400 hover:text-white"
-            }`}
+          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${
+            activeSection === "create"
+              ? "text-white border-b-2 border-yellow-500"
+              : "text-gray-400 hover:text-white"
+          }`}
           onClick={() => setActiveSection("create")}
         >
           {isEditingListing || existingItem ? (
@@ -274,17 +384,17 @@ export default function ArtistMarketplaceTab({
 
         {/* My Listing */}
         <button
-          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeSection === "listings"
-            ? "text-white border-b-2 border-yellow-500"
-            : "text-gray-400 hover:text-white"
-            }`}
+          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${
+            activeSection === "listings"
+              ? "text-white border-b-2 border-yellow-500"
+              : "text-gray-400 hover:text-white"
+          }`}
           onClick={() => setActiveSection("listings")}
         >
           <List className="w-4 h-4 text-yellow-400" />
           My Listing {existingItem && <span>(1)</span>}
         </button>
       </div>
-
 
       {/* Create/Edit Listing Form */}
       {activeSection === "create" && (
@@ -302,8 +412,9 @@ export default function ArtistMarketplaceTab({
                 value={currentListing.title}
                 onChange={onListingChange}
                 placeholder="e.g., Fender Stratocaster, Studio Session Service"
-                className={`w-full bg-gray-800 border ${formErrors.title ? "border-red-500" : "border-gray-700"
-                  } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                className={`w-full bg-gray-800 border ${
+                  formErrors.title ? "border-red-500" : "border-gray-700"
+                } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500`}
               />
               {formErrors.title && (
                 <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
@@ -330,8 +441,9 @@ export default function ArtistMarketplaceTab({
                   placeholder="0.00"
                   step="0.01"
                   min="0"
-                  className={`w-full bg-gray-800 border ${formErrors.price ? "border-red-500" : "border-gray-700"
-                    } rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                  className={`w-full bg-gray-800 border ${
+                    formErrors.price ? "border-red-500" : "border-gray-700"
+                  } rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
                 />
               </div>
               {formErrors.price && (
@@ -390,15 +502,15 @@ export default function ArtistMarketplaceTab({
                 value={currentListing.description}
                 onChange={onListingChange}
                 rows="6"
-                className={`w-full bg-gray-800 border ${formErrors.description ? "border-red-500" : "border-gray-700"
-                  } rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                className={`w-full bg-gray-800 border ${
+                  formErrors.description ? "border-red-500" : "border-gray-700"
+                } rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
               />
               <p className="mt-2 text-sm text-gray-400">
                 Detailed descriptions increase trust and sales
               </p>
             </div>
           </div>
-
 
           {/* Media Upload Section */}
           <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
@@ -441,7 +553,7 @@ export default function ArtistMarketplaceTab({
                       />
                     </div>
                     <button
-                      onClick={() => onRemovePhoto(index)}
+                      onClick={() => removeListingPhoto(index)}
                       className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition shadow-lg"
                     >
                       <X className="w-4 h-4" />
@@ -545,7 +657,6 @@ export default function ArtistMarketplaceTab({
                 </div>
               )}
             </div>
-
           </div>
 
           {/* Action Buttons */}
@@ -574,9 +685,21 @@ export default function ArtistMarketplaceTab({
 
               <button
                 onClick={handleCreateOrUpdate}
-                className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold rounded-xl hover:opacity-90 hover:scale-105 transition-all duration-300 shadow-lg shadow-orange-500/20"
+                disabled={submitting}
+                className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300
+                  ${
+                    submitting
+                      ? "bg-gray-600 cursor-not-allowed"
+                      : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:scale-105"
+                  }
+                `}
               >
-                {isEditingListing ? (
+                {submitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                    Processing...
+                  </span>
+                ) : existingItem ? (
                   <span className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5" />
                     Update Listing
@@ -599,8 +722,12 @@ export default function ArtistMarketplaceTab({
           {/* Header Section */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-white">Marketplace Listings</h2>
-              <p className="text-gray-400 mt-1">Manage your active listings and track performance</p>
+              <h2 className="text-2xl font-bold text-white">
+                Marketplace Listings
+              </h2>
+              <p className="text-gray-400 mt-1">
+                Manage your active listings and track performance
+              </p>
             </div>
           </div>
 
@@ -612,8 +739,12 @@ export default function ArtistMarketplaceTab({
                   <div className="w-16 h-16 border-4 border-gray-800 rounded-full"></div>
                   <div className="absolute top-0 left-0 w-16 h-16 border-4 border-t-yellow-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
                 </div>
-                <p className="text-gray-400 mt-6 text-lg font-medium">Loading your listing...</p>
-                <p className="text-gray-500 text-sm mt-2">Fetching marketplace data</p>
+                <p className="text-gray-400 mt-6 text-lg font-medium">
+                  Loading your listing...
+                </p>
+                <p className="text-gray-500 text-sm mt-2">
+                  Fetching marketplace data
+                </p>
               </div>
             </div>
           ) : !existingItem ? (
@@ -632,8 +763,9 @@ export default function ArtistMarketplaceTab({
                   No Active Listings
                 </h3>
                 <p className="text-gray-400 text-lg mb-10 leading-relaxed">
-                  Start your marketplace journey by listing gear, services, or merchandise.
-                  Reach thousands of music enthusiasts and professionals.
+                  Start your marketplace journey by listing gear, services, or
+                  merchandise. Reach thousands of music enthusiasts and
+                  professionals.
                 </p>
                 <button
                   onClick={() => setActiveSection("create")}
@@ -651,11 +783,15 @@ export default function ArtistMarketplaceTab({
                     <div className="text-sm">Commission Fee</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-white mb-2">24h</div>
+                    <div className="text-2xl font-bold text-white mb-2">
+                      24h
+                    </div>
                     <div className="text-sm">Avg. Response Time</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-white mb-2">100%</div>
+                    <div className="text-2xl font-bold text-white mb-2">
+                      100%
+                    </div>
                     <div className="text-sm">Secure Transactions</div>
                   </div>
                 </div>
@@ -665,45 +801,61 @@ export default function ArtistMarketplaceTab({
             /* Active Listing Details */
             <div className="bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl overflow-hidden border border-gray-800 shadow-2xl">
               {/* Status Header */}
-              <div className={`px-8 py-4 backdrop-blur-sm ${existingItem.status === "active"
-                ? "bg-gradient-to-r from-green-500/10 to-emerald-500/5"
-                : existingItem.status === "sold"
-                  ? "bg-gradient-to-r from-red-500/10 to-rose-500/5"
-                  : existingItem.status === "reserved"
+              <div
+                className={`px-8 py-4 backdrop-blur-sm ${
+                  existingItem.status === "active"
+                    ? "bg-gradient-to-r from-green-500/10 to-emerald-500/5"
+                    : existingItem.status === "sold"
+                    ? "bg-gradient-to-r from-red-500/10 to-rose-500/5"
+                    : existingItem.status === "reserved"
                     ? "bg-gradient-to-r from-orange-500/10 to-amber-500/5"
                     : "bg-gradient-to-r from-yellow-500/10 to-yellow-500/5"
-                }`}>
+                }`}
+              >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${existingItem.status === "active"
-                      ? "bg-green-500/20"
-                      : existingItem.status === "sold"
-                        ? "bg-red-500/20"
-                        : existingItem.status === "reserved"
+                    <div
+                      className={`p-2 rounded-lg ${
+                        existingItem.status === "active"
+                          ? "bg-green-500/20"
+                          : existingItem.status === "sold"
+                          ? "bg-red-500/20"
+                          : existingItem.status === "reserved"
                           ? "bg-orange-500/20"
                           : "bg-yellow-500/20"
-                      }`}>
-                      <div className={`w-3 h-3 rounded-full ${existingItem.status === "active"
-                        ? "bg-green-500 animate-pulse"
-                        : existingItem.status === "sold"
-                          ? "bg-red-500"
-                          : existingItem.status === "reserved"
+                      }`}
+                    >
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          existingItem.status === "active"
+                            ? "bg-green-500 animate-pulse"
+                            : existingItem.status === "sold"
+                            ? "bg-red-500"
+                            : existingItem.status === "reserved"
                             ? "bg-orange-500"
                             : "bg-yellow-500"
-                        }`}></div>
+                        }`}
+                      ></div>
                     </div>
                     <div>
-                      <h4 className="text-sm font-semibold text-gray-300">Listing Status</h4>
-                      <p className={`text-lg font-bold ${existingItem.status === "active"
-                        ? "text-green-400"
-                        : existingItem.status === "sold"
-                          ? "text-red-400"
-                          : existingItem.status === "reserved"
+                      <h4 className="text-sm font-semibold text-gray-300">
+                        Listing Status
+                      </h4>
+                      <p
+                        className={`text-lg font-bold ${
+                          existingItem.status === "active"
+                            ? "text-green-400"
+                            : existingItem.status === "sold"
+                            ? "text-red-400"
+                            : existingItem.status === "reserved"
                             ? "text-orange-400"
                             : "text-yellow-400"
-                        }`}>
-                        {existingItem.status.charAt(0).toUpperCase() + existingItem.status.slice(1)}
-                        {existingItem.status === "active" && " • Accepting Offers"}
+                        }`}
+                      >
+                        {existingItem.status.charAt(0).toUpperCase() +
+                          existingItem.status.slice(1)}
+                        {existingItem.status === "active" &&
+                          " • Accepting Offers"}
                       </p>
                     </div>
                   </div>
@@ -711,11 +863,14 @@ export default function ArtistMarketplaceTab({
                     <div className="text-right">
                       <p className="text-sm text-gray-400">Listed</p>
                       <p className="font-medium text-white">
-                        {new Date(existingItem.createdAt).toLocaleDateString('en-US', {
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
+                        {new Date(existingItem.createdAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          }
+                        )}
                       </p>
                     </div>
                     <div className="w-8 h-8 bg-gray-800 rounded-lg flex items-center justify-center">
@@ -744,9 +899,11 @@ export default function ArtistMarketplaceTab({
                     {/* Main Image Gallery */}
                     <div className="space-y-4">
                       <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 to-black border-2 border-gray-800 shadow-xl">
-                        {existingItem.photos?.[0] ? (
-                          <img
-                            src={existingItem.photos[0]}
+                        {existingItem.photos?.[selectedImageIndex] ? (
+                          <Image
+                            width="800"
+                            height="800"
+                            src={existingItem.photos[selectedImageIndex]}
                             alt={existingItem.title}
                             className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                           />
@@ -763,30 +920,40 @@ export default function ArtistMarketplaceTab({
                       </div>
 
                       {/* Thumbnail Strip */}
-                      {existingItem.photos && existingItem.photos.length > 1 && (
-                        <div className="flex gap-3 overflow-x-auto pb-2">
-                          {existingItem.photos.map((photo, index) => (
-                            <button
-                              key={index}
-                              className="flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-800 hover:border-yellow-500 transition-all duration-300"
-                              onClick={() => {/* Add gallery navigation */ }}
-                            >
-                              <img
-                                src={photo}
-                                alt={`${existingItem.title} ${index + 1}`}
-                                className="w-full h-full object-cover"
-                              />
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                      {existingItem.photos &&
+                        existingItem.photos.length > 1 && (
+                          <div className="flex gap-3 overflow-x-auto pb-2">
+                            {existingItem.photos.map((photo, index) => (
+                              <button
+                                key={index}
+                                onClick={() => setSelectedImageIndex(index)}
+                                className={`flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border-2 transition-all duration-300
+                                  ${
+                                    selectedImageIndex === index
+                                      ? "border-yellow-500"
+                                      : "border-gray-800 hover:border-yellow-500"
+                                  }`}
+                              >
+                                <Image
+                                  width="400"
+                                  height="400"
+                                  src={photo}
+                                  alt={`${existingItem.title} ${index + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        )}
                     </div>
 
                     {/* Description */}
                     <div className="bg-gray-900/50 rounded-2xl p-6 border border-gray-800">
                       <div className="flex items-center gap-3 mb-6">
                         <FileText className="w-6 h-6 text-yellow-500" />
-                        <h3 className="text-xl font-bold text-white">Description</h3>
+                        <h3 className="text-xl font-bold text-white">
+                          Description
+                        </h3>
                       </div>
                       <div className="prose prose-invert max-w-none">
                         <p className="text-gray-300 leading-relaxed whitespace-pre-line">
@@ -801,7 +968,9 @@ export default function ArtistMarketplaceTab({
                     <div className="sticky top-8 space-y-6">
                       {/* Action Card */}
                       <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-800 shadow-xl">
-                        <h4 className="text-lg font-bold text-white mb-6">Manage Listing</h4>
+                        <h4 className="text-lg font-bold text-white mb-6">
+                          Manage Listing
+                        </h4>
 
                         <div className="space-y-4">
                           <button
@@ -819,7 +988,11 @@ export default function ArtistMarketplaceTab({
 
                           <button
                             onClick={() => {
-                              if (window.confirm('Are you sure you want to delete this listing?')) {
+                              if (
+                                window.confirm(
+                                  "Are you sure you want to delete this listing?"
+                                )
+                              ) {
                                 onDeleteListing(existingItem._id);
                               }
                             }}
@@ -844,7 +1017,9 @@ export default function ArtistMarketplaceTab({
                               <p className="text-gray-400 text-sm">Photos</p>
                               <p className="text-2xl font-bold text-white mt-1">
                                 {existingItem.photos?.length || 0}
-                                <span className="text-gray-500 text-sm ml-1">/5 max</span>
+                                <span className="text-gray-500 text-sm ml-1">
+                                  /5 max
+                                </span>
                               </p>
                             </div>
 
@@ -855,14 +1030,15 @@ export default function ArtistMarketplaceTab({
                                 {Array.isArray(existingItem.videos)
                                   ? existingItem.videos.length
                                   : existingItem.video
-                                    ? 1
-                                    : 0}
-                                <span className="text-gray-500 text-sm ml-1">uploaded</span>
+                                  ? 1
+                                  : 0}
+                                <span className="text-gray-500 text-sm ml-1">
+                                  uploaded
+                                </span>
                               </p>
                             </div>
                           </div>
                         </div>
-
                       </div>
 
                       {/* Listing Video */}

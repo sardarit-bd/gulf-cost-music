@@ -39,7 +39,6 @@ const getHeaders = (isFormData = false) => {
 };
 
 const api = {
-  // Artist Profile
   getMyArtistProfile: () =>
     fetch(`${API_URL}/api/artists/profile/me`, { headers: getHeaders() }).then(
       async (res) => {
@@ -61,7 +60,6 @@ const api = {
     });
   },
 
-  // Marketplace
   getMyMarketItem: () =>
     fetch(`${API_URL}/api/market/me`, { headers: getHeaders() }).then(
       async (res) => {
@@ -221,6 +219,7 @@ export default function ArtistDashboard() {
   const [billingData, setBillingData] = useState(null);
   const [invoices, setInvoices] = useState([]);
   const [billingLoading, setBillingLoading] = useState(false);
+  const [deletedPhotoIndexes, setDeletedPhotoIndexes] = useState([]);
 
   const [currentListing, setCurrentListing] = useState({
     title: "",
@@ -273,32 +272,33 @@ export default function ArtistDashboard() {
 
         // Ensure we only set valid photos with URLs
         const validPhotos = (artistData.photos || [])
-          .filter(photo =>
-            photo &&
-            photo.url &&
-            typeof photo.url === 'string' &&
-            photo.url.trim() !== "" &&
-            !photo.url.includes("undefined") &&
-            !photo.url.includes("null")
+          .filter(
+            (photo) =>
+              photo &&
+              photo.url &&
+              typeof photo.url === "string" &&
+              photo.url.trim() !== "" &&
+              !photo.url.includes("undefined") &&
+              !photo.url.includes("null")
           )
-          .map(p => ({
+          .map((p) => ({
             url: p.url,
-            filename: p.filename || p.url.split('/').pop(),
-            isNew: false
+            filename: p.filename || p.url.split("/").pop(),
+            isNew: false,
           }));
 
         setPreviewImages(validPhotos);
 
         // Ensure valid audio files
-        const validAudios = (artistData.mp3Files || [])
-          .filter(audio =>
+        const validAudios = (artistData.mp3Files || []).filter(
+          (audio) =>
             audio &&
             audio.url &&
-            typeof audio.url === 'string' &&
+            typeof audio.url === "string" &&
             audio.url.trim() !== "" &&
             !audio.url.includes("undefined") &&
             !audio.url.includes("null")
-          );
+        );
 
         setAudioPreview(validAudios);
       } else {
@@ -322,6 +322,8 @@ export default function ArtistDashboard() {
       if (response.success) {
         if (response.data) {
           setListings([response.data]);
+          setIsEditingListing(true);
+          setActiveTab("marketplace");
           setCurrentListing({
             title: response.data.title || "",
             description: response.data.description || "",
@@ -592,6 +594,11 @@ export default function ArtistDashboard() {
   };
 
   const handleCreateListing = async () => {
+    if (listings.length > 0) {
+      toast.error("You already have a listing. Please edit it.");
+      return;
+    }
+
     if (
       !currentListing.title ||
       !currentListing.description ||
@@ -644,21 +651,26 @@ export default function ArtistDashboard() {
   const handleUpdateListing = async () => {
     try {
       const formData = new FormData();
+
       formData.append("title", currentListing.title);
       formData.append("description", currentListing.description);
       formData.append("price", currentListing.price);
       formData.append("location", currentListing.location);
       formData.append("status", currentListing.status);
 
-      // Append new photos only (existing photos are already in backend)
-      listingPhotos.forEach((photo, index) => {
+      // NEW photos only
+      listingPhotos.forEach((photo) => {
         if (photo instanceof File) {
           formData.append("photos", photo);
         }
       });
 
-      // Append video if new
-      if (listingVideos.length > 0 && listingVideos[0] instanceof File) {
+      // deleted photo indexes
+      deletedPhotoIndexes.forEach((i) => {
+        formData.append("deletedPhotos[]", i);
+      });
+
+      if (listingVideos[0] instanceof File) {
         formData.append("video", listingVideos[0]);
       }
 
@@ -666,13 +678,11 @@ export default function ArtistDashboard() {
 
       if (response.success) {
         toast.success("Listing updated successfully!");
+        setDeletedPhotoIndexes([]); // reset
         await loadMarketplaceData();
         setIsEditingListing(false);
-      } else {
-        toast.error(response.message || "Failed to update listing");
       }
-    } catch (error) {
-      console.error("Error updating listing:", error);
+    } catch (err) {
       toast.error("Failed to update listing");
     }
   };
@@ -773,17 +783,12 @@ export default function ArtistDashboard() {
     setListingVideos([file]);
   };
 
-  const removeListingPhoto = async (index) => {
+  const removeListingPhoto = (index) => {
     const photo = listingPhotos[index];
 
-    if (typeof photo === "string" && photo.startsWith("http")) {
-      try {
-        await api.deleteMarketPhoto(index);
-        toast.success("Photo deleted from server");
-      } catch (error) {
-        toast.error("Failed to delete photo from server");
-        return;
-      }
+    // if existing photo (string URL), track deletion
+    if (typeof photo === "string") {
+      setDeletedPhotoIndexes((prev) => [...prev, index]);
     }
 
     const newPhotos = [...listingPhotos];
@@ -813,12 +818,12 @@ export default function ArtistDashboard() {
     const newImages = [...previewImages];
     const newPhotoFiles = [];
 
-    files.forEach(file => {
+    files.forEach((file) => {
       newImages.push({
         url: URL.createObjectURL(file),
         filename: file.name,
         file,
-        isNew: true
+        isNew: true,
       });
     });
 
@@ -884,15 +889,12 @@ export default function ArtistDashboard() {
         return;
       }
 
-      const res = await fetch(
-        `${API_URL}/api/subscription/checkout/pro`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await fetch(`${API_URL}/api/subscription/checkout/pro`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       const data = await res.json();
 
@@ -990,6 +992,9 @@ export default function ArtistDashboard() {
               onEditListing={handleEditListing}
               onDeleteListing={handleDeleteListing}
               onCancelEdit={handleCancelEdit}
+              loadMarketplaceData={loadMarketplaceData}
+              setListingPhotos={setListingPhotos}
+              setIsEditingListing={setIsEditingListing}
             />
           )}
 
@@ -1006,7 +1011,6 @@ export default function ArtistDashboard() {
               onDownloadInvoice={handleDownloadInvoice}
             />
           )}
-
         </div>
       </div>
     </div>
