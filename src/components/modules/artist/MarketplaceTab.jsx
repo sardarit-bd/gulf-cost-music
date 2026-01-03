@@ -106,7 +106,7 @@ export default function ArtistMarketplaceTab({
       // Handle video
       if (listingVideos[0] instanceof File) {
         formData.append("video", listingVideos[0]);
-      } else if (listingVideos.length === 0 && existingItem?.video) {
+      } else if (listingVideos.length === 0 && existingItem?.videos?.length) {
         formData.append("removeVideo", "true");
       }
 
@@ -362,11 +362,10 @@ export default function ArtistMarketplaceTab({
       <div className="flex flex-wrap border-b border-gray-800">
         {/* Create / Edit Listing */}
         <button
-          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${
-            activeSection === "create"
-              ? "text-white border-b-2 border-yellow-500"
-              : "text-gray-400 hover:text-white"
-          }`}
+          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeSection === "create"
+            ? "text-white border-b-2 border-yellow-500"
+            : "text-gray-400 hover:text-white"
+            }`}
           onClick={() => setActiveSection("create")}
         >
           {isEditingListing || existingItem ? (
@@ -384,11 +383,10 @@ export default function ArtistMarketplaceTab({
 
         {/* My Listing */}
         <button
-          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${
-            activeSection === "listings"
-              ? "text-white border-b-2 border-yellow-500"
-              : "text-gray-400 hover:text-white"
-          }`}
+          className={`flex items-center gap-2 px-6 py-3 font-medium text-sm transition-all ${activeSection === "listings"
+            ? "text-white border-b-2 border-yellow-500"
+            : "text-gray-400 hover:text-white"
+            }`}
           onClick={() => setActiveSection("listings")}
         >
           <List className="w-4 h-4 text-yellow-400" />
@@ -412,9 +410,8 @@ export default function ArtistMarketplaceTab({
                 value={currentListing.title}
                 onChange={onListingChange}
                 placeholder="e.g., Fender Stratocaster, Studio Session Service"
-                className={`w-full bg-gray-800 border ${
-                  formErrors.title ? "border-red-500" : "border-gray-700"
-                } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                className={`w-full bg-gray-800 border ${formErrors.title ? "border-red-500" : "border-gray-700"
+                  } rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-500`}
               />
               {formErrors.title && (
                 <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
@@ -441,9 +438,8 @@ export default function ArtistMarketplaceTab({
                   placeholder="0.00"
                   step="0.01"
                   min="0"
-                  className={`w-full bg-gray-800 border ${
-                    formErrors.price ? "border-red-500" : "border-gray-700"
-                  } rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                  className={`w-full bg-gray-800 border ${formErrors.price ? "border-red-500" : "border-gray-700"
+                    } rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
                 />
               </div>
               {formErrors.price && (
@@ -502,9 +498,8 @@ export default function ArtistMarketplaceTab({
                 value={currentListing.description}
                 onChange={onListingChange}
                 rows="6"
-                className={`w-full bg-gray-800 border ${
-                  formErrors.description ? "border-red-500" : "border-gray-700"
-                } rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
+                className={`w-full bg-gray-800 border ${formErrors.description ? "border-red-500" : "border-gray-700"
+                  } rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
               />
               <p className="mt-2 text-sm text-gray-400">
                 Detailed descriptions increase trust and sales
@@ -687,10 +682,9 @@ export default function ArtistMarketplaceTab({
                 onClick={handleCreateOrUpdate}
                 disabled={submitting}
                 className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300
-                  ${
-                    submitting
-                      ? "bg-gray-600 cursor-not-allowed"
-                      : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:scale-105"
+                  ${submitting
+                    ? "bg-gray-600 cursor-not-allowed"
+                    : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:scale-105"
                   }
                 `}
               >
@@ -802,39 +796,36 @@ export default function ArtistMarketplaceTab({
             <div className="bg-gradient-to-br from-gray-900 to-gray-950 rounded-2xl overflow-hidden border border-gray-800 shadow-2xl">
               {/* Status Header */}
               <div
-                className={`px-8 py-4 backdrop-blur-sm ${
-                  existingItem.status === "active"
-                    ? "bg-gradient-to-r from-green-500/10 to-emerald-500/5"
-                    : existingItem.status === "sold"
+                className={`px-8 py-4 backdrop-blur-sm ${existingItem.status === "active"
+                  ? "bg-gradient-to-r from-green-500/10 to-emerald-500/5"
+                  : existingItem.status === "sold"
                     ? "bg-gradient-to-r from-red-500/10 to-rose-500/5"
                     : existingItem.status === "reserved"
-                    ? "bg-gradient-to-r from-orange-500/10 to-amber-500/5"
-                    : "bg-gradient-to-r from-yellow-500/10 to-yellow-500/5"
-                }`}
+                      ? "bg-gradient-to-r from-orange-500/10 to-amber-500/5"
+                      : "bg-gradient-to-r from-yellow-500/10 to-yellow-500/5"
+                  }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div
-                      className={`p-2 rounded-lg ${
-                        existingItem.status === "active"
-                          ? "bg-green-500/20"
-                          : existingItem.status === "sold"
+                      className={`p-2 rounded-lg ${existingItem.status === "active"
+                        ? "bg-green-500/20"
+                        : existingItem.status === "sold"
                           ? "bg-red-500/20"
                           : existingItem.status === "reserved"
-                          ? "bg-orange-500/20"
-                          : "bg-yellow-500/20"
-                      }`}
+                            ? "bg-orange-500/20"
+                            : "bg-yellow-500/20"
+                        }`}
                     >
                       <div
-                        className={`w-3 h-3 rounded-full ${
-                          existingItem.status === "active"
-                            ? "bg-green-500 animate-pulse"
-                            : existingItem.status === "sold"
+                        className={`w-3 h-3 rounded-full ${existingItem.status === "active"
+                          ? "bg-green-500 animate-pulse"
+                          : existingItem.status === "sold"
                             ? "bg-red-500"
                             : existingItem.status === "reserved"
-                            ? "bg-orange-500"
-                            : "bg-yellow-500"
-                        }`}
+                              ? "bg-orange-500"
+                              : "bg-yellow-500"
+                          }`}
                       ></div>
                     </div>
                     <div>
@@ -842,15 +833,14 @@ export default function ArtistMarketplaceTab({
                         Listing Status
                       </h4>
                       <p
-                        className={`text-lg font-bold ${
-                          existingItem.status === "active"
-                            ? "text-green-400"
-                            : existingItem.status === "sold"
+                        className={`text-lg font-bold ${existingItem.status === "active"
+                          ? "text-green-400"
+                          : existingItem.status === "sold"
                             ? "text-red-400"
                             : existingItem.status === "reserved"
-                            ? "text-orange-400"
-                            : "text-yellow-400"
-                        }`}
+                              ? "text-orange-400"
+                              : "text-yellow-400"
+                          }`}
                       >
                         {existingItem.status.charAt(0).toUpperCase() +
                           existingItem.status.slice(1)}
@@ -928,10 +918,9 @@ export default function ArtistMarketplaceTab({
                                 key={index}
                                 onClick={() => setSelectedImageIndex(index)}
                                 className={`flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border-2 transition-all duration-300
-                                  ${
-                                    selectedImageIndex === index
-                                      ? "border-yellow-500"
-                                      : "border-gray-800 hover:border-yellow-500"
+                                  ${selectedImageIndex === index
+                                    ? "border-yellow-500"
+                                    : "border-gray-800 hover:border-yellow-500"
                                   }`}
                               >
                                 <Image
@@ -972,7 +961,7 @@ export default function ArtistMarketplaceTab({
                           Manage Listing
                         </h4>
 
-                        <div className="space-y-4">
+                        <div className="flex justify-center items-center space-x-4">
                           <button
                             onClick={() => {
                               onEditListing(existingItem);
@@ -1030,8 +1019,8 @@ export default function ArtistMarketplaceTab({
                                 {Array.isArray(existingItem.videos)
                                   ? existingItem.videos.length
                                   : existingItem.video
-                                  ? 1
-                                  : 0}
+                                    ? 1
+                                    : 0}
                                 <span className="text-gray-500 text-sm ml-1">
                                   uploaded
                                 </span>
@@ -1042,7 +1031,7 @@ export default function ArtistMarketplaceTab({
                       </div>
 
                       {/* Listing Video */}
-                      {existingItem.video && (
+                      {existingItem.videos?.length > 0 && (
                         <div className="bg-gray-900/50 rounded-2xl p-4 border border-gray-800">
                           <h4 className="text-sm font-semibold text-gray-300 mb-3">
                             Listing Video
@@ -1050,10 +1039,10 @@ export default function ArtistMarketplaceTab({
 
                           <div className="relative aspect-video rounded-xl overflow-hidden border border-gray-700">
                             <video
-                              src={existingItem.video}
+                              src={existingItem.videos[0]}
                               controls
-                              className="w-full h-full object-cover"
                               preload="metadata"
+                              className="w-full h-full object-cover"
                             >
                               Your browser does not support the video tag.
                             </video>

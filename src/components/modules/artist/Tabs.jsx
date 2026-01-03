@@ -25,7 +25,6 @@ export default function Tabs({
     },
   ];
 
-  // Marketplace → only verified users
   if (isVerified) {
     tabs.push({
       id: "marketplace",
@@ -34,7 +33,6 @@ export default function Tabs({
     });
   }
 
-  // Billing → ALL users
   tabs.push({
     id: "billing",
     label: "Billing",

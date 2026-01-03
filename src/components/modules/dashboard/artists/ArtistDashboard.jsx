@@ -3,6 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
+import { api } from "../../artist/apiService";
 import EditProfileTab from "../../artist/EditProfileTab";
 import Header from "../../artist/Header";
 import ArtistMarketplaceTab from "../../artist/MarketplaceTab";
@@ -10,173 +11,6 @@ import OverviewTab from "../../artist/OverviewTab";
 import PlanStats from "../../artist/PlanStats";
 import Tabs from "../../artist/Tabs";
 import BillingTab from "../billing/BillingTab";
-
-const API_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
-
-const getToken = () => {
-  if (typeof document !== "undefined") {
-    return document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("token="))
-      ?.split("=")[1];
-  }
-  return null;
-};
-
-const getHeaders = (isFormData = false) => {
-  const token = getToken();
-  const headers = {};
-
-  if (!isFormData) {
-    headers["Content-Type"] = "application/json";
-  }
-
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-
-  return headers;
-};
-
-const api = {
-  getMyArtistProfile: () =>
-    fetch(`${API_URL}/api/artists/profile/me`, { headers: getHeaders() }).then(
-      async (res) => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Failed to fetch profile");
-        return data;
-      }
-    ),
-
-  updateArtistProfile: (formData) => {
-    return fetch(`${API_URL}/api/artists/profile`, {
-      method: "POST",
-      headers: getHeaders(true),
-      body: formData,
-    }).then(async (res) => {
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to update profile");
-      return data;
-    });
-  },
-
-  getMyMarketItem: () =>
-    fetch(`${API_URL}/api/market/me`, { headers: getHeaders() }).then(
-      async (res) => {
-        const data = await res.json();
-        if (!res.ok)
-          throw new Error(data.message || "Failed to fetch market item");
-        return data;
-      }
-    ),
-
-  createMarketItem: (formData) => {
-    return fetch(`${API_URL}/api/market/me`, {
-      method: "POST",
-      headers: getHeaders(true),
-      body: formData,
-    }).then(async (res) => {
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to create listing");
-      return data;
-    });
-  },
-
-  updateMarketItem: (formData) => {
-    return fetch(`${API_URL}/api/market/me`, {
-      method: "PUT",
-      headers: getHeaders(true),
-      body: formData,
-    }).then(async (res) => {
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to update listing");
-      return data;
-    });
-  },
-
-  deleteMarketItem: () =>
-    fetch(`${API_URL}/api/market/me`, {
-      method: "DELETE",
-      headers: getHeaders(),
-    }).then(async (res) => {
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to delete listing");
-      return data;
-    }),
-
-  deleteMarketPhoto: (index) =>
-    fetch(`${API_URL}/api/market/me/photos/${index}`, {
-      method: "DELETE",
-      headers: getHeaders(),
-    }).then(async (res) => {
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to delete photo");
-      return data;
-    }),
-
-  // Billing
-  getBillingStatus: () =>
-    fetch(`${API_URL}/api/subscription/status`, { headers: getHeaders() }).then(
-      async (res) => {
-        const data = await res.json();
-        if (!res.ok)
-          throw new Error(data.message || "Failed to fetch billing status");
-        return data;
-      }
-    ),
-
-  createCheckoutSession: () =>
-    fetch(`${API_URL}/api/subscription/checkout/pro`, {
-      method: "POST",
-      headers: getHeaders(),
-    }).then(async (res) => {
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to create checkout");
-      return data;
-    }),
-
-  createBillingPortal: () =>
-    fetch(`${API_URL}/api/subscription/portal`, {
-      method: "POST",
-      headers: getHeaders(),
-    }).then(async (res) => {
-      const data = await res.json();
-      if (!res.ok)
-        throw new Error(data.message || "Failed to create billing portal");
-      return data;
-    }),
-
-  cancelSubscription: () =>
-    fetch(`${API_URL}/api/subscription/cancel`, {
-      method: "POST",
-      headers: getHeaders(),
-    }).then(async (res) => {
-      const data = await res.json();
-      if (!res.ok)
-        throw new Error(data.message || "Failed to cancel subscription");
-      return data;
-    }),
-
-  resumeSubscription: () =>
-    fetch(`${API_URL}/api/subscription/resume`, {
-      method: "POST",
-      headers: getHeaders(),
-    }).then(async (res) => {
-      const data = await res.json();
-      if (!res.ok)
-        throw new Error(data.message || "Failed to resume subscription");
-      return data;
-    }),
-
-  getInvoices: () =>
-    fetch(`${API_URL}/api/subscription/invoices`, {
-      headers: getHeaders(),
-    }).then(async (res) => {
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to fetch invoices");
-      return data;
-    }),
-};
 
 // Subscription Rules
 const SUBSCRIPTION_RULES = {
@@ -232,6 +66,8 @@ export default function ArtistDashboard() {
   const [listingPhotos, setListingPhotos] = useState([]);
   const [listingVideos, setListingVideos] = useState([]);
   const [isEditingListing, setIsEditingListing] = useState(false);
+  // const [listingVideos, setListingVideos] = useState([]);
+
 
   const [saving, setSaving] = useState(false);
   const [uploadLimits, setUploadLimits] = useState({
@@ -262,6 +98,15 @@ export default function ArtistDashboard() {
       });
     }
   }, [subscriptionPlan]);
+
+  // useEffect(() => {
+  //   if (existingItem?.videos?.length) {
+  //     setListingVideos(existingItem.videos);
+  //   } else {
+  //     setListingVideos([]);
+  //   }
+  // }, [existingItem]);
+
 
   const loadArtistProfile = async () => {
     try {
@@ -323,7 +168,6 @@ export default function ArtistDashboard() {
         if (response.data) {
           setListings([response.data]);
           setIsEditingListing(true);
-          setActiveTab("marketplace");
           setCurrentListing({
             title: response.data.title || "",
             description: response.data.description || "",
@@ -332,7 +176,10 @@ export default function ArtistDashboard() {
             status: response.data.status || "active",
           });
           setListingPhotos(response.data.photos || []);
-          setListingVideos(response.data.video ? [response.data.video] : []);
+          setListingVideos(
+            Array.isArray(response.data.videos) ? response.data.videos : []
+          );
+
         } else {
           setListings([]);
         }
@@ -541,34 +388,80 @@ export default function ArtistDashboard() {
     setArtist((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = async () => {
+  const handleSave = async (saveDataOrFormData) => {
     try {
       setSaving(true);
 
-      const formData = new FormData();
-      formData.append("name", artist.name);
-      formData.append("city", artist.city);
-      formData.append("genre", artist.genre);
+      let formData;
 
-      if (subscriptionPlan === "pro") {
-        formData.append("biography", artist.biography || "");
+      // Check if saveDataOrFormData is FormData or plain object
+      if (saveDataOrFormData instanceof FormData) {
+        // If it's already FormData, use it directly
+        formData = saveDataOrFormData;
+
+        // Add basic fields if not already present
+        if (!formData.has('name')) {
+          formData.append("name", artist.name || "");
+        }
+        if (!formData.has('city')) {
+          formData.append("city", artist.city || "");
+        }
+        if (!formData.has('genre')) {
+          formData.append("genre", artist.genre || "");
+        }
+        if (subscriptionPlan === "pro" && !formData.has('biography')) {
+          formData.append("biography", artist.biography || "");
+        }
+      } else {
+        // If it's plain object (old format), convert to FormData
+        formData = new FormData();
+        const saveData = saveDataOrFormData;
+
+        formData.append("name", saveData.name || artist.name || "");
+        formData.append("city", saveData.city || artist.city || "");
+        formData.append("genre", saveData.genre || artist.genre || "");
+
+        if (subscriptionPlan === "pro") {
+          formData.append("biography", saveData.biography || artist.biography || "");
+        }
+
+        // Add removed photos and audios
+        if (saveData.removedPhotos && saveData.removedPhotos.length > 0) {
+          saveData.removedPhotos.forEach(filename => {
+            formData.append("removedPhotos", filename);
+          });
+        }
+
+        if (saveData.removedAudios && saveData.removedAudios.length > 0) {
+          saveData.removedAudios.forEach(filename => {
+            formData.append("removedAudios", filename);
+          });
+        }
+
+        // Add new photo files
+        if (saveData.newPhotos && saveData.newPhotos.length > 0) {
+          saveData.newPhotos.forEach((photo) => {
+            if (photo instanceof File) {
+              formData.append("photos", photo);
+            }
+          });
+        }
+
+        // Add new audio files
+        if (saveData.newAudios && saveData.newAudios.length > 0) {
+          saveData.newAudios.forEach((audio) => {
+            if (audio instanceof File) {
+              formData.append("mp3Files", audio);
+            }
+          });
+        }
       }
 
-      // Handle file uploads for photos
-      const photoFiles =
-        artist.photos?.filter((photo) => photo instanceof File) || [];
-      photoFiles.forEach((photo, index) => {
-        formData.append("photos", photo);
-      });
-
-      // Handle file uploads for audio
-      const audioFiles = audioPreview
-        .filter((audio) => audio.file && audio.file instanceof File)
-        .map((audio) => audio.file);
-
-      audioFiles.forEach((audio, index) => {
-        formData.append("mp3Files", audio);
-      });
+      // Debug: Check FormData contents
+      console.log("=== FormData Debug ===");
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ':', pair[1]);
+      }
 
       const response = await api.updateArtistProfile(formData);
 
@@ -587,7 +480,6 @@ export default function ArtistDashboard() {
     }
   };
 
-  // Marketplace Handlers (existing code remains same...)
   const handleListingChange = (e) => {
     const { name, value } = e.target;
     setCurrentListing((prev) => ({ ...prev, [name]: value }));
@@ -859,24 +751,6 @@ export default function ArtistDashboard() {
     setAudioPreview(newAudios);
   };
 
-  const removeImage = (index) => {
-    const newImages = [...previewImages];
-    newImages.splice(index, 1);
-    setPreviewImages(newImages);
-
-    setArtist((prev) => {
-      const newPhotos = [...(prev.photos || [])];
-      newPhotos.splice(index, 1);
-      return { ...prev, photos: newPhotos };
-    });
-  };
-
-  const removeAudio = (index) => {
-    const newAudios = [...audioPreview];
-    newAudios.splice(index, 1);
-    setAudioPreview(newAudios);
-  };
-
   const handleProCheckout = async () => {
     try {
       const token = document.cookie
@@ -964,9 +838,9 @@ export default function ArtistDashboard() {
               uploadLimits={uploadLimits}
               onChange={handleChange}
               onImageUpload={handleImageUpload}
-              onRemoveImage={removeImage}
+              // onRemoveImage={removeImage}
               onAudioUpload={handleAudioUpload}
-              onRemoveAudio={removeAudio}
+              // onRemoveAudio={removeAudio}
               onSave={handleSave}
               saving={saving}
             />
@@ -995,6 +869,8 @@ export default function ArtistDashboard() {
               loadMarketplaceData={loadMarketplaceData}
               setListingPhotos={setListingPhotos}
               setIsEditingListing={setIsEditingListing}
+              listingVideos={listingVideos}
+              setListingVideos={setListingVideos}
             />
           )}
 

@@ -36,30 +36,75 @@ export default function EditProfileTab({
 }) {
   const [removedPhotos, setRemovedPhotos] = useState([]);
   const [removedAudios, setRemovedAudios] = useState([]);
-  const [localPreviewImages, setLocalPreviewImages] = useState([]);
-  const [localAudioPreview, setLocalAudioPreview] = useState([]);
+  const [localImages, setLocalImages] = useState([]);
+  const [localAudios, setLocalAudios] = useState([]);
 
   // Initialize local state
   useEffect(() => {
-    setLocalPreviewImages(
-      previewImages.filter(
-        (img) =>
-          img &&
-          (typeof img === "string"
-            ? img.trim() !== ""
-            : img.url && img.url.trim() !== "")
-      )
-    );
-    setLocalAudioPreview(
-      audioPreview.filter(
-        (audio) =>
-          audio &&
-          (typeof audio === "string"
-            ? audio.trim() !== ""
-            : audio.url && audio.url.trim() !== "")
-      )
-    );
+    // ================= IMAGES (UNCHANGED) =================
+    const formattedImages = previewImages.map((img) => {
+      if (typeof img === "string") {
+        const filename = img.split("/").pop();
+        return {
+          url: img,
+          filename,
+          isNew: false,
+          isRemoved: false,
+        };
+      }
+
+      return {
+        url: img.url || "",
+        filename: img.filename || img.url?.split("/").pop() || "",
+        file: img.file,
+        isNew: img.isNew || false,
+        isRemoved: false,
+      };
+    }).filter(img => img.url && img.url.trim() !== "");
+
+    setLocalImages(formattedImages);
+
+    // ================= AUDIO (FIXED PART) =================
+    setLocalAudios(prev => {
+      // 🔥 keep newly uploaded audios (file সহ)
+      const existingNewAudios = prev.filter(a => a.isNew && a.file);
+
+      // backend / preview audios normalize
+      const formattedAudios = audioPreview
+        .map((audio) => {
+          if (typeof audio === "string") {
+            const filename = audio.split("/").pop();
+            return {
+              url: audio,
+              filename,
+              name: filename,
+              isNew: false,
+              isRemoved: false,
+            };
+          }
+
+          if (audio?.url) {
+            return {
+              url: audio.url,
+              filename: audio.filename || audio.url.split("/").pop(),
+              name: audio.name || audio.filename || "",
+              isNew: false,
+              isRemoved: false,
+            };
+          }
+
+          return null;
+        })
+        .filter(Boolean);
+
+      // ✅ merge: backend audios + new uploads
+      return [...formattedAudios, ...existingNewAudios];
+    });
+
+    setRemovedPhotos([]);
+    setRemovedAudios([]);
   }, [previewImages, audioPreview]);
+
 
   const handleImageUpload = async (files) => {
     if (subscriptionPlan !== "pro") {
@@ -67,7 +112,9 @@ export default function EditProfileTab({
       return;
     }
 
-    const totalPhotos = localPreviewImages.length + files.length;
+    const currentVisibleImages = localImages.filter(img => !img.isRemoved);
+    const totalPhotos = currentVisibleImages.length + files.length;
+
     if (totalPhotos > uploadLimits.photos) {
       toast.error(
         `Maximum ${uploadLimits.photos} photos allowed for ${subscriptionPlan} plan`
@@ -75,36 +122,45 @@ export default function EditProfileTab({
       return;
     }
 
-    const newImages = [...localPreviewImages];
+    const newImages = [...localImages];
     files.forEach((file) => {
       newImages.push({
         url: URL.createObjectURL(file),
         filename: file.name,
         file: file,
         isNew: true,
-        isRemoved: false,
+        isRemoved: false
       });
     });
 
-    setLocalPreviewImages(newImages);
-    onImageUpload(files); // Pass to parent
+    setLocalImages(newImages);
+    onImageUpload(files);
   };
 
   const handleRemoveImage = (index) => {
-    const imageToRemove = localPreviewImages[index];
+    const imageToRemove = localImages[index];
 
-    // If it's an existing image (not newly uploaded), add to removed list
-    if (!imageToRemove.isNew && imageToRemove.filename) {
-      setRemovedPhotos((prev) => [...prev, imageToRemove.filename]);
+    if (!imageToRemove.isNew) {
+      // Mark existing image as removed
+      const updatedImages = [...localImages];
+      updatedImages[index] = {
+        ...imageToRemove,
+        isRemoved: true
+      };
+      setLocalImages(updatedImages);
+
+      // Add filename to removed list
+      if (imageToRemove.filename) {
+        setRemovedPhotos(prev => [...prev, imageToRemove.filename]);
+      }
+    } else {
+      // Remove new image completely
+      const updatedImages = [...localImages];
+      updatedImages.splice(index, 1);
+      setLocalImages(updatedImages);
     }
 
-    // Remove from local state
-    const newImages = [...localPreviewImages];
-    newImages.splice(index, 1);
-    setLocalPreviewImages(newImages);
-
-    // Call parent's remove function
-    onRemoveImage(index);
+    // onRemoveImage(index);
   };
 
   const handleAudioUpload = async (files) => {
@@ -113,7 +169,9 @@ export default function EditProfileTab({
       return;
     }
 
-    const totalAudios = localAudioPreview.length + files.length;
+    const currentVisibleAudios = localAudios.filter(audio => !audio.isRemoved);
+    const totalAudios = currentVisibleAudios.length + files.length;
+
     if (totalAudios > uploadLimits.audios) {
       toast.error(
         `Maximum ${uploadLimits.audios} audio files allowed for ${subscriptionPlan} plan`
@@ -121,39 +179,53 @@ export default function EditProfileTab({
       return;
     }
 
-    const newAudios = [...localAudioPreview];
+    const newAudios = [...localAudios];
     files.forEach((file) => {
       newAudios.push({
-        name: file.name,
         url: URL.createObjectURL(file),
+        filename: file.name,
+        name: file.name,
         file: file,
         isNew: true,
-        isRemoved: false,
+        isRemoved: false
       });
     });
 
-    setLocalAudioPreview(newAudios);
-    onAudioUpload(files);
+    setLocalAudios(newAudios);
+    // onAudioUpload(files);
   };
 
   const handleRemoveAudio = (index) => {
-    const audioToRemove = localAudioPreview[index];
+    const audioToRemove = localAudios[index];
 
-    // If it's an existing audio (not newly uploaded), add to removed list
-    if (!audioToRemove.isNew && audioToRemove.filename) {
-      setRemovedAudios((prev) => [...prev, audioToRemove.filename]);
+    if (!audioToRemove.isNew) {
+      // Mark existing audio as removed
+      const updatedAudios = [...localAudios];
+      updatedAudios[index] = {
+        ...audioToRemove,
+        isRemoved: true
+      };
+      setLocalAudios(updatedAudios);
+
+      // Add filename to removed list
+      if (audioToRemove.filename) {
+        setRemovedAudios(prev => [...prev, audioToRemove.filename]);
+      }
+    } else {
+      // Remove new audio completely
+      const updatedAudios = [...localAudios];
+      updatedAudios.splice(index, 1);
+      setLocalAudios(updatedAudios);
     }
 
-    const newAudios = [...localAudioPreview];
-    newAudios.splice(index, 1);
-    setLocalAudioPreview(newAudios);
-
-    onRemoveAudio(index);
+    // onRemoveAudio(index);
   };
 
   const handleSave = async () => {
-    // Create form data with removed files info
+    // Create FormData object
     const formData = new FormData();
+
+    // Add basic info
     formData.append("name", artist.name || "");
     formData.append("city", artist.city || "");
     formData.append("genre", artist.genre || "");
@@ -163,34 +235,44 @@ export default function EditProfileTab({
     }
 
     // Add removed photos
-    removedPhotos.forEach((filename) => {
-      formData.append("removedPhotos", filename);
+    removedPhotos.forEach(filename => {
+      if (filename) {
+        formData.append("removedPhotos", filename);
+      }
     });
 
     // Add removed audios
-    removedAudios.forEach((filename) => {
-      formData.append("removedAudios", filename);
+    removedAudios.forEach(filename => {
+      if (filename) {
+        formData.append("removedAudios", filename);
+      }
     });
 
     // Add new photos
-    const newPhotoFiles = localPreviewImages
-      .filter((img) => img.isNew && img.file)
-      .map((img) => img.file);
-
-    newPhotoFiles.forEach((file) => {
-      formData.append("photos", file);
-    });
+    localImages
+      .filter(img => img.isNew && img.file && !img.isRemoved)
+      .forEach(img => {
+        formData.append("photos", img.file);
+      });
 
     // Add new audios
-    const newAudioFiles = localAudioPreview
-      .filter((audio) => audio.isNew && audio.file)
-      .map((audio) => audio.file);
+    localAudios
+      .filter(audio => audio.isNew && audio.file && !audio.isRemoved)
+      .forEach(audio => {
+        formData.append("mp3Files", audio.file);
+      });
 
-    newAudioFiles.forEach((file) => {
-      formData.append("mp3Files", file);
-    });
+    console.log("Saving with FormData:");
+    console.log("Removed photos:", removedPhotos);
+    console.log("Removed audios:", removedAudios);
+    console.log("New photos:", localImages.filter(img => img.isNew && !img.isRemoved).length);
+    console.log("New audios:", localAudios.filter(audio => audio.isNew && !audio.isRemoved).length);
 
-    // Call parent save with formData
+    // Debug form data
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ':', pair[1]);
+    }
+
     try {
       await onSave(formData);
       // Clear removed lists after successful save
@@ -200,6 +282,10 @@ export default function EditProfileTab({
       console.error("Save failed:", error);
     }
   };
+
+  // Get visible images and audios for display
+  const visibleImages = localImages.filter(img => !img.isRemoved);
+  const visibleAudios = localAudios.filter(audio => !audio.isRemoved);
 
   return (
     <div className="animate-fadeIn space-y-10">
@@ -278,11 +364,10 @@ export default function EditProfileTab({
                 ? "Upgrade to Pro to add biography..."
                 : "Write a short biography about yourself and your music..."
             }
-            className={`w-full px-4 py-3 rounded-lg text-white border placeholder-gray-400 outline-none resize-vertical transition ${
-              subscriptionPlan === "free"
-                ? "bg-gray-800 border-gray-700 text-gray-500 cursor-not-allowed"
-                : "bg-gray-700 border-gray-600 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20"
-            }`}
+            className={`w-full px-4 py-3 rounded-lg text-white border placeholder-gray-400 outline-none resize-vertical transition ${subscriptionPlan === "free"
+              ? "bg-gray-800 border-gray-700 text-gray-500 cursor-not-allowed"
+              : "bg-gray-700 border-gray-600 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20"
+              }`}
             disabled={subscriptionPlan === "free"}
           />
           {subscriptionPlan === "free" && <UpgradePrompt feature="Biography" />}
@@ -298,21 +383,18 @@ export default function EditProfileTab({
             label="Upload Photos"
             accept="image/*"
             maxFiles={uploadLimits.photos || 0}
-            currentFiles={localPreviewImages.map((img, idx) => {
-              const url = typeof img === "string" ? img : img.url;
-              return {
-                url: url,
-                id: idx,
-                name: img.filename || `Photo ${idx + 1}`,
-                isNew: img.isNew,
-              };
-            })}
+            currentFiles={visibleImages.map((img, idx) => ({
+              url: img.url,
+              id: idx,
+              name: img.filename || `Photo ${idx + 1}`,
+              isNew: img.isNew,
+            }))}
             onUpload={handleImageUpload}
             onRemove={handleRemoveImage}
             subscriptionPlan={subscriptionPlan}
             disabled={subscriptionPlan !== "pro"}
             showLimits={true}
-            currentCount={localPreviewImages.length}
+            currentCount={visibleImages.length}
           />
         </div>
 
@@ -323,10 +405,10 @@ export default function EditProfileTab({
             label="Upload Audio"
             accept="audio/*"
             maxFiles={uploadLimits.audios || 0}
-            currentFiles={localAudioPreview.map((audio, idx) => ({
-              url: typeof audio === "string" ? audio : audio.url,
+            currentFiles={visibleAudios.map((audio, idx) => ({
+              url: audio.url,
               id: idx,
-              name: audio.name || `Audio ${idx + 1}`,
+              name: audio.name || audio.filename || `Audio ${idx + 1}`,
               isNew: audio.isNew,
             }))}
             onUpload={handleAudioUpload}
@@ -334,7 +416,7 @@ export default function EditProfileTab({
             subscriptionPlan={subscriptionPlan}
             disabled={subscriptionPlan !== "pro"}
             showLimits={true}
-            currentCount={localAudioPreview.length}
+            currentCount={visibleAudios.length}
           />
         </div>
       </div>
