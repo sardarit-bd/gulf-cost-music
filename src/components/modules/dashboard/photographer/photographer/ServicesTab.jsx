@@ -5,6 +5,8 @@ import {
     Loader2,
     Trash2
 } from "lucide-react";
+import {ConfirmModal} from "@/components/modules/dashboard/photographer/photographer/ConfirmModal";
+import { useState } from "react";
 
 export default function ServicesTab({
     services,
@@ -14,6 +16,14 @@ export default function ServicesTab({
     handleDeleteService,
     loading,
 }) {
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [selectedService, setSelectedService] = useState(null);
+
+
+
+
+
+
     return (
         <div className="animate-fadeIn">
             <div className="grid lg:grid-cols-3 gap-8">
@@ -48,7 +58,10 @@ export default function ServicesTab({
                                             <p className="text-yellow-400 font-medium">{service.price}</p>
                                         </div>
                                         <button
-                                            onClick={() => handleDeleteService(service._id)}
+                                            onClick={() => {
+                                                setSelectedService(service);
+                                                setDeleteModalOpen(true);
+                                            }}
                                             className="text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-red-400/10 rounded-lg"
                                             title="Delete service"
                                         >
@@ -119,6 +132,22 @@ export default function ServicesTab({
                     </div>
                 </div>
             </div>
+
+
+            <ConfirmModal
+                isOpen={deleteModalOpen}
+                onClose={() => setDeleteModalOpen(false)}
+                onConfirm={() => {
+                    handleDeleteService(selectedService._id);
+                    setDeleteModalOpen(false);
+                }}
+                title="Delete Service"
+                message={`Are you sure you want to delete "${selectedService?.service}"? This action cannot be undone.`}
+                confirmText="Delete Service"
+                cancelText="Cancel"
+                type="delete"
+            />
+
         </div>
     );
 }

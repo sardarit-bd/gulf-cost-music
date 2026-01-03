@@ -1,7 +1,16 @@
 "use client";
 import { Filter, Search, X } from "lucide-react";
 
-const Filters = ({ search, statusFilter, onSearchChange, onStatusFilterChange, onApply, onClear }) => {
+const Filters = ({
+    search,
+    statusFilter,
+    planFilter,
+    onSearchChange,
+    onStatusFilterChange,
+    onPlanFilterChange,
+    onApply,
+    onClear
+}) => {
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 mb-6">
             <div className="flex flex-col lg:flex-row gap-4 items-end">
@@ -45,6 +54,21 @@ const Filters = ({ search, statusFilter, onSearchChange, onStatusFilterChange, o
                     </select>
                 </div>
 
+                <div className="w-full lg:w-48">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Subscription Plan
+                    </label>
+                    <select
+                        className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        value={planFilter}
+                        onChange={(e) => onPlanFilterChange(e.target.value)}
+                    >
+                        <option value="all">All Plans</option>
+                        <option value="pro">Pro Plan</option>
+                        <option value="free">Free Plan</option>
+                    </select>
+                </div>
+
                 <div className="flex space-x-2">
                     <button
                         onClick={onApply}
@@ -53,7 +77,7 @@ const Filters = ({ search, statusFilter, onSearchChange, onStatusFilterChange, o
                         <Filter className="w-4 h-4" />
                         <span>Apply</span>
                     </button>
-                    {(search || statusFilter !== "all") && (
+                    {(search || statusFilter !== "all" || planFilter !== "all") && (
                         <button
                             onClick={onClear}
                             className="w-full lg:w-auto px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium transition-colors flex items-center space-x-2"

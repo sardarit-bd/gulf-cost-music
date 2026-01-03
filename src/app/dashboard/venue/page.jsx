@@ -1,21 +1,22 @@
 "use client";
 
+import AddShowTab from "@/components/modules/dashboard/venues/AddShowTab";
+import BillingTab from "@/components/modules/dashboard/venues/BillingTab";
+import EditProfileTab from "@/components/modules/dashboard/venues/EditProfileTab";
+import OverviewTab from "@/components/modules/dashboard/venues/OverviewTab";
+import MarketplaceTab from "@/components/modules/venues/MarketplaceTab";
 import { useAuth } from "@/context/AuthContext";
 import {
   Building2,
-  Calendar,
-  Clock,
+  CreditCard,
+  Crown,
   Edit3,
   ImageIcon,
-  Loader2,
-  MapPin,
   Music,
-  Save,
-  Star,
-  Trash2,
+  ShoppingBag,
   Users,
+  XCircle,
 } from "lucide-react";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -37,14 +38,54 @@ export default function VenueDashboard() {
     biography: "",
     openHours: "",
     photos: [],
+    isActive: false,
+    verifiedOrder: 0,
   });
   const [previewImages, setPreviewImages] = useState([]);
-  const [newShow, setNewShow] = useState({ artist: "", date: "", time: "" });
+  const [newShow, setNewShow] = useState({
+    artist: "",
+    date: "",
+    time: "",
+    image: null,
+  });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showsThisMonth, setShowsThisMonth] = useState(0);
+  const [subscriptionPlan, setSubscriptionPlan] = useState("free");
+  const [removedPhotos, setRemovedPhotos] = useState([]);
+
+  // ========== NEW MARKETPLACE STATES ==========
+  const [marketplaceListings, setMarketplaceListings] = useState([]);
+  const [marketplaceLoading, setMarketplaceLoading] = useState(false);
+  const [currentListing, setCurrentListing] = useState({
+    title: "",
+    price: "",
+    location: "",
+    description: "",
+    status: "active",
+    photos: [],
+    videos: [],
+    category: "equipment",
+    itemCondition: "excellent",
+    contactPhone: "",
+    contactEmail: "",
+  });
+  const [listingPhotos, setListingPhotos] = useState([]);
+  const [listingVideos, setListingVideos] = useState([]);
+  const [isEditingListing, setIsEditingListing] = useState(false);
+  const [editingListingId, setEditingListingId] = useState(null);
+  const [activeMarketSection, setActiveMarketSection] = useState("create");
+  // ============================================
 
   const cityOptions = ["New Orleans", "Biloxi", "Mobile", "Pensacola"];
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
+
+  // === Check User Subscription ===
+  useEffect(() => {
+    if (user?.subscriptionPlan) {
+      setSubscriptionPlan(user.subscriptionPlan);
+    }
+  }, [user]);
 
   // === Fetch Venue Profile ===
   useEffect(() => {
@@ -52,27 +93,48 @@ export default function VenueDashboard() {
       try {
         setLoading(true);
         const token = getCookie("token");
-        if (!token) return toast.error("You must be logged in.");
+        if (!token) {
+          // toast.error("You must be logged in.");
+          return;
+        }
 
         const res = await fetch(`${API_BASE}/api/venues/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
+        if (res.status === 401) {
+          toast.error("Session expired. Please login again.");
+          return;
+        }
+
         const data = await res.json();
 
-        if (!res.ok) throw new Error(data.message || "Failed to fetch venue.");
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to fetch venue.");
+        }
 
         if (data.data?.venue) {
           const v = data.data.venue;
           setVenue({
-            name: v.venueName,
-            city: v.city,
-            address: v.address,
-            seating: v.seatingCapacity,
-            biography: v.biography,
-            openHours: v.openHours,
-            photos: [],
+            name: v.venueName || "",
+            city: v.city || "",
+            address: v.address || "",
+            seating: v.seatingCapacity?.toString() || "",
+            biography: v.biography || "",
+            openHours: v.openHours || "",
+            photos: v.photos || [],
+            isActive: v.isActive || false,
+            verifiedOrder: v.verifiedOrder || 0,
           });
           setPreviewImages(v.photos?.map((p) => p.url) || []);
+        }
+
+        // Fetch shows count for this month
+        await fetchShowsCount(token);
+
+        // Load marketplace listings if Pro user
+        if (data.data?.venue?.isActive) {
+          await loadMarketplaceListings();
         }
       } catch (error) {
         console.error("Error fetching venue:", error);
@@ -81,57 +143,681 @@ export default function VenueDashboard() {
         setLoading(false);
       }
     };
+
     fetchVenue();
-  }, []);
+  }, [API_BASE, user?.subscriptionPlan]);
+
+  // === Fetch Shows Count for Free Plan ===
+  const fetchShowsCount = async (token) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/venues/shows/count`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setShowsThisMonth(data.data?.count || 0);
+      }
+    } catch (error) {
+      console.error("Error fetching shows count:", error);
+    }
+  };
+
+  // === Marketplace API Functions ===
+  const fetchVenueMarketplaceListings = async () => {
+    try {
+      const token = getCookie("token");
+      if (!token) throw new Error("No authentication token found");
+
+      const response = await fetch(`${API_BASE}/api/market/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // CASE 1: backend returns array
+        if (Array.isArray(data.data)) {
+          return data.data;
+        }
+
+        // CASE 2: backend returns { listing: {...} }
+        if (data.data?.listing) {
+          return [data.data.listing];
+        }
+
+        // CASE 3: backend returns single object
+        if (data.data?._id) {
+          return [data.data];
+        }
+
+        return [];
+      }
+      else if (response.status === 404) {
+        return [];
+      } else {
+        throw new Error(data.message || "Failed to fetch listings");
+      }
+    } catch (error) {
+      console.error("Error fetching marketplace listings:", error);
+      throw error;
+    }
+  };
+
+  const createMarketplaceListing = async (listingData) => {
+    try {
+      const token = getCookie("token");
+      if (!token) throw new Error("No authentication token found");
+
+      const formData = new FormData();
+
+      formData.append("title", listingData.title);
+      formData.append("description", listingData.description);
+      formData.append("price", listingData.price);
+      formData.append("category", listingData.category);
+      formData.append("status", listingData.status);
+      formData.append("itemCondition", listingData.itemCondition);
+
+      if (listingData.location) {
+        formData.append("location", listingData.location);
+      }
+      if (listingData.contactPhone) {
+        formData.append("contactPhone", listingData.contactPhone);
+      }
+      if (listingData.contactEmail) {
+        formData.append("contactEmail", listingData.contactEmail);
+      }
+
+      if (listingData.photos && listingData.photos.length > 0) {
+        listingData.photos.forEach((file, index) => {
+          if (file instanceof File) {
+            formData.append("photos", file);
+          }
+        });
+      }
+
+      if (listingData.videos && listingData.videos.length > 0) {
+        const videoFile = listingData.videos[0];
+        if (videoFile instanceof File) {
+          formData.append("video", videoFile);
+        }
+      }
+
+      const saveToast = toast.loading("Creating listing...");
+
+      const response = await fetch(`${API_BASE}/api/market/me`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await response.json();
+      toast.dismiss(saveToast);
+
+      if (response.ok) {
+        toast.success("Listing created successfully!");
+        return data.data;
+      } else {
+        throw new Error(data.message || "Failed to create listing");
+      }
+    } catch (error) {
+      toast.error(error.message || "Network error while creating listing");
+      throw error;
+    }
+  };
+
+  const updateMarketplaceListing = async (id, listingData) => {
+    try {
+      const token = getCookie("token");
+      if (!token) throw new Error("No authentication token found");
+
+      const formData = new FormData();
+
+      formData.append("title", listingData.title);
+      formData.append("description", listingData.description);
+      formData.append("price", listingData.price);
+      formData.append("category", listingData.category);
+      formData.append("status", listingData.status);
+      formData.append("itemCondition", listingData.itemCondition);
+
+      if (listingData.location) {
+        formData.append("location", listingData.location);
+      }
+      if (listingData.contactPhone) {
+        formData.append("contactPhone", listingData.contactPhone);
+      }
+      if (listingData.contactEmail) {
+        formData.append("contactEmail", listingData.contactEmail);
+      }
+
+      if (listingData.photos && listingData.photos.length > 0) {
+        const newPhotos = listingData.photos.filter(
+          (file) => file instanceof File
+        );
+        newPhotos.forEach((file) => {
+          formData.append("photos", file);
+        });
+      }
+
+      if (listingData.videos && listingData.videos.length > 0) {
+        const videoFile = listingData.videos[0];
+        if (videoFile instanceof File) {
+          formData.append("video", videoFile);
+        }
+      }
+
+      const saveToast = toast.loading("Updating listing...");
+
+      const response = await fetch(`${API_BASE}/api/market/me`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await response.json();
+      toast.dismiss(saveToast);
+
+      if (response.ok) {
+        toast.success("Listing updated successfully!");
+        return data.data;
+      } else {
+        throw new Error(data.message || "Failed to update listing");
+      }
+    } catch (error) {
+      toast.error(error.message || "Network error while updating listing");
+      throw error;
+    }
+  };
+
+  const deleteMarketplaceListing = async (id) => {
+    try {
+      const token = getCookie("token");
+      if (!token) throw new Error("No authentication token found");
+
+      if (
+        !window.confirm(
+          "Are you sure you want to delete this listing? This action cannot be undone."
+        )
+      ) {
+        return false;
+      }
+
+      const deleteToast = toast.loading("Deleting listing...");
+
+      const response = await fetch(`${API_BASE}/api/market/me`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await response.json();
+      toast.dismiss(deleteToast);
+
+      if (response.ok) {
+        toast.success("Listing deleted successfully!");
+        return true;
+      } else {
+        throw new Error(data.message || "Failed to delete listing");
+      }
+    } catch (error) {
+      toast.error(error.message || "Network error while deleting listing");
+      throw error;
+    }
+  };
+
+  const deleteMarketplacePhoto = async (photoIndex) => {
+    try {
+      const token = getCookie("token");
+      if (!token) throw new Error("No authentication token found");
+
+      const deleteToast = toast.loading("Deleting photo...");
+
+      const response = await fetch(
+        `${API_BASE}/api/market/me/photos/${photoIndex}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const data = await response.json();
+      toast.dismiss(deleteToast);
+
+      if (response.ok) {
+        toast.success("Photo deleted successfully!");
+        return data.data;
+      } else {
+        throw new Error(data.message || "Failed to delete photo");
+      }
+    } catch (error) {
+      toast.error(error.message || "Network error while deleting photo");
+      throw error;
+    }
+  };
+
+  // === Marketplace Handlers ===
+  const loadMarketplaceListings = async () => {
+    if (!venue?.isActive) return;
+
+    try {
+      setMarketplaceLoading(true);
+      const data = await fetchVenueMarketplaceListings();
+      setMarketplaceListings(data);
+
+      if (data.length > 0) {
+        setActiveMarketSection("listings");
+      } else {
+        setActiveMarketSection("create");
+      }
+    } catch (error) {
+      console.error("Failed to load marketplace listings:", error);
+    } finally {
+      setMarketplaceLoading(false);
+    }
+  };
+
+  const handleListingChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentListing((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleListingPhotoUpload = (files) => {
+    if (!venue?.isActive) {
+      toast.error("Only verified venues can use the marketplace");
+      return;
+    }
+
+    const availableSlots =
+      5 -
+      (listingPhotos.length +
+        currentListing.photos?.filter((p) => !(p instanceof File))?.length ||
+        0);
+    const limitedFiles = files.slice(0, Math.max(0, availableSlots));
+
+    if (limitedFiles.length === 0) {
+      toast.error("Maximum 5 photos allowed");
+      return;
+    }
+
+    const urls = limitedFiles.map((file) => URL.createObjectURL(file));
+    setListingPhotos((prev) => [...prev, ...urls]);
+    setCurrentListing((prev) => ({
+      ...prev,
+      photos: [...(prev.photos || []), ...limitedFiles],
+    }));
+  };
+
+  const handleListingVideoUpload = (files) => {
+    if (!venue?.isActive) {
+      toast.error("Only verified venues can use the marketplace");
+      return;
+    }
+
+    const availableSlots =
+      1 - (listingVideos.length + (currentListing.video ? 1 : 0));
+    const limitedFiles = files.slice(0, Math.max(0, availableSlots));
+
+    if (limitedFiles.length === 0) {
+      toast.error("Maximum 1 video allowed");
+      return;
+    }
+
+    const urls = limitedFiles.map((file) => URL.createObjectURL(file));
+    setListingVideos((prev) => [...prev, ...urls]);
+    setCurrentListing((prev) => ({
+      ...prev,
+      videos: [...(prev.videos || []), ...limitedFiles],
+    }));
+  };
+
+  const removeListingPhoto = async (index) => {
+    try {
+      const photoToRemove = listingPhotos[index];
+
+      if (photoToRemove?.startsWith("blob:")) {
+        URL.revokeObjectURL(photoToRemove);
+
+        setCurrentListing((prev) => {
+          const newPhotos = [...prev.photos];
+          const fileIndex = newPhotos.findIndex((p) => p instanceof File);
+          if (fileIndex !== -1) {
+            newPhotos.splice(fileIndex, 1);
+          }
+          return { ...prev, photos: newPhotos };
+        });
+
+        setListingPhotos((prev) => {
+          const newList = [...prev];
+          newList.splice(index, 1);
+          return newList;
+        });
+      } else {
+        const updatedListing = await deleteMarketplacePhoto(index);
+
+        if (updatedListing) {
+          setCurrentListing((prev) => ({
+            ...prev,
+            photos: updatedListing.photos || [],
+          }));
+
+          if (activeTab === "marketplace") {
+            await loadMarketplaceListings();
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to remove photo:", error);
+    }
+  };
+
+  const removeListingVideo = (index) => {
+    if (listingVideos[index]?.startsWith("blob:")) {
+      URL.revokeObjectURL(listingVideos[index]);
+    }
+
+    setCurrentListing((prev) => {
+      const newVideos = [...prev.videos];
+      newVideos.splice(index, 1);
+      return { ...prev, videos: newVideos };
+    });
+
+    setListingVideos((prev) => {
+      const newList = [...prev];
+      newList.splice(index, 1);
+      return newList;
+    });
+  };
+
+  const handleCreateListing = async () => {
+    if (!venue?.isActive) {
+      toast.error("Only verified venues can use the marketplace");
+      return;
+    }
+
+    if (!currentListing.title?.trim()) {
+      toast.error("Please enter a title");
+      return;
+    }
+
+    if (!currentListing.price || parseFloat(currentListing.price) <= 0) {
+      toast.error("Please enter a valid price");
+      return;
+    }
+
+    if (!currentListing.description?.trim()) {
+      toast.error("Please enter a description");
+      return;
+    }
+
+    const totalPhotos = listingPhotos.length;
+    if (totalPhotos === 0) {
+      toast.error("Please upload at least one photo");
+      return;
+    }
+
+    try {
+      if (marketplaceListings.length > 0 && !isEditingListing) {
+        toast.error(
+          "You can only have one active listing. Please edit or delete your existing listing."
+        );
+        return;
+      }
+
+      const listingData = {
+        ...currentListing,
+        price: parseFloat(currentListing.price),
+        category: currentListing.category || "equipment",
+        status: currentListing.status || "active",
+      };
+
+      const newListing = await createMarketplaceListing(listingData);
+
+      setMarketplaceListings([newListing]);
+
+      setCurrentListing({
+        title: "",
+        price: "",
+        location: "",
+        description: "",
+        status: "active",
+        photos: [],
+        videos: [],
+        category: "equipment",
+        itemCondition: "excellent",
+        contactPhone: "",
+        contactEmail: "",
+      });
+      setListingPhotos([]);
+      setListingVideos([]);
+
+      toast.success("Listing created successfully!");
+      setActiveMarketSection("listings");
+    } catch (error) {
+      console.error("Failed to create listing:", error);
+    }
+  };
+
+  const handleEditListing = (listing) => {
+    setIsEditingListing(true);
+    setEditingListingId(listing._id);
+    setCurrentListing({
+      title: listing.title,
+      price: listing.price.toString(),
+      location: listing.location || "",
+      description: listing.description,
+      status: listing.status,
+      category: listing.category || "equipment",
+      itemCondition: listing.itemCondition || "excellent",
+      contactPhone: listing.contactPhone || "",
+      contactEmail: listing.contactEmail || "",
+      photos: listing.photos || [],
+      videos: listing.video ? [listing.video] : [],
+    });
+
+    setListingPhotos(listing.photos || []);
+    setListingVideos(listing.video ? [listing.video] : []);
+
+    setActiveMarketSection("create");
+  };
+
+  const handleUpdateListing = async () => {
+    if (!venue?.isActive) {
+      toast.error("Only verified venues can use the marketplace");
+      return;
+    }
+
+    if (!currentListing.title?.trim()) {
+      toast.error("Please enter a title");
+      return;
+    }
+
+    if (!currentListing.price || parseFloat(currentListing.price) <= 0) {
+      toast.error("Please enter a valid price");
+      return;
+    }
+
+    if (!currentListing.description?.trim()) {
+      toast.error("Please enter a description");
+      return;
+    }
+
+    const totalPhotos = listingPhotos.length;
+    if (totalPhotos === 0) {
+      toast.error("Please upload at least one photo");
+      return;
+    }
+
+    try {
+      const listingData = {
+        ...currentListing,
+        price: parseFloat(currentListing.price),
+        category: currentListing.category || "equipment",
+        status: currentListing.status || "active",
+      };
+
+      const updatedListing = await updateMarketplaceListing(
+        editingListingId,
+        listingData
+      );
+
+      setMarketplaceListings([updatedListing]);
+
+      setIsEditingListing(false);
+      setEditingListingId(null);
+      setCurrentListing({
+        title: "",
+        price: "",
+        location: "",
+        description: "",
+        status: "active",
+        photos: [],
+        videos: [],
+        category: "equipment",
+        itemCondition: "excellent",
+        contactPhone: "",
+        contactEmail: "",
+      });
+      setListingPhotos([]);
+      setListingVideos([]);
+
+      toast.success("Listing updated successfully!");
+      setActiveMarketSection("listings");
+    } catch (error) {
+      console.error("Failed to update listing:", error);
+    }
+  };
+
+  const handleDeleteListing = async (id) => {
+    if (!venue?.isActive) {
+      toast.error("Only verified venues can use the marketplace");
+      return;
+    }
+
+    try {
+      await deleteMarketplaceListing(id);
+      setMarketplaceListings([]);
+      toast.success("Listing deleted successfully!");
+      setActiveMarketSection("create");
+    } catch (error) {
+      console.error("Failed to delete listing:", error);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingListing(false);
+    setEditingListingId(null);
+    setCurrentListing({
+      title: "",
+      price: "",
+      location: "",
+      description: "",
+      status: "active",
+      photos: [],
+      videos: [],
+      category: "equipment",
+      itemCondition: "excellent",
+      contactPhone: "",
+      contactEmail: "",
+    });
+    setListingPhotos([]);
+    setListingVideos([]);
+    setActiveMarketSection("listings");
+  };
 
   // === Handle Input ===
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (subscriptionPlan === "free") {
+      if (name === "biography" || name === "openHours") {
+        toast.error(`Free plan users cannot update ${name}. Upgrade to Pro.`);
+        return;
+      }
+    }
+
     setVenue({ ...venue, [name]: value });
   };
 
-  // === Image Upload ===
+  // === Image Upload with Plan Validation ===
   const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files).slice(0, 5);
-    const urls = files.map((file) => URL.createObjectURL(file));
-    setPreviewImages(urls);
-    setVenue({ ...venue, photos: files });
-  };
+    if (subscriptionPlan === "free") {
+      toast.error("Free plan users cannot upload photos. Upgrade to Pro.");
+      return;
+    }
 
-  const removeImage = (index) => {
-    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
+    const files = Array.from(e.target.files);
+
+    if (previewImages.length + files.length > 5) {
+      toast.error("Pro plan allows maximum 5 photos.");
+      return;
+    }
+
+    const urls = files.map((file) => URL.createObjectURL(file));
+    setPreviewImages([...previewImages, ...urls]);
     setVenue((prev) => ({
       ...prev,
-      photos: prev.photos.filter((_, i) => i !== index),
+      photos: [...prev.photos, ...files],
     }));
   };
 
-  // === Save Venue ===
+  const removeImage = (index) => {
+    const urlToRemove = previewImages[index];
+
+    const photoObj = venue.photos.find((p) => p.url === urlToRemove);
+
+    if (photoObj?.filename) {
+      setRemovedPhotos((prev) => [...prev, photoObj.filename]);
+    }
+
+    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
+
+    setVenue((prev) => ({
+      ...prev,
+      photos: prev.photos.filter((p) => p.url !== urlToRemove),
+    }));
+  };
+
+  // === Save Venue with Plan Validation ===
   const handleSave = async () => {
     try {
       const token = getCookie("token");
-      if (!token) return toast.error("You are not logged in.");
+      if (!token) {
+        toast.error("You are not logged in.");
+        return;
+      }
 
       const formData = new FormData();
       formData.append("venueName", venue.name);
       formData.append("city", venue.city.toLowerCase());
       formData.append("address", venue.address);
       formData.append("seatingCapacity", venue.seating);
-      formData.append("biography", venue.biography || "");
-      formData.append("openHours", venue.openHours);
-      formData.append("openDays", "Mon-Sat");
 
-      if (venue.photos && venue.photos.length > 0) {
+      if (subscriptionPlan === "pro") {
+        formData.append("biography", venue.biography || "");
+        formData.append("openHours", venue.openHours);
+        formData.append("openDays", "Mon-Sat");
+      }
+
+      if (
+        venue.photos &&
+        venue.photos.length > 0 &&
+        subscriptionPlan === "pro"
+      ) {
         venue.photos.forEach((file) => {
-          formData.append("photos", file);
+          if (file instanceof File) {
+            formData.append("photos", file);
+          }
         });
       }
+
+      removedPhotos.forEach((filename) => {
+        formData.append("removedPhotos", filename);
+      });
 
       setSaving(true);
       const saveToast = toast.loading("Saving venue...");
 
       const res = await fetch(`${API_BASE}/api/venues/profile`, {
-        method: "POST",
+        method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -140,37 +826,57 @@ export default function VenueDashboard() {
 
       const data = await res.json();
       toast.dismiss(saveToast);
-      if (!res.ok) throw new Error(data.message || "Failed to save venue.");
+
+      if (!res.ok) {
+        toast.error(data.message || "Failed to save venue");
+        return;
+      }
 
       toast.success("Venue profile saved successfully!");
+      setRemovedPhotos([]);
 
-      // Update local state with new photos
       if (data.data?.venue?.photos) {
         setPreviewImages(data.data.venue.photos.map((p) => p.url));
       }
     } catch (error) {
       console.error("Save error:", error);
-      toast.error(error.message || "Server error while saving venue.");
+      toast.error(error.message);
     } finally {
       setSaving(false);
     }
   };
 
-  // === Add Show ===
+  // === Add Show with Free Plan Limit ===
   const handleAddShow = async (e) => {
     e.preventDefault();
 
+    if (subscriptionPlan === "free" && showsThisMonth >= 1) {
+      toast.error(
+        "Free plan allows only 1 show per month. Upgrade to Pro for unlimited shows."
+      );
+      return;
+    }
+
+    if (!newShow.artist || !newShow.date || !newShow.time || !newShow.image) {
+      toast.error("Please fill all fields including the show image.");
+      return;
+    }
+
     try {
       const token = getCookie("token");
-      if (!token) return toast.error("You are not logged in.");
+      if (!token) {
+        toast.error("You are not logged in.");
+        return;
+      }
 
       const formData = new FormData();
       formData.append("artist", newShow.artist);
       formData.append("date", newShow.date);
       formData.append("time", newShow.time);
-      if (newShow.image) formData.append("image", newShow.image);
+      formData.append("image", newShow.image);
 
       setLoading(true);
+      const addToast = toast.loading("Adding show...");
 
       const res = await fetch(`${API_BASE}/api/venues/add-show`, {
         method: "POST",
@@ -181,79 +887,250 @@ export default function VenueDashboard() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to add show.");
+      toast.dismiss(addToast);
+
+      if (!res.ok) {
+        if (data.message?.includes("Free plan")) {
+          toast.error(data.message);
+        } else {
+          throw new Error(data.message || "Failed to add show.");
+        }
+        return;
+      }
 
       toast.success("🎤 Show added successfully!");
       setNewShow({ artist: "", date: "", time: "", image: null });
-    } catch (err) {
-      console.error("Add show error:", err);
-      toast.error(err.message || "Error adding show.");
+
+      if (subscriptionPlan === "free") {
+        setShowsThisMonth((prev) => prev + 1);
+      }
+    } catch (error) {
+      console.error("Add show error:", error);
+      toast.error(error.message || "Error adding show.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading)
+  const handleProCheckout = async () => {
+    try {
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("token="))
+        ?.split("=")[1];
+
+      if (!token) {
+        alert("You must be logged in to upgrade.");
+        return;
+      }
+
+      const res = await fetch(
+        `${API_BASE}/api/subscription/checkout/pro`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        throw new Error(data.message || "Checkout failed");
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error("Checkout error:", error);
+      alert("Unable to start checkout. Please try again.");
+    }
+  };
+
+  // === Plan Badge Component ===
+  const PlanBadge = () => (
+    <div
+      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${subscriptionPlan === "pro"
+        ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+        : "bg-gray-700 text-gray-300 border border-gray-600"
+        }`}
+    >
+      {subscriptionPlan === "pro" ? (
+        <>
+          <Crown size={14} />
+          Pro Plan
+        </>
+      ) : (
+        <>
+          <Users size={14} />
+          Free Plan
+        </>
+      )}
+    </div>
+  );
+
+  // === Upgrade Prompt Component ===
+  const UpgradePrompt = ({ feature }) => (
+    <div className="mt-2 p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
+      <div className="flex items-start gap-3">
+        <Crown className="text-yellow-500 mt-0.5 flex-shrink-0" size={16} />
+        <div>
+          <p className="text-sm text-gray-300">
+            <span className="font-medium">{feature}</span> is available for Pro
+            users
+          </p>
+          <button
+            onClick={() => window.open("/pricing", "_blank")}
+            className="mt-2 text-sm bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1 rounded font-medium transition"
+          >
+            Upgrade to Pro
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-yellow-400">
-        Loading...
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading venue dashboard...</p>
+        </div>
       </div>
     );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-16">
       <Toaster position="top-center" reverseOrder={false} />
 
       <div className="">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center gap-3">
+        {/* Header with Plan Info */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-4 mb-4">
             <div className="p-2 bg-yellow-500 rounded-lg">
               <Building2 size={32} className="text-black" />
             </div>
-            Venue Dashboard
-          </h1>
+            <div>
+              <h1 className="text-4xl font-bold text-white">Venue Dashboard</h1>
+              <div className="flex items-center justify-center gap-3 mt-2">
+                <PlanBadge />
+                {!venue.isActive && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm">
+                    <XCircle size={14} />
+                    Pending Verification
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
           <p className="text-gray-400 text-lg">
             Manage your venue profile and upcoming shows
           </p>
         </div>
 
+        {/* Plan Stats Bar */}
+        {subscriptionPlan === "free" && (
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <Music size={20} className="text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-white font-medium">Monthly Show Limit</p>
+                  <p className="text-gray-400 text-sm">
+                    {showsThisMonth}/1 show this month
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-purple-500/20 rounded-lg">
+                  <ImageIcon size={20} className="text-purple-400" />
+                </div>
+                <div>
+                  <p className="text-white font-medium">Photo Uploads</p>
+                  <p className="text-gray-400 text-sm">
+                    Not available in Free plan
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-yellow-500/20 rounded-lg">
+                  <ShoppingBag size={20} className="text-yellow-400" />
+                </div>
+                <div>
+                  <p className="text-white font-medium">Marketplace</p>
+                  <p className="text-gray-400 text-sm">Pro feature only</p>
+                </div>
+              </div>
+              <button
+                onClick={handleProCheckout}
+                className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 
+             hover:from-yellow-500 hover:to-yellow-700 
+             text-black px-5 py-2.5 rounded-xl font-semibold 
+             shadow-md hover:shadow-lg transition-all"
+              >
+                <Crown size={16} />
+                Upgrade to Pro · $10/month
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Main Container */}
         <div className="bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-700">
-          {/* Enhanced Tabs */}
+          {/* Tabs */}
           <div className="border-b border-gray-700 bg-gray-900">
             <div className="flex overflow-x-auto">
               {[
                 { id: "overview", label: "Overview", icon: Building2 },
                 { id: "edit", label: "Edit Profile", icon: Edit3 },
                 { id: "addshow", label: "Add Show", icon: Music },
+                { id: "marketplace", label: "Marketplace", icon: ShoppingBag },
+                { id: "billing", label: "Billing", icon: CreditCard },
               ].map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
-                  onClick={() => setActiveTab(id)}
-                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${
-                    activeTab === id
-                      ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
-                      : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
-                  }`}
+                  onClick={() => {
+                    setActiveTab(id);
+                    if (id === "marketplace" && venue?.isActive) {
+                      loadMarketplaceListings();
+                    }
+                  }}
+                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === id
+                    ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
+                    : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
+                    }`}
                 >
                   <Icon size={18} />
                   {label}
+
+                  {id === "addshow" && subscriptionPlan === "free" && (
+                    <span className="text-xs bg-gray-700 px-1.5 py-0.5 rounded">
+                      {showsThisMonth}/1
+                    </span>
+                  )}
+
+                  {id === "marketplace" && !venue.isActive && (
+                    <span className="text-xs bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">
+                      Verify
+                    </span>
+                  )}
                 </button>
+
               ))}
             </div>
           </div>
 
           <div className="p-6 md:p-8">
-            {loading && (
-              <div className="flex justify-center items-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-500"></div>
-                <span className="ml-3 text-gray-400">Loading...</span>
-              </div>
-            )}
-
             {activeTab === "overview" && (
-              <OverviewTab venue={venue} previewImages={previewImages} />
+              <OverviewTab
+                venue={venue}
+                previewImages={previewImages}
+                subscriptionPlan={subscriptionPlan}
+              />
             )}
             {activeTab === "edit" && (
               <EditProfileTab
@@ -265,6 +1142,8 @@ export default function VenueDashboard() {
                 previewImages={previewImages}
                 handleSave={handleSave}
                 saving={saving}
+                subscriptionPlan={subscriptionPlan}
+                UpgradePrompt={UpgradePrompt}
               />
             )}
             {activeTab === "addshow" && (
@@ -272,471 +1151,42 @@ export default function VenueDashboard() {
                 newShow={newShow}
                 setNewShow={setNewShow}
                 handleAddShow={handleAddShow}
+                loading={loading}
+                subscriptionPlan={subscriptionPlan}
+                showsThisMonth={showsThisMonth}
+                UpgradePrompt={UpgradePrompt}
               />
             )}
+            {activeTab === "marketplace" && (
+              <MarketplaceTab
+                subscriptionPlan={subscriptionPlan}
+                venue={venue}
+                marketplaceListings={marketplaceListings}
+                marketplaceLoading={marketplaceLoading}
+                currentListing={currentListing}
+                listingPhotos={listingPhotos}
+                listingVideos={listingVideos}
+                isEditingListing={isEditingListing}
+                activeMarketSection={activeMarketSection}
+                setActiveMarketSection={setActiveMarketSection}
+                handleListingChange={handleListingChange}
+                handleListingPhotoUpload={handleListingPhotoUpload}
+                handleListingVideoUpload={handleListingVideoUpload}
+                removeListingPhoto={removeListingPhoto}
+                removeListingVideo={removeListingVideo}
+                handleCreateListing={handleCreateListing}
+                handleUpdateListing={handleUpdateListing}
+                handleEditListing={handleEditListing}
+                handleDeleteListing={handleDeleteListing}
+                handleCancelEdit={handleCancelEdit}
+              />
+            )}
+
+            {activeTab === "billing" && <BillingTab />}
+
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
-
-/* ============== Enhanced Overview Tab ============== */
-const OverviewTab = ({ venue, previewImages }) => (
-  <div className="animate-fadeIn space-y-8">
-    {/* Stats Cards */}
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-blue-500/20 rounded-lg">
-            <Users size={24} className="text-blue-400" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-white">
-              {venue.seating || "0"}
-            </p>
-            <p className="text-gray-400">Seating Capacity</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-green-500/20 rounded-lg">
-            <MapPin size={24} className="text-green-400" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-white capitalize">
-              {venue.city || "—"}
-            </p>
-            <p className="text-gray-400">Location</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-yellow-500/20 rounded-lg">
-            <Clock size={24} className="text-yellow-400" />
-          </div>
-          <div>
-            <p className="text-lg font-bold text-white truncate">
-              {venue.openHours || "—"}
-            </p>
-            <p className="text-gray-400">Open Hours</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div className="grid lg:grid-cols-2 gap-8">
-      {/* Venue Details Card */}
-      <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
-        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-          <Building2 size={24} />
-          Venue Information
-        </h3>
-
-        <div className="space-y-6">
-          <InfoCard
-            icon={<Star className="text-yellow-400" size={20} />}
-            label="Venue Name"
-            value={venue.name}
-          />
-          <InfoCard
-            icon={<MapPin className="text-red-400" size={20} />}
-            label="Address"
-            value={venue.address}
-          />
-          <InfoCard
-            icon={<Users className="text-blue-400" size={20} />}
-            label="Seating Capacity"
-            value={venue.seating ? `${venue.seating} people` : "—"}
-          />
-          <InfoCard
-            icon={<Clock className="text-green-400" size={20} />}
-            label="Open Hours"
-            value={venue.openHours}
-          />
-        </div>
-
-        {/* Biography Section */}
-        {venue.biography && (
-          <div className="mt-6 pt-6 border-t border-gray-700">
-            <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-              <Edit3 size={18} />
-              About Venue
-            </h4>
-            <p className="text-gray-300 leading-relaxed bg-gray-800/50 rounded-lg p-4">
-              {venue.biography}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Photos Gallery Card */}
-      <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
-        <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-          <ImageIcon size={24} />
-          Venue Photos
-          {previewImages.length > 0 && (
-            <span className="bg-yellow-500 text-black px-2 py-1 rounded-full text-sm font-medium ml-2">
-              {previewImages.length}
-            </span>
-          )}
-        </h3>
-
-        {previewImages.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4">
-            {previewImages.map((src, idx) => (
-              <div
-                key={idx}
-                className="relative aspect-square rounded-xl overflow-hidden group border border-gray-600"
-              >
-                <Image
-                  src={src}
-                  alt={`Venue photo ${idx + 1}`}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-end justify-center pb-2">
-                  <span className="text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                    Photo {idx + 1}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12 bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-600">
-            <ImageIcon size={48} className="text-gray-500 mx-auto mb-4" />
-            <p className="text-gray-400 text-lg mb-2">No photos uploaded yet</p>
-            <p className="text-gray-500 text-sm">
-              Add photos in the Edit Profile section
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-);
-
-/* ============== Enhanced Edit Profile Tab ============== */
-const EditProfileTab = ({
-  venue,
-  cityOptions,
-  handleChange,
-  handleImageUpload,
-  removeImage,
-  previewImages,
-  handleSave,
-  saving,
-}) => (
-  <div className="">
-    <div className="grid lg:grid-cols-3 gap-8">
-      {/* Main Form */}
-      <div className="lg:col-span-2 space-y-6">
-        <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
-          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <Edit3 size={20} />
-            Venue Details
-          </h3>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <Input
-              label="Venue Name *"
-              name="name"
-              value={venue.name}
-              onChange={handleChange}
-              icon={<Building2 size={18} />}
-            />
-            <Select
-              label="City *"
-              name="city"
-              value={venue.city}
-              options={cityOptions}
-              onChange={handleChange}
-              icon={<MapPin size={18} />}
-            />
-            <div className="md:col-span-2">
-              <Input
-                label="Address *"
-                name="address"
-                value={venue.address}
-                onChange={handleChange}
-                icon={<MapPin size={18} />}
-              />
-            </div>
-            <Input
-              label="Seating Capacity"
-              name="seating"
-              type="number"
-              value={venue.seating}
-              onChange={handleChange}
-              icon={<Users size={18} />}
-            />
-            <Input
-              label="Open Hours"
-              name="openHours"
-              value={venue.openHours}
-              onChange={handleChange}
-              icon={<Clock size={18} />}
-            />
-            <div className="md:col-span-2">
-              <Textarea
-                label="Biography"
-                name="biography"
-                value={venue.biography}
-                onChange={handleChange}
-                icon={<Edit3 size={18} />}
-                placeholder="Tell us about your venue, its history, and what makes it special..."
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Sidebar - Photos & Actions */}
-      <div className="space-y-6">
-        {/* Photo Upload */}
-        <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <ImageIcon size={20} />
-            Photos ({previewImages.length}/5)
-          </h3>
-
-          <label
-            className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-xl transition ${
-              previewImages.length >= 5
-                ? "border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed"
-                : "border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20"
-            }`}
-          >
-            <ImageIcon size={32} />
-            <span className="text-sm font-medium text-center">
-              {previewImages.length >= 5
-                ? "Maximum Reached"
-                : "Upload Venue Photos"}
-            </span>
-            <span className="text-xs text-gray-400 text-center">
-              Max 5 photos • JPG, PNG
-            </span>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              hidden
-              onChange={handleImageUpload}
-              disabled={previewImages.length >= 5}
-            />
-          </label>
-
-          {previewImages.length > 0 && (
-            <div className="mt-4">
-              <p className="text-sm text-gray-400 mb-3">Preview:</p>
-              <div className="grid grid-cols-2 gap-3">
-                {previewImages.map((src, i) => (
-                  <div
-                    key={i}
-                    className="relative aspect-square rounded-lg overflow-hidden border border-gray-600 group"
-                  >
-                    <Image
-                      src={src}
-                      alt={`Preview ${i + 1}`}
-                      fill
-                      className="object-cover"
-                    />
-                    <button
-                      onClick={() => removeImage(i)}
-                      className="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
-          <h3 className="text-lg font-semibold text-white mb-4">Actions</h3>
-          <div className="space-y-3">
-            <button
-              disabled={saving}
-              onClick={handleSave}
-              className="w-full flex items-center justify-center gap-2 bg-yellow-500 text-black py-3 rounded-lg hover:bg-yellow-400 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save size={18} />
-                  Save Changes
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-/* ============== Enhanced Add Show Tab ============== */
-const AddShowTab = ({ newShow, setNewShow, handleAddShow }) => (
-  <div className="">
-    <div className="bg-gray-900 rounded-2xl p-8 border border-gray-700">
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-yellow-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <Music size={32} className="text-black" />
-        </div>
-        <h2 className="text-2xl font-bold text-white mb-2">Add New Show</h2>
-        <p className="text-gray-400">
-          Schedule a live performance at your venue
-        </p>
-      </div>
-
-      <form onSubmit={handleAddShow} className="space-y-6">
-        {/* ARTIST */}
-        <Input
-          label="Artist / Band Name *"
-          name="artist"
-          value={newShow.artist}
-          onChange={(e) => setNewShow({ ...newShow, artist: e.target.value })}
-          icon={<Music size={18} />}
-          placeholder="Enter artist or band name"
-        />
-
-        {/* DATE & TIME */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <Input
-            label="Show Date *"
-            name="date"
-            type="date"
-            value={newShow.date}
-            onChange={(e) => setNewShow({ ...newShow, date: e.target.value })}
-            icon={<Calendar size={18} />}
-          />
-          <Input
-            label="Show Time *"
-            name="time"
-            type="time"
-            value={newShow.time}
-            onChange={(e) => setNewShow({ ...newShow, time: e.target.value })}
-            icon={<Clock size={18} />}
-          />
-        </div>
-
-        {/* SHOW IMAGE UPLOAD — ADD HERE */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-            <ImageIcon size={18} />
-            Show Image *
-          </label>
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) =>
-              setNewShow({ ...newShow, image: e.target.files[0] })
-            }
-            className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400"
-            required
-          />
-        </div>
-
-        {/* SUBMIT BUTTON */}
-        <div className="flex justify-center pt-4">
-          <button
-            type="submit"
-            className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-3 rounded-lg font-semibold transition transform hover:scale-105"
-          >
-            <Music size={18} />
-            Add Show
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-);
-
-/* ============== Enhanced Reusable Components ============== */
-const InfoCard = ({ icon, label, value }) => (
-  <div className="flex items-start gap-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
-    <div className="flex-shrink-0 mt-1">{icon}</div>
-    <div className="flex-1">
-      <h4 className="text-sm font-medium text-gray-400 mb-1">{label}</h4>
-      <p className="text-white font-semibold">{value || "Not specified"}</p>
-    </div>
-  </div>
-);
-
-const Input = ({
-  label,
-  name,
-  value,
-  onChange,
-  type = "text",
-  icon,
-  placeholder,
-}) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-      {icon}
-      {label}
-    </label>
-    <input
-      name={name}
-      type={type}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition"
-      required
-    />
-  </div>
-);
-
-const Textarea = ({ label, name, value, onChange, icon, placeholder }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-      {icon}
-      {label}
-    </label>
-    <textarea
-      name={name}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      rows={4}
-      className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition resize-vertical"
-    />
-  </div>
-);
-
-const Select = ({ label, name, value, options, onChange, icon }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-      {icon}
-      {label}
-    </label>
-    <select
-      name={name}
-      value={value}
-      onChange={onChange}
-      className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition"
-    >
-      <option value="">Select a city</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-  </div>
-);

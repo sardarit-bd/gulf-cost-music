@@ -175,7 +175,7 @@ export default function PodcastPage() {
     <AdminLayout>
       <div className="min-h-screen bg-gray-50 p-6">
         <Toaster />
-        <div className="max-w-6xl mx-auto">
+        <div className="">
           <PodcastHeader
             loading={loading}
             showForm={showForm}

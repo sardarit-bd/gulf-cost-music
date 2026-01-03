@@ -1,11 +1,12 @@
 "use client";
 import {
-    AlertTriangle,
     Building2,
     Calendar,
     CalendarDays,
     CheckCircle,
     Clock,
+    Crown,
+    DollarSign,
     Globe,
     Mail,
     MapPin,
@@ -13,14 +14,15 @@ import {
     Sparkles,
     User,
     Users,
-    X
+    X,
 } from "lucide-react";
 
-const VenueDetailModal = ({ venue, onClose, onEdit, onVerifyVenue }) => {
+const VenueDetailModal = ({ venue, onClose, onEdit, onChangePlan, onVerifyVenue }) => {
     if (!venue) return null;
 
     const isVerified = venue.verifiedOrder > 0;
-    const hasColor = venue.colorCode && venue.colorCode !== "#808080" && venue.colorCode !== "#000000";
+    const hasColor = venue.colorCode;
+    const currentPlan = venue.user?.subscriptionPlan || "free";
 
     const getCapacityColor = (capacity) => {
         if (capacity > 1000) return "bg-purple-100 text-purple-800 border-purple-200";
@@ -44,7 +46,7 @@ const VenueDetailModal = ({ venue, onClose, onEdit, onVerifyVenue }) => {
                     </div>
 
                     <div className="space-y-6">
-                        {/* Header Section with Verification Status */}
+                        {/* Header Section */}
                         <div className="flex items-center space-x-4">
                             <div
                                 className="w-20 h-20 rounded-xl flex items-center justify-center text-white"
@@ -68,7 +70,21 @@ const VenueDetailModal = ({ venue, onClose, onEdit, onVerifyVenue }) => {
                                         </span>
                                     )}
                                 </div>
-                                <p className="text-gray-600 flex items-center mt-1">
+                                <div className="flex items-center gap-2">
+                                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${currentPlan === "pro"
+                                            ? "bg-yellow-100 text-yellow-800"
+                                            : "bg-gray-100 text-gray-800"
+                                        }`}>
+                                        {currentPlan === "pro" ? <Crown className="w-3 h-3" /> : <DollarSign className="w-3 h-3" />}
+                                        {currentPlan === "pro" ? "Pro Plan" : "Free Plan"}
+                                    </span>
+                                    {venue.eventCount > 0 && (
+                                        <span className="text-xs text-gray-500">
+                                            {venue.eventCount} show{venue.eventCount !== 1 ? 's' : ''}
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-gray-600 flex items-center mt-2">
                                     <User className="w-4 h-4 mr-2" />
                                     {venue.user?.username}
                                 </p>
@@ -76,6 +92,46 @@ const VenueDetailModal = ({ venue, onClose, onEdit, onVerifyVenue }) => {
                                     <Mail className="w-4 h-4 mr-2" />
                                     {venue.user?.email}
                                 </p>
+                            </div>
+                        </div>
+
+                        {/* Plan Management Section */}
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <h5 className="font-semibold text-gray-800 mb-2">Subscription Plan</h5>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className={`text-sm ${currentPlan === "pro" ? "text-yellow-700" : "text-gray-700"}`}>
+                                        Current Plan: <span className="font-bold">{currentPlan === "pro" ? "Pro" : "Free"}</span>
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {currentPlan === "pro"
+                                            ? "Full access to all features including photo uploads"
+                                            : "Limited features, no photo uploads"}
+                                    </p>
+                                </div>
+                                <div className="flex gap-2">
+                                    {currentPlan === "free" ? (
+                                        <button
+                                            onClick={() => {
+                                                onClose();
+                                                onChangePlan(venue._id, venue.venueName, "free", "pro");
+                                            }}
+                                            className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm font-medium"
+                                        >
+                                            Upgrade to Pro
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => {
+                                                onClose();
+                                                onChangePlan(venue._id, venue.venueName, "pro", "free");
+                                            }}
+                                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 text-sm font-medium"
+                                        >
+                                            Downgrade to Free
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -103,19 +159,19 @@ const VenueDetailModal = ({ venue, onClose, onEdit, onVerifyVenue }) => {
                                     </div>
                                 </div>
                                 <p className="text-green-600 text-xs mt-2">
-                                    This venue will appear in the calendar with its assigned color
+                                    This venue appears in the calendar with its assigned color
                                 </p>
                             </div>
                         ) : (
                             <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-lg p-4">
                                 <div className="flex items-center space-x-2 mb-2">
-                                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                                    <Sparkles className="w-5 h-5 text-yellow-600" />
                                     <h5 className="font-semibold text-yellow-800">Venue Not Verified</h5>
                                 </div>
                                 <p className="text-yellow-700 text-sm mb-3">
                                     This venue is not yet verified. Verify to assign a unique color for calendar events.
                                 </p>
-                                {venue.isActive && (
+                                {venue.isActive ? (
                                     <button
                                         onClick={() => {
                                             onClose();
@@ -126,8 +182,7 @@ const VenueDetailModal = ({ venue, onClose, onEdit, onVerifyVenue }) => {
                                         <Sparkles className="w-4 h-4 mr-2" />
                                         Verify Venue
                                     </button>
-                                )}
-                                {!venue.isActive && (
+                                ) : (
                                     <p className="text-yellow-700 text-sm">
                                         Activate the venue first to enable verification.
                                     </p>

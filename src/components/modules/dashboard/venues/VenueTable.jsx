@@ -1,21 +1,21 @@
 "use client";
+
 import {
     Building2,
     Calendar,
     CheckCircle,
     Clock,
+    Crown,
+    DollarSign,
     Edit,
     Eye,
-    Globe,
     Mail,
     MapPin,
     MoreVertical,
-    Phone,
     Power,
     Save,
     Sparkles,
     Trash2,
-    User,
     Users,
     X
 } from "lucide-react";
@@ -38,7 +38,8 @@ const VenueTable = ({
     onInputChange,
     onDeleteVenue,
     onActionMenuToggle,
-    onVerifyVenue
+    onVerifyVenue,
+    onChangePlan,
 }) => {
     const getCapacityColor = (capacity) => {
         if (capacity > 1000) return "bg-purple-100 text-purple-800 border-purple-200";
@@ -46,6 +47,27 @@ const VenueTable = ({
         if (capacity > 200) return "bg-green-100 text-green-800 border-green-200";
         return "bg-gray-100 text-gray-800 border-gray-200";
     };
+
+    const PlanBadge = ({ plan }) => (
+        <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${plan === "pro"
+                    ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                    : "bg-gray-100 text-gray-800 border border-gray-200"
+                }`}
+        >
+            {plan === "pro" ? (
+                <>
+                    <Crown className="w-3 h-3" />
+                    Pro
+                </>
+            ) : (
+                <>
+                    <DollarSign className="w-3 h-3" />
+                    Free
+                </>
+            )}
+        </span>
+    );
 
     if (loading) {
         return (
@@ -74,13 +96,13 @@ const VenueTable = ({
                                 Venue
                             </th>
                             <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Plan & Status
+                            </th>
+                            <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Location & Contact
                             </th>
                             <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Details
-                            </th>
-                            <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
                             </th>
                             <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Actions
@@ -98,6 +120,7 @@ const VenueTable = ({
                                     saveLoading={saveLoading}
                                     actionMenu={actionMenu}
                                     getCapacityColor={getCapacityColor}
+                                    PlanBadge={PlanBadge}
                                     onViewVenue={onViewVenue}
                                     onToggleActive={onToggleActive}
                                     onEdit={onEdit}
@@ -107,6 +130,7 @@ const VenueTable = ({
                                     onDeleteVenue={onDeleteVenue}
                                     onActionMenuToggle={onActionMenuToggle}
                                     onVerifyVenue={onVerifyVenue}
+                                    onChangePlan={onChangePlan}
                                 />
                             ))
                         ) : (
@@ -115,7 +139,7 @@ const VenueTable = ({
                                     <div className="text-gray-500">
                                         <Building2 className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                                         <p className="text-lg font-medium text-gray-900 mb-2">No venues found</p>
-                                        <p className="text-sm">No venues have been registered yet</p>
+                                        <p className="text-sm">Try changing your filters</p>
                                     </div>
                                 </td>
                             </tr>
@@ -136,14 +160,15 @@ const VenueTable = ({
     );
 };
 
-// VenueRow component - FIXED: venue prop ব্যবহার করুন
+// VenueRow component
 const VenueRow = ({
-    venue, // FIXED: venues থেকে venue তে পরিবর্তন
+    venue,
     editingVenue,
     formData,
     saveLoading,
     actionMenu,
     getCapacityColor,
+    PlanBadge,
     onViewVenue,
     onToggleActive,
     onEdit,
@@ -152,11 +177,13 @@ const VenueRow = ({
     onInputChange,
     onDeleteVenue,
     onActionMenuToggle,
-    onVerifyVenue
+    onVerifyVenue,
+    onChangePlan,
 }) => {
-    const isEditing = editingVenue === venue._id; // FIXED: venues._id থেকে venue._id
-    const isVerified = venue.verifiedOrder > 0; // FIXED: venues থেকে venue
-    const hasColor = venue.colorCode && venue.colorCode !== "#808080" && venue.colorCode !== "#000000"; // FIXED: venues থেকে venue
+    const isEditing = editingVenue === venue._id;
+    const isVerified = venue.verifiedOrder > 0;
+    const hasColor = venue.colorCode;
+    const currentPlan = venue.user?.subscriptionPlan || "free";
 
     return (
         <tr className="hover:bg-gray-50 transition-colors group">
@@ -192,20 +219,67 @@ const VenueRow = ({
                                         title={`Verified - Order: ${venue.verifiedOrder}, Color: ${venue.colorCode}`}
                                     >
                                         <CheckCircle className="w-3 h-3 mr-1" />
-                                        Verified
+                                        #{venue.verifiedOrder}
                                     </span>
                                 )}
                             </div>
                         )}
-                        <div className="text-sm text-gray-500 flex items-center mt-1">
-                            <User className="w-3 h-3 mr-1" />
-                            {venue.user?.username}
-                        </div>
-                        <div className="text-sm text-gray-500 flex items-center mt-1">
-                            <Mail className="w-3 h-3 mr-1" />
-                            {venue.user?.email}
+                        <div className="flex items-center gap-2 mt-1">
+                            <PlanBadge plan={currentPlan} />
+                            {venue.eventCount > 0 && (
+                                <span className="text-xs text-gray-500">
+                                    {venue.eventCount} show{venue.eventCount !== 1 ? 's' : ''}
+                                </span>
+                            )}
                         </div>
                     </div>
+                </div>
+            </td>
+
+            {/* Plan & Status Column */}
+            <td className="px-6 py-4">
+                <div className="space-y-2">
+                    {isEditing ? (
+                        <select
+                            value={formData.isActive?.toString() || 'false'}
+                            onChange={(e) => onInputChange('isActive', e.target.value === 'true')}
+                            className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    ) : venue.isActive ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                            Active
+                        </span>
+                    ) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                            <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                            Inactive
+                        </span>
+                    )}
+
+                    {/* Plan change buttons */}
+                    {!isEditing && (
+                        <div className="flex gap-1">
+                            {currentPlan === "free" ? (
+                                <button
+                                    onClick={() => onChangePlan(venue._id, venue.venueName, "free", "pro")}
+                                    className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded hover:bg-yellow-200"
+                                >
+                                    ↑ Upgrade
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => onChangePlan(venue._id, venue.venueName, "pro", "free")}
+                                    className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200"
+                                >
+                                    ↓ Downgrade
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
             </td>
 
@@ -240,16 +314,10 @@ const VenueRow = ({
                                     {venue.address}
                                 </div>
                             )}
-                            {venue.phone && (
+                            {venue.user?.email && (
                                 <div className="flex items-center text-sm text-gray-600">
-                                    <Phone className="w-3 h-3 mr-2 text-gray-400" />
-                                    <span>{venue.phone}</span>
-                                </div>
-                            )}
-                            {venue.website && (
-                                <div className="flex items-center text-sm text-blue-600">
-                                    <Globe className="w-3 h-3 mr-2" />
-                                    <span className="truncate">Website</span>
+                                    <Mail className="w-3 h-3 mr-2 text-gray-400" />
+                                    <span className="truncate">{venue.user.email}</span>
                                 </div>
                             )}
                         </>
@@ -300,30 +368,6 @@ const VenueRow = ({
                 </div>
             </td>
 
-            {/* Status Column */}
-            <td className="px-6 py-4 whitespace-nowrap">
-                {isEditing ? (
-                    <select
-                        value={formData.isActive?.toString() || 'false'}
-                        onChange={(e) => onInputChange('isActive', e.target.value === 'true')}
-                        className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
-                    </select>
-                ) : venue.isActive ? (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                        Active
-                    </span>
-                ) : (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-                        <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
-                        Inactive
-                    </span>
-                )}
-            </td>
-
             {/* Actions Column */}
             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex justify-end items-center space-x-2">
@@ -360,7 +404,6 @@ const VenueRow = ({
                                 <Eye className="w-4 h-4" />
                             </button>
 
-                            {/* Verify Button - শুধুমাত্র unverified এবং active venues এর জন্য */}
                             {!isVerified && venue.isActive && (
                                 <button
                                     onClick={() => onVerifyVenue(venue._id, venue.venueName)}
@@ -399,17 +442,58 @@ const VenueRow = ({
                                             <Edit className="w-4 h-4 mr-2" />
                                             Edit Venue
                                         </button>
-                                        {!isVerified && (
+
+                                        {/* Plan Management */}
+                                        <div className="border-t border-gray-100 my-1"></div>
+                                        <div className="px-4 py-1 text-xs font-medium text-gray-500">Plan</div>
+                                        {currentPlan === "free" ? (
                                             <button
-                                                onClick={() => onVerifyVenue(venue._id, venue.venueName)}
-                                                className="flex items-center px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 w-full text-left"
+                                                onClick={() => {
+                                                    onChangePlan(venue._id, venue.venueName, "free", "pro");
+                                                    onActionMenuToggle(null);
+                                                }}
+                                                className="flex items-center px-4 py-2 text-sm text-yellow-700 hover:bg-yellow-50 w-full text-left"
                                             >
-                                                <Sparkles className="w-4 h-4 mr-2" />
-                                                Verify Venue
+                                                <Crown className="w-4 h-4 mr-2" />
+                                                Upgrade to Pro
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => {
+                                                    onChangePlan(venue._id, venue.venueName, "pro", "free");
+                                                    onActionMenuToggle(null);
+                                                }}
+                                                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                                            >
+                                                <DollarSign className="w-4 h-4 mr-2" />
+                                                Downgrade to Free
                                             </button>
                                         )}
+
+                                        {/* Verification */}
+                                        {!isVerified && venue.isActive && (
+                                            <>
+                                                <div className="border-t border-gray-100 my-1"></div>
+                                                <button
+                                                    onClick={() => {
+                                                        onVerifyVenue(venue._id, venue.venueName);
+                                                        onActionMenuToggle(null);
+                                                    }}
+                                                    className="flex items-center px-4 py-2 text-sm text-purple-600 hover:bg-purple-50 w-full text-left"
+                                                >
+                                                    <Sparkles className="w-4 h-4 mr-2" />
+                                                    Verify Venue
+                                                </button>
+                                            </>
+                                        )}
+
+                                        {/* Delete */}
+                                        <div className="border-t border-gray-100 my-1"></div>
                                         <button
-                                            onClick={() => onDeleteVenue(venue._id, venue.venueName)}
+                                            onClick={() => {
+                                                onDeleteVenue(venue._id, venue.venueName);
+                                                onActionMenuToggle(null);
+                                            }}
                                             className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
                                         >
                                             <Trash2 className="w-4 h-4 mr-2" />
