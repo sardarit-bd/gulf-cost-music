@@ -158,7 +158,7 @@ export default function AdminSponsors() {
 
             <button
               onClick={handleAddSponsor}
-              className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 bg-[var(--primary)] text-white px-6 py-3 rounded-lg hover:bg-[var(--primary-dark)] transition-colors"
             >
               <Plus className="w-5 h-5" />
               Add New Sponsor
@@ -173,7 +173,7 @@ export default function AdminSponsors() {
               placeholder="Search sponsors..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="text-gray-500 w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="text-gray-500 w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
             />
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function AdminSponsors() {
         {/* Sponsors Grid */}
         {loading ? (
           <div className="flex justify-center items-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600 mr-3" />
+            <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)] mr-3" />
             <span className="text-gray-600">Loading sponsors...</span>
           </div>
         ) : (
@@ -213,7 +213,7 @@ export default function AdminSponsors() {
               {!searchTerm && (
                 <button
                   onClick={handleAddSponsor}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="bg-[var(--primary)] text-white px-6 py-3 rounded-lg hover:bg-[var(--primary-dark)] transition-colors"
                 >
                   Add Your First Sponsor
                 </button>

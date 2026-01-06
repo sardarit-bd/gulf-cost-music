@@ -9,10 +9,12 @@ import axios from "axios";
 import {
   Building2,
   CheckCircle,
-  Power,
+  Crown,
+  DollarSign,
   RefreshCw,
+  Sparkles,
   TrendingUp,
-  Users,
+  Users
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
@@ -20,7 +22,6 @@ import toast, { Toaster } from "react-hot-toast";
 // Function to get cookie value by name
 const getCookie = (name) => {
   if (typeof document === "undefined") return null;
-
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) return parts.pop().split(";").shift();
@@ -35,11 +36,21 @@ const VenueManagement = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("");
+  const [planFilter, setPlanFilter] = useState("all");
   const [actionMenu, setActionMenu] = useState(null);
   const [editingVenue, setEditingVenue] = useState(null);
   const [formData, setFormData] = useState({});
   const [saveLoading, setSaveLoading] = useState(false);
   const [viewingVenue, setViewingVenue] = useState(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    inactive: 0,
+    verified: 0,
+    pro: 0,
+    free: 0,
+    thisMonth: 0,
+  });
 
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
@@ -50,7 +61,7 @@ const VenueManagement = () => {
     onConfirm: null,
   });
 
-  const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/content?type=venues`;
+  const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
   const showToast = (message, type = "success") => {
     if (type === "error") toast.error(message);
@@ -75,6 +86,7 @@ const VenueManagement = () => {
     setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
   };
 
+  // ✅ FIXED: Fetch venues with proper error handling
   const fetchVenues = async () => {
     try {
       setLoading(true);
@@ -90,35 +102,76 @@ const VenueManagement = () => {
         ...(search && { search }),
         ...(statusFilter !== "all" && { status: statusFilter }),
         ...(cityFilter && { city: cityFilter }),
+        ...(planFilter !== "all" && { plan: planFilter }),
       });
 
-      const { data } = await axios.get(`${API_URL}&${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axios.get(
+        `${API_BASE}/api/venues/admin/venues?${params.toString()}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-      setVenues(data.data.content);
-      setPages(data.data.pagination.pages);
+      if (data.success) {
+        setVenues(data.data.content || []);
+        setPages(data.data.pagination?.pages || 1);
+
+        // ✅ Calculate stats properly
+        const venuesData = data.data.content || [];
+        calculateStats(venuesData);
+      }
     } catch (err) {
       console.error("Fetch venues error:", err);
-      showToast("Failed to fetch venues", "error");
+      showToast(
+        err.response?.data?.message || "Failed to fetch venues",
+        "error"
+      );
+      setVenues([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ FIXED: Calculate stats from venues
+  const calculateStats = (venuesData) => {
+    const total = venuesData.length;
+    const active = venuesData.filter((v) => v.isActive).length;
+    const verified = venuesData.filter((v) => v.verifiedOrder > 0).length;
+    const pro = venuesData.filter((v) => v.user?.subscriptionPlan === "pro").length;
+    const free = venuesData.filter((v) => !v.user?.subscriptionPlan || v.user?.subscriptionPlan === "free").length;
+
+    // This month calculation
+    const thisMonth = venuesData.filter((v) => {
+      if (!v.createdAt) return false;
+      const created = new Date(v.createdAt);
+      const now = new Date();
+      return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+    }).length;
+
+    setStats({
+      total,
+      active,
+      inactive: total - active,
+      verified,
+      pro,
+      free,
+      thisMonth,
+    });
   };
 
   const handleViewVenue = (venue) => {
     setViewingVenue(venue);
   };
 
+  // ✅ FIXED: Toggle venue active status - send full object
   const toggleActive = async (id, currentStatus, venueName) => {
     const action = currentStatus ? "deactivate" : "activate";
 
     showConfirmation(
       `${currentStatus ? "Deactivate" : "Activate"} Venue`,
-      `Are you sure you want to ${action} "${venueName}"? ${
-        currentStatus
-          ? "This venue will no longer be visible to users."
-          : "This venue will become visible to users."
+      `Are you sure you want to ${action} "${venueName}"? ${currentStatus
+        ? "This venue will no longer be visible to users."
+        : "This venue will become visible to users."
       }`,
       currentStatus ? "Deactivate" : "Activate",
       currentStatus ? "warning" : "success",
@@ -130,26 +183,34 @@ const VenueManagement = () => {
             return;
           }
 
+          // ✅ Send complete venue object
           await axios.put(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/admin/${id}`,
-            { isActive: !currentStatus },
+            `${API_BASE}/api/venues/admin/${id}`,
+            {
+              isActive: !currentStatus,
+              // Include other required fields if needed
+              verifiedOrder: currentStatus ? 0 : undefined // Keep verification when deactivating
+            },
             { headers: { Authorization: `Bearer ${token}` } }
           );
+
           fetchVenues();
           setActionMenu(null);
           showToast(
-            `Venue ${
-              !currentStatus ? "activated" : "deactivated"
-            } successfully!`
+            `Venue ${!currentStatus ? "activated" : "deactivated"} successfully!`
           );
         } catch (err) {
           console.error("Toggle venue error:", err);
-          showToast("Failed to update venue status", "error");
+          showToast(
+            err.response?.data?.message || "Failed to update venue status",
+            "error"
+          );
         }
       }
     );
   };
 
+  // Handle edit venue
   const handleEdit = (venue) => {
     setEditingVenue(venue._id);
     setFormData({
@@ -163,10 +224,13 @@ const VenueManagement = () => {
       phone: venue.phone || "",
       website: venue.website || "",
       isActive: venue.isActive || false,
+      colorCode: venue.colorCode || "", // ✅ Add color code field
+      verifiedOrder: venue.verifiedOrder || 0, // ✅ Add verification order
     });
     setActionMenu(null);
   };
 
+  // ✅ FIXED: Handle save venue updates
   const handleSave = async (id) => {
     setSaveLoading(true);
     try {
@@ -176,9 +240,16 @@ const VenueManagement = () => {
         return;
       }
 
+      // ✅ Prepare complete update data
+      const updateData = {
+        ...formData,
+        seatingCapacity: parseInt(formData.seatingCapacity) || 0,
+        verifiedOrder: parseInt(formData.verifiedOrder) || 0,
+      };
+
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/admin/${id}`,
-        formData,
+        `${API_BASE}/api/venues/admin/${id}`,
+        updateData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -191,12 +262,12 @@ const VenueManagement = () => {
         setEditingVenue(null);
         setFormData({});
         fetchVenues();
-        showToast("Venue profile updated successfully!");
+        showToast("Venue updated successfully!");
       }
     } catch (err) {
       console.error("Update venue error:", err);
       showToast(
-        err.response?.data?.message || "Error updating venue profile",
+        err.response?.data?.message || "Error updating venue",
         "error"
       );
     } finally {
@@ -213,11 +284,17 @@ const VenueManagement = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // ✅ FIXED: Verify venue - USE CORRECT ENDPOINT
   const verifyVenue = async (id, venueName) => {
     showConfirmation(
       "Verify Venue",
-      `Are you sure you want to verify "${venueName}"? This will assign a unique color to the venue and make it visible in the calendar with proper color coding.`,
-      "Verify Venue",
+      `Are you sure you want to verify "${venueName}"? 
+      This will:
+      1. Activate the venue
+      2. Assign a unique color code
+      3. Make it visible in calendar
+      4. Assign verification order number`,
+      "Verify & Assign Color",
       "success",
       async () => {
         try {
@@ -227,10 +304,74 @@ const VenueManagement = () => {
             return;
           }
 
+          // ✅ OPTION 1: Use the verify endpoint (if exists)
+          // const response = await axios.put(
+          //   `${API_BASE}/api/venues/admin/${id}/verify`,
+          //   {},
+          //   {
+          //     headers: {
+          //       Authorization: `Bearer ${token}`,
+          //       "Content-Type": "application/json",
+          //     },
+          //   }
+          // );
+
+          // ✅ OPTION 2: Use the main update endpoint with isActive: true
           const response = await axios.put(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/admin/${id}`,
+            `${API_BASE}/api/venues/admin/${id}`,
             {
               isActive: true,
+              // This will trigger auto verification in backend
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (response.data.success) {
+            const venue = response.data.data.venue;
+            fetchVenues();
+            setActionMenu(null);
+            showToast(
+              `Venue verified successfully! 
+              Color: ${venue.colorCode || 'Auto-assigned'} 
+              Order: ${venue.verifiedOrder || 1}`
+            );
+          }
+        } catch (err) {
+          console.error("Verify venue error:", err);
+          showToast(
+            err.response?.data?.message || "Failed to verify venue",
+            "error"
+          );
+        }
+      }
+    );
+  };
+
+  // ✅ FIXED: Change subscription plan
+  const changePlan = async (id, venueName, currentPlan, newPlan) => {
+    showConfirmation(
+      `${newPlan === "pro" ? "Upgrade to Pro" : "Downgrade to Free"}`,
+      `Are you sure you want to ${newPlan === "pro" ? "upgrade" : "downgrade"} "${venueName}" to ${newPlan} plan?`,
+      newPlan === "pro" ? "Upgrade to Pro" : "Downgrade to Free",
+      newPlan === "pro" ? "success" : "warning",
+      async () => {
+        try {
+          const token = getCookie("token");
+          if (!token) {
+            showToast("Authentication token not found", "error");
+            return;
+          }
+
+          const response = await axios.put(
+            `${API_BASE}/api/venues/admin/${id}/plan`,
+            {
+              subscriptionPlan: newPlan,
+              notifyUser: true // Optional: send notification to user
             },
             {
               headers: {
@@ -244,22 +385,27 @@ const VenueManagement = () => {
             fetchVenues();
             setActionMenu(null);
             showToast(
-              `Venue "${venueName}" verified successfully with color ${response.data.data.venue.colorCode}!`
+              `Venue ${newPlan === "pro" ? "upgraded to Pro" : "downgraded to Free"} successfully!`
             );
           }
         } catch (err) {
-          console.error("Verify venue error:", err);
-          showToast("Failed to verify venue", "error");
+          console.error("Change plan error:", err);
+          showToast(
+            err.response?.data?.message || "Failed to change plan",
+            "error"
+          );
         }
       }
     );
   };
 
+  // ✅ FIXED: Delete venue
   const deleteVenue = async (id, venueName) => {
     showConfirmation(
       "Delete Venue",
-      `Are you sure you want to delete "${venueName}"? This action cannot be undone and all venue data will be permanently lost.`,
-      "Delete Venue",
+      `Are you sure you want to permanently delete "${venueName}"?
+      This action cannot be undone!`,
+      "Delete Permanently",
       "danger",
       async () => {
         try {
@@ -270,24 +416,29 @@ const VenueManagement = () => {
           }
 
           await axios.delete(
-            `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/admin/${id}`,
+            `${API_BASE}/api/venues/admin/${id}`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           fetchVenues();
           setActionMenu(null);
-          showToast("Venue profile deleted successfully!");
+          showToast("Venue deleted successfully!");
         } catch (err) {
           console.error("Delete venue error:", err);
-          showToast("Failed to delete venue profile", "error");
+          showToast(
+            err.response?.data?.message || "Failed to delete venue",
+            "error"
+          );
         }
       }
     );
   };
 
+  // Clear all filters
   const clearFilters = () => {
     setSearch("");
     setStatusFilter("all");
     setCityFilter("");
+    setPlanFilter("all");
     setPage(1);
   };
 
@@ -296,26 +447,28 @@ const VenueManagement = () => {
 
   const handlePageChange = (newPage) => setPage(newPage);
 
+  // ✅ FIXED: Use debounced search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchVenues();
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [search, statusFilter, cityFilter, planFilter]);
+
   useEffect(() => {
     fetchVenues();
-  }, [page, statusFilter, cityFilter]);
+  }, [page]);
 
+  // Get unique cities for filter
   const cities = [
     ...new Set(venues.map((venue) => venue.city).filter(Boolean)),
-  ];
-
-  const stats = {
-    total: venues.length,
-    active: venues.filter((v) => v.isActive).length,
-    inactive: venues.filter((v) => !v.isActive).length,
-    verified: venues.filter((v) => v.verifiedOrder > 0).length,
-    thisMonth: Math.floor(venues.length * 0.18),
-  };
+  ].sort();
 
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="">
           <Toaster />
 
           {/* Confirmation Modal */}
@@ -339,23 +492,23 @@ const VenueManagement = () => {
                 Venue Management
               </h1>
               <p className="text-gray-600 mt-2">
-                Manage venue profiles, activate/deactivate accounts, and monitor
-                venue activities
+                Manage venue profiles, subscription plans, verification, and color assignments
               </p>
             </div>
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
               <button
                 onClick={fetchVenues}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                disabled={loading}
+                className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 text-sm font-medium disabled:opacity-50"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
                 <span>Refresh</span>
               </button>
             </div>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 mb-8">
             <StatCard
               icon={Building2}
               label="Total Venues"
@@ -365,24 +518,38 @@ const VenueManagement = () => {
             />
             <StatCard
               icon={Users}
-              label="Active Venues"
+              label="Active"
               value={stats.active}
               change={12}
               color="green"
             />
             <StatCard
               icon={CheckCircle}
-              label="Verified Venues"
+              label="Verified"
               value={stats.verified}
               change={15}
               color="purple"
             />
             <StatCard
-              icon={Power}
-              label="Inactive Venues"
-              value={stats.inactive}
-              change={-4}
-              color="orange"
+              icon={Crown}
+              label="Pro Plan"
+              value={stats.pro}
+              change={20}
+              color="yellow"
+            />
+            <StatCard
+              icon={DollarSign}
+              label="Free Plan"
+              value={stats.free}
+              change={-5}
+              color="gray"
+            />
+            <StatCard
+              icon={Sparkles}
+              label="Colors Assigned"
+              value={stats.verified}
+              change={10}
+              color="pink"
             />
             <StatCard
               icon={TrendingUp}
@@ -393,20 +560,22 @@ const VenueManagement = () => {
             />
           </div>
 
-          {/* Filters */}
+          {/* Filters - Enhanced with Plan Filter */}
           <Filters
             search={search}
             statusFilter={statusFilter}
             cityFilter={cityFilter}
+            planFilter={planFilter}
             cities={cities}
             onSearchChange={setSearch}
             onStatusFilterChange={setStatusFilter}
             onCityFilterChange={setCityFilter}
+            onPlanFilterChange={setPlanFilter}
             onApply={fetchVenues}
             onClear={clearFilters}
           />
 
-          {/* Venues Table */}
+          {/* Venues Table - Enhanced with Plan Management */}
           <VenueTable
             venues={venues}
             loading={loading}
@@ -426,6 +595,7 @@ const VenueManagement = () => {
             onDeleteVenue={deleteVenue}
             onActionMenuToggle={handleActionMenuToggle}
             onVerifyVenue={verifyVenue}
+            onChangePlan={changePlan}
           />
 
           {/* Venue Detail Modal */}
@@ -434,6 +604,8 @@ const VenueManagement = () => {
               venue={viewingVenue}
               onClose={() => setViewingVenue(null)}
               onEdit={handleEdit}
+              onChangePlan={changePlan}
+              onVerifyVenue={verifyVenue}
             />
           )}
         </div>

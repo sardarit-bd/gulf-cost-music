@@ -110,10 +110,9 @@ const NewsManagement = () => {
 
     showConfirmation(
       `${isActive ? "Deactivate" : "Activate"} News`,
-      `Are you sure you want to ${action} "${title}"? ${
-        isActive
-          ? "This news will no longer be visible to users."
-          : "This news will become visible to users."
+      `Are you sure you want to ${action} "${title}"? ${isActive
+        ? "This news will no longer be visible to users."
+        : "This news will become visible to users."
       }`,
       isActive ? "Deactivate" : "Activate",
       isActive ? "warning" : "success",
@@ -267,7 +266,7 @@ const NewsManagement = () => {
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="">
           <Toaster />
 
           <ConfirmationModal
@@ -296,7 +295,7 @@ const NewsManagement = () => {
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
               <button
                 onClick={fetchNews}
-                className="flex items-center space-x-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium"
+                className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 text-sm font-medium"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Refresh</span>

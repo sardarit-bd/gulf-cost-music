@@ -135,7 +135,7 @@ const PodcastForm = ({
                     <button
                         type="submit"
                         disabled={submitting}
-                        className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center gap-2 disabled:opacity-50"
+                        className="px-6 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 transition flex items-center gap-2 disabled:opacity-50"
                     >
                         {editingItem ? (
                             <>

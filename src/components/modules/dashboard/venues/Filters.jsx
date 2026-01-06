@@ -1,22 +1,25 @@
 "use client";
+
 import { Filter, Search, X } from "lucide-react";
 
 const Filters = ({
     search,
     statusFilter,
     cityFilter,
+    planFilter,
     cities,
     onSearchChange,
     onStatusFilterChange,
     onCityFilterChange,
+    onPlanFilterChange,
     onApply,
-    onClear
+    onClear,
 }) => {
-    const hasActiveFilters = search || statusFilter !== "all" || cityFilter;
+    const hasActiveFilters = search || statusFilter !== "all" || cityFilter || planFilter !== "all";
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 mb-6">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-end">
                 <div className="lg:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Search Venues
@@ -54,43 +57,59 @@ const Filters = ({
                         <option value="all">All Status</option>
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
+                        <option value="verified">Verified</option>
+                        <option value="unverified">Unverified</option>
                     </select>
                 </div>
 
-                <div className="flex space-x-2">
-                    <div className="flex-1">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            City
-                        </label>
-                        <select
-                            className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            value={cityFilter}
-                            onChange={(e) => onCityFilterChange(e.target.value)}
-                        >
-                            <option value="">All Cities</option>
-                            {cities.map(city => (
-                                <option key={city} value={city}>{city}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="flex space-x-2 self-end">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        City
+                    </label>
+                    <select
+                        className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={cityFilter}
+                        onChange={(e) => onCityFilterChange(e.target.value)}
+                    >
+                        <option value="">All Cities</option>
+                        {cities.map(city => (
+                            <option key={city} value={city}>{city}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Plan
+                    </label>
+                    <select
+                        className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        value={planFilter}
+                        onChange={(e) => onPlanFilterChange(e.target.value)}
+                    >
+                        <option value="all">All Plans</option>
+                        <option value="pro">Pro</option>
+                        <option value="free">Free</option>
+                    </select>
+                </div>
+
+                <div className="flex space-x-2 self-end">
+                    <button
+                        onClick={onApply}
+                        className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 font-medium transition-colors flex items-center space-x-2"
+                    >
+                        <Filter className="w-4 h-4" />
+                        <span>Apply</span>
+                    </button>
+                    {hasActiveFilters && (
                         <button
-                            onClick={onApply}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center space-x-2"
+                            onClick={onClear}
+                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium transition-colors flex items-center space-x-2"
                         >
-                            <Filter className="w-4 h-4" />
-                            <span>Apply</span>
+                            <X className="w-4 h-4" />
+                            <span>Clear</span>
                         </button>
-                        {hasActiveFilters && (
-                            <button
-                                onClick={onClear}
-                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-medium transition-colors flex items-center space-x-2"
-                            >
-                                <X className="w-4 h-4" />
-                                <span>Clear</span>
-                            </button>
-                        )}
-                    </div>
+                    )}
                 </div>
             </div>
         </div>

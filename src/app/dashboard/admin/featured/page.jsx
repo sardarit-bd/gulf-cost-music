@@ -330,7 +330,7 @@ export default function AdminFeaturedSection() {
       <div className="min-h-screen bg-gray-50 p-6">
         <Toaster />
         {/* Header */}
-        <div className="max-w-7xl mx-auto">
+        <div className="">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
@@ -352,7 +352,7 @@ export default function AdminFeaturedSection() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 bg-[var(--primary)] text-white px-6 py-2 rounded-lg hover:bg-primary/80disabled:opacity-50 transition-colors"
               >
                 {saving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -370,7 +370,7 @@ export default function AdminFeaturedSection() {
               {/* Content Settings */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <Type className="w-5 h-5 text-blue-600" />
+                  <Type className="w-5 h-5 text-[var(--primary)]" />
                   Content Settings
                 </h2>
 
@@ -386,7 +386,7 @@ export default function AdminFeaturedSection() {
                       value={featuredData.subtitle}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-gray-900"
                       placeholder="Enter subtitle"
                       maxLength={100}
                     />
@@ -403,7 +403,7 @@ export default function AdminFeaturedSection() {
                       value={featuredData.title}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-gray-900"
                       placeholder="Enter main title"
                       maxLength={150}
                     />
@@ -420,7 +420,7 @@ export default function AdminFeaturedSection() {
                       onChange={handleInputChange}
                       required
                       rows={4}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 resize-none"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] text-gray-900 resize-none"
                       placeholder="Enter description"
                       maxLength={500}
                     />
@@ -431,7 +431,7 @@ export default function AdminFeaturedSection() {
               {/* List Items Management */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <List className="w-5 h-5 text-blue-600" />
+                  <List className="w-5 h-5 text-[var(--primary)]" />
                   Feature List Items
                 </h2>
 
@@ -448,7 +448,7 @@ export default function AdminFeaturedSection() {
                       name="icon"
                       value={newListItem.icon}
                       onChange={handleListItemChange}
-                      className="text-gray-500 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="text-gray-500 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                     >
                       <option value="calendar">Calendar Icon</option>
                       <option value="users">Users Icon</option>
@@ -462,7 +462,7 @@ export default function AdminFeaturedSection() {
                       value={newListItem.title}
                       onChange={handleListItemChange}
                       placeholder="Item title"
-                      className="text-gray-500 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="text-gray-500 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                     />
 
                     <textarea
@@ -471,7 +471,7 @@ export default function AdminFeaturedSection() {
                       onChange={handleListItemChange}
                       placeholder="Item description"
                       rows={2}
-                      className="text-gray-500 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                      className="text-gray-500 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] resize-none"
                     />
 
                     <div className="flex gap-2">
@@ -493,7 +493,7 @@ export default function AdminFeaturedSection() {
                       ) : (
                         <button
                           onClick={handleAddListItem}
-                          className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                          className="flex items-center gap-2 bg-[var(--primary)] text-white px-3 py-2 rounded-lg hover:bg-primary/80 transition-colors"
                         >
                           <Plus className="w-4 h-4" />
                           Add Item
@@ -554,7 +554,7 @@ export default function AdminFeaturedSection() {
             {/* Right Column - Image Upload */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-blue-600" />
+                <ImageIcon className="w-5 h-5 text-[var(--primary)]" />
                 Featured Image
               </h2>
 
@@ -592,7 +592,7 @@ export default function AdminFeaturedSection() {
                   {imagePreview ? "Upload New Image" : "Upload Featured Image"}
                 </label>
 
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-[var(--primary)] transition-colors">
                   <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
 
                   {selectedImage ? (
@@ -622,7 +622,7 @@ export default function AdminFeaturedSection() {
                         PNG, JPG, WEBP (Max 5MB)
                       </p>
 
-                      <label className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+                      <label className="inline-flex items-center gap-2 bg-[var(--primary)] text-white px-6 py-3 rounded-lg hover:bg-primary/80 transition-colors cursor-pointer">
                         <Upload className="w-4 h-4" />
                         Choose Image File
                         <input
@@ -658,7 +658,7 @@ export default function AdminFeaturedSection() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full bg-blue-600 text-white py-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shadow-lg"
+              className="w-full bg-[var(--primary)] text-white py-4 rounded-lg hover:bg-primary/80 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 shadow-lg"
             >
               {saving ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

@@ -17,8 +17,8 @@ export default function DashboardLayout({ children }) {
   }
 
   return (
-    <div className="mt-32">
-      <div className="container mx-auto sm:px-6 lg:px-8">
+    <div className="mt-24">
+      <div className="">
         {children}
       </div>
     </div>

@@ -165,18 +165,16 @@ export default function UserOrderTracking() {
                           >
                             <div
                               className={`w-8 h-8 flex items-center justify-center rounded-full border
-                                                                ${
-                                                                  active
-                                                                    ? "bg-blue-600 text-white border-blue-600"
-                                                                    : "bg-gray-100 text-gray-400 border-gray-300"
-                                                                }`}
+                                                                ${active
+                                  ? "bg-blue-600 text-white border-blue-600"
+                                  : "bg-gray-100 text-gray-400 border-gray-300"
+                                }`}
                             >
                               <Icon className="w-4 h-4" />
                             </div>
                             <p
-                              className={`text-xs mt-2 ${
-                                active ? "text-gray-900" : "text-gray-400"
-                              }`}
+                              className={`text-xs mt-2 ${active ? "text-gray-900" : "text-gray-400"
+                                }`}
                             >
                               {item.label}
                             </p>

@@ -210,11 +210,9 @@ const ContactManagement = () => {
   // Reply to message
   const handleReply = (message) => {
     const subject = `Re: ${message.subject}`;
-    const body = `\n\n--- Original Message ---\nFrom: ${message.name} <${
-      message.email
-    }>\nDate: ${new Date(message.createdAt).toLocaleString()}\nMessage: ${
-      message.message
-    }\n`;
+    const body = `\n\n--- Original Message ---\nFrom: ${message.name} <${message.email
+      }>\nDate: ${new Date(message.createdAt).toLocaleString()}\nMessage: ${message.message
+      }\n`;
 
     window.open(
       `mailto:${message.email}?subject=${encodeURIComponent(
@@ -287,7 +285,7 @@ const ContactManagement = () => {
               )}
               <button
                 onClick={fetchContacts}
-                className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
+                className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 text-sm font-medium"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Refresh</span>
@@ -376,11 +374,10 @@ const ContactManagement = () => {
                       contacts.map((msg) => (
                         <tr
                           key={msg._id}
-                          className={`hover:bg-gray-50 transition-colors group ${
-                            !msg.isRead
-                              ? "bg-blue-50 border-l-4 border-l-blue-500"
-                              : ""
-                          }`}
+                          className={`hover:bg-gray-50 transition-colors group ${!msg.isRead
+                            ? "bg-blue-50 border-l-4 border-l-blue-500"
+                            : ""
+                            }`}
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-3">
@@ -536,11 +533,10 @@ const ContactManagement = () => {
                         <button
                           key={pageNumber}
                           onClick={() => setPage(pageNumber)}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            page === pageNumber
-                              ? "bg-indigo-600 text-white shadow-sm"
-                              : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                          }`}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${page === pageNumber
+                            ? "bg-indigo-600 text-white shadow-sm"
+                            : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                            }`}
                         >
                           {pageNumber}
                         </button>
@@ -863,12 +859,12 @@ const StatCard = ({ icon: Icon, label, value, change, color }) => {
         >
           <Icon className="w-6 h-6 text-white" />
         </div>
-        <div
+        {/* <div
           className={`flex items-center space-x-1 text-sm font-medium ${changeColor}`}
         >
           <span>{changeIcon}</span>
           <span>{Math.abs(change)}%</span>
-        </div>
+        </div> */}
       </div>
       <h3 className="text-2xl font-bold text-gray-900 mb-1">{value || 0}</h3>
       <p className="text-gray-600 text-sm">{label}</p>

@@ -1,7 +1,7 @@
 "use client";
-import { Calendar, Mail, MapPin, Music, X } from "lucide-react";
+import { Calendar, Crown, Mail, MapPin, Music, Users, X } from "lucide-react";
 
-const ArtistDetailModal = ({ artist, onClose, onEdit }) => {
+const ArtistDetailModal = ({ artist, onClose, onEdit, onPlanChange }) => {
     if (!artist) return null;
 
     const getGenreColor = (genre) => {
@@ -45,10 +45,28 @@ const ArtistDetailModal = ({ artist, onClose, onEdit }) => {
                                     <Mail className="w-4 h-4 mr-2" />
                                     {artist.user?.email}
                                 </p>
+                                <div className="mt-2">
+                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${artist.user?.subscriptionPlan === "pro"
+                                        ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                                        : "bg-blue-100 text-blue-800 border border-blue-200"
+                                        }`}>
+                                        {artist.user?.subscriptionPlan === "pro" ? (
+                                            <>
+                                                <Crown className="w-4 h-4 mr-1" />
+                                                Pro Plan
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Users className="w-4 h-4 mr-1" />
+                                                Free Plan
+                                            </>
+                                        )}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-4">
                                 <div>
                                     <label className="font-medium text-gray-700">Genre:</label>
@@ -95,6 +113,35 @@ const ArtistDetailModal = ({ artist, onClose, onEdit }) => {
                                     </p>
                                 </div>
 
+                                <div>
+                                    <label className="font-medium text-gray-700">Media Uploads:</label>
+                                    <div className="mt-2 space-y-2">
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span className="text-gray-600">Photos:</span>
+                                            <span className="font-medium">
+                                                {artist.photos?.length || 0}/{
+                                                    artist.user?.subscriptionPlan === "pro" ? 5 : 0
+                                                }
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span className="text-gray-600">Audio Tracks:</span>
+                                            <span className="font-medium">
+                                                {artist.mp3Files?.length || 0}/{
+                                                    artist.user?.subscriptionPlan === "pro" ? 5 : 0
+                                                }
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span className="text-gray-600">Biography:</span>
+                                            <span className={`font-medium ${artist.biography ? "text-green-600" : "text-gray-400"
+                                                }`}>
+                                                {artist.biography ? "✓ Added" : "✗ Not added"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {artist.phone && (
                                     <div>
                                         <label className="font-medium text-gray-700">Phone:</label>
@@ -106,7 +153,7 @@ const ArtistDetailModal = ({ artist, onClose, onEdit }) => {
                                     <div>
                                         <label className="font-medium text-gray-700">Website:</label>
                                         <p className="text-gray-600 mt-1 truncate">
-                                            <a href={artist.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                            <a href={artist.website} target="_blank" rel="noopener noreferrer" className="text-[var(--primary)] hover:underline">
                                                 {artist.website}
                                             </a>
                                         </p>
@@ -115,30 +162,58 @@ const ArtistDetailModal = ({ artist, onClose, onEdit }) => {
                             </div>
                         </div>
 
-                        {artist.bio && (
+                        {artist.biography && (
                             <div>
-                                <label className="font-medium text-gray-700">Bio:</label>
-                                <p className="text-gray-600 mt-2 text-sm leading-relaxed">{artist.bio}</p>
+                                <label className="font-medium text-gray-700">Biography:</label>
+                                <p className="text-gray-600 mt-2 text-sm leading-relaxed">{artist.biography}</p>
                             </div>
                         )}
                     </div>
 
-                    <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
-                        <button
-                            onClick={() => {
-                                onClose();
-                                onEdit(artist);
-                            }}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                        >
-                            Edit Profile
-                        </button>
-                        <button
-                            onClick={onClose}
-                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors text-sm font-medium"
-                        >
-                            Close
-                        </button>
+                    <div className="flex justify-between items-center mt-6 pt-4 border-t">
+                        <div className="flex gap-2">
+                            {artist.user?.subscriptionPlan === "free" ? (
+                                <button
+                                    onClick={() => {
+                                        onPlanChange(artist, "pro");
+                                        onClose();
+                                    }}
+                                    className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium flex items-center"
+                                >
+                                    <Crown className="w-4 h-4 mr-2" />
+                                    Upgrade to Pro
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => {
+                                        onPlanChange(artist, "free");
+                                        onClose();
+                                    }}
+                                    className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 transition-colors text-sm font-medium flex items-center"
+                                >
+                                    <Users className="w-4 h-4 mr-2" />
+                                    Downgrade to Free
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    onClose();
+                                    onEdit(artist);
+                                }}
+                                className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 transition-colors text-sm font-medium"
+                            >
+                                Edit Profile
+                            </button>
+                            <button
+                                onClick={onClose}
+                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors text-sm font-medium"
+                            >
+                                Close
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
