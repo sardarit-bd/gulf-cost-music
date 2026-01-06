@@ -54,25 +54,6 @@ export default function HeroSection() {
     if (!videoUrl.includes('http') && !videoUrl.includes('youtube') && !videoUrl.includes('youtu.be')) {
       return `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/q_auto/${videoUrl}.mp4`;
     }
-
-    // YouTube URL handling
-    // if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
-    //   let videoId = "";
-
-    //   if (videoUrl.includes("youtube.com/watch?v=")) {
-    //     videoId = videoUrl.split("v=")[1]?.split("&")[0];
-    //   } else if (videoUrl.includes("youtu.be/")) {
-    //     videoId = videoUrl.split("youtu.be/")[1]?.split("?")[0];
-    //   } else if (videoUrl.includes("youtube.com/embed/")) {
-    //     videoId = videoUrl.split("embed/")[1]?.split("?")[0];
-    //   }
-
-    //   if (videoId) {
-    //     return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0&showinfo=0&disablekb=1&iv_load_policy=3`;
-    //   }
-    // }
-
-    // Direct video URL
     return videoUrl;
   };
 
@@ -135,7 +116,7 @@ export default function HeroSection() {
           {hero?.subtitle || "Experience the best with stunning venues and powerful performances."}
         </p>
 
-        <button className="bg-[#FAEE71] hover:bg-[#FAEE71]/90 text-black px-4 py-2 rounded-lg font-bold hover:bg-[#FAEE71]/90 transition text-lg">
+        <button className="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded-lg font-bold hover:bg-yellow-500/90 transition text-lg">
           <Link href="/venues">
             {hero?.buttonText || "Get Started"}
           </Link>

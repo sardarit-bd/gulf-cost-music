@@ -1,5 +1,3 @@
-// components/artist/ArtistMarketplaceTab.js
-
 "use client";
 
 import {
@@ -313,50 +311,7 @@ export default function ArtistMarketplaceTab({
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-purple-500" />
-            </div>
-            <div>
-              <p className="text-gray-400 text-sm">Active Listing</p>
-              <p className="text-2xl font-bold text-white">{activeCount}</p>
-            </div>
-          </div>
-        </div>
 
-        <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-500" />
-            </div>
-            <div>
-              <p className="text-gray-400 text-sm">Your Price</p>
-              <p className="text-2xl font-bold text-white">
-                {currentListing.price
-                  ? `$${parseFloat(currentListing.price).toFixed(2)}`
-                  : "$0.00"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-900 rounded-xl p-5 border border-gray-800">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-              <ImageIcon className="w-6 h-6 text-blue-500" />
-            </div>
-            <div>
-              <p className="text-gray-400 text-sm">Photos</p>
-              <p className="text-lg font-bold text-white">
-                {listingPhotos.length}/5
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Navigation Tabs */}
       <div className="flex flex-wrap border-b border-gray-800">
@@ -713,18 +668,6 @@ export default function ArtistMarketplaceTab({
       {/* My Listing View - VENUE STYLE */}
       {activeSection === "listings" && (
         <div className="space-y-8">
-          {/* Header Section */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-bold text-white">
-                Marketplace Listings
-              </h2>
-              <p className="text-gray-400 mt-1">
-                Manage your active listings and track performance
-              </p>
-            </div>
-          </div>
-
           {/* Loading State */}
           {loadingListings ? (
             <div className="text-center py-16 bg-gray-900/50 rounded-2xl border border-gray-800">

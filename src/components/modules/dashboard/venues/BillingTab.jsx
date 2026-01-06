@@ -365,7 +365,7 @@ export default function BillingTab() {
                         </div>
 
                         {/* Plan Features */}
-                        <div className="mb-6">
+                        {/* <div className="mb-6">
                             <h3 className="text-lg font-semibold text-white mb-4">Plan Features</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {planFeatures[plan].map((feature, index) => (
@@ -375,124 +375,112 @@ export default function BillingTab() {
                                     </div>
                                 ))}
                             </div>
-                        </div>
+                        </div> */}
 
-                        {/* Current Usage */}
-                        {isPro && subscriptionRules[userType] && (
-                            <div className="bg-gray-800/50 rounded-xl p-4">
-                                <h4 className="text-sm font-semibold text-gray-300 mb-3">Your Current Limits</h4>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                    {Object.entries(subscriptionRules[userType]).map(([key, value]) => (
-                                        <div key={key} className="text-center">
-                                            <p className="text-2xl font-bold text-white">{value}</p>
-                                            <p className="text-xs text-gray-400 capitalize">{key.replace(/([A-Z])/g, ' $1')}</p>
+
+                        <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+                            <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-3">
+                                <CreditCard className="w-5 h-5" />
+                                Billing Information
+                            </h3>
+
+                            <div className="space-y-6">
+                                {/* Status Timeline */}
+                                <div className="relative pl-8">
+                                    <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-700"></div>
+
+                                    {trialEndsAt && (
+                                        <div className="relative mb-6">
+                                            <div className="absolute -left-9 top-1 w-4 h-4 bg-blue-500 rounded-full border-4 border-gray-900"></div>
+                                            <div>
+                                                <p className="text-sm text-gray-400">Trial Period</p>
+                                                <p className="text-white font-medium">
+                                                    Ends on {new Date(trialEndsAt).toLocaleDateString('en-US', {
+                                                        weekday: 'long',
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric'
+                                                    })}
+                                                </p>
+                                                {new Date(trialEndsAt) > new Date() && (
+                                                    <p className="text-sm text-blue-400 mt-1">
+                                                        {Math.ceil((new Date(trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24))} days remaining
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
-                                    ))}
+                                    )}
+
+                                    {currentPeriodEnd && (
+                                        <div className="relative mb-6">
+                                            <div className="absolute -left-9 top-1 w-4 h-4 bg-green-500 rounded-full border-4 border-gray-900"></div>
+                                            <div>
+                                                <p className="text-sm text-gray-400">
+                                                    {isCanceled ? "Subscription Ends" : "Next Billing Date"}
+                                                </p>
+                                                <p className="text-white font-medium">
+                                                    {new Date(currentPeriodEnd).toLocaleDateString('en-US', {
+                                                        weekday: 'long',
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric'
+                                                    })}
+                                                </p>
+                                                {!isCanceled && new Date(currentPeriodEnd) > new Date() && (
+                                                    <p className="text-sm text-gray-400 mt-1">
+                                                        Renews automatically
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex flex-wrap gap-3 pt-6 border-t border-gray-800">
+                                    <button
+                                        onClick={openBillingPortal}
+                                        disabled={actionLoading || !hasStripeSubscription}
+                                        className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 
+                           disabled:opacity-50 disabled:cursor-not-allowed
+                           text-white px-5 py-2.5 rounded-xl font-medium transition"
+                                    >
+                                        <CreditCard className="w-4 h-4" />
+                                        {actionLoading ? "Loading..." : "Manage Billing"}
+                                    </button>
+
+                                    {/* {isPro && isActive && !isCanceled && (
+                                        <button
+                                            onClick={cancelSubscription}
+                                            disabled={actionLoading}
+                                            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 
+                             disabled:opacity-50 disabled:cursor-not-allowed
+                             text-white px-5 py-2.5 rounded-xl font-medium transition"
+                                        >
+                                            <XCircle className="w-4 h-4" />
+                                            {actionLoading ? "Processing..." : "Cancel Subscription"}
+                                        </button>
+                                    )} */}
+
+                                    {isCanceled && (
+                                        <button
+                                            onClick={resumeSubscription}
+                                            disabled={actionLoading}
+                                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 
+                             disabled:opacity-50 disabled:cursor-not-allowed
+                             text-white px-5 py-2.5 rounded-xl font-medium transition"
+                                        >
+                                            <RefreshCcw className="w-4 h-4" />
+                                            {actionLoading ? "Processing..." : "Resume Subscription"}
+                                        </button>
+                                    )}
                                 </div>
                             </div>
-                        )}
+                        </div>
                     </div>
 
                     {/* Billing Information */}
-                    <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
-                        <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-3">
-                            <CreditCard className="w-5 h-5" />
-                            Billing Information
-                        </h3>
 
-                        <div className="space-y-6">
-                            {/* Status Timeline */}
-                            <div className="relative pl-8">
-                                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-700"></div>
-
-                                {trialEndsAt && (
-                                    <div className="relative mb-6">
-                                        <div className="absolute -left-9 top-1 w-4 h-4 bg-blue-500 rounded-full border-4 border-gray-900"></div>
-                                        <div>
-                                            <p className="text-sm text-gray-400">Trial Period</p>
-                                            <p className="text-white font-medium">
-                                                Ends on {new Date(trialEndsAt).toLocaleDateString('en-US', {
-                                                    weekday: 'long',
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric'
-                                                })}
-                                            </p>
-                                            {new Date(trialEndsAt) > new Date() && (
-                                                <p className="text-sm text-blue-400 mt-1">
-                                                    {Math.ceil((new Date(trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24))} days remaining
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {currentPeriodEnd && (
-                                    <div className="relative mb-6">
-                                        <div className="absolute -left-9 top-1 w-4 h-4 bg-green-500 rounded-full border-4 border-gray-900"></div>
-                                        <div>
-                                            <p className="text-sm text-gray-400">
-                                                {isCanceled ? "Subscription Ends" : "Next Billing Date"}
-                                            </p>
-                                            <p className="text-white font-medium">
-                                                {new Date(currentPeriodEnd).toLocaleDateString('en-US', {
-                                                    weekday: 'long',
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric'
-                                                })}
-                                            </p>
-                                            {!isCanceled && new Date(currentPeriodEnd) > new Date() && (
-                                                <p className="text-sm text-gray-400 mt-1">
-                                                    Renews automatically
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex flex-wrap gap-3 pt-6 border-t border-gray-800">
-                                <button
-                                    onClick={openBillingPortal}
-                                    disabled={actionLoading || !hasStripeSubscription}
-                                    className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 
-                           disabled:opacity-50 disabled:cursor-not-allowed
-                           text-white px-5 py-2.5 rounded-xl font-medium transition"
-                                >
-                                    <CreditCard className="w-4 h-4" />
-                                    {actionLoading ? "Loading..." : "Manage Billing"}
-                                </button>
-
-                                {isPro && isActive && !isCanceled && (
-                                    <button
-                                        onClick={cancelSubscription}
-                                        disabled={actionLoading}
-                                        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 
-                             disabled:opacity-50 disabled:cursor-not-allowed
-                             text-white px-5 py-2.5 rounded-xl font-medium transition"
-                                    >
-                                        <XCircle className="w-4 h-4" />
-                                        {actionLoading ? "Processing..." : "Cancel Subscription"}
-                                    </button>
-                                )}
-
-                                {isCanceled && (
-                                    <button
-                                        onClick={resumeSubscription}
-                                        disabled={actionLoading}
-                                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 
-                             disabled:opacity-50 disabled:cursor-not-allowed
-                             text-white px-5 py-2.5 rounded-xl font-medium transition"
-                                    >
-                                        <RefreshCcw className="w-4 h-4" />
-                                        {actionLoading ? "Processing..." : "Resume Subscription"}
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Right Column - Quick Actions & Info */}
@@ -577,46 +565,6 @@ export default function BillingTab() {
                             </div>
                         </div>
                     </div>
-
-                    {/* Help & Support */}
-                    <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
-                        <h4 className="text-sm font-semibold text-white mb-4">Need Help?</h4>
-                        <div className="space-y-3">
-                            <a
-                                href="mailto:support@gulfmusic.com"
-                                className="block text-gray-400 hover:text-white text-sm transition"
-                            >
-                                ✉️ Contact Support
-                            </a>
-                            <a
-                                href="/faq"
-                                className="block text-gray-400 hover:text-white text-sm transition"
-                            >
-                                📚 FAQ & Documentation
-                            </a>
-                            <a
-                                href="/terms"
-                                className="block text-gray-400 hover:text-white text-sm transition"
-                            >
-                                📄 Terms of Service
-                            </a>
-                        </div>
-                    </div>
-
-                    {/* Pro Tip */}
-                    {isPro && (
-                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-6">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                                    <Zap className="w-5 h-5 text-blue-500" />
-                                </div>
-                                <h4 className="text-sm font-semibold text-white">Pro Tip</h4>
-                            </div>
-                            <p className="text-sm text-gray-300">
-                                Use all your Pro features! Upload photos, add audio tracks, and list items in the marketplace to get the most value from your subscription.
-                            </p>
-                        </div>
-                    )}
                 </div>
             </div>
 

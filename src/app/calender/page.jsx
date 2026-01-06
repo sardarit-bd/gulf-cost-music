@@ -1,6 +1,6 @@
 "use client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Check, ChevronLeft, ChevronRight, Clock, MapPin, Users } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, MapPin, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 // City options (same as backend)
@@ -27,6 +27,19 @@ export default function CalendarBoard() {
   const [venues, setVenues] = useState([]);
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+
+
+
+  const getWeekDates = (date) => {
+    const start = new Date(date);
+    start.setDate(date.getDate() - date.getDay()); // Sunday
+
+    return Array.from({ length: 7 }).map((_, i) => {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      return d;
+    });
+  };
 
   // Fetch events from backend API
   const fetchEvents = async (city, year = null, month = null) => {
@@ -393,7 +406,7 @@ export default function CalendarBoard() {
                                       onClick={() => handleEventClick(event)}
                                       title={`${event.title} at ${event.venue} - ${event.time}`}
                                     >
-                                      <div className="font-medium truncate">
+                                      <div className="font-medium truncate text-gray-600">
                                         {event.title}
                                       </div>
                                       <div className="text-xs text-gray-500 truncate mt-1">
@@ -428,6 +441,53 @@ export default function CalendarBoard() {
                       )}
                     </div>
                   )}
+
+                  {/* Week View */}
+                  {view === "week" && (
+                    <div className="p-4">
+                      <div className="grid grid-cols-7 gap-2">
+                        {getWeekDates(currentDate).map((date, idx) => {
+                          const dayEvents = events.filter(e =>
+                            e.date.toDateString() === date.toDateString()
+                          );
+
+                          return (
+                            <div
+                              key={idx}
+                              className="border rounded-lg p-2 min-h-40 bg-white text-gray-600"
+                            >
+                              <div className="font-semibold text-sm mb-2">
+                                {date.toLocaleDateString("en-US", {
+                                  weekday: "short",
+                                  day: "numeric"
+                                })}
+                              </div>
+
+                              <div className="space-y-1">
+                                {dayEvents.map(event => (
+                                  <div
+                                    key={event.id}
+                                    className="text-xs p-1 rounded text-gray-600"
+                                    style={{
+                                      backgroundColor: `${event.color}20`,
+                                      borderLeft: `3px solid ${event.color}`
+                                    }}
+                                  >
+                                    {event.title}
+                                  </div>
+                                ))}
+
+                                {dayEvents.length === 0 && (
+                                  <p className="text-xs text-gray-400">No events</p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
 
                   {/* Agenda View */}
                   {view === "agenda" && (
@@ -529,7 +589,7 @@ export default function CalendarBoard() {
                           )}
                         </div>
 
-                        <div
+                        {/* <div
                           className={`w-5 h-5 flex-shrink-0 rounded border flex items-center justify-center transition
                             ${filteredVenueIds.includes(venue._id)
                               ? "bg-blue-600 border-blue-600"
@@ -539,7 +599,7 @@ export default function CalendarBoard() {
                           {filteredVenueIds.includes(venue._id) && (
                             <Check className="w-3 h-3 text-white" />
                           )}
-                        </div>
+                        </div> */}
                       </div>
                     ))
                   ) : (
@@ -549,14 +609,14 @@ export default function CalendarBoard() {
                   )}
                 </div>
 
-                {filteredVenueIds.length > 0 && (
+                {/* {filteredVenueIds.length > 0 && (
                   <button
                     onClick={() => setFilteredVenueIds([])}
                     className="w-full mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium"
                   >
                     Clear filters
                   </button>
-                )}
+                )} */}
               </div>
 
               {/* Stats */}
@@ -571,10 +631,10 @@ export default function CalendarBoard() {
                     <span className="text-gray-600">Active Venues:</span>
                     <span className="font-medium text-gray-600">{venues.length}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  {/* <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Filtered:</span>
                     <span className="font-medium text-gray-600">{filteredVenueIds.length} venue(s)</span>
-                  </div>
+                  </div> */}
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Current Month:</span>
                     <span className="font-medium text-gray-600">
@@ -672,7 +732,7 @@ export default function CalendarBoard() {
 
                     window.open(googleCalendarUrl, '_blank');
                   }}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                  className="flex-1 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
                 >
                   Add to Calendar
                 </button>

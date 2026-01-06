@@ -6,13 +6,12 @@ import {
     DollarSign,
     MapPin,
     ShoppingBag,
-    Tag,
-    User,
     Video
 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 export default function MarketItemPage() {
     const { city, market } = useParams();
@@ -50,6 +49,48 @@ export default function MarketItemPage() {
             setLoading(false);
         }
     };
+
+    const handleBuyNow = async () => {
+        try {
+            const token = document.cookie
+                .split("; ")
+                .find((row) => row.startsWith("token="))
+                ?.split("=")[1];
+
+            if (!token) {
+                router.push("/login");
+                return;
+            }
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_BASE_URL}/api/market-checkout/checkout`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        itemId: item._id,
+                    }),
+                }
+            );
+
+            const data = await res.json();
+
+            if (!data.success) {
+                toast.error(data.message || "Checkout failed");
+                return;
+            }
+
+            // Redirect to Stripe Checkout
+            window.location.href = data.url;
+        } catch (err) {
+            console.error("Buy now error:", err);
+            toast.error("Something went wrong. Please try again.");
+        }
+    };
+
 
     if (loading) {
         return (
@@ -118,8 +159,8 @@ export default function MarketItemPage() {
                                     <Image
                                         src={item.photos[1]}
                                         alt={item.title}
-                                        width={128}
-                                        height={128}
+                                        width={500}
+                                        height={500}
                                         className="object-cover w-full h-full"
                                     />
                                 ) : (
@@ -219,14 +260,13 @@ export default function MarketItemPage() {
                                         Price
                                     </div>
                                 </div>
-                                <button className="w-full flex items-center justify-center gap-2 py-3 bg-yellow-500 text-black rounded-lg font-semibold hover:bg-yellow-400 transition">
-                                    {/* <Mail size={18} /> */}
+                                <button
+                                    onClick={handleBuyNow}
+                                    className="w-full flex items-center justify-center gap-2 py-3 bg-yellow-500 text-black rounded-lg font-semibold hover:bg-yellow-400 transition"
+                                >
                                     Buy Now
                                 </button>
-                                {/* <button className="w-full flex items-center justify-center gap-2 py-3 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition">
-                                    <User size={18} />
-                                    View Profile
-                                </button> */}
+
                             </div>
                         </div>
 
@@ -284,7 +324,7 @@ export default function MarketItemPage() {
                                         { id: "details", label: "Details", icon: ShoppingBag },
                                         { id: "gallery", label: "Gallery", icon: Camera, count: item.photos?.length },
                                         { id: "video", label: "Video", icon: Video },
-                                        { id: "seller", label: "Seller", icon: User },
+                                        // { id: "seller", label: "Seller", icon: User },
                                     ].map((tab) => (
                                         <button
                                             key={tab.id}
@@ -323,7 +363,7 @@ export default function MarketItemPage() {
                                         </div>
 
                                         {/* Details Grid */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-6 sm:mt-8">
+                                        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-6 sm:mt-8">
                                             <div className="bg-gradient-to-br from-gray-700/50 to-gray-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-600/30">
                                                 <h4 className="font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3">
                                                     <Tag className="text-yellow-400" size={20} />
@@ -358,7 +398,7 @@ export default function MarketItemPage() {
                                                     <p className="text-gray-400 text-sm mt-1">{decodedCity}</p>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </div> */}
                                     </div>
                                 )}
 
@@ -424,7 +464,7 @@ export default function MarketItemPage() {
                                     </div>
                                 )}
 
-                                {activeTab === "seller" && (
+                                {/* {activeTab === "seller" && (
                                     <div>
                                         <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">Seller Profile</h3>
 
@@ -462,7 +502,7 @@ export default function MarketItemPage() {
                                             </div>
                                         </div>
                                     </div>
-                                )}
+                                )} */}
                             </div>
                         </div>
 
