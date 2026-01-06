@@ -19,14 +19,13 @@ import {
   Music,
   Newspaper,
   PanelBottom,
-  Settings,
   ShoppingBag,
   Sparkles,
   TvMinimalPlay,
   User,
   Users,
   Waves,
-  X,
+  X
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -48,6 +47,9 @@ export default function AdminLayout({ children }) {
     useState(false);
   const [expandedItems, setExpandedItems] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [adminProfile, setAdminProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
   const [loading, setLoading] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const pathname = usePathname();
@@ -116,6 +118,38 @@ export default function AdminLayout({ children }) {
       type: "single",
     },
   ];
+
+
+  const fetchAdminProfile = async () => {
+    try {
+      const token = getCookie("token");
+      if (!token) return;
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/profile`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setAdminProfile(data.data);
+      }
+    } catch (err) {
+      console.error("Failed to load admin profile", err);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdminProfile();
+  }, []);
+
 
   // Fetch notifications
   const fetchNotifications = async () => {
@@ -484,17 +518,35 @@ export default function AdminLayout({ children }) {
           {/* User Section */}
           <div className="p-4 border-t border-gray-200 bg-gray-50">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <User className="h-5 w-5 text-white" />
+              {/* Profile Image */}
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                {adminProfile?.profilePhoto?.url ? (
+                  <Image
+                    src={adminProfile.profilePhoto.url}
+                    alt={adminProfile.fullName}
+                    width={40}
+                    height={40}
+                    className="object-cover w-full h-full"
+                    unoptimized
+                  />
+                ) : (
+                  <User className="h-5 w-5 text-gray-500" />
+                )}
               </div>
+
+              {/* Name & Role */}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  Admin User
+                  {profileLoading
+                    ? "Loading..."
+                    : adminProfile?.fullName || user?.username}
                 </p>
-                <p className="text-xs text-gray-500 truncate">
-                  Super Administrator
+                <p className="text-xs text-gray-500 truncate capitalize">
+                  {adminProfile?.role?.replace("_", " ") || user?.role}
                 </p>
               </div>
+
+              {/* Logout */}
               <button
                 onClick={handleLogout}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
@@ -504,6 +556,7 @@ export default function AdminLayout({ children }) {
               </button>
             </div>
           </div>
+
         </div>
       </div>
 
@@ -666,37 +719,64 @@ export default function AdminLayout({ children }) {
                   }}
                   className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                    {user?.username?.charAt(0)?.toUpperCase() || "A"}
+                  {/* Profile Image / Avatar */}
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                    {adminProfile?.profilePhoto?.url ? (
+                      <Image
+                        src={adminProfile.profilePhoto.url}
+                        alt={adminProfile.fullName}
+                        width={32}
+                        height={32}
+                        className="object-cover w-full h-full"
+                        unoptimized
+                      />
+                    ) : (
+                      <span className="text-sm font-semibold text-gray-700">
+                        {adminProfile?.fullName?.charAt(0)?.toUpperCase() ||
+                          user?.username?.charAt(0)?.toUpperCase() ||
+                          "A"}
+                      </span>
+                    )}
                   </div>
+
+                  {/* Name & Role */}
                   <div className="hidden sm:block text-left">
-                    <p className="text-sm font-medium text-gray-900">
-                      {user?.username || "Admin User"}
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {adminProfile?.fullName || user?.username || "Admin"}
                     </p>
                     <p className="text-xs text-gray-500 capitalize">
-                      {user?.role || "Super Admin"}
+                      {adminProfile?.role?.replace("_", " ") || user?.role}
                     </p>
                   </div>
+
                   <ChevronDown
                     className={`h-4 w-4 text-gray-500 transition-transform ${userDropdownOpen ? "rotate-180" : ""
                       }`}
                   />
                 </button>
 
+                {/* Dropdown Menu */}
                 <div
-                  className={`absolute top-full right-0 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 transition-all duration-200 ${userDropdownOpen
-                    ? "opacity-100 visible"
-                    : "opacity-0 invisible"
+                  className={`absolute top-full right-0 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 transition-all duration-200 ${userDropdownOpen ? "opacity-100 visible" : "opacity-0 invisible"
                     }`}
                 >
                   <Link
+                    href="/dashboard/admin/profile"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                    onClick={closeAllDropdowns}
+                  >
+                    <User className="w-4 h-4" />
+                    Profile
+                  </Link>
+
+                  {/* <Link
                     href="/dashboard/admin/settings"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors duration-200"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors"
                     onClick={closeAllDropdowns}
                   >
                     <Settings className="w-4 h-4" />
                     Settings
-                  </Link>
+                  </Link> */}
 
                   <div className="border-t border-gray-100 my-1"></div>
 
@@ -705,13 +785,14 @@ export default function AdminLayout({ children }) {
                       handleLogout();
                       closeAllDropdowns();
                     }}
-                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 text-left"
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
                   >
                     <LogOut className="w-4 h-4" />
                     Sign Out
                   </button>
                 </div>
               </div>
+
             </div>
           </div>
         </header>
