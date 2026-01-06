@@ -407,7 +407,7 @@ const UserManagement = () => {
                   fetchUsers();
                   fetchStats();
                 }}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 text-sm font-medium"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Refresh</span>

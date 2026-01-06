@@ -300,7 +300,7 @@ export default function ProductManagement() {
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+          className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 transition"
         >
           <Plus className="w-5 h-5" />
           Add Product
@@ -436,20 +436,17 @@ export default function ProductManagement() {
                   onClick={() =>
                     setFormData({ ...formData, isActive: !formData.isActive })
                   }
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    formData.isActive ? "bg-green-500" : "bg-gray-300"
-                  }`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isActive ? "bg-green-500" : "bg-gray-300"
+                    }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      formData.isActive ? "translate-x-6" : "translate-x-1"
-                    }`}
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.isActive ? "translate-x-6" : "translate-x-1"
+                      }`}
                   />
                 </button>
                 <span
-                  className={`font-medium ${
-                    formData.isActive ? "text-green-600" : "text-gray-600"
-                  }`}
+                  className={`font-medium ${formData.isActive ? "text-green-600" : "text-gray-600"
+                    }`}
                 >
                   {formData.isActive ? "Active" : "Inactive"}
                 </span>
@@ -548,7 +545,7 @@ export default function ProductManagement() {
             {merchItems.length === 0 && (
               <button
                 onClick={() => setShowForm(true)}
-                className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                className="mt-4 px-6 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 transition"
               >
                 Create Your First Product
               </button>
@@ -607,13 +604,12 @@ export default function ProductManagement() {
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          item.stock > 10
-                            ? "bg-green-100 text-green-800"
-                            : item.stock > 0
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${item.stock > 10
+                          ? "bg-green-100 text-green-800"
+                          : item.stock > 0
                             ? "bg-yellow-100 text-yellow-800"
                             : "bg-red-100 text-red-800"
-                        }`}
+                          }`}
                       >
                         {item.stock} units
                       </span>
@@ -623,11 +619,10 @@ export default function ProductManagement() {
                         <button
                           onClick={() => toggleProductStatus(item)}
                           disabled={actionLoading === item._id}
-                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition ${
-                            item.isActive
-                              ? "bg-green-100 text-green-800 hover:bg-green-200"
-                              : "bg-red-100 text-red-800 hover:bg-red-200"
-                          }`}
+                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition ${item.isActive
+                            ? "bg-green-100 text-green-800 hover:bg-green-200"
+                            : "bg-red-100 text-red-800 hover:bg-red-200"
+                            }`}
                         >
                           {actionLoading === item._id ? (
                             <Loader2 className="w-3 h-3 animate-spin" />
@@ -736,11 +731,10 @@ export default function ProductManagement() {
                     <div>
                       <p className="text-sm text-gray-500">Stock</p>
                       <p
-                        className={`text-lg font-semibold ${
-                          selectedItem.stock > 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
+                        className={`text-lg font-semibold ${selectedItem.stock > 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                          }`}
                       >
                         {selectedItem.stock} units
                       </p>
@@ -751,11 +745,10 @@ export default function ProductManagement() {
                     <div>
                       <p className="text-sm text-gray-500">Status</p>
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                          selectedItem.isActive
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${selectedItem.isActive
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                          }`}
                       >
                         {selectedItem.isActive ? (
                           <ToggleRight className="w-3 h-3" />

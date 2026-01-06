@@ -47,8 +47,8 @@ const ArtistDetailModal = ({ artist, onClose, onEdit, onPlanChange }) => {
                                 </p>
                                 <div className="mt-2">
                                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${artist.user?.subscriptionPlan === "pro"
-                                            ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
-                                            : "bg-blue-100 text-blue-800 border border-blue-200"
+                                        ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                                        : "bg-blue-100 text-blue-800 border border-blue-200"
                                         }`}>
                                         {artist.user?.subscriptionPlan === "pro" ? (
                                             <>
@@ -153,7 +153,7 @@ const ArtistDetailModal = ({ artist, onClose, onEdit, onPlanChange }) => {
                                     <div>
                                         <label className="font-medium text-gray-700">Website:</label>
                                         <p className="text-gray-600 mt-1 truncate">
-                                            <a href={artist.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                            <a href={artist.website} target="_blank" rel="noopener noreferrer" className="text-[var(--primary)] hover:underline">
                                                 {artist.website}
                                             </a>
                                         </p>
@@ -189,7 +189,7 @@ const ArtistDetailModal = ({ artist, onClose, onEdit, onPlanChange }) => {
                                         onPlanChange(artist, "free");
                                         onClose();
                                     }}
-                                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium flex items-center"
+                                    className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 transition-colors text-sm font-medium flex items-center"
                                 >
                                     <Users className="w-4 h-4 mr-2" />
                                     Downgrade to Free
@@ -203,7 +203,7 @@ const ArtistDetailModal = ({ artist, onClose, onEdit, onPlanChange }) => {
                                     onClose();
                                     onEdit(artist);
                                 }}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                                className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 transition-colors text-sm font-medium"
                             >
                                 Edit Profile
                             </button>

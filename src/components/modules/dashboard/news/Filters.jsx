@@ -78,7 +78,7 @@ const Filters = ({
                     <div className="flex space-x-2 self-end">
                         <button
                             onClick={onApply}
-                            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors flex items-center space-x-2"
+                            className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 font-medium transition-colors flex items-center space-x-2"
                         >
                             <Filter className="w-4 h-4" />
                             <span>Apply</span>

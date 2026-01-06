@@ -49,9 +49,20 @@ export default function AdminLayout({ children }) {
   const [expandedItems, setExpandedItems] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const pathname = usePathname();
   const { logout, user } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient && window.innerWidth >= 1024) {
+      setExpandedItems(["Content Management"]);
+    }
+  }, [isClient]);
 
   // Refs for dropdowns
   const userDropdownRef = useRef(null);
@@ -95,6 +106,7 @@ export default function AdminLayout({ children }) {
           icon: Handshake,
         },
         { name: "Footer", href: "/dashboard/admin/footer", icon: PanelBottom },
+        { name: "Profile", href: "/dashboard/admin/profile", icon: User },
       ],
     },
     {
@@ -103,12 +115,6 @@ export default function AdminLayout({ children }) {
       icon: Mail,
       type: "single",
     },
-    // {
-    //   name: 'System Settings',
-    //   href: '/dashboard/admin/settings',
-    //   icon: Settings,
-    //   type: 'single'
-    // },
   ];
 
   // Fetch notifications
@@ -134,7 +140,6 @@ export default function AdminLayout({ children }) {
         const data = await response.json();
 
         if (data.success && data.data.contacts) {
-          // Transform contact messages to notifications
           const contactNotifications = data.data.contacts.map((contact) => ({
             id: contact._id,
             title: "New Contact Message",
@@ -152,7 +157,6 @@ export default function AdminLayout({ children }) {
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
-      // Fallback to mock data if API fails
       setNotifications(getMockNotifications());
     } finally {
       setLoading(false);
@@ -230,7 +234,6 @@ export default function AdminLayout({ children }) {
         );
       }
 
-      // Update local state
       setNotifications((prev) =>
         prev.map((notif) =>
           notif.id === notificationId ? { ...notif, read: true } : notif
@@ -254,7 +257,6 @@ export default function AdminLayout({ children }) {
         (n) => !n.read && n.contactId
       );
 
-      // Mark all contact notifications as read
       await Promise.all(
         unreadContacts.map((contact) =>
           fetch(
@@ -269,7 +271,6 @@ export default function AdminLayout({ children }) {
         )
       );
 
-      // Update local state
       setNotifications((prev) =>
         prev.map((notif) => ({ ...notif, read: true }))
       );
@@ -281,7 +282,6 @@ export default function AdminLayout({ children }) {
   // Handle notification click
   const handleNotificationClick = (notification) => {
     if (notification.contactId) {
-      // Redirect to contact messages page
       router.push("/dashboard/admin/contacts");
       markAsRead(notification.id, notification.contactId);
     }
@@ -322,7 +322,7 @@ export default function AdminLayout({ children }) {
     closeAllDropdowns();
   }, [pathname]);
 
-  // Fetch notifications on component mount and when notification dropdown opens
+  // Fetch notifications when dropdown opens
   useEffect(() => {
     if (notificationDropdownOpen) {
       fetchNotifications();
@@ -330,6 +330,10 @@ export default function AdminLayout({ children }) {
   }, [notificationDropdownOpen]);
 
   const toggleExpanded = (itemName) => {
+    if (isClient && window.innerWidth >= 1024 && itemName === "Content Management") {
+      return;
+    }
+
     setExpandedItems((prev) =>
       prev.includes(itemName)
         ? prev.filter((item) => item !== itemName)
@@ -355,19 +359,31 @@ export default function AdminLayout({ children }) {
     (notification) => !notification.read
   ).length;
 
+  // Function to handle menu item clicks (close sidebar only on mobile)
+  const handleMenuItemClick = () => {
+    // Only close sidebar on mobile screens (less than 1024px)
+    if (isClient && window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  };
+
   const NavItem = ({ item }) => {
     const Icon = item.icon;
     const isItemActive =
       item.type === "single"
         ? isActive(item.href)
         : isChildActive(item.children);
-    const isExpanded = expandedItems.includes(item.name);
+
+    const isExpanded = item.type === "group" && expandedItems.includes(item.name);
 
     if (item.type === "group") {
       return (
         <div className="space-y-1">
           <button
-            onClick={() => toggleExpanded(item.name)}
+            onClick={() => {
+              toggleExpanded(item.name);
+              handleMenuItemClick();
+            }}
             className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isItemActive
               ? "bg-blue-50 text-blue-700 border border-blue-200"
               : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
@@ -378,34 +394,32 @@ export default function AdminLayout({ children }) {
               {item.name}
             </div>
             <ChevronRight
-              className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-90" : ""
+              className={`h-4 w-4 transition-transform lg:hidden ${isExpanded ? "rotate-90" : ""
                 }`}
             />
           </button>
 
-          {isExpanded && (
-            <div className="ml-4 space-y-1 border-l border-gray-200 pl-2">
-              {item.children.map((child) => {
-                const ChildIcon = child.icon;
-                const isChildActive = isActive(child.href);
+          <div className={`ml-4 space-y-1 border-l border-gray-200 pl-2 ${isExpanded ? "block" : "hidden"}`}>
+            {item.children.map((child) => {
+              const ChildIcon = child.icon;
+              const isChildActive = isActive(child.href);
 
-                return (
-                  <Link
-                    key={child.name}
-                    href={child.href}
-                    className={`flex items-center px-4 py-2 text-sm rounded-lg transition-colors ${isChildActive
-                      ? "bg-blue-100 text-blue-700 border border-blue-200"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                      }`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <ChildIcon className="mr-3 h-4 w-4" />
-                    {child.name}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
+              return (
+                <Link
+                  key={child.name}
+                  href={child.href}
+                  className={`flex items-center px-4 py-2 text-sm rounded-lg transition-colors ${isChildActive
+                    ? "bg-blue-100 text-blue-700 border border-blue-200"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  onClick={handleMenuItemClick} // Use the new function here
+                >
+                  <ChildIcon className="mr-3 h-4 w-4" />
+                  {child.name}
+                </Link>
+              );
+            })}
+          </div>
         </div>
       );
     }
@@ -417,7 +431,7 @@ export default function AdminLayout({ children }) {
           ? "bg-blue-600 text-white shadow-lg"
           : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
           }`}
-        onClick={() => setSidebarOpen(false)}
+        onClick={handleMenuItemClick} // Use the new function here
       >
         <Icon className="mr-3 h-5 w-5" />
         {item.name}
@@ -643,7 +657,7 @@ export default function AdminLayout({ children }) {
                 )}
               </div>
 
-              {/* User Menu - Updated with new style */}
+              {/* User Menu */}
               <div className="relative group" ref={userDropdownRef}>
                 <button
                   onClick={() => {
@@ -669,22 +683,12 @@ export default function AdminLayout({ children }) {
                   />
                 </button>
 
-                {/* Updated Dropdown with new style */}
                 <div
                   className={`absolute top-full right-0 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 transition-all duration-200 ${userDropdownOpen
                     ? "opacity-100 visible"
                     : "opacity-0 invisible"
                     }`}
                 >
-                  {/* <Link
-                    href="/dashboard/admin"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors duration-200"
-                    onClick={closeAllDropdowns}
-                  >
-                    <User className="w-4 h-4" />
-                    My Profile
-                  </Link> */}
-
                   <Link
                     href="/dashboard/admin/settings"
                     className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors duration-200"

@@ -140,7 +140,7 @@ export default function HeroEditor({ heroData, onChange, onSave }) {
                         <button
                             onClick={() => open()}
                             disabled={uploading}
-                            className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full mt-3 bg-[var(--primary)] hover:bg-primary/80 text-white py-2 rounded-md flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {uploading ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />

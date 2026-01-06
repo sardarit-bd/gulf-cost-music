@@ -215,30 +215,34 @@ const ArtistRow = ({
                     </select>
                 ) : (
                     <div className="flex flex-col gap-2">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${currentPlan === "pro"
-                            ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
-                            : "bg-blue-100 text-blue-800 border border-blue-200"
-                            }`}>
+                        {/* Current Plan Badge */}
+                        <button
+                            className={`inline-flex items-center justify-center gap-1 
+                                w-20 px-3 py-1 rounded-full text-xs font-medium
+                                ${currentPlan === "pro"
+                                    ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                                    : "bg-blue-100 text-blue-800 border border-blue-200"
+                                }`}
+                        >
                             {currentPlan === "pro" ? (
                                 <>
-                                    <Crown className="w-3 h-3 mr-1" />
-                                    Pro Plan
+                                    <Crown className="w-3 h-3" />
+                                    Pro
                                 </>
                             ) : (
                                 <>
-                                    <Users className="w-3 h-3 mr-1" />
-                                    Free Plan
+                                    <Users className="w-3 h-3" />
+                                    Free
                                 </>
                             )}
-                        </span>
+                        </button>
 
                         {/* Quick Plan Change Buttons */}
                         <div className="flex gap-1">
                             {currentPlan === "free" ? (
                                 <button
                                     onClick={() => onOpenPlanChangeModal(artist, "pro")}
-                                    className="inline-flex items-center gap-2 px-2 py-1 text-xs bg-yellow-500 text-white rounded hover:bg-yellow-600 transition"
-                                    title="Upgrade to Pro"
+                                    className="inline-flex items-center justify-center gap-1 w-16 px-2 py-1 text-xs rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition"
                                 >
                                     <Crown className="w-3 h-3" />
                                     Pro
@@ -246,8 +250,7 @@ const ArtistRow = ({
                             ) : (
                                 <button
                                     onClick={() => onOpenPlanChangeModal(artist, "free")}
-                                    className="inline-flex items-center gap-2 px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                                    title="Downgrade to Free"
+                                    className="inline-flex items-center justify-center gap-1 w-16 px-2 py-1 text-xs rounded-full bg-blue-500 text-white hover:bg-blue-600 transition"
                                 >
                                     <Users className="w-3 h-3" />
                                     Free
@@ -255,6 +258,7 @@ const ArtistRow = ({
                             )}
                         </div>
                     </div>
+
                 )}
             </td>
 

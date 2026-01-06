@@ -25,7 +25,7 @@ const PodcastTable = ({ podcasts, loading, onEdit, onDelete, onAddNew }) => {
                     </p>
                     <button
                         onClick={onAddNew}
-                        className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                        className="px-6 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 transition"
                     >
                         Add Your First Podcast
                     </button>

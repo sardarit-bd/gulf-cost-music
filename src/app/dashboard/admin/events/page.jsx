@@ -568,7 +568,7 @@ const AdminEventsPage = () => {
             <div className="flex items-center space-x-3 mt-4 lg:mt-0">
               <button
                 onClick={fetchEvents}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+                className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 text-sm font-medium"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Refresh</span>
@@ -670,7 +670,7 @@ const AdminEventsPage = () => {
                 <div className="flex space-x-2 self-end">
                   <button
                     onClick={fetchEvents}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center space-x-2"
+                    className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 font-medium transition-colors flex items-center space-x-2"
                   >
                     <Filter className="w-4 h-4" />
                     <span>Apply</span>

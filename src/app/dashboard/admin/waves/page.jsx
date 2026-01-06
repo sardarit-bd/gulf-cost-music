@@ -259,14 +259,14 @@ export default function WaveManagementPage() {
             <div className="flex items-center space-x-2 sm:space-x-3 w-full lg:w-auto">
               <button
                 onClick={handleRefresh}
-                className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors flex-1 lg:flex-none justify-center"
+                className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 text-sm font-medium transition-colors flex-1 lg:flex-none justify-center"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span className="hidden sm:inline">Refresh</span>
               </button>
               <button
                 onClick={() => setShowForm(true)}
-                className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors flex-1 lg:flex-none justify-center"
+                className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 text-sm font-medium transition-colors flex-1 lg:flex-none justify-center"
               >
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Add Session</span>

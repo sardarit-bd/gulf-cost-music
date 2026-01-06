@@ -96,7 +96,7 @@ const Filters = ({
 
                 <button
                     onClick={onApply}
-                    className="w-full lg:w-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+                    className="w-full lg:w-auto px-6 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 font-medium transition-colors"
                 >
                     Apply Filters
                 </button>

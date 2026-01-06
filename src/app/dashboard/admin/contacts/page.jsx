@@ -285,7 +285,7 @@ const ContactManagement = () => {
               )}
               <button
                 onClick={fetchContacts}
-                className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
+                className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 text-sm font-medium"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Refresh</span>
@@ -375,8 +375,8 @@ const ContactManagement = () => {
                         <tr
                           key={msg._id}
                           className={`hover:bg-gray-50 transition-colors group ${!msg.isRead
-                              ? "bg-blue-50 border-l-4 border-l-blue-500"
-                              : ""
+                            ? "bg-blue-50 border-l-4 border-l-blue-500"
+                            : ""
                             }`}
                         >
                           <td className="px-6 py-4">
@@ -534,8 +534,8 @@ const ContactManagement = () => {
                           key={pageNumber}
                           onClick={() => setPage(pageNumber)}
                           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${page === pageNumber
-                              ? "bg-indigo-600 text-white shadow-sm"
-                              : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                            ? "bg-indigo-600 text-white shadow-sm"
+                            : "border border-gray-300 text-gray-700 hover:bg-gray-50"
                             }`}
                         >
                           {pageNumber}
