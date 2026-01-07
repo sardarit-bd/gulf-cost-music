@@ -31,7 +31,7 @@ export default function WaveManagementPage() {
   const [actionMenu, setActionMenu] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
-    thumbnail: "",
+    // thumbnail: "",
     youtubeUrl: "",
   });
   const [saveLoading, setSaveLoading] = useState(false);
@@ -143,7 +143,7 @@ export default function WaveManagementPage() {
     setEditingItem(item);
     setFormData({
       title: item.title || "",
-      thumbnail: item.thumbnail || "",
+      // thumbnail: item.thumbnail || "",
       youtubeUrl: item.youtubeUrl || "",
     });
     setShowForm(true);
@@ -181,7 +181,7 @@ export default function WaveManagementPage() {
   const resetForm = () => {
     setFormData({
       title: "",
-      thumbnail: "",
+      // thumbnail: "",
       youtubeUrl: "",
     });
     setEditingItem(null);

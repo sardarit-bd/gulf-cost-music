@@ -14,7 +14,7 @@ const nextConfig = {
         port: "",
         pathname: "/**",
       },
-       {
+      {
         protocol: "https",
         hostname: "example.com",
         pathname: "/**",
@@ -45,6 +45,12 @@ const nextConfig = {
         protocol: "https",
         hostname: "cdn.pixabay.com",
       },
+      {
+        protocol: "https",
+        hostname: "img.youtube.com",
+        pathname: "/vi/**",
+      },
+
     ],
   },
 };

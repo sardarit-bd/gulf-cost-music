@@ -9,19 +9,26 @@ const PodcastForm = ({
     token,
     onSubmit,
     onCancel,
-    handleApiError
+    handleApiError,
 }) => {
     const [formData, setFormData] = useState({
         title: editingItem?.title || "",
-        thumbnail: editingItem?.thumbnail || null,
-        youtubeUrl: editingItem?.youtubeUrl || "",
         description: editingItem?.description || "",
+        videoType: editingItem?.videoType || "youtube",
+        youtubeUrl: editingItem?.youtubeUrl || "",
+        thumbnail: editingItem?.thumbnail || "",
+        videoUrl: editingItem?.video || "",
+        videoPublicId: editingItem?.videoPublicId || "",
     });
+
     const [formErrors, setFormErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
 
     const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
+    // =====================
+    // VALIDATION
+    // =====================
     const validateForm = () => {
         const errors = {};
 
@@ -29,35 +36,53 @@ const PodcastForm = ({
             errors.title = "Title is required";
         }
 
-        if (!formData.youtubeUrl.trim()) {
-            errors.youtubeUrl = "YouTube URL is required";
+        if (formData.videoType === "youtube") {
+            if (!formData.youtubeUrl.trim()) {
+                errors.youtubeUrl = "YouTube URL is required";
+            }
         }
 
-        if (!editingItem && !formData.thumbnail) {
-            errors.thumbnail = "Thumbnail is required for new podcasts";
+        if (formData.videoType === "upload") {
+            if (!formData.videoUrl || !formData.videoPublicId) {
+                errors.videoUrl = "Please upload a video first";
+            }
         }
 
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
 
-    const handleFileChange = (file) => {
-        setFormData({ ...formData, thumbnail: file });
-        setFormErrors({ ...formErrors, thumbnail: "" });
+
+    // =====================
+    // FORM HELPERS
+    // =====================
+    const handleFormDataChange = (newData) => {
+        setFormData(newData);
+    };
+
+    const handleFormErrorsChange = (newErrors) => {
+        setFormErrors(newErrors);
     };
 
     const clearThumbnail = () => {
-        setFormData({ ...formData, thumbnail: null });
+        setFormData((prev) => ({
+            ...prev,
+            thumbnail: "",
+        }));
     };
 
-    const handleFormDataChange = (newFormData) => {
-        setFormData(newFormData);
+    const handleThumbnailChange = (file) => {
+        setFormData((prev) => ({
+            ...prev,
+            thumbnail: file,
+        }));
     };
 
-    const handleFormErrorsChange = (newFormErrors) => {
-        setFormErrors(newFormErrors);
-    };
 
+
+    // =====================
+    // SUBMIT
+    // =====================
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -74,33 +99,44 @@ const PodcastForm = ({
         setSubmitting(true);
 
         try {
-            const headers = {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "multipart/form-data",
+            const payload = {
+                title: formData.title.trim(),
+                description: formData.description.trim(),
+                videoType: formData.videoType,
             };
 
-            const fd = new FormData();
-            fd.append("title", formData.title.trim());
-            fd.append("youtubeUrl", formData.youtubeUrl.trim());
-            fd.append("description", formData.description.trim());
-
-            if (formData.thumbnail instanceof File) {
-                fd.append("thumbnail", formData.thumbnail);
+            if (formData.videoType === "youtube") {
+                payload.youtubeUrl = formData.youtubeUrl.trim();
             }
 
-            let response;
+            if (formData.videoType === "upload") {
+                payload.video = formData.videoUrl;
+                payload.videoPublicId = formData.videoPublicId;
+            }
+
+            if (formData.thumbnail) {
+                payload.thumbnail = formData.thumbnail;
+            }
+
+            const headers = {
+                Authorization: `Bearer ${token}`,
+            };
+
             if (editingItem) {
-                response = await axios.put(`${API_BASE}/api/casts/${editingItem._id}`, fd, {
-                    headers,
-                });
+                await axios.put(
+                    `${API_BASE}/api/casts/${editingItem._id}`,
+                    payload,
+                    { headers }
+                );
                 toast.success("Podcast updated successfully!");
             } else {
-                response = await axios.post(`${API_BASE}/api/casts`, fd, { headers });
+                await axios.post(`${API_BASE}/api/casts`, payload, { headers });
                 toast.success("Podcast added successfully!");
             }
 
             onSubmit();
         } catch (error) {
+            console.error(error);
             toast.error(handleApiError(error, "Failed to save podcast"));
         } finally {
             setSubmitting(false);
@@ -110,7 +146,7 @@ const PodcastForm = ({
     return (
         <div className="bg-white rounded-xl border border-gray-300 shadow-sm p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4 text-gray-900">
-                {editingItem ? 'Edit Podcast' : 'Add New Podcast'}
+                {editingItem ? "Edit Podcast" : "Add New Podcast"}
             </h2>
 
             <form onSubmit={handleSubmit}>
@@ -120,9 +156,11 @@ const PodcastForm = ({
                     editingItem={editingItem}
                     onFormDataChange={handleFormDataChange}
                     onFormErrorsChange={handleFormErrorsChange}
-                    onFileChange={handleFileChange}
+                    onFileChange={handleThumbnailChange}
                     onClearThumbnail={clearThumbnail}
                 />
+
+
 
                 <div className="md:col-span-2 flex justify-end gap-3 pt-4 border-t border-gray-300">
                     <button
@@ -140,12 +178,12 @@ const PodcastForm = ({
                         {editingItem ? (
                             <>
                                 <Edit className="w-4 h-4" />
-                                {submitting ? 'Updating...' : 'Update Podcast'}
+                                {submitting ? "Updating..." : "Update Podcast"}
                             </>
                         ) : (
                             <>
                                 <Plus className="w-4 h-4" />
-                                {submitting ? 'Adding...' : 'Add Podcast'}
+                                {submitting ? "Adding..." : "Add Podcast"}
                             </>
                         )}
                     </button>
