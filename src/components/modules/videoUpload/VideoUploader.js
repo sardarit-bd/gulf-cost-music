@@ -11,14 +11,15 @@ export default function VideoUploader({ onUploaded }) {
             <CldUploadWidget
                 uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
                 options={{
-                    sources: ["local", "camera", "url"],
                     resource_type: "video",
-                    max_file_size: 200000000, // 200MB
+                    max_file_size: 200000000,
                 }}
                 onUpload={(result) => {
                     const secureUrl = result.info.secure_url;
+                    const publicId = result.info.public_id;
+
                     setVideoUrl(secureUrl);
-                    onUploaded(secureUrl);
+                    onUploaded(secureUrl, publicId);
                 }}
             >
                 {({ open }) => (
@@ -33,7 +34,11 @@ export default function VideoUploader({ onUploaded }) {
             </CldUploadWidget>
 
             {videoUrl && (
-                <video src={videoUrl} controls className="w-full mt-4 rounded-lg"></video>
+                <video
+                    src={videoUrl}
+                    controls
+                    className="w-full mt-4 rounded-lg"
+                />
             )}
         </div>
     );

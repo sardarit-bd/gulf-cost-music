@@ -56,7 +56,7 @@ const WaveForm = ({
                         />
                     </div>
 
-                    <div>
+                    {/* <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Thumbnail URL
                         </label>
@@ -70,7 +70,7 @@ const WaveForm = ({
                         <p className="text-xs text-gray-500 mt-1">
                             Leave empty to use YouTube thumbnail
                         </p>
-                    </div>
+                    </div> */}
                 </div>
 
                 <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-4 sm:mt-6">
@@ -84,7 +84,7 @@ const WaveForm = ({
                     <button
                         type="submit"
                         disabled={saveLoading}
-                        className="px-4 sm:px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors disabled:opacity-50 flex items-center justify-center space-x-2 text-sm sm:text-base order-1 sm:order-2"
+                        className="px-4 sm:px-6 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 font-medium transition-colors disabled:opacity-50 flex items-center justify-center space-x-2 text-sm sm:text-base order-1 sm:order-2"
                     >
                         {saveLoading ? (
                             <>
