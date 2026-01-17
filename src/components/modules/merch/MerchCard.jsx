@@ -149,7 +149,7 @@ export default function MerchCard({ limit = null }) {
           </div>
 
           {/* Skeleton Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
             {[...Array(limit || 4)].map((_, index) => (
               <div
                 key={index}
@@ -215,7 +215,7 @@ export default function MerchCard({ limit = null }) {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
             {merchItems.map((item) => (
               <div
                 key={item._id}

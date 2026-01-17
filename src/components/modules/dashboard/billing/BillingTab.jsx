@@ -8,7 +8,7 @@ import {
   RefreshCcw,
   Shield,
   XCircle,
-  Zap
+  Zap,
 } from "lucide-react";
 
 export default function BillingTab({
@@ -82,10 +82,11 @@ export default function BillingTab({
           </div>
           <div className="flex items-center gap-3">
             <span
-              className={`px-4 py-2 rounded-full text-sm font-semibold ${isPro
-                ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 border border-yellow-500/30"
-                : "bg-gray-800 text-gray-300 border border-gray-700"
-                }`}
+              className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                isPro
+                  ? "bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 border border-yellow-500/30"
+                  : "bg-gray-800 text-gray-300 border border-gray-700"
+              }`}
             >
               {isPro ? "Pro Plan" : "Free   Plan"}
             </span>
@@ -108,14 +109,15 @@ export default function BillingTab({
                 </h2>
                 <div className="flex items-center gap-3 mb-4">
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${status === "active"
-                      ? "bg-green-500/20 text-green-500"
-                      : status === "trialing"
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      status === "active"
+                        ? "bg-green-500/20 text-green-500"
+                        : status === "trialing"
                         ? "bg-blue-500/20 text-blue-500"
                         : status === "canceled"
-                          ? "bg-red-500/20 text-red-500"
-                          : "bg-gray-500/20 text-gray-400"
-                      }`}
+                        ? "bg-red-500/20 text-red-500"
+                        : "bg-gray-500/20 text-gray-400"
+                    }`}
                   >
                     {status.charAt(0).toUpperCase() + status.slice(1)}
                   </span>
@@ -175,8 +177,9 @@ export default function BillingTab({
                       {isCanceled ? "Subscription Ends" : "Next Billing Date"}
                     </span>
                     <span
-                      className={`font-medium ${isCanceled ? "text-red-400" : "text-white"
-                        }`}
+                      className={`font-medium ${
+                        isCanceled ? "text-red-400" : "text-white"
+                      }`}
                     >
                       {new Date(currentPeriodEnd).toLocaleDateString()}
                     </span>
@@ -332,7 +335,7 @@ export default function BillingTab({
                 </li>
                 <li className="flex items-center gap-2 text-sm">
                   <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-gray-300">7-day free trial</span>
+                  <span className="text-gray-300">30-day free trial</span>
                 </li>
               </ul>
               <button
@@ -363,21 +366,24 @@ export default function BillingTab({
                 <p className="text-xs text-gray-500">Status</p>
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-2 h-2 rounded-full ${status === "active"
-                      ? "bg-green-500"
-                      : status === "trialing"
+                    className={`w-2 h-2 rounded-full ${
+                      status === "active"
+                        ? "bg-green-500"
+                        : status === "trialing"
                         ? "bg-blue-500"
                         : status === "canceled"
-                          ? "bg-red-500"
-                          : "bg-gray-500"
-                      }`}
+                        ? "bg-red-500"
+                        : "bg-gray-500"
+                    }`}
                   ></div>
                   <p className="text-white capitalize">{status}</p>
                 </div>
               </div>
               <div>
                 <p className="text-xs text-gray-500">User Type</p>
-                <p className="text-white capitalize">{user?.userType || "User"}</p>
+                <p className="text-white capitalize">
+                  {user?.userType || "User"}
+                </p>
               </div>
             </div>
           </div>
