@@ -12,6 +12,11 @@ import PlanStats from "../../artist/PlanStats";
 import Tabs from "../../artist/Tabs";
 import BillingTab from "../billing/BillingTab";
 
+
+
+const API_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
+
 // Subscription Rules
 const SUBSCRIPTION_RULES = {
   artist: {

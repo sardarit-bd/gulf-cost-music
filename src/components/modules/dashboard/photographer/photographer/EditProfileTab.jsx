@@ -6,7 +6,7 @@ import Textarea from "@/ui/Textarea";
 import { Crown, Edit3, Loader2, MapPin, Save, User } from "lucide-react";
 
 // Upgrade Prompt Component
-const UpgradePrompt = ({ feature }) => (
+const UpgradePrompt = ({ feature, onUpgrade }) => (
     <div className="mt-3 p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
         <div className="flex items-start gap-3">
             <Crown className="text-yellow-500 mt-0.5 flex-shrink-0" size={16} />
@@ -15,7 +15,7 @@ const UpgradePrompt = ({ feature }) => (
                     <span className="font-medium">{feature}</span> is available for Pro users
                 </p>
                 <button
-                    onClick={() => window.open("/pricing", "_blank")}
+                    onClick={onUpgrade}
                     className="mt-2 text-sm bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1.5 rounded font-medium transition"
                 >
                     Upgrade to Pro
@@ -32,6 +32,7 @@ export default function EditProfileTab({
     handleChange,
     handleSave,
     saving,
+    onUpgrade,
 }) {
     return (
         <div className="animate-fadeIn">
@@ -87,7 +88,13 @@ export default function EditProfileTab({
                                     rows={6}
                                     disabled={subscriptionPlan === "free"}
                                 />
-                                {subscriptionPlan === "free" && <UpgradePrompt feature="Biography" />}
+                                {subscriptionPlan === "free" && (
+                                    <UpgradePrompt
+                                        feature="Biography"
+                                        onUpgrade={onUpgrade}
+                                    />
+                                )}
+
                             </div>
                         </div>
                     </div>
@@ -150,7 +157,7 @@ export default function EditProfileTab({
 
                             {subscriptionPlan === "free" && (
                                 <button
-                                    onClick={() => window.open("/pricing", "_blank")}
+                                    onClick={onUpgrade}
                                     className="w-full flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-3 rounded-lg font-semibold transition"
                                 >
                                     <Crown size={16} />

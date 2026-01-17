@@ -295,7 +295,7 @@ export default function ArtistMarketplaceTab({
               Verified Artist
             </span>
 
-            {!isEditingListing && existingItem && (
+            {/* {!isEditingListing && existingItem && (
               <button
                 onClick={() => {
                   onEditListing(existingItem);
@@ -306,7 +306,7 @@ export default function ArtistMarketplaceTab({
                 <Edit2 className="w-4 h-4" />
                 Edit Listing
               </button>
-            )}
+            )} */}
           </div>
         </div>
       </div>

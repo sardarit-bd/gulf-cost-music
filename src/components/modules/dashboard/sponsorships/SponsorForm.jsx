@@ -228,7 +228,7 @@ export default function SponsorForm({ sponsor, onClose, onSave }) {
                 onChange={handleInputChange}
                 required
                 disabled={loading}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="text-gray-600 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus: focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 placeholder="Enter sponsor name"
               />
             </div>
@@ -261,11 +261,10 @@ export default function SponsorForm({ sponsor, onClose, onSave }) {
               {/* Upload Area */}
               <div className="flex items-center justify-center w-full">
                 <label
-                  className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                    dragOver
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-300 hover:border-blue-500"
-                  } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${dragOver
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 hover:border-blue-500"
+                    } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}

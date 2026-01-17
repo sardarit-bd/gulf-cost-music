@@ -33,6 +33,7 @@ export default function EditProfileTab({
   onRemoveAudio,
   onSave,
   saving = false,
+  onUpgrade,
 }) {
   const [removedPhotos, setRemovedPhotos] = useState([]);
   const [removedAudios, setRemovedAudios] = useState([]);
@@ -370,7 +371,13 @@ export default function EditProfileTab({
               }`}
             disabled={subscriptionPlan === "free"}
           />
-          {subscriptionPlan === "free" && <UpgradePrompt feature="Biography" />}
+          {subscriptionPlan === "free" && (
+            <UpgradePrompt
+              feature="Biography"
+              onUpgrade={onUpgrade}
+            />
+          )}
+
         </div>
       </div>
 

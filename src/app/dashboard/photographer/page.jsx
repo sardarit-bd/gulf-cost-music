@@ -441,6 +441,7 @@ export default function PhotographerPage() {
         onCancel={cancel}
         onResume={resume}
         onRefresh={fetchBilling}
+
       />
     </div>
   );

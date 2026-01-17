@@ -195,6 +195,7 @@ export default function PhotographerDashboard({
                             saving={saving}
                             uploadingPhotos={uploadingPhotos}
                             maxPhotos={MAX_PHOTOS}
+
                         />
                     )}
 

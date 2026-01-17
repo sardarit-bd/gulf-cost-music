@@ -1,19 +1,14 @@
 "use client";
 
 import {
-  Calendar,
   CheckCircle,
   CreditCard,
   Crown,
-  DollarSign,
-  Download,
-  FileText,
   Loader,
-  Receipt,
   RefreshCcw,
   Shield,
   XCircle,
-  Zap,
+  Zap
 } from "lucide-react";
 
 export default function BillingTab({
@@ -225,19 +220,19 @@ export default function BillingTab({
                 </button>
               )}
 
-              <button
+              {/* <button
                 onClick={onRefresh}
                 className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 
                          text-white px-5 py-2.5 rounded-xl font-medium transition"
               >
                 <RefreshCcw className="w-4 h-4" />
                 Refresh
-              </button>
+              </button> */}
             </div>
           </div>
 
           {/* Invoice History */}
-          <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
+          {/* <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white flex items-center gap-3">
                 <FileText className="w-5 h-5" />
@@ -302,7 +297,7 @@ export default function BillingTab({
                 ))}
               </div>
             )}
-          </div>
+          </div> */}
         </div>
 
         {/* Right Column - Quick Info */}

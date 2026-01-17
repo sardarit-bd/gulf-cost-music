@@ -155,9 +155,9 @@ export default function MarketItemPage() {
                     <div className="flex items-end gap-4 sm:gap-6 text-white w-full">
                         <div className="relative flex-shrink-0">
                             <div className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-xl sm:rounded-2xl overflow-hidden border-3 sm:border-4 border-yellow-400 shadow-2xl">
-                                {item.photos?.[1] ? (
+                                {item.photos?.[0] ? (
                                     <Image
-                                        src={item.photos[1]}
+                                        src={item.photos[0]}
                                         alt={item.title}
                                         width={500}
                                         height={500}
@@ -211,12 +211,13 @@ export default function MarketItemPage() {
                                         <Camera size={16} className="sm:w-4 text-blue-400" />
                                         <span>{item.photos?.length || 0} Photos</span>
                                     </div>
-                                    {item.video && (
+                                    {item.videos?.length > 0 && (
                                         <div className="flex items-center gap-1 sm:gap-2">
                                             <Video size={16} className="sm:w-4 text-purple-400" />
                                             <span>Video Available</span>
                                         </div>
                                     )}
+
                                 </div>
                             </div>
                         </div>
@@ -295,8 +296,9 @@ export default function MarketItemPage() {
                                 </div>
                                 <div className="text-center p-3 sm:p-4 bg-gray-700/30 rounded-lg sm:rounded-xl border border-gray-600/30">
                                     <div className="text-xl sm:text-2xl font-bold text-purple-400">
-                                        {item.video ? "Yes" : "No"}
+                                        {item.videos?.length > 0 ? "Yes" : "No"}
                                     </div>
+
                                     <div className="text-xs sm:text-sm text-gray-300 mt-1">
                                         Video
                                     </div>
@@ -442,11 +444,11 @@ export default function MarketItemPage() {
                                     <div>
                                         <h3 className="text-xl sm:text-2xl font-bold text-white mb-4">Video Preview</h3>
 
-                                        {item.video ? (
+                                        {item.videos?.length > 0 ? (
                                             <div className="bg-gradient-to-br from-gray-700/50 to-gray-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-600/30">
                                                 <div className="aspect-video rounded-lg sm:rounded-xl overflow-hidden mb-3 sm:mb-4 bg-black">
                                                     <video
-                                                        src={item.video}
+                                                        src={item.videos[0]}
                                                         controls
                                                         className="w-full h-full object-contain"
                                                         poster={item.photos?.[0]}
@@ -461,6 +463,7 @@ export default function MarketItemPage() {
                                                 </p>
                                             </div>
                                         )}
+
                                     </div>
                                 )}
 
