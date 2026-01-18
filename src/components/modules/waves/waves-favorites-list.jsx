@@ -54,7 +54,7 @@ export default function WavesFavoritesList({
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-black">Your Waves</h2>
 
-      <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+      <div className="space-y-3 max-h-[600px] overflow-y-auto p-4">
         {waves.map((wave) => (
           <WaveItem
             key={wave._id}

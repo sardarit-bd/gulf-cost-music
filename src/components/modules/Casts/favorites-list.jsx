@@ -44,7 +44,7 @@ export default function FavoritesList({ setCast, activeCast }) {
     <div className="space-y-4">
       <h2 className="text-2xl font-bold text-black">Your Favorites</h2>
 
-      <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+      <div className="space-y-3 max-h-[600px] overflow-y-auto p-4">
         {favorites.map((favorite) => (
           <div
             key={favorite._id}

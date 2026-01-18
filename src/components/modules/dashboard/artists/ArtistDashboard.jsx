@@ -200,24 +200,17 @@ export default function ArtistDashboard() {
   const loadBillingData = async () => {
     try {
       setBillingLoading(true);
-      const [billingRes, invoicesRes] = await Promise.allSettled([
-        api.getBillingStatus(),
-        api.getInvoices(),
-      ]);
 
-      if (billingRes.status === "fulfilled") {
-        setBillingData(billingRes.value.data);
-      }
+      const billingRes = await api.getBillingStatus();
+      setBillingData(billingRes.data);
 
-      if (invoicesRes.status === "fulfilled") {
-        setInvoices(invoicesRes.value.data || []);
-      }
     } catch (error) {
       console.error("Error loading billing data:", error);
     } finally {
       setBillingLoading(false);
     }
   };
+
 
   // Billing Handlers
   // const handleProCheckout = async () => {
@@ -787,6 +780,37 @@ export default function ArtistDashboard() {
     }
   };
 
+  const handleStripeConnect = async () => {
+    try {
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("token="))
+        ?.split("=")[1];
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/stripe/connect/onboard`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (data.success && data.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error(data.message || "Stripe connection failed");
+      }
+    } catch (err) {
+      toast.error("Stripe connect failed");
+    }
+  };
+
+
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
@@ -858,6 +882,7 @@ export default function ArtistDashboard() {
               listings={listings}
               loadingListings={loadingListings}
               currentListing={currentListing}
+              billingData={billingData}
               listingPhotos={listingPhotos}
               listingVideos={listingVideos}
               isEditingListing={isEditingListing}
@@ -876,6 +901,7 @@ export default function ArtistDashboard() {
               setIsEditingListing={setIsEditingListing}
               listingVideos={listingVideos}
               setListingVideos={setListingVideos}
+              handleStripeConnect={handleStripeConnect}
             />
           )}
 
