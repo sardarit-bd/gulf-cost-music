@@ -1,5 +1,6 @@
 "use client";
 
+import BeforeListingNotice from "@/components/shared/BeforeListingNotice";
 import {
   AlertCircle,
   ArrowRight,
@@ -47,6 +48,8 @@ export default function ArtistMarketplaceTab({
   loadMarketplaceData,
   setListingPhotos,
   setIsEditingListing,
+  billingData,
+  handleStripeConnect,
 }) {
   const [activeSection, setActiveSection] = useState("create");
   const [formErrors, setFormErrors] = useState({});
@@ -294,24 +297,20 @@ export default function ArtistMarketplaceTab({
               <Package className="w-4 h-4" />
               Verified Artist
             </span>
-
-            {!isEditingListing && existingItem && (
-              <button
-                onClick={() => {
-                  onEditListing(existingItem);
-                  setActiveSection("create");
-                }}
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-              >
-                <Edit2 className="w-4 h-4" />
-                Edit Listing
-              </button>
-            )}
           </div>
         </div>
       </div>
 
-
+      {!billingData?.stripeAccountId && (
+        <BeforeListingNotice
+          steps={[
+            "Connect your <strong>Stripe account</strong> to receive payouts",
+            "Verify your artist profile",
+            "Add at least one photo and set a valid price",
+          ]}
+          onButtonClick={handleStripeConnect}
+        />
+      )}
 
       {/* Navigation Tabs */}
       <div className="flex flex-wrap border-b border-gray-800">

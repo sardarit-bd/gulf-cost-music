@@ -103,7 +103,6 @@ export default function OverviewTab({ photographer, previewImages }) {
                             </p>
                         </div>
                     )}
-                    Select an option
 
 
                     {/* Services Preview */}

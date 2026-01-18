@@ -158,7 +158,7 @@ export default function AdminSponsors() {
 
             <button
               onClick={handleAddSponsor}
-              className="flex items-center gap-2 bg-[var(--primary)] text-white px-6 py-3 rounded-lg hover:bg-[var(--primary-dark)] transition-colors"
+              className="flex items-center gap-2 bg-[var(--primary)] text-white px-6 py-3 rounded-lg hover:bg-primary/80 transition-colors"
             >
               <Plus className="w-5 h-5" />
               Add New Sponsor
@@ -213,7 +213,7 @@ export default function AdminSponsors() {
               {!searchTerm && (
                 <button
                   onClick={handleAddSponsor}
-                  className="bg-[var(--primary)] text-white px-6 py-3 rounded-lg hover:bg-[var(--primary-dark)] transition-colors"
+                  className="bg-[var(--primary)] text-white px-6 py-3 rounded-lg hover:bg-primary/80 transition-colors"
                 >
                   Add Your First Sponsor
                 </button>

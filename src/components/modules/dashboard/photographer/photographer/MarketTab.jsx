@@ -1171,7 +1171,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                                 key={index}
                                                                 onClick={() => setActivePhotoIndex(index)}
                                                                 className={`flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border-2 transition-all duration-300
-            ${activePhotoIndex === index
+${activePhotoIndex === index
                                                                         ? "border-yellow-500"
                                                                         : "border-gray-800 hover:border-yellow-500"
                                                                     }`}

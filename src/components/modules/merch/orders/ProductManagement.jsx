@@ -24,6 +24,7 @@ export default function ProductManagement() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     price: "",
@@ -84,60 +85,62 @@ export default function ProductManagement() {
       return;
     }
 
+    if (!editingItem && !formData.image) {
+      toast.error("Product image is required");
+      return;
+    }
+
     const token = getTokenFromCookies();
     if (!token) {
       toast.error("Authentication required");
       return;
     }
 
-    const submitData = new FormData();
-
-    submitData.append("name", formData.name);
-    submitData.append("price", parseFloat(formData.price));
-    submitData.append("description", formData.description);
-    submitData.append("stock", parseInt(formData.stock));
-    submitData.append("quantity", formData.quantity);
-    submitData.append("isActive", formData.isActive);
-
-    if (formData.image) {
-      submitData.append("image", formData.image);
-    }
+    const toastId = toast.loading(
+      editingItem ? "Updating product..." : "Creating product..."
+    );
 
     try {
-      let response;
+      const submitData = new FormData();
+      submitData.append("name", formData.name);
+      submitData.append("price", parseFloat(formData.price));
+      submitData.append("description", formData.description);
+      submitData.append("stock", parseInt(formData.stock));
+      submitData.append("quantity", parseInt(formData.quantity));
+      submitData.append("isActive", formData.isActive);
+
+      if (formData.image) {
+        submitData.append("image", formData.image);
+      }
+
       if (editingItem) {
-        response = await axios.put(
+        await axios.put(
           `${API_BASE}/api/merch/${editingItem._id}`,
           submitData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "multipart/form-data",
-            },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        toast.success("Product updated successfully!");
+        toast.success("Product updated successfully!", { id: toastId });
       } else {
-        response = await axios.post(`${API_BASE}/api/merch`, submitData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
+        await axios.post(`${API_BASE}/api/merch`, submitData, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        toast.success("Product created successfully!");
+        toast.success("Product created successfully!", { id: toastId });
       }
 
       resetForm();
       fetchMerch();
     } catch (error) {
-      const errorMsg =
-        error.response?.data?.message || "Failed to save product";
-      toast.error(errorMsg);
+      console.error(error);
+      toast.error(
+        error.response?.data?.message || "Failed to save product",
+        { id: toastId }
+      );
     }
   };
 
+
   const handleDelete = async (id, name) => {
-    if (!confirm(`Delete "${name}"? This action cannot be undone.`)) return;
+    // if (!confirm(`Delete "${name}"? This action cannot be undone.`)) return;
 
     setActionLoading(id);
     try {
@@ -517,7 +520,7 @@ export default function ProductManagement() {
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
+                className="px-6 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 flex items-center gap-2"
               >
                 {editingItem ? "Update Product" : "Create Product"}
               </button>
@@ -661,17 +664,13 @@ export default function ProductManagement() {
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(item._id, item.name)}
-                        disabled={actionLoading === item._id}
-                        className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition disabled:opacity-50"
+                        onClick={() => setDeleteTarget(item)}
+                        className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
                         title="Delete Product"
                       >
-                        {actionLoading === item._id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
+                        <Trash2 className="w-4 h-4" />
                       </button>
+
                     </td>
                   </tr>
                 ))}
@@ -789,7 +788,56 @@ export default function ProductManagement() {
             </div>
           </div>
         </div>
+
+
       )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setDeleteTarget(null)}
+          />
+
+          {/* Modal Box */}
+          <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md z-10 p-6">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Delete Product
+            </h3>
+
+            <p className="text-gray-600 mt-2">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">{deleteTarget.name}</span>?
+              <br />
+              <span className="text-red-600 text-sm">
+                This action cannot be undone.
+              </span>
+            </p>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={async () => {
+                  await handleDelete(deleteTarget._id, deleteTarget.name);
+                  setDeleteTarget(null);
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
+import BillingTab from "@/components/modules/dashboard/billing/BillingTab";
 import AddShowTab from "@/components/modules/dashboard/venues/AddShowTab";
-import BillingTab from "@/components/modules/dashboard/venues/BillingTab";
+// import BillingTab from "@/components/modules/dashboard/venues/BillingTab";
 import EditProfileTab from "@/components/modules/dashboard/venues/EditProfileTab";
 import OverviewTab from "@/components/modules/dashboard/venues/OverviewTab";
 import MarketplaceTab from "@/components/modules/venues/MarketplaceTab";
@@ -30,6 +31,10 @@ const getCookie = (name) => {
 export default function VenueDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const { user } = useAuth();
+  // ===== BILLING STATES =====
+  const [billingData, setBillingData] = useState(null);
+  const [billingLoading, setBillingLoading] = useState(false);
+
   const [venue, setVenue] = useState({
     name: "",
     city: "",
@@ -947,6 +952,85 @@ export default function VenueDashboard() {
     }
   };
 
+  // const loadBillingData = async () => {
+  //   try {
+  //     setBillingLoading(true);
+  //     const token = getCookie("token");
+
+  //     const res = await fetch(`${API_BASE}/api/subscription/status`, {
+  //       headers: { Authorization: `Bearer ${token}` },
+  //     });
+
+  //     const data = await res.json();
+  //     if (res.ok) {
+  //       setBillingData(data.data);
+  //     }
+  //   } catch (err) {
+  //     console.error("Billing load error:", err);
+  //   } finally {
+  //     setBillingLoading(false);
+  //   }
+  // };
+
+  // ================= BILLING HELPERS =================
+  const loadBillingData = async () => {
+    try {
+      setBillingLoading(true);
+      const token = getCookie("token");
+
+      const res = await fetch(`${API_BASE}/api/subscription/status`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setBillingData(data.data);
+      }
+    } catch (err) {
+      console.error("Billing load error:", err);
+    } finally {
+      setBillingLoading(false);
+    }
+  };
+
+  const handleOpenPortal = async () => {
+    const token = getCookie("token");
+
+    const res = await fetch(`${API_BASE}/api/subscription/portal`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+    if (data?.url) {
+      window.open(data.url, "_blank");
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    const token = getCookie("token");
+
+    await fetch(`${API_BASE}/api/subscription/cancel`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    loadBillingData();
+  };
+
+  const handleResumeSubscription = async () => {
+    const token = getCookie("token");
+
+    await fetch(`${API_BASE}/api/subscription/resume`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    loadBillingData();
+  };
+
+
+
   // === Plan Badge Component ===
   const PlanBadge = () => (
     <div
@@ -1095,10 +1179,16 @@ export default function VenueDashboard() {
                   key={id}
                   onClick={() => {
                     setActiveTab(id);
+
                     if (id === "marketplace" && venue?.isActive) {
                       loadMarketplaceListings();
                     }
+
+                    if (id === "billing") {
+                      loadBillingData();
+                    }
                   }}
+
                   className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === id
                     ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
                     : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
@@ -1182,7 +1272,18 @@ export default function VenueDashboard() {
               />
             )}
 
-            {activeTab === "billing" && <BillingTab />}
+            {activeTab === "billing" && (
+              <BillingTab
+                user={user}
+                billingData={billingData}
+                loading={billingLoading}
+                onUpgrade={handleProCheckout}
+                onOpenPortal={handleOpenPortal}
+                onCancel={handleCancelSubscription}
+                onResume={handleResumeSubscription}
+              />
+            )}
+
 
           </div>
         </div>

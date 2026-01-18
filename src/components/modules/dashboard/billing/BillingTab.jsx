@@ -1,15 +1,10 @@
 "use client";
 
 import {
-  Calendar,
   CheckCircle,
   CreditCard,
   Crown,
-  DollarSign,
-  Download,
-  FileText,
   Loader,
-  Receipt,
   RefreshCcw,
   Shield,
   XCircle,
@@ -40,25 +35,27 @@ export default function BillingTab({
   const isActive = status === "active";
   const isTrialing = status === "trialing";
   const isCanceled = cancelAtPeriodEnd;
+  const userType = user?.userType;
+
 
   const artistFeatures = {
     free: [
-      "Basic artist profile",
+      "Basic profile",
       "No photo uploads",
-      "No audio uploads",
+      ...(userType === "artist" ? ["No audio uploads"] : []),
       "No marketplace access",
       "Standard support",
     ],
     pro: [
       "5 photo uploads",
-      "5 audio tracks",
+      ...(userType === "artist" ? ["5 audio tracks"] : []),
       "Marketplace listing",
-      "Biography section",
-      "Priority support",
-      "Verified artist badge",
-      "Analytics dashboard",
+      ...(userType === "photographer" ? ["1 video tracks"] : []),
+      ...(userType === "venue" ? ["Unlimited shows and events"] : []),
+      "Add Biography",
     ],
   };
+
 
   if (loading) {
     return (
@@ -224,84 +221,7 @@ export default function BillingTab({
                   Resume Subscription
                 </button>
               )}
-
-              <button
-                onClick={onRefresh}
-                className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 
-                         text-white px-5 py-2.5 rounded-xl font-medium transition"
-              >
-                <RefreshCcw className="w-4 h-4" />
-                Refresh
-              </button>
             </div>
-          </div>
-
-          {/* Invoice History */}
-          <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white flex items-center gap-3">
-                <FileText className="w-5 h-5" />
-                Invoice History
-              </h3>
-            </div>
-
-            {invoices.length === 0 ? (
-              <div className="text-center py-8">
-                <FileText className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                <p className="text-gray-400">No invoices found</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {invoices.map((invoice) => (
-                  <div
-                    key={invoice.id}
-                    className="bg-gray-800/50 hover:bg-gray-800 rounded-xl p-4 transition-all border border-gray-700/50"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <Receipt className="w-4 h-4 text-gray-400" />
-                          <span className="text-white font-medium">
-                            {invoice.number}
-                          </span>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${invoice.status === "paid"
-                              ? "bg-green-500/20 text-green-400"
-                              : invoice.status === "pending"
-                                ? "bg-yellow-500/20 text-yellow-400"
-                                : "bg-red-500/20 text-red-400"
-                              }`}
-                          >
-                            {invoice.status.charAt(0).toUpperCase() +
-                              invoice.status.slice(1)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-400">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {new Date(invoice.date).toLocaleDateString()}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <DollarSign className="w-3 h-3" />$
-                            {invoice.amount?.toFixed(2) || "0.00"}
-                          </div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() =>
-                          onDownloadInvoice(invoice.id, invoice.number)
-                        }
-                        className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 
-                                 text-white px-3 py-2 rounded-lg text-sm transition"
-                      >
-                        <Download className="w-4 h-4" />
-                        Download
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 
@@ -337,7 +257,7 @@ export default function BillingTab({
                 </li>
                 <li className="flex items-center gap-2 text-sm">
                   <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-gray-300">7-day free trial</span>
+                  <span className="text-gray-300">30-day free trial</span>
                 </li>
               </ul>
               <button
@@ -382,7 +302,9 @@ export default function BillingTab({
               </div>
               <div>
                 <p className="text-xs text-gray-500">User Type</p>
-                <p className="text-white capitalize">{user?.userType || "User"}</p>
+                <p className="text-white capitalize">
+                  {user?.userType || "User"}
+                </p>
               </div>
             </div>
           </div>
