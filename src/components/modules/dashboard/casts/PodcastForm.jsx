@@ -17,7 +17,7 @@ const PodcastForm = ({
         videoType: editingItem?.videoType || "youtube",
         youtubeUrl: editingItem?.youtubeUrl || "",
         thumbnail: editingItem?.thumbnail || "",
-        videoUrl: editingItem?.video || "",
+        videoUrl: editingItem?.video || editingItem?.videoUrl || "",
         videoPublicId: editingItem?.videoPublicId || "",
     });
 
@@ -43,7 +43,7 @@ const PodcastForm = ({
         }
 
         if (formData.videoType === "upload") {
-            if (!formData.videoUrl || !formData.videoPublicId) {
+            if (!editingItem && (!formData.videoUrl || !formData.videoPublicId)) {
                 errors.videoUrl = "Please upload a video first";
             }
         }
@@ -110,7 +110,7 @@ const PodcastForm = ({
             }
 
             if (formData.videoType === "upload") {
-                payload.video = formData.videoUrl;
+                payload.videoUrl = formData.videoUrl;
                 payload.videoPublicId = formData.videoPublicId;
             }
 
