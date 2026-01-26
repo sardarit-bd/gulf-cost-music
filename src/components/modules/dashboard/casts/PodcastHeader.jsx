@@ -1,6 +1,6 @@
-import { Plus, RefreshCw, Video } from "lucide-react";
+import { Plus, Video } from "lucide-react";
 
-const PodcastHeader = ({ loading, showForm, onRefresh, onToggleForm }) => {
+const PodcastHeader = ({ loading, showForm, onRefresh, onToggleForm, setShowSectionTextEditor }) => {
     return (
         <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
@@ -9,13 +9,19 @@ const PodcastHeader = ({ loading, showForm, onRefresh, onToggleForm }) => {
             </h1>
             <div className="flex items-center space-x-3">
                 <button
+                    onClick={() => setShowSectionTextEditor(true)}
+                    className="px-4 py-2.5 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                >
+                    Edit Header Text
+                </button>
+                {/* <button
                     onClick={onRefresh}
                     disabled={loading}
                     className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 disabled:opacity-50 transition"
                 >
                     <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                     <span>Refresh</span>
-                </button>
+                </button> */}
                 <button
                     onClick={onToggleForm}
                     className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 transition"

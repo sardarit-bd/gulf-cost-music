@@ -201,7 +201,7 @@ export default function MerchCard({ limit = null }) {
   return (
     <section className="py-16 px-6 md:px-16 bg-white relative">
       <Toaster />
-      <div className="container mx-auto">
+      <div className="container mx-auto h-screen">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Merchandise</h2>
         <p className="text-gray-600 mb-8">
           Exclusive Gulf Coast Music Collection
@@ -242,11 +242,10 @@ export default function MerchCard({ limit = null }) {
                       ${item.price}
                     </span>
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        item.stock > 0
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${item.stock > 0
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
-                      }`}
+                        }`}
                     >
                       {item.stock > 0
                         ? `${item.stock} in stock`
@@ -341,11 +340,10 @@ export default function MerchCard({ limit = null }) {
                     <div>
                       <p className="text-sm text-gray-500">Stock</p>
                       <p
-                        className={`text-lg font-semibold ${
-                          selectedItem.stock > 0
+                        className={`text-lg font-semibold ${selectedItem.stock > 0
                             ? "text-green-600"
                             : "text-red-600"
-                        }`}
+                          }`}
                       >
                         {selectedItem.stock > 0
                           ? `${selectedItem.stock} available`

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import YouTubePlayer from "./youtube-player";
 
-export default function FeaturedCast({ cast }) {
+export default function FeaturedCast({ cast, sectionText }) {
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Extract YouTube Video ID from URL
@@ -30,15 +30,15 @@ export default function FeaturedCast({ cast }) {
     <div className="space-y-9">
       {/* Header */}
       <div>
-        <h2 className="text-black text-2xl font-bold mb-2">Cast</h2>
+        <h2 className="text-black text-2xl font-bold mb-2">
+          {sectionText?.sectionTitle || "Cast"}
+        </h2>
         <p className="text-gray-600">
-          Tune into engaging podcast episodes featuring your favorite personalities
+          {sectionText?.sectionSubtitle || "Tune into engaging podcast episodes featuring your favorite personalities"}
         </p>
       </div>
 
-
       <div className="relative rounded-xl overflow-hidden shadow-lg bg-black">
-
         {!isPlaying && cast.thumbnail ? (
           <div
             className="relative h-[550px] w-full cursor-pointer"
@@ -57,7 +57,6 @@ export default function FeaturedCast({ cast }) {
                 );
               }}
             />
-
 
             {/* Play Button */}
             <div className="absolute inset-0 flex items-center justify-center">
@@ -78,7 +77,6 @@ export default function FeaturedCast({ cast }) {
             </div>
           </div>
         ) : (
-
           videoId && (
             <>
               <YouTubePlayer videoId={videoId} autoPlay />

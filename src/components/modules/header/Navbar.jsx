@@ -285,12 +285,12 @@ export default function Header() {
               </div>
             ))}
 
-            <Link
+            {/* <Link
               href="/merch"
               className="hover:text-yellow-400 transition-colors duration-200 font-medium text-sm xl:text-base"
             >
               Merch
-            </Link>
+            </Link> */}
           </nav>
 
           {/* Tablet Nav */}

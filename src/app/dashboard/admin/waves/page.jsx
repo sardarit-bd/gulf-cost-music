@@ -4,10 +4,11 @@ import ConfirmationModal from "@/components/modules/dashboard/waves/Confirmation
 import Filters from "@/components/modules/dashboard/waves/Filters";
 import StatCard from "@/components/modules/dashboard/waves/StatCard";
 import WaveForm from "@/components/modules/dashboard/waves/WaveForm";
+import WaveSectionTextEditor from "@/components/modules/dashboard/waves/WaveSectionTextEditor";
 import WaveTable from "@/components/modules/dashboard/waves/WaveTable";
 import { handleApiError } from "@/utils/errorHandler";
 import axios from "axios";
-import { Mic2, Plus, RefreshCw } from "lucide-react";
+import { Mic2, Plus, Text } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -31,10 +32,11 @@ export default function WaveManagementPage() {
   const [actionMenu, setActionMenu] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
-    // thumbnail: "",
     youtubeUrl: "",
+    description: "",
   });
   const [saveLoading, setSaveLoading] = useState(false);
+  const [showSectionTextEditor, setShowSectionTextEditor] = useState(false);
 
   // Confirmation modal states
   const [confirmationModal, setConfirmationModal] = useState({
@@ -89,6 +91,19 @@ export default function WaveManagementPage() {
     }
   };
 
+  // Fetch section text
+  const fetchSectionText = async () => {
+    try {
+      const { data } = await axios.get(`${API_BASE}/api/waves/section-text`);
+      if (data.success) {
+        return data.data;
+      }
+    } catch (error) {
+      console.error("Failed to fetch section text:", error);
+    }
+    return null;
+  };
+
   // Create or update wave
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -122,8 +137,8 @@ export default function WaveManagementPage() {
       if (response.data.success) {
         toast.success(
           editingItem
-            ? "Open mic updated successfully!"
-            : "Open mic added successfully!"
+            ? "Wave updated successfully!"
+            : "Wave added successfully!"
         );
         resetForm();
         fetchWaves();
@@ -132,7 +147,7 @@ export default function WaveManagementPage() {
       }
     } catch (error) {
       console.error("Save error:", error);
-      toast.error(handleApiError(error, "Failed to save open mic"));
+      toast.error(handleApiError(error, "Failed to save wave"));
     } finally {
       setSaveLoading(false);
     }
@@ -143,8 +158,8 @@ export default function WaveManagementPage() {
     setEditingItem(item);
     setFormData({
       title: item.title || "",
-      // thumbnail: item.thumbnail || "",
       youtubeUrl: item.youtubeUrl || "",
+      description: item.description || "",
     });
     setShowForm(true);
     setActionMenu(null);
@@ -153,9 +168,9 @@ export default function WaveManagementPage() {
   // Delete wave with confirmation
   const handleDelete = (id, title) => {
     showConfirmation(
-      "Delete Open Mic Session",
+      "Delete Wave",
       `Are you sure you want to delete "${title}"? This action cannot be undone.`,
-      "Delete Session",
+      "Delete Wave",
       "danger",
       async () => {
         try {
@@ -169,9 +184,9 @@ export default function WaveManagementPage() {
           await axios.delete(`${API_BASE}/api/waves/${id}`, { headers });
           fetchWaves();
           setActionMenu(null);
-          toast.success("Open mic deleted successfully!");
+          toast.success("Wave deleted successfully!");
         } catch (error) {
-          toast.error(handleApiError(error, "Failed to delete open mic"));
+          toast.error(handleApiError(error, "Failed to delete wave"));
         }
       }
     );
@@ -181,8 +196,8 @@ export default function WaveManagementPage() {
   const resetForm = () => {
     setFormData({
       title: "",
-      // thumbnail: "",
       youtubeUrl: "",
+      description: "",
     });
     setEditingItem(null);
     setShowForm(false);
@@ -194,7 +209,7 @@ export default function WaveManagementPage() {
     const refreshPromise = fetchWaves();
     toast.promise(refreshPromise, {
       loading: "Refreshing data...",
-      success: "Data refreshed successfully!",
+      // success: "Data refreshed successfully!",
       error: "Failed to refresh data",
     });
   };
@@ -250,26 +265,35 @@ export default function WaveManagementPage() {
                 <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl">
                   <Mic2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                Open Mic Management
+                Waves Management
               </h1>
               <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
-                Manage open mic sessions, performances, and YouTube videos
+                Manage waves, videos, and section text
               </p>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-3 w-full lg:w-auto">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
               <button
+                onClick={() => setShowSectionTextEditor(true)}
+                className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 text-sm font-medium transition-colors"
+                title="Edit Section Text"
+              >
+                <Text className="w-4 h-4" />
+                <span className="hidden sm:inline">Edit Header Text</span>
+                <span className="sm:hidden">Text</span>
+              </button>
+              {/* <button
                 onClick={handleRefresh}
-                className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 text-sm font-medium transition-colors flex-1 lg:flex-none justify-center"
+                className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 text-sm font-medium transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span className="hidden sm:inline">Refresh</span>
-              </button>
+              </button> */}
               <button
                 onClick={() => setShowForm(true)}
-                className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 text-sm font-medium transition-colors flex-1 lg:flex-none justify-center"
+                className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 text-sm font-medium transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Add Session</span>
+                <span className="hidden sm:inline">Add Wave</span>
                 <span className="sm:hidden">Add</span>
               </button>
             </div>
@@ -279,7 +303,7 @@ export default function WaveManagementPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <StatCard
               icon={Mic2}
-              label="Total Sessions"
+              label="Total Waves"
               value={waves.length}
               change={18}
               color="indigo"
@@ -306,6 +330,19 @@ export default function WaveManagementPage() {
               color="purple"
             />
           </div>
+
+          {/* Section Text Editor Modal */}
+          {showSectionTextEditor && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <WaveSectionTextEditor
+                  onClose={() => setShowSectionTextEditor(false)}
+                  token={token || getCookie("token")}
+                  API_BASE={API_BASE}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Search and Filters */}
           <Filters

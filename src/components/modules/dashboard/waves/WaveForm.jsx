@@ -28,6 +28,7 @@ const WaveForm = ({
 
             <form onSubmit={onSubmit}>
                 <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                    {/* Title */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Session Title *
@@ -35,13 +36,14 @@ const WaveForm = ({
                         <input
                             type="text"
                             value={formData.title}
-                            onChange={(e) => onInputChange('title', e.target.value)}
-                            className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm sm:text-base"
+                            onChange={(e) => onInputChange("title", e.target.value)}
+                            className="text-gray-500 w-full px-3 py-2 outline-none border border-gray-300 rounded-lg focus:ring-1 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm sm:text-base"
                             placeholder="Enter open mic session title"
                             required
                         />
                     </div>
 
+                    {/* YouTube URL */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             YouTube URL *
@@ -49,10 +51,24 @@ const WaveForm = ({
                         <input
                             type="url"
                             value={formData.youtubeUrl}
-                            onChange={(e) => onInputChange('youtubeUrl', e.target.value)}
-                            className="text-gray-500 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-sm sm:text-base"
+                            onChange={(e) => onInputChange("youtubeUrl", e.target.value)}
+                            className="text-gray-500 w-full px-3 py-2 outline-none border border-gray-300 rounded-lg focus:ring-1 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm sm:text-base"
                             placeholder="https://www.youtube.com/watch?v=..."
                             required
+                        />
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Description
+                        </label>
+                        <textarea
+                            value={formData.description || ""}
+                            onChange={(e) => onInputChange("description", e.target.value)}
+                            rows={4}
+                            className="text-gray-500 w-full px-3 py-2 outline-none border border-gray-300 rounded-lg focus:ring-1 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm sm:text-base resize-none"
+                            placeholder="Write session details (optional)"
                         />
                     </div>
                 </div>

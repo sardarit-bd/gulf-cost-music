@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import FavoriteItem from "./favorite-item";
 
-export default function FavoritesList({ setCast, activeCast }) {
+export default function FavoritesList({ setCast, activeCast, sectionText }) {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
@@ -12,11 +12,12 @@ export default function FavoritesList({ setCast, activeCast }) {
       try {
         const res = await fetch(`${API_BASE}/api/casts`, { cache: "no-store" });
         const data = await res.json();
-        console.log("list:", data);
 
         if (res.ok && data.success && Array.isArray(data.data.casts)) {
           setFavorites(data.data.casts);
-          setCast(data.data.casts[0]);
+          if (data.data.casts.length > 0 && !activeCast) {
+            setCast(data.data.casts[0]);
+          }
         } else {
           console.warn("No valid podcast data found");
           setFavorites([]);
@@ -30,8 +31,7 @@ export default function FavoritesList({ setCast, activeCast }) {
     };
 
     fetchFavorites();
-  }, [API_BASE, setCast]);
-
+  }, [API_BASE, setCast, activeCast]);
 
   if (loading)
     return <p className="text-gray-600 animate-pulse">Loading podcasts...</p>;
@@ -39,10 +39,11 @@ export default function FavoritesList({ setCast, activeCast }) {
   if (!favorites.length)
     return <p className="text-gray-500">No podcasts available.</p>;
 
-
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-black">Your Favorites</h2>
+      <h2 className="text-2xl font-bold text-black">
+        {sectionText?.yourCastsTitle || "Your Favorites"}
+      </h2>
 
       <div className="space-y-3 max-h-[600px] overflow-y-auto p-4">
         {favorites.map((favorite) => (

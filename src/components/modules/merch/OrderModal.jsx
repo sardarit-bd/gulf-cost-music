@@ -206,7 +206,7 @@ const OrderModal = ({
                             <label className="block text-sm font-medium text-gray-700 mb-3">
                                 Select Payment Method
                             </label>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 gap-3">
                                 <button
                                     onClick={() => handlePaymentMethodSelect("stripe")}
                                     className={`p-4 border-2 rounded-lg text-center transition-all duration-200 ${selectedPaymentMethod === "stripe"
@@ -218,7 +218,7 @@ const OrderModal = ({
                                     <div className="text-xs mt-1">Pay online</div>
                                 </button>
 
-                                <button
+                                {/* <button
                                     onClick={() => handlePaymentMethodSelect("cod")}
                                     className={`p-4 border-2 rounded-lg text-center transition-all duration-200 ${selectedPaymentMethod === "cod"
                                         ? "border-green-500 bg-green-50 text-green-700 shadow-sm"
@@ -227,7 +227,7 @@ const OrderModal = ({
                                 >
                                     <div className="font-semibold">💰 COD</div>
                                     <div className="text-xs mt-1">Pay on delivery</div>
-                                </button>
+                                </button> */}
                             </div>
                         </div>
 
