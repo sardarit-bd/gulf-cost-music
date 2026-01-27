@@ -8,7 +8,7 @@ import WaveSectionTextEditor from "@/components/modules/dashboard/waves/WaveSect
 import WaveTable from "@/components/modules/dashboard/waves/WaveTable";
 import { handleApiError } from "@/utils/errorHandler";
 import axios from "axios";
-import { Mic2, Plus, Text } from "lucide-react";
+import { Mic2, Plus, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -272,14 +272,22 @@ export default function WaveManagementPage() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
-              <button
-                onClick={() => setShowSectionTextEditor(true)}
+              {/* <button
+                
                 className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 text-sm font-medium transition-colors"
                 title="Edit Section Text"
               >
                 <Text className="w-4 h-4" />
                 <span className="hidden sm:inline">Edit Header Text</span>
                 <span className="sm:hidden">Text</span>
+              </button> */}
+
+              <button
+                onClick={() => setShowSectionTextEditor(true)}
+                className="flex items-center gap-2 bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                <Settings className="w-5 h-5" />
+                Page Settings
               </button>
               {/* <button
                 onClick={handleRefresh}
@@ -290,7 +298,7 @@ export default function WaveManagementPage() {
               </button> */}
               <button
                 onClick={() => setShowForm(true)}
-                className="flex items-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 text-sm font-medium transition-colors"
+                className="flex items-center space-x-1 sm:space-x-2 px-6 sm:px-4 py-3 bg-[var(--primary)] text-black rounded-lg hover:bg-primary/80 text-sm font-medium transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Add Wave</span>

@@ -1,4 +1,4 @@
-import { Plus, Video } from "lucide-react";
+import { Plus, Settings, Video } from "lucide-react";
 
 const PodcastHeader = ({ loading, showForm, onRefresh, onToggleForm, setShowSectionTextEditor }) => {
     return (
@@ -10,21 +10,14 @@ const PodcastHeader = ({ loading, showForm, onRefresh, onToggleForm, setShowSect
             <div className="flex items-center space-x-3">
                 <button
                     onClick={() => setShowSectionTextEditor(true)}
-                    className="px-4 py-2.5 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors"
+                    className="flex items-center gap-2 bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors"
                 >
-                    Edit Header Text
+                    <Settings className="w-5 h-5" />
+                    Page Settings
                 </button>
-                {/* <button
-                    onClick={onRefresh}
-                    disabled={loading}
-                    className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 disabled:opacity-50 transition"
-                >
-                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                    <span>Refresh</span>
-                </button> */}
                 <button
                     onClick={onToggleForm}
-                    className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 transition"
+                    className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] text-black rounded-lg hover:bg-primary/80 transition"
                 >
                     <Plus className="w-4 h-4" />
                     <span>{showForm ? 'Cancel' : 'Add Podcast'}</span>
