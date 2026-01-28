@@ -155,3 +155,19 @@ span.swiper-pagination-bullet.swiper-pagination-bullet-active {
   background: linear-gradient(to bottom, #fbbf24, #eab308);
   /* darker hover */
 }
+
+/* Hide date & time picker icons in Chrome */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  display: none;
+}
+
+/* Firefox */
+input[type="date"] {
+  appearance: none;
+}
+
+input[type="time"] {
+  appearance: none;
+}

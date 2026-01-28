@@ -2,7 +2,6 @@
 
 import BillingTab from "@/components/modules/dashboard/billing/BillingTab";
 import AddShowTab from "@/components/modules/dashboard/venues/AddShowTab";
-// import BillingTab from "@/components/modules/dashboard/venues/BillingTab";
 import EditProfileTab from "@/components/modules/dashboard/venues/EditProfileTab";
 import OverviewTab from "@/components/modules/dashboard/venues/OverviewTab";
 import MarketplaceTab from "@/components/modules/venues/MarketplaceTab";
@@ -35,8 +34,10 @@ export default function VenueDashboard() {
   const [billingData, setBillingData] = useState(null);
   const [billingLoading, setBillingLoading] = useState(false);
 
+  // ✅ FIXED: Add state field to venue object
   const [venue, setVenue] = useState({
     name: "",
+    state: "Alabama", // ✅ Added state field
     city: "",
     address: "",
     seating: "",
@@ -120,8 +121,10 @@ export default function VenueDashboard() {
 
         if (data.data?.venue) {
           const v = data.data.venue;
+          // ✅ FIXED: Add state field when fetching venue data
           setVenue({
             name: v.venueName || "",
+            state: v.state || "Alabama", // ✅ Get state from backend
             city: v.city || "",
             address: v.address || "",
             seating: v.seatingCapacity?.toString() || "",
@@ -782,7 +785,7 @@ export default function VenueDashboard() {
   };
 
   // === Save Venue with Plan Validation ===
-  const handleSave = async () => {
+  const handleSave = async (saveData) => {
     try {
       const token = getCookie("token");
       if (!token) {
@@ -790,23 +793,43 @@ export default function VenueDashboard() {
         return;
       }
 
+      // Use saveData if provided, otherwise use venue state
+      const dataToSave = saveData || {
+        venueName: venue.name,
+        state: venue.state || "Alabama",
+        city: venue.city.toLowerCase(),
+        address: venue.address,
+        seatingCapacity: venue.seating,
+        biography: venue.biography || "",
+        openHours: venue.openHours,
+        openDays: "Mon-Sat",
+        phone: venue.phone || "",
+        website: venue.website || ""
+      };
+
+      console.log("Sending venue data:", dataToSave); // ✅ Debug log
+
       const formData = new FormData();
-      formData.append("venueName", venue.name);
-      formData.append("city", venue.city.toLowerCase());
-      formData.append("address", venue.address);
-      formData.append("seatingCapacity", venue.seating);
+
+      // ✅ Required fields - MUST include state
+      formData.append("venueName", dataToSave.venueName);
+      formData.append("state", dataToSave.state || "Alabama");
+      formData.append("city", dataToSave.city);
+
+      // Optional fields based on plan
+      if (dataToSave.address) formData.append("address", dataToSave.address);
+      if (dataToSave.seatingCapacity) formData.append("seatingCapacity", dataToSave.seatingCapacity);
 
       if (subscriptionPlan === "pro") {
-        formData.append("biography", venue.biography || "");
-        formData.append("openHours", venue.openHours);
-        formData.append("openDays", "Mon-Sat");
+        if (dataToSave.biography) formData.append("biography", dataToSave.biography);
+        if (dataToSave.openHours) formData.append("openHours", dataToSave.openHours);
+        if (dataToSave.openDays) formData.append("openDays", dataToSave.openDays);
+        if (dataToSave.phone) formData.append("phone", dataToSave.phone);
+        if (dataToSave.website) formData.append("website", dataToSave.website);
       }
 
-      if (
-        venue.photos &&
-        venue.photos.length > 0 &&
-        subscriptionPlan === "pro"
-      ) {
+      // Handle photos
+      if (venue.photos && venue.photos.length > 0 && subscriptionPlan === "pro") {
         venue.photos.forEach((file) => {
           if (file instanceof File) {
             formData.append("photos", file);
@@ -814,9 +837,16 @@ export default function VenueDashboard() {
         });
       }
 
+      // Handle removed photos
       removedPhotos.forEach((filename) => {
         formData.append("removedPhotos", filename);
       });
+
+      // ✅ Debug: Log formData contents
+      console.log("FormData contents:");
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
 
       setSaving(true);
       const saveToast = toast.loading("Saving venue...");
@@ -832,7 +862,10 @@ export default function VenueDashboard() {
       const data = await res.json();
       toast.dismiss(saveToast);
 
+      console.log("Save response:", data); // ✅ Debug log
+
       if (!res.ok) {
+        console.error("Save error response:", data);
         toast.error(data.message || "Failed to save venue");
         return;
       }
@@ -952,26 +985,6 @@ export default function VenueDashboard() {
     }
   };
 
-  // const loadBillingData = async () => {
-  //   try {
-  //     setBillingLoading(true);
-  //     const token = getCookie("token");
-
-  //     const res = await fetch(`${API_BASE}/api/subscription/status`, {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-
-  //     const data = await res.json();
-  //     if (res.ok) {
-  //       setBillingData(data.data);
-  //     }
-  //   } catch (err) {
-  //     console.error("Billing load error:", err);
-  //   } finally {
-  //     setBillingLoading(false);
-  //   }
-  // };
-
   // ================= BILLING HELPERS =================
   const loadBillingData = async () => {
     try {
@@ -1029,8 +1042,6 @@ export default function VenueDashboard() {
     loadBillingData();
   };
 
-
-
   // === Plan Badge Component ===
   const PlanBadge = () => (
     <div
@@ -1086,7 +1097,7 @@ export default function VenueDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-16">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4 sm:px-6 lg:px-16">
       <Toaster position="top-center" reverseOrder={false} />
 
       <div className="">
@@ -1097,8 +1108,8 @@ export default function VenueDashboard() {
               <Building2 size={32} className="text-black" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-white">Venue Dashboard</h1>
-              <div className="flex items-center justify-center gap-3 mt-2">
+              <h1 className="text-3xl sm:text-4xl font-bold text-white">Venue Dashboard</h1>
+              <div className="flex items-center justify-center gap-3 mt-2 flex-wrap">
                 <PlanBadge />
                 {!venue.isActive && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm">
@@ -1154,7 +1165,7 @@ export default function VenueDashboard() {
                 className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 
              hover:from-yellow-500 hover:to-yellow-700 
              text-black px-5 py-2.5 rounded-xl font-semibold 
-             shadow-md hover:shadow-lg transition-all"
+             shadow-md hover:shadow-lg transition-all whitespace-nowrap"
               >
                 <Crown size={16} />
                 Upgrade to Pro · $10/month
@@ -1188,14 +1199,14 @@ export default function VenueDashboard() {
                       loadBillingData();
                     }
                   }}
-
-                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === id
+                  className={`flex items-center gap-2 px-4 sm:px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === id
                     ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
                     : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
                     }`}
                 >
                   <Icon size={18} />
-                  {label}
+                  <span className="hidden sm:inline">{label}</span>
+                  <span className="sm:hidden">{label.charAt(0)}</span>
 
                   {id === "addshow" && subscriptionPlan === "free" && (
                     <span className="text-xs bg-gray-700 px-1.5 py-0.5 rounded">
@@ -1209,12 +1220,11 @@ export default function VenueDashboard() {
                     </span>
                   )}
                 </button>
-
               ))}
             </div>
           </div>
 
-          <div className="p-6 md:p-8">
+          <div className="p-4 sm:p-6 md:p-8">
             {activeTab === "overview" && (
               <OverviewTab
                 venue={venue}
@@ -1245,6 +1255,7 @@ export default function VenueDashboard() {
                 subscriptionPlan={subscriptionPlan}
                 showsThisMonth={showsThisMonth}
                 UpgradePrompt={UpgradePrompt}
+                venue={venue}
               />
             )}
             {activeTab === "marketplace" && (
@@ -1283,11 +1294,9 @@ export default function VenueDashboard() {
                 onResume={handleResumeSubscription}
               />
             )}
-
-
           </div>
         </div>
       </div>
-    </div >
+    </div>
   );
 }
