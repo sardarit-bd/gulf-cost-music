@@ -1,6 +1,7 @@
 "use client";
 
 import { Play } from "lucide-react";
+import VideoPreview from "./VideoPreview";
 
 export default function HeroPreview({ heroData }) {
     return (
@@ -9,7 +10,7 @@ export default function HeroPreview({ heroData }) {
                 Live Preview
             </h2>
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-md p-6 border-2 border-dashed border-gray-200">
-                <div className="text-center space-y-4">
+                <div className="text-center space-y-4 mb-6">
                     <h1 className="text-2xl font-bold text-gray-900 leading-tight">
                         {heroData.title || "Your Hero Title"}
                     </h1>
@@ -29,6 +30,9 @@ export default function HeroPreview({ heroData }) {
                         </div>
                     )}
                 </div>
+
+                {/* Video Preview with Fallback */}
+                <VideoPreview videoUrl={heroData.videoUrl} />
             </div>
         </div>
     );

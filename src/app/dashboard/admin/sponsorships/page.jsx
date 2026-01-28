@@ -23,7 +23,7 @@ export default function AdminSponsors() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Section text states - SHORTENED VERSION
+  // Section text states
   const [sectionText, setSectionText] = useState({
     sectionTitle: "Our Sponsors",
     sectionSubtitle: "We're proud to partner with amazing local businesses and community supporters.",
@@ -72,23 +72,28 @@ export default function AdminSponsors() {
     }
   };
 
-  // Fetch section text
+  // Fetch section text - UPDATED ENDPOINT
   const fetchSectionText = async () => {
     setIsLoadingText(true);
     try {
       const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
-      const res = await fetch(`${API_BASE}/api/sponsors/section/text`);
+      const res = await fetch(`${API_BASE}/api/sponsors/section`); // Changed from /section/text
 
       const data = await res.json();
 
       if (data.success) {
         setSectionText({
-          sectionTitle: data.data.sectionTitle,
-          sectionSubtitle: data.data.sectionSubtitle,
+          sectionTitle: data.data.sectionTitle || "Our Sponsors",
+          sectionSubtitle: data.data.sectionSubtitle || "We're proud to partner with amazing local businesses and community supporters.",
         });
       }
     } catch (error) {
       console.error("Error fetching section text:", error);
+      // Fallback to default values
+      setSectionText({
+        sectionTitle: "Our Sponsors",
+        sectionSubtitle: "We're proud to partner with amazing local businesses and community supporters.",
+      });
     } finally {
       setIsLoadingText(false);
     }
@@ -157,7 +162,7 @@ export default function AdminSponsors() {
     }
   };
 
-  // Handle section text update - UPDATED
+  // Handle section text update - UPDATED ENDPOINT
   const handleUpdateSectionText = async (e) => {
     e.preventDefault();
 
@@ -176,7 +181,7 @@ export default function AdminSponsors() {
         sectionSubtitle: sectionText.sectionSubtitle,
       };
 
-      const res = await fetch(`${API_BASE}/api/sponsors/section/text/update`, {
+      const res = await fetch(`${API_BASE}/api/sponsors/section/update`, { // Changed from /section/text/update
         method: "PUT",
         headers: {
           'Content-Type': 'application/json',
@@ -191,7 +196,10 @@ export default function AdminSponsors() {
         toast.success("Section text updated successfully!");
         setShowTextSettings(false);
         // Update local state with new data
-        setSectionText(data.data);
+        setSectionText({
+          sectionTitle: data.data.sectionTitle,
+          sectionSubtitle: data.data.sectionSubtitle,
+        });
       } else {
         toast.error(data.message || "Update failed");
       }
@@ -243,7 +251,7 @@ export default function AdminSponsors() {
 
               <button
                 onClick={handleAddSponsor}
-                className="flex items-center gap-2 bg-[var(--primary)] text-white px-6 py-3 rounded-lg hover:bg-primary/80 transition-colors"
+                className="flex items-center gap-2 bg-[var(--primary)] text-black px-6 py-3 rounded-lg hover:bg-primary/80 transition-colors"
               >
                 <Plus className="w-5 h-5" />
                 Add New Sponsor
@@ -327,7 +335,7 @@ export default function AdminSponsors() {
           />
         )}
 
-        {/* Section Text Settings Modal - SIMPLIFIED VERSION */}
+        {/* Section Text Settings Modal */}
         {showTextSettings && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -349,10 +357,25 @@ export default function AdminSponsors() {
                 </div>
 
                 <form onSubmit={handleUpdateSectionText} className="space-y-6">
+                  {/* Current Section Preview */}
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                      Current Preview
+                    </h3>
+                    <div className="space-y-2">
+                      <p className="text-lg font-semibold text-gray-900">
+                        {sectionText.sectionTitle}
+                      </p>
+                      <p className="text-gray-600 text-sm">
+                        {sectionText.sectionSubtitle}
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Section Title */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Section Title
+                      Section Title *
                     </label>
                     <input
                       type="text"
@@ -361,6 +384,7 @@ export default function AdminSponsors() {
                         ...prev,
                         sectionTitle: e.target.value
                       }))}
+                      required
                       className="text-gray-600 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)]"
                       placeholder="Our Sponsors"
                     />
@@ -369,7 +393,7 @@ export default function AdminSponsors() {
                   {/* Section Subtitle */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Section Description
+                      Section Description *
                     </label>
                     <textarea
                       value={sectionText.sectionSubtitle}
@@ -377,6 +401,7 @@ export default function AdminSponsors() {
                         ...prev,
                         sectionSubtitle: e.target.value
                       }))}
+                      required
                       rows="4"
                       className="text-gray-600 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-[var(--primary)] resize-none"
                       placeholder="We're proud to partner with amazing local businesses and community supporters."
@@ -394,10 +419,11 @@ export default function AdminSponsors() {
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 px-4 py-3 bg-[var(--primary)] text-black rounded-lg hover:bg-primary/80 transition-colors flex items-center justify-center gap-2"
+                      disabled={isLoadingText}
+                      className="flex-1 px-4 py-3 bg-[var(--primary)] text-black rounded-lg hover:bg-primary/80 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isLoadingText && <Loader2 className="w-5 h-5 animate-spin" />}
-                      Save Changes
+                      {isLoadingText ? "Saving..." : "Save Changes"}
                     </button>
                   </div>
                 </form>
