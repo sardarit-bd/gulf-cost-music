@@ -12,30 +12,7 @@ import PlanStats from "../../artist/PlanStats";
 import Tabs from "../../artist/Tabs";
 import BillingTab from "../billing/BillingTab";
 
-
-
 const API_URL = process.env.NEXT_PUBLIC_BASE_URL;
-
-
-// Subscription Rules
-const SUBSCRIPTION_RULES = {
-  artist: {
-    free: {
-      biography: false,
-      photos: 0,
-      mp3: 0,
-      marketplace: false,
-      trialDays: 0,
-    },
-    pro: {
-      biography: true,
-      photos: 5,
-      mp3: 5,
-      marketplace: true,
-      trialDays: 7,
-    },
-  },
-};
 
 // Main Component
 export default function ArtistDashboard() {
@@ -71,14 +48,12 @@ export default function ArtistDashboard() {
   const [listingPhotos, setListingPhotos] = useState([]);
   const [listingVideos, setListingVideos] = useState([]);
   const [isEditingListing, setIsEditingListing] = useState(false);
-  // const [listingVideos, setListingVideos] = useState([]);
-
-
   const [saving, setSaving] = useState(false);
-  const [uploadLimits, setUploadLimits] = useState({
-    photos: 0,
-    audios: 0,
-    marketplace: false,
+
+  const [uploadLimits] = useState({
+    photos: 5,
+    audios: 5,
+    marketplace: true,
   });
 
   const subscriptionPlan = user?.subscriptionPlan || "free";
@@ -89,29 +64,6 @@ export default function ArtistDashboard() {
     loadMarketplaceData();
     loadBillingData();
   }, []);
-
-  // Update upload limits when plan changes
-  useEffect(() => {
-    if (subscriptionPlan) {
-      const rules =
-        SUBSCRIPTION_RULES.artist[subscriptionPlan] ||
-        SUBSCRIPTION_RULES.artist.free;
-      setUploadLimits({
-        photos: rules.photos,
-        audios: rules.mp3,
-        marketplace: subscriptionPlan === "pro",
-      });
-    }
-  }, [subscriptionPlan]);
-
-  // useEffect(() => {
-  //   if (existingItem?.videos?.length) {
-  //     setListingVideos(existingItem.videos);
-  //   } else {
-  //     setListingVideos([]);
-  //   }
-  // }, [existingItem]);
-
 
   const loadArtistProfile = async () => {
     try {
@@ -129,7 +81,7 @@ export default function ArtistDashboard() {
               typeof photo.url === "string" &&
               photo.url.trim() !== "" &&
               !photo.url.includes("undefined") &&
-              !photo.url.includes("null")
+              !photo.url.includes("null"),
           )
           .map((p) => ({
             url: p.url,
@@ -147,7 +99,7 @@ export default function ArtistDashboard() {
             typeof audio.url === "string" &&
             audio.url.trim() !== "" &&
             !audio.url.includes("undefined") &&
-            !audio.url.includes("null")
+            !audio.url.includes("null"),
         );
 
         setAudioPreview(validAudios);
@@ -159,7 +111,6 @@ export default function ArtistDashboard() {
     } catch (error) {
       console.error("Error loading artist profile:", error);
       toast.error("Failed to load profile");
-      // Set empty arrays on error
       setPreviewImages([]);
       setAudioPreview([]);
     }
@@ -182,9 +133,8 @@ export default function ArtistDashboard() {
           });
           setListingPhotos(response.data.photos || []);
           setListingVideos(
-            Array.isArray(response.data.videos) ? response.data.videos : []
+            Array.isArray(response.data.videos) ? response.data.videos : [],
           );
-
         } else {
           setListings([]);
         }
@@ -200,53 +150,14 @@ export default function ArtistDashboard() {
   const loadBillingData = async () => {
     try {
       setBillingLoading(true);
-
       const billingRes = await api.getBillingStatus();
       setBillingData(billingRes.data);
-
     } catch (error) {
       console.error("Error loading billing data:", error);
     } finally {
       setBillingLoading(false);
     }
   };
-
-
-  // Billing Handlers
-  // const handleProCheckout = async () => {
-  //   try {
-  //     const token = document.cookie
-  //       .split("; ")
-  //       .find((row) => row.startsWith("token="))
-  //       ?.split("=")[1];
-
-  //     if (!token) {
-  //       alert("You must be logged in to upgrade.");
-  //       return;
-  //     }
-
-  //     const res = await fetch(
-  //       `${API_BASE}/api/subscription/checkout/pro`,
-  //       {
-  //         method: "POST",
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     const data = await res.json();
-
-  //     if (!res.ok || !data.url) {
-  //       throw new Error(data.message || "Checkout failed");
-  //     }
-
-  //     window.location.href = data.url;
-  //   } catch (error) {
-  //     console.error("Checkout error:", error);
-  //     alert("Unable to start checkout. Please try again.");
-  //   }
-  // };
 
   const handleOpenBillingPortal = async () => {
     try {
@@ -262,7 +173,7 @@ export default function ArtistDashboard() {
   const handleCancelSubscription = async () => {
     if (
       !confirm(
-        "Your subscription will remain active until the end of the current billing period. Continue?"
+        "Your subscription will remain active until the end of the current billing period. Continue?",
       )
     ) {
       return;
@@ -296,8 +207,6 @@ export default function ArtistDashboard() {
   const handleDownloadInvoice = async (invoiceId, invoiceNumber) => {
     try {
       toast.success(`Downloading invoice ${invoiceNumber}...`);
-
-      // Create printable invoice view
       const printWindow = window.open("", "_blank");
       printWindow.document.write(`
         <html>
@@ -394,44 +303,44 @@ export default function ArtistDashboard() {
 
       // Check if saveDataOrFormData is FormData or plain object
       if (saveDataOrFormData instanceof FormData) {
-        // If it's already FormData, use it directly
         formData = saveDataOrFormData;
 
         // Add basic fields if not already present
-        if (!formData.has('name')) {
+        if (!formData.has("name")) {
           formData.append("name", artist.name || "");
         }
-        if (!formData.has('city')) {
+        if (!formData.has("city")) {
           formData.append("city", artist.city || "");
         }
-        if (!formData.has('genre')) {
+        if (!formData.has("genre")) {
           formData.append("genre", artist.genre || "");
         }
-        if (subscriptionPlan === "pro" && !formData.has('biography')) {
+        // সবাই বায়োগ্রাফি লিখতে পারবে
+        if (!formData.has("biography")) {
           formData.append("biography", artist.biography || "");
         }
       } else {
-        // If it's plain object (old format), convert to FormData
         formData = new FormData();
         const saveData = saveDataOrFormData;
 
         formData.append("name", saveData.name || artist.name || "");
         formData.append("city", saveData.city || artist.city || "");
         formData.append("genre", saveData.genre || artist.genre || "");
-
-        if (subscriptionPlan === "pro") {
-          formData.append("biography", saveData.biography || artist.biography || "");
-        }
+        // সবাই বায়োগ্রাফি লিখতে পারবে
+        formData.append(
+          "biography",
+          saveData.biography || artist.biography || "",
+        );
 
         // Add removed photos and audios
         if (saveData.removedPhotos && saveData.removedPhotos.length > 0) {
-          saveData.removedPhotos.forEach(filename => {
+          saveData.removedPhotos.forEach((filename) => {
             formData.append("removedPhotos", filename);
           });
         }
 
         if (saveData.removedAudios && saveData.removedAudios.length > 0) {
-          saveData.removedAudios.forEach(filename => {
+          saveData.removedAudios.forEach((filename) => {
             formData.append("removedAudios", filename);
           });
         }
@@ -458,7 +367,7 @@ export default function ArtistDashboard() {
       // Debug: Check FormData contents
       console.log("=== FormData Debug ===");
       for (let pair of formData.entries()) {
-        console.log(pair[0] + ':', pair[1]);
+        console.log(pair[0] + ":", pair[1]);
       }
 
       const response = await api.updateArtistProfile(formData);
@@ -690,24 +599,17 @@ export default function ArtistDashboard() {
     setListingVideos([]);
   };
 
-  // Image and Audio Upload Handlers
+  // Image and Audio Upload Handlers - সবাই একই লিমিট
   const handleImageUpload = async (files) => {
-    if (subscriptionPlan !== "pro") {
-      toast.error("Upgrade to Pro to upload photos");
-      return;
-    }
-
+    // ❌ NO Pro plan check - সবাই আপলোড করতে পারবে
     const totalPhotos = previewImages.length + files.length;
-    if (totalPhotos > uploadLimits.photos) {
-      toast.error(
-        `Maximum ${uploadLimits.photos} photos allowed for ${subscriptionPlan} plan`
-      );
+    if (totalPhotos > 5) {
+      // সর্বোচ্চ ৫টি ছবি
+      toast.error(`You can upload maximum 5 photos.`);
       return;
     }
 
     const newImages = [...previewImages];
-    const newPhotoFiles = [];
-
     files.forEach((file) => {
       newImages.push({
         url: URL.createObjectURL(file),
@@ -718,23 +620,14 @@ export default function ArtistDashboard() {
     });
 
     setPreviewImages(newImages);
-    setArtist((prev) => ({
-      ...prev,
-      photos: [...(prev.photos || []), ...newPhotoFiles],
-    }));
   };
 
   const handleAudioUpload = async (files) => {
-    if (subscriptionPlan !== "pro") {
-      toast.error("Upgrade to Pro to upload audio");
-      return;
-    }
-
+    // ❌ NO Pro plan check - সবাই আপলোড করতে পারবে
     const totalAudios = audioPreview.length + files.length;
-    if (totalAudios > uploadLimits.audios) {
-      toast.error(
-        `Maximum ${uploadLimits.audios} audio files allowed for ${subscriptionPlan} plan`
-      );
+    if (totalAudios > 5) {
+      // সর্বোচ্চ ৫টি অডিও
+      toast.error(`You can upload maximum 5 audio files.`);
       return;
     }
 
@@ -794,7 +687,7 @@ export default function ArtistDashboard() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const data = await res.json();
@@ -808,8 +701,6 @@ export default function ArtistDashboard() {
       toast.error("Stripe connect failed");
     }
   };
-
-
 
   if (!user) {
     return (
@@ -867,9 +758,7 @@ export default function ArtistDashboard() {
               uploadLimits={uploadLimits}
               onChange={handleChange}
               onImageUpload={handleImageUpload}
-              // onRemoveImage={removeImage}
               onAudioUpload={handleAudioUpload}
-              // onRemoveAudio={removeAudio}
               onSave={handleSave}
               saving={saving}
             />
@@ -878,7 +767,7 @@ export default function ArtistDashboard() {
           {activeTab === "marketplace" && user?.isVerified && (
             <ArtistMarketplaceTab
               subscriptionPlan={subscriptionPlan}
-              hasMarketplaceAccess={true}
+              hasMarketplaceAccess={uploadLimits.marketplace}
               listings={listings}
               loadingListings={loadingListings}
               currentListing={currentListing}
@@ -899,7 +788,6 @@ export default function ArtistDashboard() {
               loadMarketplaceData={loadMarketplaceData}
               setListingPhotos={setListingPhotos}
               setIsEditingListing={setIsEditingListing}
-              listingVideos={listingVideos}
               setListingVideos={setListingVideos}
               handleStripeConnect={handleStripeConnect}
             />

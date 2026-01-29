@@ -1,12 +1,16 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import Select from "@/ui/Select"; // Import the custom Select component
 import {
   Calendar,
   Camera,
+  CheckCircle,
   Eye,
   FileText,
+  Globe,
   Image as ImageIcon,
+  Mail,
   MapPin,
   Newspaper,
   Pencil,
@@ -29,9 +33,77 @@ const getCookie = (name) => {
   return match ? match[2] : null;
 };
 
-const cityOptions = ["New Orleans", "Biloxi", "Mobile", "Pensacola"];
+// State and city options based on client requirement
+const stateOptions = [
+  { value: "", label: "Select State" },
+  { value: "Louisiana", label: "Louisiana" },
+  { value: "Mississippi", label: "Mississippi" },
+  { value: "Alabama", label: "Alabama" },
+  { value: "Florida", label: "Florida" },
+];
 
-// News Detail Modal Component
+const cityByState = {
+  Louisiana: [
+    { value: "new orleans", label: "New Orleans" },
+    { value: "baton rouge", label: "Baton Rouge" },
+    { value: "lafayette", label: "Lafayette" },
+    { value: "shreveport", label: "Shreveport" },
+    { value: "lake charles", label: "Lake Charles" },
+    { value: "monroe", label: "Monroe" },
+  ],
+  Mississippi: [
+    { value: "jackson", label: "Jackson" },
+    { value: "biloxi", label: "Biloxi" },
+    { value: "gulfport", label: "Gulfport" },
+    { value: "oxford", label: "Oxford" },
+    { value: "hattiesburg", label: "Hattiesburg" },
+  ],
+  Alabama: [
+    { value: "birmingham", label: "Birmingham" },
+    { value: "mobile", label: "Mobile" },
+    { value: "huntsville", label: "Huntsville" },
+    { value: "tuscaloosa", label: "Tuscaloosa" },
+  ],
+  Florida: [
+    { value: "tampa", label: "Tampa" },
+    { value: "st. petersburg", label: "St. Petersburg" },
+    { value: "clearwater", label: "Clearwater" },
+    { value: "pensacola", label: "Pensacola" },
+    { value: "panama city", label: "Panama City" },
+    { value: "fort myers", label: "Fort Myers" },
+  ],
+};
+
+// All location options for news (includes all cities from all states)
+const allLocationOptions = [
+  // Louisiana
+  { value: "new orleans", label: "New Orleans", state: "Louisiana" },
+  { value: "baton rouge", label: "Baton Rouge", state: "Louisiana" },
+  { value: "lafayette", label: "Lafayette", state: "Louisiana" },
+  { value: "shreveport", label: "Shreveport", state: "Louisiana" },
+  { value: "lake charles", label: "Lake Charles", state: "Louisiana" },
+  { value: "monroe", label: "Monroe", state: "Louisiana" },
+  // Mississippi
+  { value: "jackson", label: "Jackson", state: "Mississippi" },
+  { value: "biloxi", label: "Biloxi", state: "Mississippi" },
+  { value: "gulfport", label: "Gulfport", state: "Mississippi" },
+  { value: "oxford", label: "Oxford", state: "Mississippi" },
+  { value: "hattiesburg", label: "Hattiesburg", state: "Mississippi" },
+  // Alabama
+  { value: "birmingham", label: "Birmingham", state: "Alabama" },
+  { value: "mobile", label: "Mobile", state: "Alabama" },
+  { value: "huntsville", label: "Huntsville", state: "Alabama" },
+  { value: "tuscaloosa", label: "Tuscaloosa", state: "Alabama" },
+  // Florida
+  { value: "tampa", label: "Tampa", state: "Florida" },
+  { value: "st. petersburg", label: "St. Petersburg", state: "Florida" },
+  { value: "clearwater", label: "Clearwater", state: "Florida" },
+  { value: "pensacola", label: "Pensacola", state: "Florida" },
+  { value: "panama city", label: "Panama City", state: "Florida" },
+  { value: "fort myers", label: "Fort Myers", state: "Florida" },
+];
+
+// News Detail Modal Component (Unchanged)
 function NewsDetailModal({ news, isOpen, onClose }) {
   if (!isOpen || !news) return null;
 
@@ -62,8 +134,8 @@ function NewsDetailModal({ news, isOpen, onClose }) {
                   news.photos.length === 1
                     ? "grid-cols-1"
                     : news.photos.length === 2
-                    ? "grid-cols-2"
-                    : "grid-cols-1 md:grid-cols-2"
+                      ? "grid-cols-2"
+                      : "grid-cols-1 md:grid-cols-2"
                 }`}
               >
                 {news.photos.map((photo, index) => (
@@ -181,6 +253,10 @@ export default function JournalistDashboard() {
     fullName: "",
     email: "",
     bio: "",
+    state: "",
+    city: "",
+    areasOfCoverage: [],
+    isVerified: false,
     avatar: null,
   });
   const [previewAvatar, setPreviewAvatar] = useState(null);
@@ -189,7 +265,9 @@ export default function JournalistDashboard() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     title: "",
-    location: "New Orleans",
+    state: "",
+    city: "",
+    location: "",
     credit: "",
     description: "",
     photos: [],
@@ -197,6 +275,8 @@ export default function JournalistDashboard() {
   const [previewImages, setPreviewImages] = useState([]);
   const [selectedNews, setSelectedNews] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCoverageAreas, setSelectedCoverageAreas] = useState([]);
+  const [cityOptions, setCityOptions] = useState([]);
 
   // === Fetch Journalist Profile & News ===
   useEffect(() => {
@@ -226,9 +306,14 @@ export default function JournalistDashboard() {
             fullName: j.fullName || "",
             email: j.user?.email || "",
             bio: j.bio || "",
+            state: j.state || "",
+            city: j.city || "",
+            areasOfCoverage: j.areasOfCoverage || [],
+            isVerified: j.isVerified || false,
             avatar: j.profilePhoto?.url || null,
           });
           setPreviewAvatar(j.profilePhoto?.url || null);
+          setSelectedCoverageAreas(j.areasOfCoverage || []);
         } else if (profileData.message) {
           toast.error(profileData.message);
         }
@@ -247,6 +332,23 @@ export default function JournalistDashboard() {
     fetchData();
   }, [user]);
 
+  // Update city options when state changes in news form
+  useEffect(() => {
+    if (form.state && cityByState[form.state]) {
+      setCityOptions(cityByState[form.state]);
+      // Auto-select first city if no city is selected
+      if (!form.city && cityByState[form.state].length > 0) {
+        setForm((prev) => ({
+          ...prev,
+          city: cityByState[form.state][0].value,
+        }));
+      }
+    } else {
+      setCityOptions([]);
+      setForm((prev) => ({ ...prev, city: "" }));
+    }
+  }, [form.state]);
+
   // === Save Profile ===
   const handleSaveProfile = async () => {
     const token = getCookie("token");
@@ -256,6 +358,10 @@ export default function JournalistDashboard() {
     try {
       const formData = new FormData();
       formData.append("bio", journalist.bio);
+      formData.append("fullName", journalist.fullName);
+      formData.append("city", journalist.city);
+      formData.append("state", journalist.state);
+      formData.append("areasOfCoverage", JSON.stringify(selectedCoverageAreas));
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/journalists/profile`,
@@ -263,7 +369,7 @@ export default function JournalistDashboard() {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: formData,
-        }
+        },
       );
 
       const data = await res.json();
@@ -303,6 +409,10 @@ export default function JournalistDashboard() {
 
       const formData = new FormData();
       formData.append("bio", journalist.bio || "");
+      formData.append("fullName", journalist.fullName || "");
+      formData.append("city", journalist.city || "");
+      formData.append("state", journalist.state || "");
+      formData.append("areasOfCoverage", JSON.stringify(selectedCoverageAreas));
       formData.append("profilePhoto", file);
 
       const res = await fetch(
@@ -311,7 +421,7 @@ export default function JournalistDashboard() {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: formData,
-        }
+        },
       );
 
       const data = await res.json();
@@ -364,6 +474,27 @@ export default function JournalistDashboard() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Handle state change in news form
+  const handleStateChange = (e) => {
+    const newState = e.target.value;
+    setForm({
+      ...form,
+      state: newState,
+      city: "", // Reset city when state changes
+      location: "", // Reset location when state changes
+    });
+  };
+
+  // Handle city change in news form
+  const handleCityChange = (e) => {
+    const newCity = e.target.value;
+    setForm({
+      ...form,
+      city: newCity,
+      location: newCity, // Set location to selected city
+    });
+  };
+
   // === Save / Update News ===
   const handleSaveNews = async () => {
     if (!form.title.trim()) {
@@ -376,8 +507,18 @@ export default function JournalistDashboard() {
       return;
     }
 
+    if (!form.state) {
+      toast.error("Please select a state");
+      return;
+    }
+
+    if (!form.city) {
+      toast.error("Please select a city");
+      return;
+    }
+
     const toastId = toast.loading(
-      editingNews ? "Updating news..." : "Publishing news..."
+      editingNews ? "Updating news..." : "Publishing news...",
     );
 
     try {
@@ -389,7 +530,7 @@ export default function JournalistDashboard() {
       formData.append("title", form.title);
       formData.append("description", form.description);
       formData.append("credit", form.credit);
-      formData.append("location", form.location.toLowerCase());
+      formData.append("location", form.city); // Use city as location
       form.photos.forEach((p) => formData.append("photos", p));
 
       const url = editingNews
@@ -416,7 +557,7 @@ export default function JournalistDashboard() {
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/my-news`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       const listData = await listRes.json();
       setNewsList(listData.data?.news || []);
@@ -426,7 +567,9 @@ export default function JournalistDashboard() {
       setEditingNews(null);
       setForm({
         title: "",
-        location: "New Orleans",
+        state: "",
+        city: "",
+        location: "",
         credit: "",
         description: "",
         photos: [],
@@ -443,13 +586,27 @@ export default function JournalistDashboard() {
   };
 
   const editNews = (n) => {
+    // Find state from location
+    const newsLocation = n.location || "";
+    const foundLocation = allLocationOptions.find(
+      (loc) => loc.value === newsLocation.toLowerCase(),
+    );
+    const newsState = foundLocation ? foundLocation.state : "";
+
+    // Get city options for the state
+    const cityOpts =
+      newsState && cityByState[newsState] ? cityByState[newsState] : [];
+
     setForm({
       title: n.title,
-      location: n.location || "New Orleans",
+      state: newsState,
+      city: newsLocation.toLowerCase(),
+      location: newsLocation.toLowerCase(),
       credit: n.credit || "",
       description: n.description || "",
       photos: [],
     });
+    setCityOptions(cityOpts);
     setPreviewImages(n.photos?.map((p) => p.url) || []);
     setEditingNews(n);
     setActiveTab("edit");
@@ -468,7 +625,7 @@ export default function JournalistDashboard() {
   const deleteNews = async (id) => {
     if (
       !confirm(
-        "Are you sure you want to delete this news item? This action cannot be undone."
+        "Are you sure you want to delete this news item? This action cannot be undone.",
       )
     )
       return;
@@ -479,7 +636,7 @@ export default function JournalistDashboard() {
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       const data = await res.json();
@@ -491,6 +648,30 @@ export default function JournalistDashboard() {
       console.error("Delete news error:", err);
       toast.error(err.message || "Server error while deleting news");
     }
+  };
+
+  // Handle coverage area selection
+  const toggleCoverageArea = (area) => {
+    setSelectedCoverageAreas((prev) => {
+      if (prev.includes(area)) {
+        return prev.filter((a) => a !== area);
+      } else {
+        return [...prev, area];
+      }
+    });
+  };
+
+  // Handle state change in profile - reset city
+  const handleProfileStateChange = (state) => {
+    setJournalist({ ...journalist, state, city: "" });
+  };
+
+  // Format city name for display
+  const formatCityName = (city) => {
+    return city
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
   if (loading)
@@ -556,7 +737,7 @@ export default function JournalistDashboard() {
           </div>
 
           <div className="p-6 md:p-8">
-            {/* PROFILE TAB - Unchanged from original */}
+            {/* PROFILE TAB - Unchanged */}
             {activeTab === "profile" && (
               <div className="">
                 <div className="grid lg:grid-cols-3 gap-8">
@@ -593,9 +774,33 @@ export default function JournalistDashboard() {
                         <h2 className="text-xl font-bold text-white mb-2">
                           {journalist.fullName || "Your Name"}
                         </h2>
-                        <p className="text-gray-400 text-sm mb-4">
+                        <p className="text-gray-400 text-sm mb-2">
                           {journalist.email || "Journalist"}
                         </p>
+
+                        {/* Verification Badge */}
+                        <div className="mb-4">
+                          <span
+                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${journalist.isVerified ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"}`}
+                          >
+                            {journalist.isVerified ? (
+                              <>
+                                <CheckCircle size={14} />
+                                Verified Journalist
+                              </>
+                            ) : (
+                              <>
+                                <Mail size={14} />
+                                Not Verified
+                              </>
+                            )}
+                          </span>
+                          {!journalist.isVerified && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Email thegulfcoastmusic@gmail.com for verification
+                            </p>
+                          )}
+                        </div>
 
                         <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 transition font-medium">
                           <Upload size={16} /> Change Photo
@@ -606,6 +811,24 @@ export default function JournalistDashboard() {
                             onChange={handleAvatarUpload}
                           />
                         </label>
+
+                        {/* Location Info */}
+                        {(journalist.state || journalist.city) && (
+                          <div className="mt-6 pt-6 border-t border-gray-700">
+                            <h4 className="text-sm font-medium text-gray-400 mb-2">
+                              Location
+                            </h4>
+                            <div className="flex items-center justify-center gap-2 text-gray-300">
+                              <MapPin size={14} />
+                              <span>
+                                {journalist.city &&
+                                  formatCityName(journalist.city)}
+                                {journalist.city && journalist.state && ", "}
+                                {journalist.state}
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -650,6 +873,58 @@ export default function JournalistDashboard() {
                           </p>
                         </div>
 
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                              State
+                            </label>
+                            <Select
+                              label=""
+                              name="state"
+                              value={journalist.state}
+                              options={stateOptions}
+                              onChange={(e) =>
+                                handleProfileStateChange(e.target.value)
+                              }
+                              placeholder="Select State"
+                              className="w-full"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                              City
+                            </label>
+                            <Select
+                              label=""
+                              name="city"
+                              value={journalist.city}
+                              options={
+                                journalist.state &&
+                                cityByState[journalist.state]
+                                  ? [
+                                      { value: "", label: "Select City" },
+                                      ...cityByState[journalist.state],
+                                    ]
+                                  : [{ value: "", label: "Select State First" }]
+                              }
+                              onChange={(e) =>
+                                setJournalist({
+                                  ...journalist,
+                                  city: e.target.value,
+                                })
+                              }
+                              disabled={!journalist.state}
+                              placeholder={
+                                journalist.state
+                                  ? "Select City"
+                                  : "Select State First"
+                              }
+                              className="w-full"
+                            />
+                          </div>
+                        </div>
+
                         <div>
                           <label className="block text-sm font-medium text-gray-300 mb-2">
                             Biography
@@ -683,7 +958,7 @@ export default function JournalistDashboard() {
               </div>
             )}
 
-            {/* NEWS LIST */}
+            {/* NEWS LIST - Unchanged */}
             {activeTab === "news" && (
               <div className="animate-fadeIn">
                 {/* Stats Header */}
@@ -729,11 +1004,14 @@ export default function JournalistDashboard() {
                           onClick={() => {
                             setForm({
                               title: "",
-                              location: "New Orleans",
+                              state: "",
+                              city: "",
+                              location: "",
                               credit: "",
                               description: "",
                               photos: [],
                             });
+                            setCityOptions([]);
                             setEditingNews(null);
                             setPreviewImages([]);
                             setActiveTab("edit");
@@ -770,7 +1048,7 @@ export default function JournalistDashboard() {
                   <div className="grid gap-6">
                     {newsList
                       .sort(
-                        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+                        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
                       )
                       .map((item) => (
                         <div
@@ -837,7 +1115,7 @@ export default function JournalistDashboard() {
                                 <div className="flex items-center gap-1">
                                   <Calendar size={14} />
                                   {new Date(
-                                    item.createdAt
+                                    item.createdAt,
                                   ).toLocaleDateString()}
                                 </div>
                                 <div className="flex items-center gap-1">
@@ -894,7 +1172,7 @@ export default function JournalistDashboard() {
               </div>
             )}
 
-            {/* ADD / EDIT NEWS - Unchanged from original */}
+            {/* ADD / EDIT NEWS - UPDATED with State and City */}
             {activeTab === "edit" && (
               <div className="">
                 <div className="bg-gray-900 rounded-xl p-6 border border-gray-700 mb-6">
@@ -931,23 +1209,49 @@ export default function JournalistDashboard() {
                           />
                         </div>
 
-                        {/* Location */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Location *
-                          </label>
-                          <select
-                            name="location"
-                            value={form.location}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition"
-                          >
-                            {cityOptions.map((loc) => (
-                              <option key={loc} value={loc}>
-                                {loc}
-                              </option>
-                            ))}
-                          </select>
+                        {/* State and City Selection */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                              State *
+                            </label>
+                            <Select
+                              label=""
+                              name="state"
+                              value={form.state}
+                              options={stateOptions}
+                              onChange={handleStateChange}
+                              placeholder="Select State"
+                              required
+                              icon={<Globe size={16} />}
+                              className="w-full"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">
+                              City *
+                            </label>
+                            <Select
+                              label=""
+                              name="city"
+                              value={form.city}
+                              options={[
+                                { value: "", label: "Select City" },
+                                ...cityOptions,
+                              ]}
+                              onChange={handleCityChange}
+                              placeholder={
+                                form.state
+                                  ? "Select City"
+                                  : "Select State First"
+                              }
+                              disabled={!form.state}
+                              required
+                              icon={<MapPin size={16} />}
+                              className="w-full"
+                            />
+                          </div>
                         </div>
 
                         {/* Credit */}
@@ -1042,6 +1346,34 @@ export default function JournalistDashboard() {
                       )}
                     </div>
 
+                    {/* Location Preview */}
+                    {form.state && form.city && (
+                      <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
+                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                          <MapPin size={20} />
+                          Location Preview
+                        </h3>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400">State:</span>
+                            <span className="text-white font-medium">
+                              {form.state}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-400">City:</span>
+                            <span className="text-white font-medium">
+                              {formatCityName(form.city)}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-2">
+                            This news will appear under {form.state} &gt;{" "}
+                            {formatCityName(form.city)} in the calendar
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Actions */}
                     <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
                       <h3 className="text-lg font-semibold text-white mb-4">
@@ -1049,7 +1381,7 @@ export default function JournalistDashboard() {
                       </h3>
                       <div className="space-y-3">
                         <button
-                          disabled={saving}
+                          disabled={saving || !form.state || !form.city}
                           onClick={handleSaveNews}
                           className="w-full flex items-center justify-center gap-2 bg-yellow-500 text-black py-3 rounded-lg hover:bg-yellow-400 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -1057,8 +1389,8 @@ export default function JournalistDashboard() {
                           {saving
                             ? "Saving..."
                             : editingNews
-                            ? "Update News"
-                            : "Publish News"}
+                              ? "Update News"
+                              : "Publish News"}
                         </button>
 
                         <button

@@ -1,13 +1,11 @@
-// app/signin/page.jsx
 "use client";
 
+import { useAuth } from "@/context/AuthContext";
 import { Lock, Mail, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
-
-
 
 // Custom Input Component
 const CustomInput = ({
@@ -21,7 +19,7 @@ const CustomInput = ({
   maxLength,
   disabled = false,
   icon,
-  error = ""
+  error = "",
 }) => {
   return (
     <div className="w-full">
@@ -42,11 +40,13 @@ const CustomInput = ({
           minLength={minLength}
           maxLength={maxLength}
           disabled={disabled}
-          className={`text-gray-700 w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 ${icon ? "pl-10" : ""
-            } ${error
+          className={`text-gray-700 w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 ${
+            icon ? "pl-10" : ""
+          } ${
+            error
               ? "border-red-500 focus:ring-red-400"
               : "border-gray-300 focus:ring-yellow-500"
-            }`}
+          }`}
         />
       </div>
 
@@ -66,9 +66,9 @@ const CustomInput = ({
   );
 };
 
-
 export default function SignIn() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -108,7 +108,7 @@ export default function SignIn() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
-        }
+        },
       );
 
       const data = await res.json();
@@ -131,27 +131,41 @@ export default function SignIn() {
         document.cookie = `token=${token}; ${cookieSettings}`;
         document.cookie = `role=${user.userType}; ${cookieSettings}`;
         document.cookie = `user=${encodeURIComponent(
-          JSON.stringify(user)
+          JSON.stringify(user),
         )}; ${cookieSettings}`;
 
         // Store in localStorage for immediate access
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
-
+        login(user);
         // Redirect based on user type
-        setTimeout(() => {
-          const redirectMap = {
-            admin: "/dashboard/admin",
-            artist: "/dashboard/artist",
-            venue: "/dashboard/venue",
-            journalist: "/dashboard/journalist",
-            photographer: "/dashboard/photographer",
-            fan: "/",
-          };
+        // setTimeout(() => {
+        //   const redirectMap = {
+        //     admin: "/dashboard/admin",
+        //     artist: "/dashboard/artist",
+        //     venue: "/dashboard/venue",
+        //     journalist: "/dashboard/journalist",
+        //     photographer: "/dashboard/photographer",
+        //     fan: "/",
+        //   };
 
-          const redirectTo = redirectMap[user.userType] || "/";
-          router.push(redirectTo);
-        }, 1000);
+        //   const redirectTo = redirectMap[user.userType] || "/";
+        //   router.push(redirectTo);
+        // }, 1000);
+
+        const redirectMap = {
+          admin: "/dashboard/admin",
+          artist: "/dashboard/artist",
+          venue: "/dashboard/venue",
+          journalist: "/dashboard/journalist",
+          photographer: "/dashboard/photographer",
+          fan: "/",
+        };
+
+        const redirectTo = redirectMap[user.userType] || "/";
+
+        toast.dismiss(toastId); // 🔥 toast clear
+        router.push(redirectTo);
 
         return;
       }

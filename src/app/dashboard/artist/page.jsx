@@ -1,14 +1,11 @@
 "use client";
 
-import LoadingState from "@/components/modules/artist/LoadingState";
 import ArtistDashboard from "@/components/modules/dashboard/artists/ArtistDashboard";
-import { useAuth } from "@/context/AuthContext";
+import withAuth from "@/utils/withAuth";
 
-export default function DashboardPage() {
-  const { user, loading } = useAuth();
-
-  if (loading) return <LoadingState />;
-  if (!user) return <div>Please login</div>;
-
-  return <ArtistDashboard key={user._id} />;
+function DashboardPage() {
+  return <ArtistDashboard />;
 }
+
+// Protect this page for artists only
+export default withAuth(DashboardPage, ["artist"]);
