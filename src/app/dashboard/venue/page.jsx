@@ -11,11 +11,10 @@ import {
   CreditCard,
   Crown,
   Edit3,
-  ImageIcon,
   Music,
   ShoppingBag,
   Users,
-  XCircle,
+  XCircle
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
@@ -30,23 +29,31 @@ const getCookie = (name) => {
 export default function VenueDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const { user } = useAuth();
+
   // ===== BILLING STATES =====
   const [billingData, setBillingData] = useState(null);
   const [billingLoading, setBillingLoading] = useState(false);
 
-  // ✅ FIXED: Add state field to venue object
+  // ✅ FIXED: Proper venue structure
   const [venue, setVenue] = useState({
+    venueName: "",
     name: "",
-    state: "Alabama", // ✅ Added state field
+    state: "Alabama",
     city: "",
     address: "",
     seating: "",
+    seatingCapacity: 0,
     biography: "",
     openHours: "",
+    openDays: "",
+    phone: "",
+    website: "",
     photos: [],
     isActive: false,
     verifiedOrder: 0,
+    colorCode: null,
   });
+
   const [previewImages, setPreviewImages] = useState([]);
   const [newShow, setNewShow] = useState({
     artist: "",
@@ -54,6 +61,7 @@ export default function VenueDashboard() {
     time: "",
     image: null,
   });
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showsThisMonth, setShowsThisMonth] = useState(0);
@@ -76,6 +84,7 @@ export default function VenueDashboard() {
     contactPhone: "",
     contactEmail: "",
   });
+
   const [listingPhotos, setListingPhotos] = useState([]);
   const [listingVideos, setListingVideos] = useState([]);
   const [isEditingListing, setIsEditingListing] = useState(false);
@@ -121,18 +130,24 @@ export default function VenueDashboard() {
 
         if (data.data?.venue) {
           const v = data.data.venue;
-          // ✅ FIXED: Add state field when fetching venue data
+          // ✅ CORRECT: Proper venue structure for both frontend and backend
           setVenue({
-            name: v.venueName || "",
-            state: v.state || "Alabama", // ✅ Get state from backend
+            venueName: v.venueName || "",
+            name: v.venueName || "", // For backward compatibility
+            state: v.state || "Alabama",
             city: v.city || "",
             address: v.address || "",
             seating: v.seatingCapacity?.toString() || "",
+            seatingCapacity: v.seatingCapacity || 0,
             biography: v.biography || "",
             openHours: v.openHours || "",
+            openDays: v.openDays || "",
+            phone: v.phone || "",
+            website: v.website || "",
             photos: v.photos || [],
             isActive: v.isActive || false,
             verifiedOrder: v.verifiedOrder || 0,
+            colorCode: v.colorCode || null,
           });
           setPreviewImages(v.photos?.map((p) => p.url) || []);
         }
@@ -140,7 +155,7 @@ export default function VenueDashboard() {
         // Fetch shows count for this month
         await fetchShowsCount(token);
 
-        // Load marketplace listings if Pro user
+        // Load marketplace listings if venue is active
         if (data.data?.venue?.isActive) {
           await loadMarketplaceListings();
         }
@@ -732,30 +747,25 @@ export default function VenueDashboard() {
   };
 
   // === Handle Input ===
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
 
-    if (subscriptionPlan === "free") {
-      if (name === "biography" || name === "openHours") {
-        toast.error(`Free plan users cannot update ${name}. Upgrade to Pro.`);
-        return;
-      }
-    }
+  //   if (subscriptionPlan === "free") {
+  //     if (name === "biography" || name === "openHours") {
+  //       toast.error(`Free plan users cannot update ${name}. Upgrade to Pro.`);
+  //       return;
+  //     }
+  //   }
 
-    setVenue({ ...venue, [name]: value });
-  };
+  //   setVenue({ ...venue, [name]: value });
+  // };
 
   // === Image Upload with Plan Validation ===
   const handleImageUpload = (e) => {
-    if (subscriptionPlan === "free") {
-      toast.error("Free plan users cannot upload photos. Upgrade to Pro.");
-      return;
-    }
-
     const files = Array.from(e.target.files);
 
-    if (previewImages.length + files.length > 5) {
-      toast.error("Pro plan allows maximum 5 photos.");
+    if (previewImages.length + files.length > 10) {
+      toast.error("Maximum 10 photos allowed.");
       return;
     }
 
@@ -766,6 +776,7 @@ export default function VenueDashboard() {
       photos: [...prev.photos, ...files],
     }));
   };
+
 
   const removeImage = (index) => {
     const urlToRemove = previewImages[index];
@@ -793,21 +804,28 @@ export default function VenueDashboard() {
         return;
       }
 
+      if (saveData) {
+        setVenue((prev) => ({
+          ...prev,
+          ...saveData,
+        }));
+      }
+
       // Use saveData if provided, otherwise use venue state
       const dataToSave = saveData || {
-        venueName: venue.name,
+        venueName: venue.venueName || venue.name || "",
         state: venue.state || "Alabama",
         city: venue.city.toLowerCase(),
-        address: venue.address,
-        seatingCapacity: venue.seating,
+        address: venue.address || "",
+        seatingCapacity: venue.seatingCapacity || parseInt(venue.seating) || 0,
         biography: venue.biography || "",
-        openHours: venue.openHours,
-        openDays: "Mon-Sat",
+        openHours: venue.openHours || "",
+        openDays: venue.openDays || "Mon-Sat",
         phone: venue.phone || "",
         website: venue.website || ""
       };
 
-      console.log("Sending venue data:", dataToSave); // ✅ Debug log
+      // console.log("Sending venue data:", dataToSave); // ✅ Debug log
 
       const formData = new FormData();
 
@@ -820,16 +838,20 @@ export default function VenueDashboard() {
       if (dataToSave.address) formData.append("address", dataToSave.address);
       if (dataToSave.seatingCapacity) formData.append("seatingCapacity", dataToSave.seatingCapacity);
 
-      if (subscriptionPlan === "pro") {
-        if (dataToSave.biography) formData.append("biography", dataToSave.biography);
-        if (dataToSave.openHours) formData.append("openHours", dataToSave.openHours);
-        if (dataToSave.openDays) formData.append("openDays", dataToSave.openDays);
-        if (dataToSave.phone) formData.append("phone", dataToSave.phone);
-        if (dataToSave.website) formData.append("website", dataToSave.website);
-      }
+      formData.append("biography", dataToSave.biography || "");
+      if (dataToSave.openHours) formData.append("openHours", dataToSave.openHours);
+      if (dataToSave.openDays) formData.append("openDays", dataToSave.openDays);
+      if (dataToSave.phone) formData.append("phone", dataToSave.phone);
+      if (dataToSave.website) formData.append("website", dataToSave.website);
+
+
+      // if (subscriptionPlan === "pro") {
+
+      // }
 
       // Handle photos
-      if (venue.photos && venue.photos.length > 0 && subscriptionPlan === "pro") {
+      // if (venue.photos && venue.photos.length > 0 && subscriptionPlan === "pro") {
+      if (venue.photos && venue.photos.length > 0) {
         venue.photos.forEach((file) => {
           if (file instanceof File) {
             formData.append("photos", file);
@@ -873,9 +895,31 @@ export default function VenueDashboard() {
       toast.success("Venue profile saved successfully!");
       setRemovedPhotos([]);
 
-      if (data.data?.venue?.photos) {
-        setPreviewImages(data.data.venue.photos.map((p) => p.url));
+      if (data.data?.venue) {
+        const v = data.data.venue;
+
+        setVenue({
+          venueName: v.venueName || "",
+          name: v.venueName || "",
+          state: v.state || "Alabama",
+          city: v.city || "",
+          address: v.address || "",
+          seating: v.seatingCapacity?.toString() || "",
+          seatingCapacity: v.seatingCapacity || 0,
+          biography: v.biography || "",
+          openHours: v.openHours || "",
+          openDays: v.openDays || "",
+          phone: v.phone || "",
+          website: v.website || "",
+          photos: v.photos || [],
+          isActive: v.isActive || false,
+          verifiedOrder: v.verifiedOrder || 0,
+          colorCode: v.colorCode || null,
+        });
+
+        setPreviewImages(v.photos?.map((p) => p.url) || []);
       }
+
     } catch (error) {
       console.error("Save error:", error);
       toast.error(error.message);
@@ -952,11 +996,7 @@ export default function VenueDashboard() {
 
   const handleProCheckout = async () => {
     try {
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("token="))
-        ?.split("=")[1];
-
+      const token = getCookie("token");
       if (!token) {
         alert("You must be logged in to upgrade.");
         return;
@@ -991,16 +1031,35 @@ export default function VenueDashboard() {
       setBillingLoading(true);
       const token = getCookie("token");
 
-      const res = await fetch(`${API_BASE}/api/subscription/status`, {
+      // ✅ CORRECT: Use venue-specific subscription endpoint
+      const res = await fetch(`${API_BASE}/api/venues/subscription/status`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await res.json();
       if (res.ok) {
         setBillingData(data.data);
+      } else {
+        console.warn("Billing data not available:", data.message);
+        // Set default free plan data
+        setBillingData({
+          plan: "free",
+          status: "none",
+          currentPeriodEnd: null,
+          cancelAtPeriodEnd: false,
+          trialEndsAt: null,
+        });
       }
     } catch (err) {
       console.error("Billing load error:", err);
+      // Set default free plan data on error
+      setBillingData({
+        plan: "free",
+        status: "none",
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+        trialEndsAt: null,
+      });
     } finally {
       setBillingLoading(false);
     }
@@ -1126,7 +1185,7 @@ export default function VenueDashboard() {
         </div>
 
         {/* Plan Stats Bar */}
-        {subscriptionPlan === "free" && (
+        {/* {subscriptionPlan === "free" && (
           <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -1172,7 +1231,7 @@ export default function VenueDashboard() {
               </button>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Main Container */}
         <div className="bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-700">
@@ -1235,8 +1294,7 @@ export default function VenueDashboard() {
             {activeTab === "edit" && (
               <EditProfileTab
                 venue={venue}
-                cityOptions={cityOptions}
-                handleChange={handleChange}
+                // handleChange={handleChange}
                 handleImageUpload={handleImageUpload}
                 removeImage={removeImage}
                 previewImages={previewImages}

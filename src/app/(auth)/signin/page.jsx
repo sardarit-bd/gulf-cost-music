@@ -217,7 +217,7 @@ export default function SignIn() {
       <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-gray-50 via-white to-yellow-50 mt-20 py-8 md:py-12 px-4 sm:px-6 lg:px-8">
         <Toaster />
 
-        <div className="max-w-6xl mx-auto flex justify-center">
+        <div className="max-w-6xl mx-auto flex justify-center mt-16">
           <div className="w-full max-w-xl">
             <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 md:p-8">
               <div className="mb-6 text-center">

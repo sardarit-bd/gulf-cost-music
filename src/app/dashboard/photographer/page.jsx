@@ -20,6 +20,7 @@ export default function PhotographerPage() {
   const { user, loading: authLoading } = useAuth();
   const [photographer, setPhotographer] = useState({
     name: "",
+    state: "",
     city: "",
     biography: "",
     services: [],
@@ -34,6 +35,15 @@ export default function PhotographerPage() {
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const [subscriptionPlan, setSubscriptionPlan] = useState("free");
 
+  // State dropdown options (PDF requirement: Louisiana, Mississippi, Alabama, Florida)
+  const stateOptions = [
+    { value: "louisiana", label: "Louisiana" },
+    { value: "mississippi", label: "Mississippi" },
+    { value: "alabama", label: "Alabama" },
+    { value: "florida", label: "Florida" },
+  ];
+
+  // City options based on state
   const cityOptions = [
     { value: "new orleans", label: "New Orleans" },
     { value: "biloxi", label: "Biloxi" },
@@ -53,14 +63,11 @@ export default function PhotographerPage() {
     resume,
   } = useBilling(API_BASE);
 
-
   useEffect(() => {
     if (activeTab === "billing") {
       fetchBilling();
     }
   }, [activeTab]);
-
-
 
   // Set subscription plan
   useEffect(() => {
@@ -78,7 +85,6 @@ export default function PhotographerPage() {
         setLoading(true);
         const token = getCookie("token");
         if (!token) {
-          // toast.error("You must be logged in.");
           setLoading(false);
           return;
         }
@@ -100,6 +106,7 @@ export default function PhotographerPage() {
 
           setPhotographer({
             name: p.name || "",
+            state: p.state || "", // Added state field
             city: p.city || "",
             biography: p.biography || "",
             services: p.services || [],
@@ -125,25 +132,12 @@ export default function PhotographerPage() {
   // === Handle Input ===
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // Check subscription restrictions
-    if (subscriptionPlan === "free" && name === "biography") {
-      toast.error("Biography feature requires Pro plan. Upgrade to Pro.");
-      return;
-    }
-
     setPhotographer(prev => ({ ...prev, [name]: value }));
   };
 
   // === Image Upload ===
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
-
-    if (subscriptionPlan === "free") {
-      toast.error("Photo uploads require Pro plan. Upgrade to Pro.");
-      e.target.value = "";
-      return;
-    }
 
     if (files.length === 0) return;
 
@@ -198,11 +192,6 @@ export default function PhotographerPage() {
 
   // === Remove Image ===
   const removeImage = async (index) => {
-    if (subscriptionPlan === "free") {
-      toast.error("Photo management requires Pro plan. Upgrade to Pro.");
-      return;
-    }
-
     const photoToDelete = photographer.photos[index];
     if (!photoToDelete) {
       // If it's just a preview (not saved to backend yet)
@@ -244,50 +233,100 @@ export default function PhotographerPage() {
   // === Save Profile ===
   const handleSave = async () => {
     try {
+      // ✅ Validation
+      if (!photographer.name || photographer.name.trim().length < 2) {
+        toast.error("Name is required and must be at least 2 characters");
+        return;
+      }
+
+      if (!photographer.state) {
+        toast.error("Please select a state");
+        return;
+      }
+
+      if (!photographer.city) {
+        toast.error("Please select a city");
+        return;
+      }
+
       const token = getCookie("token");
       if (!token) {
         toast.error("You are not logged in.");
         return;
       }
 
-      // Check subscription restrictions
-      if (subscriptionPlan === "free" && photographer.biography) {
-        toast.error("Biography feature requires Pro plan. Upgrade to Pro.");
-        return;
-      }
-
       setSaving(true);
       const saveToast = toast.loading("Saving profile...");
 
-      const res = await fetch(`${API_BASE}/api/photographers/profile`, {
+      // ✅ Prepare data with proper formatting
+      const profileData = {
+        name: photographer.name.trim(),
+        state: photographer.state.toLowerCase(),
+        city: photographer.city.toLowerCase(),
+        biography: photographer.biography || "",
+      };
+
+      // Try UPDATE first
+      let res = await fetch(`${API_BASE}/api/photographers/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          name: photographer.name,
-          city: photographer.city?.toLowerCase(),
-          biography: subscriptionPlan === "pro" ? photographer.biography : "",
-        }),
+        body: JSON.stringify(profileData),
       });
 
-      const data = await res.json();
+      let data = await res.json();
       toast.dismiss(saveToast);
 
-      if (!res.ok) throw new Error(data.message || "Failed to save profile.");
+      if (!res.ok) {
+        // If profile doesn't exist (404), try to CREATE it
+        if (res.status === 404) {
+          const createRes = await fetch(`${API_BASE}/api/photographers/profile`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(profileData),
+          });
 
-      toast.success("Profile updated successfully!");
+          const createData = await createRes.json();
 
-      // Update local state with response if available
-      if (data.data?.photographer) {
-        const p = data.data.photographer;
-        setPhotographer(prev => ({
-          ...prev,
-          name: p.name || "",
-          city: p.city || "",
-          biography: p.biography || "",
-        }));
+          if (!createRes.ok) {
+            throw new Error(createData.message || "Failed to create profile.");
+          }
+
+          toast.success("Profile created successfully!");
+
+          // Update local state
+          if (createData.data?.photographer) {
+            const p = createData.data.photographer;
+            setPhotographer(prev => ({
+              ...prev,
+              name: p.name || "",
+              state: p.state || "",
+              city: p.city || "",
+              biography: p.biography || "",
+            }));
+          }
+        } else {
+          throw new Error(data.message || "Failed to save profile.");
+        }
+      } else {
+        toast.success("Profile updated successfully!");
+
+        // Update local state
+        if (data.data?.photographer) {
+          const p = data.data.photographer;
+          setPhotographer(prev => ({
+            ...prev,
+            name: p.name || "",
+            state: p.state || "",
+            city: p.city || "",
+            biography: p.biography || "",
+          }));
+        }
       }
     } catch (error) {
       console.error("Save error:", error);
@@ -296,15 +335,9 @@ export default function PhotographerPage() {
       setSaving(false);
     }
   };
-
   // === Add Service ===
   const handleAddService = async (e) => {
     e.preventDefault();
-
-    if (subscriptionPlan === "free") {
-      toast.error("Adding services requires Pro plan. Upgrade to Pro.");
-      return;
-    }
 
     try {
       const token = getCookie("token");
@@ -344,12 +377,7 @@ export default function PhotographerPage() {
 
   // === Delete Service ===
   const handleDeleteService = async (serviceId) => {
-    if (subscriptionPlan === "free") {
-      toast.error("Managing services requires Pro plan. Upgrade to Pro.");
-      return;
-    }
-
-    // if (!confirm("Are you sure you want to delete this service?")) return;
+    if (!confirm("Are you sure you want to delete this service?")) return;
 
     try {
       const token = getCookie("token");
@@ -380,11 +408,6 @@ export default function PhotographerPage() {
 
   // === Video Management Callbacks ===
   const handleAddVideo = (updatedVideos) => {
-    if (subscriptionPlan === "free") {
-      toast.error("Video uploads require Pro plan. Upgrade to Pro.");
-      return;
-    }
-
     setPhotographer((prev) => ({
       ...prev,
       videos: updatedVideos,
@@ -422,8 +445,9 @@ export default function PhotographerPage() {
         saving={saving}
         uploadingPhotos={uploadingPhotos}
         subscriptionPlan={subscriptionPlan}
+        stateOptions={stateOptions} // Add state options
         cityOptions={cityOptions}
-        MAX_PHOTOS={subscriptionPlan === "pro" ? 5 : 0}
+        MAX_PHOTOS={5} // All free accounts get 5 photos
         handleChange={handleChange}
         handleImageUpload={handleImageUpload}
         removeImage={removeImage}
@@ -441,7 +465,6 @@ export default function PhotographerPage() {
         onCancel={cancel}
         onResume={resume}
         onRefresh={fetchBilling}
-
       />
     </div>
   );

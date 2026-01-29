@@ -9,7 +9,7 @@ import {
   Trash2,
   Upload,
   Video,
-  X,
+  X
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -80,25 +80,6 @@ const DeleteConfirmationModal = ({
               This will permanently remove the video from your portfolio
             </p>
           </div>
-
-          {/* Video Info (if available) */}
-          {/*<div className="mb-6 p-3 bg-gray-800/50 rounded-lg">*/}
-          {/*    <p className="text-gray-400 text-sm mb-1">Action Details:</p>*/}
-          {/*    <ul className="text-gray-300 text-sm space-y-1">*/}
-          {/*        <li className="flex items-center gap-2">*/}
-          {/*            <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>*/}
-          {/*            Video will be removed from Cloudinary storage*/}
-          {/*        </li>*/}
-          {/*        <li className="flex items-center gap-2">*/}
-          {/*            <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>*/}
-          {/*            Video data will be deleted from database*/}
-          {/*        </li>*/}
-          {/*        <li className="flex items-center gap-2">*/}
-          {/*            <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>*/}
-          {/*            This change is immediate and irreversible*/}
-          {/*        </li>*/}
-          {/*    </ul>*/}
-          {/*</div>*/}
 
           {/* Action Buttons */}
           <div className="flex gap-3">
@@ -236,14 +217,10 @@ export default function VideosTab({
 
   // Handle File Upload to Cloudinary
   const handleVideoFileUpload = async (e) => {
-    if (subscriptionPlan !== "pro") {
-      toast.error("Video upload is available only for Pro plan");
-      e.target.value = "";
-      return;
-    }
-
+    // PDF REQUIREMENT: All features for free accounts
+    // So remove the pro-only restriction
     if (videos.length >= 1) {
-      toast.error("Pro plan allows only 1 video", {
+      toast.error("Maximum 1 video allowed", {
         icon: "⚠️",
       });
       e.target.value = "";
@@ -326,18 +303,15 @@ export default function VideosTab({
   const handleAddVideoUrl = async (e) => {
     e.preventDefault();
 
-    if (subscriptionPlan !== "pro") {
-      toast.error("Only Pro users can add videos");
-      return;
-    }
-
+    // PDF REQUIREMENT: All features for free accounts
+    // So remove the pro-only restriction
     if (!newVideo.title || !newVideo.url) {
       toast.error("Video title and URL are required");
       return;
     }
 
     if (videos.length >= 1) {
-      toast.error("Pro plan allows only 1 video", {
+      toast.error("Maximum 1 video allowed", {
         icon: "⚠️",
       });
       return;
@@ -369,11 +343,6 @@ export default function VideosTab({
 
   // Open Delete Modal
   const openDeleteModal = (videoId, publicId, videoTitle) => {
-    if (subscriptionPlan === "free") {
-      toast.error("Managing videos requires Pro plan. Upgrade to Pro.");
-      return;
-    }
-
     setDeleteModal({
       isOpen: true,
       videoId,
@@ -462,53 +431,14 @@ export default function VideosTab({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // If free user, show upgrade prompt
-  if (subscriptionPlan === "free") {
-    return (
-      <div className="animate-fadeIn">
-        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 border border-gray-700 shadow-xl">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full mb-6 shadow-lg">
-              <Video size={40} className="text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-3">
-              Video Portfolio{" "}
-              <span className="text-yellow-400">(Pro Feature)</span>
-            </h3>
-            <p className="text-gray-300 mb-6 max-w-md mx-auto text-lg leading-relaxed">
-              Showcase your work through high-quality videos. Upgrade to Pro and
-              impress your clients with dynamic video content.
-            </p>
-            {/* <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <button
-                                onClick={() => window.open("/pricing", "_blank")}
-                                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black px-8 py-3 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg"
-                            >
-                                <Crown size={20} />
-                                Upgrade to Pro Plan
-                            </button>
-                            <button
-                                onClick={() => window.open("/features", "_blank")}
-                                className="inline-flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-8 py-3 rounded-xl font-medium transition-all border border-gray-600"
-                            >
-                                <Info size={20} />
-                                View All Features
-                            </button>
-                        </div> */}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <div className="animate-fadeIn space-y-8">
-        {/* Header Card */}
+        {/* Header Card - Updated for PDF Requirements */}
         <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl">
+              <div className="p-3 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl">
                 <Video size={28} className="text-white" />
               </div>
               <div>
@@ -519,7 +449,7 @@ export default function VideosTab({
                   <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm font-medium">
                     {videos.length}/1 video
                   </span>
-                  <span className="text-xs">• Pro Plan</span>
+                  <span className="text-xs">• All plans</span>
                 </p>
               </div>
             </div>
@@ -527,11 +457,10 @@ export default function VideosTab({
             <div className="flex flex-wrap gap-3">
               {/* Cloudinary File Upload */}
               <label
-                className={`cursor-pointer flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-medium ${
-                  uploadingVideos || videos.length >= 1
-                    ? "bg-gray-600 text-gray-400 cursor-not-allowed shadow-inner"
-                    : "bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-400 hover:to-orange-400 shadow-md hover:shadow-lg"
-                }`}
+                className={`cursor-pointer flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-medium ${uploadingVideos || videos.length >= 1
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed shadow-inner"
+                  : "bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-500 hover:to-blue-500 shadow-md hover:shadow-lg"
+                  }`}
               >
                 {uploadingVideos ? (
                   <Loader2 size={20} className="animate-spin" />
@@ -549,24 +478,23 @@ export default function VideosTab({
               </label>
 
               {/* URL Add Button */}
-              {/*<button*/}
-              {/*    onClick={() => setShowUploadForm(!showUploadForm)}*/}
-              {/*    disabled={videos.length >= 1}*/}
-              {/*    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-medium ${*/}
-              {/*        videos.length >= 1*/}
-              {/*            ? "bg-gray-600 text-gray-400 cursor-not-allowed"*/}
-              {/*            : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md hover:shadow-lg"*/}
-              {/*    }`}*/}
-              {/*>*/}
-              {/*    <Plus size={20} />*/}
-              {/*    Add URL*/}
-              {/*</button>*/}
+              <button
+                onClick={() => setShowUploadForm(!showUploadForm)}
+                disabled={videos.length >= 1}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-medium ${videos.length >= 1
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:from-blue-700 hover:to-cyan-700 shadow-md hover:shadow-lg"
+                  }`}
+              >
+                <Plus size={20} />
+                Add URL
+              </button>
             </div>
           </div>
 
           {/* URL Upload Form */}
           {showUploadForm && (
-            <div className="mb-6 p-5 bg-gray-800/80 backdrop-blur-sm rounded-xl border border-gray-600 shadow-inner">
+            <div className="mt-6 p-5 bg-gray-800/80 backdrop-blur-sm rounded-xl border border-gray-600 shadow-inner">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-lg font-semibold text-white flex items-center gap-2">
                   <Plus size={20} />
@@ -613,15 +541,29 @@ export default function VideosTab({
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Public ID (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={newVideo.public_id}
+                    onChange={(e) =>
+                      setNewVideo({ ...newVideo, public_id: e.target.value })
+                    }
+                    placeholder="cloudinary_public_id"
+                    className="w-full bg-gray-700 border border-gray-600 text-white rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  />
+                </div>
+
                 <div className="flex gap-3 pt-2">
                   <button
                     type="submit"
                     disabled={uploadingVideos || videos.length >= 1}
-                    className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-lg transition font-medium ${
-                      uploadingVideos || videos.length >= 1
-                        ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                        : "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 shadow-md"
-                    }`}
+                    className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-lg transition font-medium ${uploadingVideos || videos.length >= 1
+                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 shadow-md"
+                      }`}
                   >
                     {uploadingVideos ? (
                       <Loader2 size={20} className="animate-spin" />
@@ -695,7 +637,7 @@ export default function VideosTab({
                           {video.title || `Video ${index + 1}`}
                         </h4>
                         <p className="text-gray-400 text-sm">
-                          Added on {new Date().toLocaleDateString()}
+                          Added on {new Date(video.uploadedAt || Date.now()).toLocaleDateString()}
                         </p>
                       </div>
                       <button
@@ -738,10 +680,6 @@ export default function VideosTab({
                           </p>
                         </div>
                       )}
-                      <div className="bg-gray-800/50 p-3 rounded-lg">
-                        <p className="text-gray-400 text-xs">Status</p>
-                        <p className="text-green-400 font-medium">Active</p>
-                      </div>
                     </div>
 
                     <div className="bg-gray-800/30 p-3 rounded-lg">
@@ -760,23 +698,18 @@ export default function VideosTab({
           </div>
         ) : (
           <div className="text-center py-16 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl border-2 border-dashed border-gray-700">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-800 rounded-full mb-6">
-              <Video size={40} className="text-gray-500" />
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-purple-500/10 rounded-full mb-6 border border-purple-500/20">
+              <Video size={40} className="text-purple-400" />
             </div>
             <h4 className="text-xl font-semibold text-gray-300 mb-2">
               No videos yet
             </h4>
-            <p className="text-gray-500 mb-6 max-w-md mx-auto">
-              Upload your first video to showcase your work and attract more
-              clients
-            </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <label
-                className={`cursor-pointer flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-medium ${
-                  uploadingVideos || videos.length >= 1
-                    ? "bg-gray-600 text-gray-400 cursor-not-allowed shadow-inner"
-                    : "bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-400 hover:to-orange-400 shadow-md hover:shadow-lg"
-                }`}
+                className={`cursor-pointer flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-medium ${uploadingVideos || videos.length >= 1
+                  ? "bg-gray-600 text-gray-400 cursor-not-allowed shadow-inner"
+                  : "bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-500 hover:to-blue-500 shadow-md hover:shadow-lg"
+                  }`}
               >
                 {uploadingVideos ? (
                   <Loader2 size={20} className="animate-spin" />
@@ -792,13 +725,13 @@ export default function VideosTab({
                   disabled={uploadingVideos || videos.length >= 1}
                 />
               </label>
-              {/*<button*/}
-              {/*    onClick={() => setShowUploadForm(true)}*/}
-              {/*    className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition"*/}
-              {/*>*/}
-              {/*    <Plus size={20} />*/}
-              {/*    Add Video URL*/}
-              {/*</button>*/}
+              <button
+                onClick={() => setShowUploadForm(true)}
+                className="inline-flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition"
+              >
+                <Plus size={20} />
+                Add Video URL
+              </button>
             </div>
           </div>
         )}
@@ -811,7 +744,7 @@ export default function VideosTab({
               <div className="flex flex-col items-center text-center">
                 <Loader2
                   size={48}
-                  className="text-yellow-500 animate-spin mb-4"
+                  className="text-purple-500 animate-spin mb-4"
                 />
                 <h4 className="text-xl font-bold text-white mb-2">
                   Uploading Video
@@ -820,7 +753,7 @@ export default function VideosTab({
                   Please wait while we upload and process your video...
                 </p>
                 <div className="w-full bg-gray-800 rounded-full h-2">
-                  <div className="bg-gradient-to-r from-yellow-500 to-orange-500 h-2 rounded-full animate-pulse w-3/4"></div>
+                  <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full animate-pulse w-3/4"></div>
                 </div>
               </div>
             </div>
@@ -828,7 +761,7 @@ export default function VideosTab({
         )}
 
         {/* Info Cards */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-1 gap-6">
           {/* Guidelines Card */}
           <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/10 rounded-2xl p-6 border border-purple-700/30">
             <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -841,8 +774,7 @@ export default function VideosTab({
                   <AlertCircle size={14} className="text-purple-400" />
                 </div>
                 <span>
-                  <strong className="text-white">Max size:</strong> 200MB per
-                  video
+                  <strong className="text-white">Max size:</strong> 200MB per video
                 </span>
               </li>
               <li className="flex items-start gap-3 text-gray-300">
@@ -850,8 +782,7 @@ export default function VideosTab({
                   <AlertCircle size={14} className="text-blue-400" />
                 </div>
                 <span>
-                  <strong className="text-white">Formats:</strong> MP4, MOV,
-                  AVI, WebM, MKV
+                  <strong className="text-white">Formats:</strong> MP4, MOV, AVI, WebM, MKV
                 </span>
               </li>
               <li className="flex items-start gap-3 text-gray-300">
@@ -859,39 +790,11 @@ export default function VideosTab({
                   <AlertCircle size={14} className="text-green-400" />
                 </div>
                 <span>
-                  <strong className="text-white">Duration:</strong> Under 10
-                  minutes recommended
+                  <strong className="text-white">Limit:</strong> 1 video
                 </span>
               </li>
             </ul>
           </div>
-
-          {/* Plan Limits Card */}
-          {/*  <div className="bg-gradient-to-br from-yellow-900/10 to-orange-900/10 rounded-2xl p-6 border border-yellow-700/30">*/}
-          {/*      <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">*/}
-          {/*          <Crown size={20} className="text-yellow-500" />*/}
-          {/*          Pro Plan Limits*/}
-          {/*      </h4>*/}
-          {/*      <div className="space-y-4">*/}
-          {/*          <div>*/}
-          {/*              <div className="flex justify-between items-center mb-2">*/}
-          {/*                  <span className="text-gray-300">Videos Used</span>*/}
-          {/*                  <span className="text-white font-bold">*/}
-          {/*  {videos.length}/1 video*/}
-          {/*</span>*/}
-          {/*              </div>*/}
-          {/*              <div className="w-full bg-gray-800 rounded-full h-2">*/}
-          {/*                  <div*/}
-          {/*                      className="bg-gradient-to-r from-yellow-500 to-orange-500 h-2 rounded-full transition-all duration-500"*/}
-          {/*                      style={{ width: `${(videos.length / 1) * 100}%` }}*/}
-          {/*                  ></div>*/}
-          {/*              </div>*/}
-          {/*          </div>*/}
-          {/*          <p className="text-yellow-400/80 text-sm">*/}
-          {/*              Need more videos? Consider our Premium plan for higher limits.*/}
-          {/*          </p>*/}
-          {/*      </div>*/}
-          {/*  </div>*/}
         </div>
       </div>
 

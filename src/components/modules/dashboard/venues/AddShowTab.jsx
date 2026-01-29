@@ -1,5 +1,5 @@
 import Input from "@/ui/Input";
-import { Calendar, Clock, ImageIcon, Loader2, MapPin, Music, XCircle } from "lucide-react";
+import { Calendar, CheckCircle, Clock, ImageIcon, Loader2, MapPin, Music } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const AddShowTab = ({
@@ -7,12 +7,13 @@ const AddShowTab = ({
     setNewShow,
     handleAddShow,
     loading,
-    subscriptionPlan,
-    showsThisMonth,
-    UpgradePrompt,
+    // subscriptionPlan prop রাখছি কিন্তু ব্যবহার করছি না
+    showsThisMonth = 0,
     venue,
 }) => {
-    const isFreeLimitReached = subscriptionPlan === "free" && showsThisMonth >= 1;
+    // ALL FEATURES ENABLED FOR ALL USERS
+    const MAX_SHOWS_PER_MONTH = 50; // Free users get 50 shows/month
+    const isLimitReached = showsThisMonth >= MAX_SHOWS_PER_MONTH;
 
     // Local state for date input
     const [dateInput, setDateInput] = useState("");
@@ -176,15 +177,6 @@ const AddShowTab = ({
         return `${year}-${month}-${day}`;
     };
 
-    // Get current date in MM/DD/YYYY format for display
-    const getCurrentDate = () => {
-        const today = new Date();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        const year = today.getFullYear();
-        return `${month}/${day}/${year}`;
-    };
-
     return (
         <div className="space-y-8">
             {/* Venue Location Info */}
@@ -196,42 +188,45 @@ const AddShowTab = ({
                     <div>
                         <h4 className="text-white font-semibold">Venue Location</h4>
                         <p className="text-gray-400 text-sm">
-                            Shows will be automatically assigned to: <span className="font-medium text-white capitalize">{venue?.city || "Not set"}, {venue?.state || "Not set"}</span>
+                            Shows will be automatically listed in: <span className="font-medium text-white capitalize">{venue?.city || "Not set"}, {venue?.state || "Not set"}</span>
                         </p>
                         <p className="text-gray-500 text-xs mt-1">
-                            Venue's location is set in your profile and cannot be changed per show
+                            Your venue's location from the profile will be used for all shows
                         </p>
                     </div>
                 </div>
             </div>
 
-            {/* Plan Status */}
+            {/* Add Show Form */}
             <div className="bg-gray-900 rounded-2xl p-6 border border-gray-700">
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h3 className="text-xl font-bold text-white flex items-center gap-2">
                             <Music size={24} />
-                            Add New Show
+                            Schedule New Show
                         </h3>
                         <p className="text-gray-400 mt-1">
-                            Schedule a live performance at your venue
+                            Add a live performance event to your venue calendar
                         </p>
                     </div>
-                    <div className={`px-4 py-2 rounded-lg ${subscriptionPlan === "pro" ? "bg-yellow-500/20 text-yellow-400" : "bg-gray-700 text-gray-300"}`}>
+                    {/* <div className="px-4 py-2 rounded-lg bg-green-500/20 text-green-400">
                         <span className="font-medium">
-                            {subscriptionPlan === "pro" ? "Unlimited shows" : `${showsThisMonth}/1 show this month`}
+                            {showsThisMonth}/{MAX_SHOWS_PER_MONTH} shows this month
                         </span>
-                    </div>
+                    </div> */}
                 </div>
 
-                {isFreeLimitReached && (
-                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                {isLimitReached && (
+                    <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                         <div className="flex items-center gap-3">
-                            <XCircle className="text-red-400" size={20} />
+                            <CheckCircle className="text-yellow-400" size={20} />
                             <div>
-                                <h4 className="text-red-400 font-semibold">Monthly Limit Reached</h4>
-                                <p className="text-red-300/80 text-sm">
-                                    Free plan allows only 1 show per month. Upgrade to Pro for unlimited shows.
+                                <h4 className="text-yellow-400 font-semibold">Monthly Show Limit</h4>
+                                <p className="text-yellow-300/80 text-sm">
+                                    You've scheduled {showsThisMonth} shows this month. You can schedule up to {MAX_SHOWS_PER_MONTH} shows per month.
+                                </p>
+                                <p className="text-gray-300 text-xs mt-1">
+                                    The limit resets at the beginning of each month.
                                 </p>
                             </div>
                         </div>
@@ -241,13 +236,13 @@ const AddShowTab = ({
                 <form onSubmit={handleAddShow} className="space-y-6">
                     {/* Artist */}
                     <Input
-                        label="Artist / Band Name *"
+                        label="Artist / Band Name"
                         name="artist"
                         value={newShow.artist}
                         onChange={(e) => setNewShow({ ...newShow, artist: e.target.value })}
                         icon={<Music size={18} />}
                         placeholder="Enter artist or band name"
-                        disabled={loading || isFreeLimitReached}
+                        disabled={loading || isLimitReached}
                         required
                     />
 
@@ -267,9 +262,9 @@ const AddShowTab = ({
                                     value={dateInput}
                                     onChange={handleDateChange}
                                     onInput={handleManualDateInput}
-                                    className="w-full px-4 py-3 pr-10 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full px-4 py-3 pr-10 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                     min={getMinDate()}
-                                    disabled={loading || isFreeLimitReached}
+                                    disabled={loading || isLimitReached}
                                     required
                                 />
 
@@ -277,8 +272,8 @@ const AddShowTab = ({
                                 <button
                                     type="button"
                                     onClick={handleDatePicker}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-yellow-500 transition"
-                                    disabled={loading || isFreeLimitReached}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-green-500 transition"
+                                    disabled={loading || isLimitReached}
                                 >
                                     <Calendar size={18} />
                                 </button>
@@ -304,8 +299,8 @@ const AddShowTab = ({
                                         const todayStr = `${year}-${month}-${day}`;
                                         validateAndSetDate(todayStr);
                                     }}
-                                    className="text-xs text-yellow-500 hover:text-yellow-400 transition"
-                                    disabled={loading || isFreeLimitReached}
+                                    className="text-xs text-green-500 hover:text-green-400 transition"
+                                    disabled={loading || isLimitReached}
                                 >
                                     Use Today
                                 </button>
@@ -325,8 +320,8 @@ const AddShowTab = ({
                                     name="time"
                                     value={formatTimeForInput(newShow.time)}
                                     onChange={handleTimeChange}
-                                    className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={loading || isFreeLimitReached}
+                                    className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={loading || isLimitReached}
                                     required
                                     step="1800" // 30 minute intervals
                                 />
@@ -341,33 +336,17 @@ const AddShowTab = ({
                                             timeInput.showPicker();
                                         }
                                     }}
-                                    className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-yellow-500 transition"
-                                    disabled={loading || isFreeLimitReached}
+                                    className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-green-500 transition"
+                                    disabled={loading || isLimitReached}
                                     title="Open time picker"
                                 >
                                     <Clock className="" size={18} />
                                 </button>
-
-                                {/* Set Current Time Button */}
-                                {/* <button
-                                    type="button"
-                                    onClick={() => {
-                                        const now = new Date();
-                                        const hours = String(now.getHours()).padStart(2, '0');
-                                        const minutes = String(now.getMinutes()).padStart(2, '0');
-                                        handleTimeChange({ target: { value: `${hours}:${minutes}` } });
-                                    }}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-yellow-500 hover:text-yellow-400 transition"
-                                    disabled={loading || isFreeLimitReached}
-                                    title="Set to current time"
-                                >
-                                    Now
-                                </button> */}
                             </div>
 
                             {/* Quick Time Selector */}
                             <div className="mt-3">
-                                <p className="text-xs text-gray-400 mb-2">Quick select:</p>
+                                <p className="text-xs text-gray-400 mb-2">Popular show times:</p>
                                 <div className="flex flex-wrap gap-2">
                                     {[
                                         { label: "12:00 PM", value: "12:00 PM" },
@@ -401,10 +380,10 @@ const AddShowTab = ({
                                                 });
                                             }}
                                             className={`px-2 py-1 text-xs rounded transition ${newShow.time === timeOption.value
-                                                ? 'bg-yellow-500 text-black font-medium'
+                                                ? 'bg-green-500 text-black font-medium'
                                                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                                 }`}
-                                            disabled={loading || isFreeLimitReached}
+                                            disabled={loading || isLimitReached}
                                         >
                                             {timeOption.label}
                                         </button>
@@ -412,7 +391,7 @@ const AddShowTab = ({
                                 </div>
                             </div>
 
-                            {/* Time Format Info */}
+                            {/* Time Display */}
                             <div className="flex items-center justify-between mt-2">
                                 <p className="text-gray-500 text-xs">
                                     {newShow.time ? `Selected: ${newShow.time}` : "Select or type time"}
@@ -425,36 +404,10 @@ const AddShowTab = ({
                                             handleTimeChange({ target: { value: "" } });
                                         }}
                                         className="text-xs text-red-400 hover:text-red-300 transition"
-                                        disabled={loading || isFreeLimitReached || !newShow.time}
+                                        disabled={loading || isLimitReached || !newShow.time}
                                     >
                                         Clear
                                     </button>
-                                    <p className="text-gray-500 text-xs">
-                                        24-hour format
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Time Format Instructions */}
-                            <div className="mt-3 p-2 bg-gray-800/50 rounded text-xs text-gray-400">
-                                <p className="font-medium mb-1">Time Format Examples:</p>
-                                <div className="grid grid-cols-2 gap-1">
-                                    <div>
-                                        <span className="text-yellow-400">24-hour → 12-hour</span>
-                                        <ul className="mt-1 ml-2 space-y-0.5">
-                                            <li>14:00 → 2:00 PM</li>
-                                            <li>20:30 → 8:30 PM</li>
-                                            <li>09:15 → 9:15 AM</li>
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <span className="text-yellow-400">Common Show Times</span>
-                                        <ul className="mt-1 ml-2 space-y-0.5">
-                                            <li>Evening: 6:00 PM - 10:00 PM</li>
-                                            <li>Afternoon: 2:00 PM - 5:00 PM</li>
-                                            <li>Late Night: 10:00 PM+</li>
-                                        </ul>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -463,16 +416,16 @@ const AddShowTab = ({
                     {/* Description */}
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Show Description (Optional)
+                            Show Description
                         </label>
                         <textarea
                             name="description"
                             value={newShow.description || ''}
                             onChange={(e) => setNewShow({ ...newShow, description: e.target.value })}
-                            className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                            placeholder="Describe the show, music genre, special guests, etc."
+                            className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            placeholder="Describe the show, music genre, special guests, ticket info, etc."
                             rows="3"
-                            disabled={loading || isFreeLimitReached}
+                            disabled={loading || isLimitReached}
                             maxLength="1000"
                         />
                         <p className="text-gray-500 text-xs mt-2">
@@ -492,12 +445,12 @@ const AddShowTab = ({
                             onChange={(e) =>
                                 setNewShow({ ...newShow, image: e.target.files[0] })
                             }
-                            className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:border-[var(--primary)] focus:ring-2 focus:ring-green-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             required
-                            disabled={loading || isFreeLimitReached}
+                            disabled={loading || isLimitReached}
                         />
                         <p className="text-gray-500 text-xs mt-2">
-                            Upload a promotional image for the show (Max: 5MB, JPG/PNG)
+                            Upload a promotional image for the show (Max: 5MB, JPG/PNG) - Available for all users
                         </p>
                     </div>
 
@@ -505,67 +458,46 @@ const AddShowTab = ({
                     <div className="flex justify-center pt-4">
                         <button
                             type="submit"
-                            disabled={loading || isFreeLimitReached}
-                            className={`flex items-center gap-2 px-8 py-3 rounded-lg font-semibold transition ${isFreeLimitReached
+                            disabled={loading || isLimitReached}
+                            className={`flex items-center gap-2 px-8 py-3 rounded-lg font-semibold transition ${isLimitReached
                                 ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                                : "bg-yellow-500 hover:bg-yellow-600 text-black hover:scale-105"
+                                : "bg-[var(--primary)] hover:bg-primary/80 text-black hover:scale-105"
                                 }`}
                         >
                             {loading ? (
                                 <>
                                     <Loader2 size={18} className="animate-spin" />
-                                    Adding Show...
+                                    Scheduling Show...
                                 </>
                             ) : (
                                 <>
                                     <Music size={18} />
-                                    {isFreeLimitReached ? "Limit Reached" : "Add Show"}
+                                    {isLimitReached ? `Limit Reached (${MAX_SHOWS_PER_MONTH}/month)` : "Schedule Show"}
                                 </>
                             )}
                         </button>
                     </div>
                 </form>
 
-                {subscriptionPlan === "free" && !isFreeLimitReached && (
-                    <div className="mt-6 pt-6 border-t border-gray-700">
-                        <UpgradePrompt feature="Unlimited shows" />
+                {/* Usage Information */}
+                {/* <div className="mt-6 pt-6 border-t border-gray-700">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-3 bg-gray-800/50 rounded-lg">
+                            <p className="text-xs text-gray-400 mb-1">Shows This Month</p>
+                            <p className="text-lg font-bold text-white">{showsThisMonth}/{MAX_SHOWS_PER_MONTH}</p>
+                        </div>
+                        <div className="p-3 bg-gray-800/50 rounded-lg">
+                            <p className="text-xs text-gray-400 mb-1">Monthly Limit</p>
+                            <p className="text-lg font-bold text-green-400">{MAX_SHOWS_PER_MONTH} shows</p>
+                        </div>
+                        <div className="p-3 bg-gray-800/50 rounded-lg">
+                            <p className="text-xs text-gray-400 mb-1">Status</p>
+                            <p className="text-lg font-bold text-blue-400">
+                                {isLimitReached ? "Limit Reached" : "Available"}
+                            </p>
+                        </div>
                     </div>
-                )}
-            </div>
-
-            {/* Instructions */}
-            <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-                <h4 className="text-lg font-semibold text-white mb-4">Important Notes</h4>
-                <ul className="space-y-3 text-gray-400">
-                    <li className="flex items-start gap-2">
-                        <span className="text-yellow-500 mt-1">•</span>
-                        <span>Shows will automatically appear in the calendar for <span className="text-white font-medium capitalize">{venue?.city || "your city"}</span>, <span className="text-white font-medium">{venue?.state || "your state"}</span></span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                        <span className="text-yellow-500 mt-1">•</span>
-                        <span>Date format must be MM/DD/YYYY (e.g., 01/25/2024)</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                        <span className="text-yellow-500 mt-1">•</span>
-                        <span>Time format: 24-hour (e.g., 20:30) will be converted to 8:30 PM</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                        <span className="text-yellow-500 mt-1">•</span>
-                        <span>Free users: 1 show per calendar month</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                        <span className="text-yellow-500 mt-1">•</span>
-                        <span>Pro users: Unlimited shows</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                        <span className="text-yellow-500 mt-1">•</span>
-                        <span>Image size: Maximum 5MB, JPG or PNG format</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                        <span className="text-yellow-500 mt-1">•</span>
-                        <span>All fields marked with * are required</span>
-                    </li>
-                </ul>
+                </div> */}
             </div>
         </div>
     );

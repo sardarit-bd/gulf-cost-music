@@ -18,6 +18,12 @@ const OverviewTab = ({ venue, previewImages, subscriptionPlan }) => {
         return state;
     };
 
+    // Get venue name - use venueName first, then name as fallback
+    const venueName = venue.venueName || venue.name || "—";
+
+    // Get seating capacity - use seatingCapacity first, then seating as fallback
+    const seatingCapacity = venue.seatingCapacity || venue.seating || 0;
+
     return (
         <div className="space-y-8">
             {/* Verification Status */}
@@ -69,7 +75,7 @@ const OverviewTab = ({ venue, previewImages, subscriptionPlan }) => {
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-white">
-                                {venue.seatingCapacity || "0"}
+                                {seatingCapacity || "0"}
                             </p>
                             <p className="text-gray-400">Seating Capacity</p>
                         </div>
@@ -134,7 +140,7 @@ const OverviewTab = ({ venue, previewImages, subscriptionPlan }) => {
                         <InfoCard
                             icon={<Star className="text-yellow-400" size={20} />}
                             label="Venue Name"
-                            value={venue.venueName || "—"}
+                            value={venueName}
                         />
 
                         {/* State and City */}
@@ -159,7 +165,7 @@ const OverviewTab = ({ venue, previewImages, subscriptionPlan }) => {
                         <InfoCard
                             icon={<Users className="text-blue-400" size={20} />}
                             label="Seating Capacity"
-                            value={venue.seatingCapacity ? `${venue.seatingCapacity} people` : "—"}
+                            value={seatingCapacity ? `${seatingCapacity} people` : "—"}
                         />
                         <InfoCard
                             icon={<Clock className="text-green-400" size={20} />}

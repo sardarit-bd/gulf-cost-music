@@ -2,31 +2,10 @@
 
 import DeleteConfirmationModal from "@/components/modules/dashboard/photographer/photographer/DeleteConfirmationModal";
 import SuccessModal from "@/components/modules/dashboard/photographer/photographer/SuccessModal";
-import { Crown, ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
+import { CheckCircle, ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import toast from "react-hot-toast";
-
-// Upgrade Prompt Component
-const UpgradePrompt = ({ feature }) => (
-  <div className="mt-4 p-4 bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-700 rounded-xl">
-    <div className="flex items-center gap-3">
-      <Crown className="text-yellow-500 flex-shrink-0" size={18} />
-      <div>
-        <p className="text-sm text-gray-300">
-          <span className="font-medium text-white">{feature}</span> is available
-          for Pro users
-        </p>
-        <button
-          onClick={() => window.open("/pricing", "_blank")}
-          className="mt-2 text-sm bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black px-4 py-2 rounded-lg font-medium transition"
-        >
-          Upgrade to Pro
-        </button>
-      </div>
-    </div>
-  </div>
-);
 
 export default function PhotosTab({
   photos,
@@ -34,7 +13,7 @@ export default function PhotosTab({
   removeImage,
   handleImageUpload,
   uploadingPhotos,
-  MAX_PHOTOS,
+  MAX_PHOTOS = 5, // All users get 5 photos for free
 }) {
   const [isUploading, setIsUploading] = useState(false);
 
@@ -52,16 +31,10 @@ export default function PhotosTab({
   });
 
   const handleFileUpload = async (e) => {
-    if (subscriptionPlan === "free") {
-      toast.error("Photo uploads require Pro plan. Upgrade to Pro.");
-      e.target.value = "";
-      return;
-    }
-
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    // Check photo limit
+    // Check photo limit - ALL USERS get 5 photos
     const totalAfterUpload = photos.length + files.length;
     if (totalAfterUpload > MAX_PHOTOS) {
       toast.error(
@@ -90,11 +63,6 @@ export default function PhotosTab({
 
   // Open Delete Modal
   const openDeleteModal = (index) => {
-    if (subscriptionPlan === "free") {
-      toast.error("Managing photos requires Pro plan. Upgrade to Pro.");
-      return;
-    }
-
     setDeleteModal({
       isOpen: true,
       photoIndex: index,
@@ -135,44 +103,6 @@ export default function PhotosTab({
     }
   };
 
-  if (subscriptionPlan === "free") {
-    return (
-      <div className="animate-fadeIn">
-        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 border border-gray-700 shadow-xl">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full mb-6 shadow-lg">
-              <ImageIcon size={40} className="text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-white mb-3">
-              Photo Portfolio{" "}
-              <span className="text-yellow-400">(Pro Feature)</span>
-            </h3>
-            <p className="text-gray-300 mb-6 max-w-md mx-auto text-lg leading-relaxed">
-              Showcase your best work through stunning photos. Upgrade to Pro
-              and build an impressive portfolio.
-            </p>
-            {/* <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <button
-                                onClick={() => window.open("/pricing", "_blank")}
-                                className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black px-8 py-3 rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg"
-                            >
-                                <Crown size={20} />
-                                Upgrade to Pro Plan
-                            </button>
-                            <button
-                                onClick={() => window.open("/features", "_blank")}
-                                className="inline-flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-8 py-3 rounded-xl font-medium transition-all border border-gray-600"
-                            >
-                                <Info size={20} />
-                                View All Features
-                            </button>
-                        </div> */}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <div className="animate-fadeIn space-y-8">
@@ -180,7 +110,7 @@ export default function PhotosTab({
         <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-br from-yellow-600 to-orange-600 rounded-xl">
+              <div className="p-3 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl">
                 <ImageIcon size={28} className="text-white" />
               </div>
               <div>
@@ -188,10 +118,10 @@ export default function PhotosTab({
                   Portfolio Photos
                 </h3>
                 <p className="text-gray-400 flex items-center gap-2 mt-1">
-                  <span className="bg-yellow-500/20 text-yellow-300 px-3 py-1 rounded-full text-sm font-medium">
+                  <span className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full text-sm font-medium">
                     {photos.length}/{MAX_PHOTOS} photos
                   </span>
-                  <span className="text-xs">• Pro Plan</span>
+                  <span className="text-xs">• Free Plan Included</span>
                 </p>
               </div>
             </div>
@@ -207,21 +137,30 @@ export default function PhotosTab({
             </div>
           </div>
 
+          {/* Free Plan Benefits */}
+          <div className="mb-4 p-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-lg">
+            <div className="flex items-center gap-2">
+              <CheckCircle size={16} className="text-green-400" />
+              <p className="text-sm text-gray-300">
+                <span className="font-medium text-white">Free Plan Feature:</span> Upload up to {MAX_PHOTOS} photos for your portfolio
+              </p>
+            </div>
+          </div>
+
           {/* Upload Area */}
           <label
-            className={`cursor-pointer flex flex-col items-center justify-center gap-4 p-10 border-3 border-dashed rounded-2xl transition-all duration-300 ${
-              photos.length >= MAX_PHOTOS || uploadingPhotos || isUploading
-                ? "border-gray-600 bg-gray-800/50 text-gray-500 cursor-not-allowed"
-                : "border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20 hover:border-yellow-400/70 hover:scale-[1.01]"
-            }`}
+            className={`cursor-pointer flex flex-col items-center justify-center gap-4 p-10 border-3 border-dashed rounded-2xl transition-all duration-300 ${photos.length >= MAX_PHOTOS || uploadingPhotos || isUploading
+              ? "border-gray-600 bg-gray-800/50 text-gray-500 cursor-not-allowed"
+              : "border-blue-400/50 bg-blue-400/10 text-blue-400 hover:bg-blue-400/20 hover:border-blue-400/70 hover:scale-[1.01]"
+              }`}
           >
             {uploadingPhotos || isUploading ? (
               <div className="text-center">
                 <Loader2
                   size={48}
-                  className="animate-spin mx-auto mb-4 text-yellow-500"
+                  className="animate-spin mx-auto mb-4 text-blue-500"
                 />
-                <p className="text-lg font-medium text-yellow-400">
+                <p className="text-lg font-medium text-blue-400">
                   Uploading Photos...
                 </p>
                 <p className="text-sm text-gray-400 mt-2">
@@ -230,8 +169,8 @@ export default function PhotosTab({
               </div>
             ) : (
               <>
-                <div className="p-4 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-full">
-                  <Upload size={36} className="text-yellow-400" />
+                <div className="p-4 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full">
+                  <Upload size={36} className="text-blue-400" />
                 </div>
                 <div className="text-center space-y-2">
                   <p className="text-xl font-bold">
@@ -246,6 +185,10 @@ export default function PhotosTab({
                   </p>
                   <p className="text-sm text-gray-500 mt-4">
                     Supported formats: JPG, PNG, WebP, GIF
+                  </p>
+                  <p className="text-sm text-green-400 flex items-center justify-center gap-1">
+                    <CheckCircle size={14} />
+                    Included in Free Plan
                   </p>
                 </div>
                 <input
@@ -275,7 +218,7 @@ export default function PhotosTab({
               </div>
               <div className="w-full bg-gray-800 rounded-full h-2">
                 <div
-                  className="bg-gradient-to-r from-yellow-500 to-orange-500 h-2 rounded-full transition-all duration-500"
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
                   style={{ width: `${(photos.length / MAX_PHOTOS) * 100}%` }}
                 ></div>
               </div>
@@ -294,8 +237,8 @@ export default function PhotosTab({
             </h3>
 
             {photos.length > 0 && (
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <span className="bg-gray-800 px-3 py-1 rounded-full">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full">
                   Click photo to delete
                 </span>
               </div>
@@ -304,8 +247,8 @@ export default function PhotosTab({
 
           {photos.length === 0 ? (
             <div className="text-center py-16 bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-2xl border-3 border-dashed border-gray-700">
-              <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-800 rounded-full mb-6">
-                <ImageIcon size={40} className="text-gray-500" />
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full mb-6">
+                <ImageIcon size={40} className="text-blue-500/50" />
               </div>
               <h4 className="text-xl font-semibold text-gray-300 mb-2">
                 No photos yet
@@ -313,7 +256,7 @@ export default function PhotosTab({
               <p className="text-gray-500 mb-6 max-w-md mx-auto">
                 Start building your portfolio by uploading your best work
               </p>
-              <label className="cursor-pointer inline-flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-orange-600 text-white px-8 py-3 rounded-xl font-medium hover:from-yellow-700 hover:to-orange-700 transition shadow-md">
+              <label className="cursor-pointer inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-purple-700 transition shadow-md">
                 <Upload size={20} />
                 Upload First Photo
                 <input
@@ -324,6 +267,10 @@ export default function PhotosTab({
                   disabled={uploadingPhotos || isUploading}
                 />
               </label>
+              <p className="text-green-400 text-sm mt-4 flex items-center justify-center gap-1">
+                <CheckCircle size={14} />
+                Free plan includes {MAX_PHOTOS} photo uploads
+              </p>
             </div>
           ) : (
             <>
@@ -373,7 +320,7 @@ export default function PhotosTab({
 
                     {/* Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="absolute top-3 right-3 bg-red-500/90 p-2 rounded-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                      <div className="absolute top-3 right-3 bg-red-600/90 p-2 rounded-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                         <Trash2 size={20} className="text-white" />
                       </div>
 
@@ -401,11 +348,59 @@ export default function PhotosTab({
                   </div>
                 ))}
               </div>
+
+              {/* Free Plan Note */}
+              <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <CheckCircle size={20} className="text-green-400" />
+                  <div>
+                    <p className="text-blue-300 font-medium">
+                      Free Plan Benefits
+                    </p>
+                    <p className="text-gray-300 text-sm">
+                      You're using the Free plan with {MAX_PHOTOS} photo uploads included. All photo management features are available.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </>
           )}
         </div>
 
         {/* Info Section */}
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 border border-gray-700">
+          <h4 className="text-lg font-semibold text-white mb-4">
+            📸 Photo Upload Guidelines
+          </h4>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h5 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                <CheckCircle size={14} className="text-green-400" />
+                For All Users (Free & Pro)
+              </h5>
+              <ul className="text-sm text-gray-400 space-y-1">
+                <li>• Maximum {MAX_PHOTOS} photos per portfolio</li>
+                <li>• Supported formats: JPG, PNG, WebP, GIF</li>
+                <li>• Max file size: 5MB per photo</li>
+                <li>• Recommended size: 1200x800 pixels or larger</li>
+                <li>• Full photo management (upload, delete, organize)</li>
+              </ul>
+            </div>
+            <div>
+              <h5 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                <CheckCircle size={14} className="text-green-400" />
+                Tips for Best Results
+              </h5>
+              <ul className="text-sm text-gray-400 space-y-1">
+                <li>• Use high-quality, well-lit photos</li>
+                <li>• Show variety in your portfolio</li>
+                <li>• Add descriptive captions</li>
+                <li>• Update your portfolio regularly</li>
+                <li>• Showcase your best work first</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
