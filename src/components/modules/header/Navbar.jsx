@@ -100,6 +100,8 @@ export default function Header() {
         return "/dashboard/journalist";
       case "photographer":
         return "/dashboard/photographer";
+      case "studio":
+        return "/dashboard/studio";
       case "admin":
         return "/dashboard/admin";
       case "user":

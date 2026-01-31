@@ -1,6 +1,7 @@
 "use client";
 
 import BeforeListingNotice from "@/components/shared/BeforeListingNotice";
+import Select from "@/ui/Select";
 import {
   AlertCircle,
   ArrowRight,
@@ -22,9 +23,22 @@ import {
   Video,
   X,
 } from "lucide-react";
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
+
+const STATE_OPTIONS = [
+  { value: "", label: "Select a state", disabled: true },
+  { value: "Louisiana", label: "Louisiana" },
+  { value: "Mississippi", label: "Mississippi" },
+  { value: "Alabama", label: "Alabama" },
+  { value: "Florida", label: "Florida" }
+];
+
+const STATUS_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "hidden", label: "Hidden" },
+  { value: "sold", label: "Sold" }
+];
 
 export default function ArtistMarketplaceTab({
   subscriptionPlan,
@@ -50,6 +64,8 @@ export default function ArtistMarketplaceTab({
   setIsEditingListing,
   billingData,
   handleStripeConnect,
+  stripeStatus = { isConnected: false, isReady: false },
+  user
 }) {
   const [activeSection, setActiveSection] = useState("create");
   const [formErrors, setFormErrors] = useState({});
@@ -62,20 +78,155 @@ export default function ArtistMarketplaceTab({
     [listings]
   );
 
+  const stripeConnected = Boolean(billingData?.stripeAccountId);
+  const stripeReady =
+    Boolean(billingData?.stripeAccountId) &&
+    Boolean(billingData?.stripeOnboardingComplete);
+
+
   useEffect(() => {
     if (existingItem) {
       setActiveSection("create");
     }
   }, [existingItem]);
 
-  const statusLabel = (s) => {
-    if (s === "active") return "Active";
-    if (s === "sold") return "Sold";
-    if (s === "hidden") return "Hidden";
-    return "Active";
+  // ✅ Custom Select change handler
+  const handleSelectChange = (e) => {
+    const { name, value } = e.target;
+
+    // Create synthetic event for parent component
+    const syntheticEvent = {
+      target: {
+        name,
+        value
+      }
+    };
+
+    // Call parent's onChange handler
+    onListingChange(syntheticEvent);
+
+    // Clear error for this field
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
+    }
   };
 
-  // নতুন handleUpdateListing ফাংশন
+  // ✅ Validate form
+  const validateForm = () => {
+    const errors = {};
+
+    if (!currentListing.title?.trim()) {
+      errors.title = "Title is required";
+    }
+
+    if (!currentListing.price || parseFloat(currentListing.price) <= 0) {
+      errors.price = "Please enter a valid price";
+    }
+
+    if (!currentListing.description?.trim()) {
+      errors.description = "Description is required";
+    }
+
+    if (!currentListing.location) {
+      errors.location = "Please select a state";
+    }
+
+    const totalPhotos = listingPhotos.length;
+    if (totalPhotos === 0) {
+      errors.photos = "At least one photo is required";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // ✅ Handle create or update listing
+  const handleCreateOrUpdate = async () => {
+    if (!validateForm()) return;
+
+    try {
+      setSubmitting(true);
+
+      if (existingItem) {
+        await handleUpdateListing();
+      } else {
+        await onCreateListing();
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ✅ Handle photo upload with limit check
+  const handlePhotoUpload = (e) => {
+    const files = Array.from(e.target.files);
+
+    // Check photo limit
+    if (listingPhotos.length + files.length > 5) {
+      toast.error(`You can only upload ${5 - listingPhotos.length} more photos.`);
+      e.target.value = "";
+      return;
+    }
+
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
+    const validFiles = files.filter((file) => {
+      if (!validTypes.includes(file.type)) {
+        toast.error(`Invalid file type: ${file.name}. Only JPEG, PNG, WebP allowed.`);
+        return false;
+      }
+      if (file.size > maxSize) {
+        toast.error(`File too large: ${file.name}. Max size is 5MB.`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length > 0) {
+      onPhotoUpload(validFiles);
+    }
+
+    e.target.value = "";
+  };
+
+  // ✅ Handle video upload
+  const handleVideoUpload = (e) => {
+    const files = Array.from(e.target.files);
+
+    if (files.length === 0) return;
+
+    // Check if already has video
+    if (listingVideos.length > 0) {
+      toast.error("You can only upload one video");
+      e.target.value = "";
+      return;
+    }
+
+    const file = files[0];
+    const validTypes = ["video/mp4", "video/quicktime"];
+    const maxSize = 50 * 1024 * 1024; // 50MB
+
+    if (!validTypes.includes(file.type)) {
+      toast.error("Invalid file type. Only MP4, MOV allowed.");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > maxSize) {
+      toast.error("File too large. Max size is 50MB.");
+      e.target.value = "";
+      return;
+    }
+
+    onVideoUpload([file]);
+    e.target.value = "";
+  };
+
+  // ✅ New handleUpdateListing function
   const handleUpdateListing = async () => {
     try {
       if (!validateForm()) return;
@@ -111,29 +262,10 @@ export default function ArtistMarketplaceTab({
         formData.append("removeVideo", "true");
       }
 
-      // Call the onUpdateListing prop (which should call the API)
-      if (typeof onUpdateListing === "function") {
-        // You might need to adjust this based on how your parent component handles it
-        await onUpdateListing(formData);
-      } else {
-        // Or directly call API if needed
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/market/me`,
-          {
-            method: "PUT",
-            headers: {
-              Authorization: `Bearer ${getToken()}`,
-            },
-            body: formData,
-          }
-        );
+      // Call the parent's onUpdateListing
+      await onUpdateListing(formData);
 
-        const data = await response.json();
-        if (!response.ok)
-          throw new Error(data.message || "Failed to update listing");
-      }
-
-      toast.success("Listing updated successfully!");
+      // toast.success("Listing updated successfully!");
       setDeletedPhotoIndexes([]);
       await loadMarketplaceData();
       setIsEditingListing(false);
@@ -145,7 +277,7 @@ export default function ArtistMarketplaceTab({
     }
   };
 
-  // নতুন removeListingPhoto ফাংশন
+  // ✅ New removeListingPhoto function
   const removeListingPhoto = (index) => {
     const photo = listingPhotos[index];
 
@@ -157,87 +289,6 @@ export default function ArtistMarketplaceTab({
     const newPhotos = [...listingPhotos];
     newPhotos.splice(index, 1);
     setListingPhotos(newPhotos);
-  };
-
-  // Validate form
-  const validateForm = () => {
-    const errors = {};
-
-    if (!currentListing.title?.trim()) {
-      errors.title = "Title is required";
-    }
-
-    if (!currentListing.price || parseFloat(currentListing.price) <= 0) {
-      errors.price = "Please enter a valid price";
-    }
-
-    if (!currentListing.description?.trim()) {
-      errors.description = "Description is required";
-    }
-
-    const totalPhotos = listingPhotos.length;
-    if (totalPhotos === 0) {
-      errors.photos = "At least one photo is required";
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleCreateOrUpdate = async () => {
-    if (!validateForm()) return;
-
-    try {
-      setSubmitting(true);
-
-      if (existingItem) {
-        await handleUpdateListing();
-      } else {
-        await onCreateListing();
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handlePhotoUpload = (e) => {
-    const files = Array.from(e.target.files);
-    const validTypes = ["image/jpeg", "image/png", "image/webp"];
-    const maxSize = 15 * 1024 * 1024;
-
-    const validFiles = files.filter((file) => {
-      if (!validTypes.includes(file.type)) {
-        return false;
-      }
-      if (file.size > maxSize) {
-        return false;
-      }
-      return true;
-    });
-
-    if (validFiles.length > 0) {
-      onPhotoUpload(validFiles);
-    }
-  };
-
-  const handleVideoUpload = (e) => {
-    const files = Array.from(e.target.files);
-    const validTypes = ["video/mp4", "video/quicktime"];
-    const maxSize = 200 * 1024 * 1024; // 50MB
-
-    const validFiles = files.filter((file) => {
-      if (!validTypes.includes(file.type)) {
-        return false;
-      }
-      if (file.size > maxSize) {
-        return false;
-      }
-      return true;
-    });
-
-    if (validFiles.length > 0) {
-      onVideoUpload(validFiles);
-    }
   };
 
   // Helper function to get token from cookie
@@ -301,16 +352,17 @@ export default function ArtistMarketplaceTab({
         </div>
       </div>
 
-      {!billingData?.stripeAccountId && (
-        <BeforeListingNotice
-          steps={[
-            "Connect your <strong>Stripe account</strong> to receive payouts",
-            "Verify your artist profile",
-            "Add at least one photo and set a valid price",
-          ]}
-          onButtonClick={handleStripeConnect}
-        />
-      )}
+      <BeforeListingNotice
+        steps={[
+          "Connect your <strong>Stripe account</strong> to receive payouts",
+          "Verify your artist profile",
+          "Add at least one photo and set a valid price",
+        ]}
+        onButtonClick={handleStripeConnect}
+        isConnected={stripeConnected}
+        isReady={stripeReady}
+      />
+
 
       {/* Navigation Tabs */}
       <div className="flex flex-wrap border-b border-gray-800">
@@ -404,42 +456,46 @@ export default function ArtistMarketplaceTab({
               )}
             </div>
 
-            {/* Location */}
+            {/* ✅ Location (State) - Custom Select ব্যবহার করুন */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                Pickup Location *
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                State *
               </label>
-              <select
+              <Select
                 name="location"
                 value={currentListing.location || ""}
-                onChange={onListingChange}
-                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
-              >
-                <option value="">Select a location</option>
-                <option value="New Orleans">New Orleans</option>
-                <option value="Biloxi">Biloxi</option>
-                <option value="Mobile">Mobile</option>
-                <option value="Pensacola">Pensacola</option>
-              </select>
+                options={STATE_OPTIONS}
+                onChange={handleSelectChange}
+                placeholder="Select a state"
+                required={true}
+                icon={<MapPin className="w-4 h-4 text-gray-400" />}
+                error={formErrors.location}
+                className="mb-2"
+              />
+              {formErrors.location && (
+                <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {formErrors.location}
+                </p>
+              )}
+              <p className="mt-2 text-sm text-gray-400">
+                Choose from Gulf Coast states (Required for market listings)
+              </p>
             </div>
 
-            {/* Listing Status */}
+            {/* ✅ Listing Status - Custom Select ব্যবহার করুন */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Listing Status
               </label>
-              <select
+              <Select
                 name="status"
-                value={currentListing.status}
-                onChange={onListingChange}
-                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
-              >
-                <option value="active">Active</option>
-                <option value="hidden">Hidden</option>
-                <option value="sold">Sold</option>
-                <option value="reserved">Reserved</option>
-              </select>
+                value={currentListing.status || "active"}
+                options={STATUS_OPTIONS}
+                onChange={handleSelectChange}
+                placeholder="Select status"
+                className="mb-2"
+              />
             </div>
 
             {/* Description (full width) */}
@@ -455,6 +511,12 @@ export default function ArtistMarketplaceTab({
                 className={`w-full bg-gray-800 border ${formErrors.description ? "border-red-500" : "border-gray-700"
                   } rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
               />
+              {formErrors.description && (
+                <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {formErrors.description}
+                </p>
+              )}
               <p className="mt-2 text-sm text-gray-400">
                 Detailed descriptions increase trust and sales
               </p>
@@ -521,7 +583,7 @@ export default function ArtistMarketplaceTab({
                         Click to upload
                       </span>
                       <span className="text-xs text-gray-500 mt-1">
-                        JPEG, PNG, WebP
+                        JPEG, PNG, WebP • Max 5MB
                       </span>
                     </div>
                     <input
@@ -638,7 +700,7 @@ export default function ArtistMarketplaceTab({
                 className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300
                   ${submitting
                     ? "bg-gray-600 cursor-not-allowed"
-                    : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:scale-105"
+                    : "bg-gradient-to-r from-yellow-500 to-orange-500 hover:scale-105 hover:shadow-2xl hover:shadow-orange-500/20"
                   }
                 `}
               >
@@ -664,7 +726,7 @@ export default function ArtistMarketplaceTab({
         </div>
       )}
 
-      {/* My Listing View - VENUE STYLE */}
+      {/* My Listing View */}
       {activeSection === "listings" && (
         <div className="space-y-8">
           {/* Loading State */}
@@ -826,22 +888,27 @@ export default function ArtistMarketplaceTab({
                           ${existingItem.price}
                         </span>
                       </div>
+                      {/* ✅ State Badge Display */}
+                      {existingItem.location && (
+                        <div className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-sm mt-3">
+                          <MapPin size={14} />
+                          {existingItem.location} {/* Now shows state name */}
+                        </div>
+                      )}
                     </div>
 
                     {/* Main Image Gallery */}
                     <div className="space-y-4">
                       <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 to-black border-2 border-gray-800 shadow-xl">
                         {existingItem.photos?.[selectedImageIndex] ? (
-                          <Image
-                            width="800"
-                            height="800"
+                          <img
                             src={existingItem.photos[selectedImageIndex]}
                             alt={existingItem.title}
                             className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Image className="w-16 h-16 text-gray-700" />
+                            <ImageIcon className="w-16 h-16 text-gray-700" />
                           </div>
                         )}
                         <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm px-3 py-1 rounded-full">
@@ -865,9 +932,7 @@ export default function ArtistMarketplaceTab({
                                     : "border-gray-800 hover:border-yellow-500"
                                   }`}
                               >
-                                <Image
-                                  width="400"
-                                  height="400"
+                                <img
                                   src={photo}
                                   alt={`${existingItem.title} ${index + 1}`}
                                   className="w-full h-full object-cover"

@@ -28,6 +28,11 @@ export default function ArtistDashboard() {
     isVerified: false,
   });
 
+  const [stripeStatus, setStripeStatus] = useState({
+    isConnected: false,
+    isReady: false
+  });
+
   const [previewImages, setPreviewImages] = useState([]);
   const [audioPreview, setAudioPreview] = useState([]);
   const [listings, setListings] = useState([]);
@@ -71,6 +76,17 @@ export default function ArtistDashboard() {
       if (response.success && response.data.artist) {
         const artistData = response.data.artist;
         setArtist(artistData);
+
+
+        if (user) {
+          const isConnected = !!user.stripeAccountId;
+          const isReady = isConnected && (user.stripeOnboardingComplete || true);
+
+          setStripeStatus({
+            isConnected,
+            isReady
+          })
+        }
 
         // Ensure we only set valid photos with URLs
         const validPhotos = (artistData.photos || [])
@@ -790,6 +806,8 @@ export default function ArtistDashboard() {
               setIsEditingListing={setIsEditingListing}
               setListingVideos={setListingVideos}
               handleStripeConnect={handleStripeConnect}
+              stripeStatus={stripeStatus}
+              user={user}
             />
           )}
 

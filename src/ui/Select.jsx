@@ -96,10 +96,9 @@ export default function Select({
               disabled={option.disabled}
               className={`
                 w-full px-4 py-3 text-left transition-colors duration-150
-                ${
-                  option.value === value
-                    ? "bg-yellow-500/20 text-yellow-400"
-                    : "text-gray-300 hover:bg-gray-700"
+                ${option.value === value
+                  ? "bg-yellow-500/20 text-yellow-400"
+                  : "text-gray-300 hover:bg-gray-700"
                 }
                 ${option.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                 flex items-center justify-between

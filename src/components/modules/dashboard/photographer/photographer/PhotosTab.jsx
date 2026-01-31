@@ -186,10 +186,6 @@ export default function PhotosTab({
                   <p className="text-sm text-gray-500 mt-4">
                     Supported formats: JPG, PNG, WebP, GIF
                   </p>
-                  <p className="text-sm text-green-400 flex items-center justify-center gap-1">
-                    <CheckCircle size={14} />
-                    Included in Free Plan
-                  </p>
                 </div>
                 <input
                   type="file"
@@ -348,58 +344,8 @@ export default function PhotosTab({
                   </div>
                 ))}
               </div>
-
-              {/* Free Plan Note */}
-              <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <CheckCircle size={20} className="text-green-400" />
-                  <div>
-                    <p className="text-blue-300 font-medium">
-                      Free Plan Benefits
-                    </p>
-                    <p className="text-gray-300 text-sm">
-                      You're using the Free plan with {MAX_PHOTOS} photo uploads included. All photo management features are available.
-                    </p>
-                  </div>
-                </div>
-              </div>
             </>
           )}
-        </div>
-
-        {/* Info Section */}
-        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 border border-gray-700">
-          <h4 className="text-lg font-semibold text-white mb-4">
-            📸 Photo Upload Guidelines
-          </h4>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h5 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <CheckCircle size={14} className="text-green-400" />
-                For All Users (Free & Pro)
-              </h5>
-              <ul className="text-sm text-gray-400 space-y-1">
-                <li>• Maximum {MAX_PHOTOS} photos per portfolio</li>
-                <li>• Supported formats: JPG, PNG, WebP, GIF</li>
-                <li>• Max file size: 5MB per photo</li>
-                <li>• Recommended size: 1200x800 pixels or larger</li>
-                <li>• Full photo management (upload, delete, organize)</li>
-              </ul>
-            </div>
-            <div>
-              <h5 className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <CheckCircle size={14} className="text-green-400" />
-                Tips for Best Results
-              </h5>
-              <ul className="text-sm text-gray-400 space-y-1">
-                <li>• Use high-quality, well-lit photos</li>
-                <li>• Show variety in your portfolio</li>
-                <li>• Add descriptive captions</li>
-                <li>• Update your portfolio regularly</li>
-                <li>• Showcase your best work first</li>
-              </ul>
-            </div>
-          </div>
         </div>
       </div>
 

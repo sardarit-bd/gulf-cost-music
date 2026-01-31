@@ -102,59 +102,6 @@ export default function PhotographerDashboard({
         </p>
       </div>
 
-      {/* Plan Stats Bar - Updated for free features */}
-      {/* <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <ImageIcon size={20} className="text-blue-400" />
-            </div>
-            <div>
-              <p className="text-white font-medium">Photo Uploads</p>
-              <p className="text-gray-400 text-sm">
-                {previewImages.length}/5 photos available
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="p-2 bg-purple-500/20 rounded-lg">
-              <Video size={20} className="text-purple-400" />
-            </div>
-            <div>
-              <p className="text-white font-medium">Video Uploads</p>
-              <p className="text-gray-400 text-sm">
-                {photographer.videos?.length || 0}/1 video available
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="p-2 bg-green-500/20 rounded-lg">
-              <Briefcase size={20} className="text-green-400" />
-            </div>
-            <div>
-              <p className="text-white font-medium">Services</p>
-              <p className="text-gray-400 text-sm">
-                Unlimited services available
-              </p>
-            </div>
-          </div>
-          {subscriptionPlan === "free" && (
-            <button
-              onClick={onUpgrade}
-              className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg font-semibold transition"
-            >
-              <Crown size={16} />
-              <span>
-                Upgrade to Pro
-                <span className="ml-1 text-sm text-black/70">· $10/month</span>
-              </span>
-            </button>
-          )}
-        </div>
-      </div> */}
-
       {/* Main Container */}
       <div className="bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-700">
         {/* Enhanced Tabs */}

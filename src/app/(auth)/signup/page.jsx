@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
-// Custom Dropdown Component
+// Custom Dropdown Component (unchanged)
 const CustomDropdown = ({
   options,
   value,
@@ -80,7 +80,7 @@ const CustomDropdown = ({
   );
 };
 
-// Custom Input Component
+// Custom Input Component (unchanged)
 const CustomInput = ({
   type = "text",
   name,
@@ -153,12 +153,13 @@ export default function SignUp() {
     { value: "other", label: "Other" },
   ];
 
-  // User type options
+  // User type options - STUDIO যোগ হয়েছে
   const userTypeOptions = [
     { value: "artist", label: "Artist", icon: <Mic2 className="h-4 w-4" /> },
     { value: "venue", label: "Venue", icon: <Building2 className="h-4 w-4" /> },
     { value: "journalist", label: "Journalist", icon: <Newspaper className="h-4 w-4" /> },
     { value: "photographer", label: "Photographer", icon: <Camera className="h-4 w-4" /> },
+    { value: "studio", label: "Studio", icon: <Building2 className="h-4 w-4" /> }, // ✅ Studio যোগ হয়েছে
     { value: "fan", label: "Fan", icon: <Users className="h-4 w-4" /> },
   ];
 
@@ -169,11 +170,11 @@ export default function SignUp() {
     icon: <MapPin className="h-4 w-4" />
   }));
 
-  // City options for selected state - IMPORTANT: lowercase values
+  // City options for selected state
   const cityOptions = formData.state
     ? stateCityMapping[formData.state].map(city => ({
-      value: city.toLowerCase(), // lowercase value
-      label: city.charAt(0).toUpperCase() + city.slice(1), // Capitalize for display
+      value: city.toLowerCase(),
+      label: city.charAt(0).toUpperCase() + city.slice(1),
       icon: <MapPin className="h-4 w-4" />
     }))
     : [];
@@ -211,8 +212,9 @@ export default function SignUp() {
     }));
   };
 
-  // Check if user type requires location
-  const requiresLocation = ["artist", "venue", "journalist", "photographer"].includes(formData.userType);
+  // Check if user type requires location - STUDIO যোগ হয়েছে
+  const requiresLocation = ["artist", "venue", "journalist", "photographer", "studio"].includes(formData.userType);
+  // ✅ Studio যোগ হয়েছে
 
   // handle submit
   const handleSubmit = async (e) => {
@@ -239,7 +241,7 @@ export default function SignUp() {
         submissionData.genre = formData.genre.toLowerCase();
       }
 
-      // Add state and city for non-fan users
+      // Add state and city for non-fan users (Studio সহ)
       if (requiresLocation) {
         if (!formData.state || !formData.city) {
           toast.error("Please select both state and city", { id: toastId });
@@ -247,7 +249,6 @@ export default function SignUp() {
           return;
         }
         submissionData.state = formData.state;
-        // Send lowercase city to backend
         submissionData.city = formData.city.toLowerCase();
       }
 
@@ -413,7 +414,7 @@ export default function SignUp() {
                   </div>
                 )}
 
-                {/* State & City (For non-fan users) */}
+                {/* State & City (For non-fan users - Studio সহ) */}
                 {requiresLocation && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
