@@ -1,0 +1,37 @@
+export const ROLE_MENUS = {
+    artist: [
+        { label: "Dashboard", href: "/dashboard/artist/artistdashboard" },
+        { label: "Manage Profile", href: "/dashboard/artist/manageProfile" },
+        { label: "Marketplace", href: "/dashboard/artist/marketplace" },
+        { label: "Billing", href: "/dashboard/artist/billing" },
+        { label: "Orders", href: "/dashboard/artist/orders" },
+    ],
+    photographer: [
+        { label: "Overview", href: "/dashboard/photographer/overview" },
+        { label: "Edit Profile", href: "/dashboard/photographer/edit" },
+        { label: "Services", href: "/dashboard/photographer/services" },
+        { label: "Photos", href: "/dashboard/photographer/photos" },
+        { label: "Videos", href: "/dashboard/photographer/videos" },
+        { label: "Market", href: "/dashboard/photographer/market" },
+        { label: "Billing", href: "/dashboard/photographer/billing" },
+    ],
+    venue: [
+        { label: "Overview", href: "/dashboard/venue/overview" },
+        { label: "Edit Profile", href: "/dashboard/venue/edit" },
+        { label: "Events", href: "/dashboard/venue/events" },
+        { label: "Billing", href: "/dashboard/venue/billing" },
+    ],
+    journalist: [
+        { label: "Overview", href: "/dashboard/journalist/overview" },
+        { label: "My Posts", href: "/dashboard/journalist/posts" },
+        { label: "Create Post", href: "/dashboard/journalist/create" },
+        { label: "Billing", href: "/dashboard/journalist/billing" },
+    ],
+    studio: [
+        { label: "Overview", href: "/dashboard/studio/overview" },
+        { label: "Edit Profile", href: "/dashboard/studio/edit" },
+        { label: "Rooms", href: "/dashboard/studio/rooms" },
+        { label: "Bookings", href: "/dashboard/studio/bookings" },
+        { label: "Billing", href: "/dashboard/studio/billing" },
+    ],
+};

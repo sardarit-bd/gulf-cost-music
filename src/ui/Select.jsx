@@ -1,4 +1,3 @@
-// ui/Select.jsx
 "use client";
 
 import { ChevronDown } from "lucide-react";
@@ -15,11 +14,11 @@ export default function Select({
   disabled = false,
   placeholder = "Select an option",
   className = "",
+  error = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const selectRef = useRef(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (selectRef.current && !selectRef.current.contains(event.target)) {
@@ -53,7 +52,7 @@ export default function Select({
   return (
     <div className={`relative ${className}`} ref={selectRef}>
       {label && (
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
@@ -63,18 +62,18 @@ export default function Select({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={`
-          w-full flex items-center justify-between gap-3 
-          bg-gray-800 text-white px-4 py-3 rounded-xl 
-          border ${disabled ? "border-gray-700" : "border-gray-600 hover:border-yellow-500"} 
-          transition-all duration-200
-          ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
-          focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent
-        `}
+                    w-full flex items-center justify-between gap-3 
+                    bg-white text-gray-900 px-4 py-3 rounded-xl 
+                    border ${error ? "border-red-300" : "border-gray-300 hover:border-blue-500"} 
+                    transition-all duration-200 shadow-sm
+                    ${disabled ? "cursor-not-allowed opacity-60 bg-gray-50" : "cursor-pointer"}
+                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                `}
       >
         <div className="flex items-center gap-3">
-          {icon && <span className="text-gray-400">{icon}</span>}
+          {icon && <span className="text-gray-500">{icon}</span>}
           <span
-            className={`${!selectedOption ? "text-gray-400" : "text-white"}`}
+            className={`${!selectedOption ? "text-gray-400" : "text-gray-900"}`}
           >
             {displayValue}
           </span>
@@ -85,9 +84,14 @@ export default function Select({
         />
       </button>
 
+      {/* Error Message */}
+      {error && (
+        <p className="mt-1 text-xs text-red-500">{error}</p>
+      )}
+
       {/* Dropdown Options */}
       {isOpen && !disabled && (
-        <div className="absolute z-50 w-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-lg max-h-64 overflow-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-64 overflow-auto">
           {options.map((option, index) => (
             <button
               key={`${option.value}-${index}`}
@@ -95,19 +99,21 @@ export default function Select({
               onClick={() => handleSelect(option.value)}
               disabled={option.disabled}
               className={`
-                w-full px-4 py-3 text-left transition-colors duration-150
-                ${option.value === value
-                  ? "bg-yellow-500/20 text-yellow-400"
-                  : "text-gray-300 hover:bg-gray-700"
+                                w-full px-4 py-3 text-left transition-colors duration-150
+                                ${option.value === value
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-gray-700 hover:bg-gray-50"
                 }
-                ${option.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-                flex items-center justify-between
-                border-b border-gray-700 last:border-b-0
-              `}
+                                ${option.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                                flex items-center justify-between
+                                border-b border-gray-100 last:border-b-0
+                            `}
             >
-              <span>{option.label}</span>
+              <span className={option.disabled ? "text-gray-400" : ""}>
+                {option.label}
+              </span>
               {option.value === value && (
-                <span className="text-yellow-500">✓</span>
+                <span className="text-blue-600 font-bold">✓</span>
               )}
             </button>
           ))}

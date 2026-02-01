@@ -191,7 +191,6 @@ export default function AdminLayout({ children }) {
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
-      setNotifications(getMockNotifications());
     } finally {
       setLoading(false);
     }
@@ -200,40 +199,6 @@ export default function AdminLayout({ children }) {
   useEffect(() => {
     fetchNotifications();
   }, []);
-
-  // Mock notifications for fallback
-  const getMockNotifications = () => {
-    return [
-      {
-        id: 1,
-        title: "New Contact Message",
-        message: "From: John Doe - Website Inquiry",
-        email: "john@example.com",
-        time: "5 minutes ago",
-        read: false,
-        type: "contact",
-        contactId: "1",
-      },
-      {
-        id: 2,
-        title: "New Contact Message",
-        message: "From: Sarah Smith - Support Request",
-        email: "sarah@example.com",
-        time: "1 hour ago",
-        read: false,
-        type: "contact",
-        contactId: "2",
-      },
-      {
-        id: 3,
-        title: "New User Registration",
-        message: "A new artist has registered on the platform",
-        time: "2 hours ago",
-        read: true,
-        type: "user",
-      },
-    ];
-  };
 
   // Format time ago
   const formatTimeAgo = (dateString) => {
@@ -799,7 +764,7 @@ export default function AdminLayout({ children }) {
 
         {/* Main Content Area */}
         <main className="flex-1 overflow-auto">
-          <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+          <div className="">{children}</div>
         </main>
       </div>
 

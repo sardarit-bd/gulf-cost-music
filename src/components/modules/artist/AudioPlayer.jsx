@@ -8,63 +8,85 @@ export default function AudioPlayer({ audio, index, isPlaying, onToggle, onNext,
     const progressBarRef = useRef(null);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
-    const [volume, setVolume] = useState(0.8);
+    const [volume, setVolume] = useState(0.7);
     const [isMuted, setIsMuted] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Update time and duration
+    // Load audio and set up event listeners
     useEffect(() => {
         const audioEl = audioRef.current;
-        if (!audioEl) return;
+        if (!audioEl || !audio?.url) return;
 
-        const updateTime = () => {
+        const handleLoadStart = () => {
+            setIsLoading(true);
+            setError(null);
+        };
+
+        const handleLoadedData = () => {
+            setIsLoading(false);
+            setDuration(audioEl.duration || 0);
+        };
+
+        const handleTimeUpdate = () => {
             if (!isDragging) {
                 setCurrentTime(audioEl.currentTime);
             }
         };
 
-        const updateDuration = () => {
-            setDuration(audioEl.duration || 0);
-        };
-
         const handleEnded = () => {
             setCurrentTime(0);
-            onToggle(index);
+            onNext?.();
         };
 
-        audioEl.addEventListener("timeupdate", updateTime);
-        audioEl.addEventListener("loadedmetadata", updateDuration);
+        const handleError = (e) => {
+            console.error("Audio error:", e);
+            setError("Failed to load audio");
+            setIsLoading(false);
+        };
+
+        // Set initial volume
+        audioEl.volume = volume;
+
+        // Add event listeners
+        audioEl.addEventListener("loadstart", handleLoadStart);
+        audioEl.addEventListener("loadeddata", handleLoadedData);
+        audioEl.addEventListener("timeupdate", handleTimeUpdate);
         audioEl.addEventListener("ended", handleEnded);
+        audioEl.addEventListener("error", handleError);
+
+        // Load the audio source
+        audioEl.load();
 
         return () => {
-            audioEl.removeEventListener("timeupdate", updateTime);
-            audioEl.removeEventListener("loadedmetadata", updateDuration);
+            audioEl.removeEventListener("loadstart", handleLoadStart);
+            audioEl.removeEventListener("loadeddata", handleLoadedData);
+            audioEl.removeEventListener("timeupdate", handleTimeUpdate);
             audioEl.removeEventListener("ended", handleEnded);
+            audioEl.removeEventListener("error", handleError);
         };
-    }, [index, onToggle, isDragging]);
+    }, [audio?.url, isDragging, volume, onNext]);
 
-    // Volume control
+    // Handle play/pause based on isPlaying prop
     useEffect(() => {
-        if (audioRef.current) {
-            audioRef.current.volume = isMuted ? 0 : volume;
-        }
-    }, [volume, isMuted]);
+        if (!audioRef.current || !audio?.url) return;
 
-    // Play/pause based on isPlaying prop
-    useEffect(() => {
-        if (!audioRef.current) return;
-
-        if (isPlaying) {
-            const playPromise = audioRef.current.play();
-            if (playPromise !== undefined) {
-                playPromise.catch((error) => {
-                    console.error("Error playing audio:", error);
-                });
+        const playAudio = async () => {
+            try {
+                if (isPlaying) {
+                    await audioRef.current.play();
+                } else {
+                    audioRef.current.pause();
+                }
+            } catch (err) {
+                console.error("Playback error:", err);
+                setError("Playback failed");
             }
-        } else {
-            audioRef.current.pause();
-        }
-    }, [isPlaying]);
+        };
+
+        playAudio();
+    }, [isPlaying, audio?.url]);
 
     // Format time to MM:SS
     const formatTime = (time) => {
@@ -76,10 +98,10 @@ export default function AudioPlayer({ audio, index, isPlaying, onToggle, onNext,
 
     // Handle progress bar click
     const handleProgressClick = (e) => {
-        if (!progressBarRef.current || !audioRef.current) return;
+        if (!progressBarRef.current || !audioRef.current || !duration) return;
 
         const rect = progressBarRef.current.getBoundingClientRect();
-        const clickPosition = (e.clientX - rect.left) / rect.width;
+        const clickPosition = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
         const newTime = clickPosition * duration;
 
         audioRef.current.currentTime = newTime;
@@ -87,13 +109,20 @@ export default function AudioPlayer({ audio, index, isPlaying, onToggle, onNext,
     };
 
     // Handle progress bar drag
-    const handleProgressDragStart = () => setIsDragging(true);
+    const handleProgressDragStart = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+        document.addEventListener("mousemove", handleProgressDrag);
+        document.addEventListener("mouseup", handleProgressDragEnd);
+        document.addEventListener("touchmove", handleProgressDrag);
+        document.addEventListener("touchend", handleProgressDragEnd);
+    };
 
     const handleProgressDrag = (e) => {
-        if (!isDragging || !progressBarRef.current || !audioRef.current) return;
+        if (!isDragging || !progressBarRef.current || !duration) return;
 
+        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         const rect = progressBarRef.current.getBoundingClientRect();
-        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
         const clickPosition = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
         const newTime = clickPosition * duration;
 
@@ -101,10 +130,16 @@ export default function AudioPlayer({ audio, index, isPlaying, onToggle, onNext,
     };
 
     const handleProgressDragEnd = () => {
-        if (isDragging && audioRef.current) {
+        if (isDragging && audioRef.current && duration) {
             audioRef.current.currentTime = currentTime;
         }
         setIsDragging(false);
+
+        // Clean up event listeners
+        document.removeEventListener("mousemove", handleProgressDrag);
+        document.removeEventListener("mouseup", handleProgressDragEnd);
+        document.removeEventListener("touchmove", handleProgressDrag);
+        document.removeEventListener("touchend", handleProgressDragEnd);
     };
 
     // Handle volume change
@@ -114,63 +149,78 @@ export default function AudioPlayer({ audio, index, isPlaying, onToggle, onNext,
         if (newVolume > 0 && isMuted) {
             setIsMuted(false);
         }
+        if (audioRef.current) {
+            audioRef.current.volume = newVolume;
+        }
     };
 
     // Handle mute toggle
     const toggleMute = () => {
         setIsMuted(!isMuted);
+        if (audioRef.current) {
+            audioRef.current.muted = !isMuted;
+        }
     };
 
-    // Handle play/pause
+    // Handle play/pause click
     const handlePlayPause = () => {
+        if (isLoading || error) return;
         onToggle(index);
     };
 
     return (
-        <div className={`group relative p-4 rounded-xl border transition-all ${isPlaying
-            ? "border-yellow-500 bg-yellow-500/10 shadow-lg shadow-yellow-500/10"
-            : "border-gray-700 bg-gray-800/50 hover:bg-gray-800"
+        <div className={`relative p-4 rounded-2xl border transition-all duration-300 ${isPlaying
+            ? "border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/50"
+            : "border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/30"
             }`}>
+
+            {/* Hidden audio element */}
             <audio
                 ref={audioRef}
-                src={audio.url}
                 preload="metadata"
-                onError={(e) => console.error("Audio load error:", e)}
-            />
+                crossOrigin="anonymous"
+            >
+                <source src={audio?.url} type="audio/mpeg" />
+                <source src={audio?.url} type="audio/mp3" />
+                Your browser does not support the audio element.
+            </audio>
 
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 {/* Play/Pause Button */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                     <button
                         onClick={handlePlayPause}
-                        className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all transform active:scale-95 ${isPlaying
-                            ? "bg-yellow-500 text-black shadow-lg"
-                            : "bg-gray-700 text-white hover:bg-yellow-500 hover:text-black"
+                        disabled={isLoading || error}
+                        className={`relative flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${isPlaying
+                            ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/30"
+                            : "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 hover:from-blue-100 hover:to-indigo-100 hover:text-blue-600"
                             }`}
                         aria-label={isPlaying ? "Pause" : "Play"}
                     >
-                        {isPlaying ? (
+                        {isLoading ? (
+                            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : isPlaying ? (
                             <Pause size={20} className="fill-current" />
                         ) : (
                             <Play size={20} className="fill-current ml-0.5" />
                         )}
                     </button>
 
-                    {/* Skip Controls (Desktop only) */}
-                    <div className="hidden md:flex items-center gap-2">
+                    {/* Skip Controls */}
+                    <div className="flex items-center gap-1">
                         <button
                             onClick={onPrevious}
-                            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition"
-                            aria-label="Previous track"
                             disabled={!onPrevious}
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label="Previous track"
                         >
                             <SkipBack size={18} />
                         </button>
                         <button
                             onClick={onNext}
-                            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition"
-                            aria-label="Next track"
                             disabled={!onNext}
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            aria-label="Next track"
                         >
                             <SkipForward size={18} />
                         </button>
@@ -179,66 +229,77 @@ export default function AudioPlayer({ audio, index, isPlaying, onToggle, onNext,
 
                 {/* Track Info */}
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                         <div className="min-w-0">
-                            <p className="font-semibold text-white truncate">
-                                {audio.name || `Audio Track ${index + 1}`}
+                            <p className="font-semibold text-gray-900 truncate">
+                                {audio?.name || `Track ${index + 1}`}
                             </p>
-                            <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
+                            <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
                                 <span>{formatTime(currentTime)}</span>
-                                <span className="text-gray-600">/</span>
+                                <span className="text-gray-400">/</span>
                                 <span>{formatTime(duration)}</span>
+
+                                {/* Loading/Error Indicators */}
+                                {isLoading && (
+                                    <span className="text-xs text-blue-500 bg-blue-100 px-2 py-0.5 rounded">
+                                        Loading...
+                                    </span>
+                                )}
+                                {error && (
+                                    <span className="text-xs text-red-500 bg-red-100 px-2 py-0.5 rounded">
+                                        {error}
+                                    </span>
+                                )}
                             </div>
                         </div>
 
                         {/* Volume Control (Desktop only) */}
-                        <div className="hidden lg:flex items-center gap-2">
+                        {/* <div className="hidden lg:flex items-center gap-2 min-w-[140px]">
                             <button
                                 onClick={toggleMute}
-                                className="p-1.5 text-gray-400 hover:text-white transition hover:bg-gray-700/50 rounded"
+                                className="p-1.5 text-gray-500 hover:text-blue-600 transition hover:bg-blue-100 rounded"
                                 aria-label={isMuted ? "Unmute" : "Mute"}
                             >
                                 {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
                             </button>
-                            <input
-                                type="range"
-                                min="0"
-                                max="1"
-                                step="0.01"
-                                value={isMuted ? 0 : volume}
-                                onChange={handleVolumeChange}
-                                className="w-20 accent-yellow-500 cursor-pointer"
-                                aria-label="Volume"
-                            />
-                        </div>
+                            <div className="relative flex-1 group">
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="1"
+                                    step="0.01"
+                                    value={isMuted ? 0 : volume}
+                                    onChange={handleVolumeChange}
+                                    className="w-full h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500"
+                                    aria-label="Volume"
+                                />
+                                <div className="absolute inset-0 h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full pointer-events-none"
+                                    style={{ width: `${(isMuted ? 0 : volume) * 100}%` }} />
+                            </div>
+                        </div> */}
                     </div>
 
                     {/* Progress Bar */}
                     <div className="mt-4">
                         <div
                             ref={progressBarRef}
-                            className="w-full h-2 bg-gray-700 rounded-full cursor-pointer overflow-hidden relative group/progress"
+                            className="w-full h-2 bg-gray-200 rounded-full cursor-pointer overflow-hidden relative group/progress"
                             onClick={handleProgressClick}
                             onMouseDown={handleProgressDragStart}
-                            onMouseMove={handleProgressDrag}
-                            onMouseUp={handleProgressDragEnd}
-                            onMouseLeave={handleProgressDragEnd}
                             onTouchStart={handleProgressDragStart}
-                            onTouchMove={handleProgressDrag}
-                            onTouchEnd={handleProgressDragEnd}
                         >
                             {/* Background */}
-                            <div className="absolute inset-0 bg-gray-600"></div>
+                            <div className="absolute inset-0 bg-gray-200"></div>
 
                             {/* Progress */}
                             <div
-                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-500 to-yellow-400 rounded-full transition-all duration-100"
+                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-100"
                                 style={{ width: duration ? `${(currentTime / duration) * 100}%` : "0%" }}
                             />
 
                             {/* Thumb */}
                             <div
-                                className="absolute top-1/2 w-4 h-4 bg-white rounded-full shadow-lg transform -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover/progress:opacity-100 transition-opacity"
+                                className="absolute top-1/2 w-4 h-4 bg-white rounded-full shadow-lg transform -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover/progress:opacity-100 transition-opacity border-2 border-blue-500"
                                 style={{ left: duration ? `${(currentTime / duration) * 100}%` : "0%" }}
                             />
                         </div>
@@ -255,26 +316,30 @@ export default function AudioPlayer({ audio, index, isPlaying, onToggle, onNext,
             </div>
 
             {/* Mobile Volume Control */}
-            <div className="lg:hidden mt-4 pt-4 border-t border-gray-700">
+            <div className="lg:hidden mt-4 pt-4 border-t border-gray-100">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={toggleMute}
-                        className="p-2 text-gray-400 hover:text-white transition"
+                        className="p-2 text-gray-500 hover:text-blue-600 transition"
                         aria-label={isMuted ? "Unmute" : "Mute"}
                     >
                         {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
                     </button>
-                    <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        value={isMuted ? 0 : volume}
-                        onChange={handleVolumeChange}
-                        className="flex-1 accent-yellow-500 cursor-pointer"
-                        aria-label="Volume"
-                    />
-                    <span className="text-xs text-gray-400 min-w-[40px] text-right">
+                    <div className="relative flex-1">
+                        <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.01"
+                            value={isMuted ? 0 : volume}
+                            onChange={handleVolumeChange}
+                            className="w-full h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500"
+                            aria-label="Volume"
+                        />
+                        <div className="absolute inset-y-0 left-0 h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full pointer-events-none"
+                            style={{ width: `${(isMuted ? 0 : volume) * 100}%` }} />
+                    </div>
+                    <span className="text-xs text-gray-500 min-w-[45px] text-right">
                         {isMuted ? "Muted" : `${Math.round(volume * 100)}%`}
                     </span>
                 </div>
@@ -282,68 +347,84 @@ export default function AudioPlayer({ audio, index, isPlaying, onToggle, onNext,
 
             {/* Status Indicator */}
             {isPlaying && (
-                <div className="absolute top-3 bottom-3 right-3">
-                    <div className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse"></div>
-                        <span className="text-xs text-yellow-500 font-medium">Now Playing</span>
+                <div className="absolute top-3 right-3">
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs rounded-full">
+                        <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                            <span className="font-medium">Playing</span>
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* Waveform Animation (Optional) */}
+            {/* Waveform Animation */}
             {isPlaying && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 overflow-hidden rounded-b-xl">
-                    <div className="flex items-end h-full gap-[2px] px-2">
-                        {[...Array(20)].map((_, i) => (
-                            <div
-                                key={i}
-                                className="flex-1 bg-yellow-500/30 rounded-t"
-                                style={{
-                                    height: `${20 + Math.sin(i * 0.5 + Date.now() * 0.01) * 15}%`,
-                                    animation: `wave 1.2s ease-in-out ${i * 0.05}s infinite alternate`,
-                                }}
-                            />
-                        ))}
+                <div className="absolute bottom-0 left-0 right-0 h-1 overflow-hidden rounded-b-2xl opacity-30">
+                    <div className="flex items-end h-full gap-[1px] px-2">
+                        {[...Array(24)].map((_, i) => {
+                            const height = 30 + Math.sin(i * 0.7 + Date.now() * 0.008) * 25;
+                            const delay = i * 0.05;
+                            return (
+                                <div
+                                    key={i}
+                                    className="flex-1 bg-gradient-to-t from-blue-500 to-indigo-500 rounded-t"
+                                    style={{
+                                        height: `${height}%`,
+                                        animation: `wave 1.4s ease-in-out ${delay}s infinite alternate`,
+                                    }}
+                                />
+                            );
+                        })}
                     </div>
                 </div>
             )}
 
-            {/* CSS for waveform animation */}
+            {/* CSS for animations */}
             <style jsx>{`
-        @keyframes wave {
-          0% {
-            height: 20%;
-          }
-          100% {
-            height: 80%;
-          }
-        }
-        
-        /* Custom scrollbar for audio player */
-        ::-webkit-slider-thumb {
-          appearance: none;
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          background: #f59e0b;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        
-        ::-webkit-slider-thumb:hover {
-          background: #fbbf24;
-          transform: scale(1.1);
-        }
-        
-        ::-moz-range-thumb {
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          background: #f59e0b;
-          cursor: pointer;
-          border: none;
-        }
-      `}</style>
+                @keyframes wave {
+                    0% {
+                        height: 20%;
+                    }
+                    100% {
+                        height: 80%;
+                    }
+                }
+
+                /* Custom scrollbar for range inputs */
+                input[type="range"]::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    background: #3b82f6;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    border: 2px solid white;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                }
+
+                input[type="range"]::-webkit-slider-thumb:hover {
+                    background: #2563eb;
+                    transform: scale(1.1);
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+                }
+
+                input[type="range"]::-moz-range-thumb {
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    background: #3b82f6;
+                    cursor: pointer;
+                    border: 2px solid white;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                }
+
+                input[type="range"]::-moz-range-thumb:hover {
+                    background: #2563eb;
+                    transform: scale(1.1);
+                }
+            `}</style>
         </div>
     );
 }

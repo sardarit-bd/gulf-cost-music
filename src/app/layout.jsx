@@ -1,6 +1,9 @@
+"use client";
+
 import Navbar from "@/components/modules/header/Navbar";
 import { AuthProvider } from "@/context/AuthContext";
 import { Geist, Geist_Mono } from "next/font/google";
+import { usePathname } from "next/navigation";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
@@ -14,28 +17,22 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
-  title: "Gulf Coast Music",
-  description: "Best music platform",
-  icons: {
-    icon: "/images/logo.png"
-  },
-};
-
-
 export default function RootLayout({ children }) {
+  const pathname = usePathname();
+  const isDashboard = pathname.startsWith("/dashboard");
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider>
-          <Navbar />
+          {!isDashboard && <Navbar />}
+
           <Toaster
             position="top-center"
             reverseOrder={false}
-            toastOptions={{
-              duration: 3000,
-            }}
+            toastOptions={{ duration: 3000 }}
           />
+
           {children}
         </AuthProvider>
       </body>

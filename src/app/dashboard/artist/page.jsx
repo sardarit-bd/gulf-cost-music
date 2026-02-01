@@ -1,10 +1,11 @@
 "use client";
 
-import ArtistDashboard from "@/components/modules/dashboard/artists/ArtistDashboard";
+// import ArtistDashboard from "@/components/modules/dashboard/artists/ArtistDashboard";
 import withAuth from "@/utils/withAuth";
+import ArtistDashboardPage from "./artistdashboard/page";
 
 function DashboardPage() {
-  return <ArtistDashboard />;
+  return <ArtistDashboardPage />;
 }
 
 // Protect this page for artists only

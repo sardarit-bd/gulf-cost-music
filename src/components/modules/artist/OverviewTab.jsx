@@ -4,9 +4,9 @@ import { ImageIcon, Music2, User } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import AudioPlayer from "./AudioPlayer";
-import PhotoGallery from "./PhotoGallery";
 
 export default function OverviewTab({
+  user,
   artist,
   previewImages = [],
   audioPreview = [],
@@ -16,23 +16,38 @@ export default function OverviewTab({
   loadingListings,
 }) {
   const [playingIndex, setPlayingIndex] = useState(null);
+  const [likedTracks, setLikedTracks] = useState([]);
 
   const togglePlay = (index) => {
-    setPlayingIndex((prev) => (prev === index ? null : index));
+    if (playingIndex === index) {
+      setPlayingIndex(null); // Pause
+    } else {
+      setPlayingIndex(index); // Play new track
+    }
+  };
+
+  const toggleLike = (index) => {
+    setLikedTracks(prev =>
+      prev.includes(index)
+        ? prev.filter(i => i !== index)
+        : [...prev, index]
+    );
   };
 
   const playNext = () => {
-    if (!audioPreview?.length) return;
-    setPlayingIndex((prev) =>
-      prev === null || prev === audioPreview.length - 1 ? 0 : prev + 1,
-    );
+    if (!validAudioPreview.length) return;
+    const nextIndex = playingIndex === null || playingIndex === validAudioPreview.length - 1
+      ? 0
+      : playingIndex + 1;
+    setPlayingIndex(nextIndex);
   };
 
   const playPrevious = () => {
-    if (!audioPreview?.length) return;
-    setPlayingIndex((prev) =>
-      prev === null || prev === 0 ? audioPreview.length - 1 : prev - 1,
-    );
+    if (!validAudioPreview.length) return;
+    const prevIndex = playingIndex === null || playingIndex === 0
+      ? validAudioPreview.length - 1
+      : playingIndex - 1;
+    setPlayingIndex(prevIndex);
   };
 
   // Filter out empty/null image URLs
@@ -77,7 +92,6 @@ export default function OverviewTab({
   const getDisplayState = () => {
     if (!artist?.state) return "Not set";
 
-    // Format state name properly
     const stateMap = {
       louisiana: "Louisiana",
       mississippi: "Mississippi",
@@ -93,7 +107,6 @@ export default function OverviewTab({
   const getDisplayCity = () => {
     if (!artist?.city) return "Not set";
 
-    // Capitalize first letter of each word
     return artist.city
       .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -103,61 +116,74 @@ export default function OverviewTab({
   return (
     <div className="animate-fadeIn">
       {/* Profile Header */}
-      <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-6 mb-8 border border-gray-700">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div className="relative w-24 h-24 rounded-full border-4 border-yellow-500 overflow-hidden bg-gray-700">
-            {firstImage ? (
-              <Image
-                src={firstImage}
-                alt="Profile"
-                fill
-                className="object-cover"
-                sizes="96px"
-                onError={(e) => {
-                  e.target.style.display = "none";
-                }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-600">
-                <User size={32} className="text-gray-400" />
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 mb-8 border border-blue-100">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-8">
+          <div className="relative">
+            <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
+              {firstImage ? (
+                <Image
+                  src={firstImage}
+                  alt="Profile"
+                  fill
+                  className="object-cover"
+                  sizes="128px"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <User size={48} className="text-blue-400" />
+                </div>
+              )}
+            </div>
+            {artist?.isVerified && (
+              <div className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-2 rounded-full shadow-lg">
+                <div className="w-6 h-6 flex items-center justify-center">
+                  ✓
+                </div>
               </div>
             )}
           </div>
 
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-white mb-2">
-              {artist?.name || "Unnamed Artist"}
-            </h2>
-            <div className="flex flex-wrap gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <span className="text-gray-300 capitalize">
-                  {artist?.genre || "No genre"}
-                </span>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                  {artist?.name || "Unnamed Artist"}
+                </h2>
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full">
+                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                    <span className="font-medium capitalize">
+                      {artist?.genre || "No genre"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full">
+                    <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+                    <span className="font-medium">{getDisplayCity()}</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full">
+                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                    <span className="font-medium">{getDisplayState()}</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-gray-300">{getDisplayCity()}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-gray-300">{getDisplayState()}</span>
-              </div>
-            </div>
-          </div>
 
-          <div className="flex gap-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-500">
-                {validPreviewImages.length}
+              <div className="flex gap-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600">
+                    {validPreviewImages.length}
+                  </div>
+                  <div className="text-sm text-gray-600">Photos</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-600">
+                    {validAudioPreview.length}
+                  </div>
+                  <div className="text-sm text-gray-600">Tracks</div>
+                </div>
               </div>
-              <div className="text-xs text-gray-400">Photos</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-yellow-500">
-                {validAudioPreview.length}
-              </div>
-              <div className="text-xs text-gray-400">Tracks</div>
             </div>
           </div>
         </div>
@@ -166,62 +192,81 @@ export default function OverviewTab({
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Biography - ❌ Pro plan restriction removed */}
-          <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <div className="w-1 h-6 bg-yellow-500 rounded"></div>
-              Biography
-            </h3>
-            <div className="text-gray-300 leading-relaxed">
+          {/* Biography */}
+          <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
+                Biography
+              </h3>
+              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                Edit
+              </button>
+            </div>
+            <div className="text-gray-700 leading-relaxed">
               {artist?.biography ? (
                 <p className="whitespace-pre-line">{artist.biography}</p>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <div className="flex justify-center mb-2">
-                    <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center">
-                      <ImageIcon size={20} className="text-gray-500" />
+                <div className="text-center py-12 text-gray-500">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
+                      <ImageIcon size={24} className="text-blue-400" />
                     </div>
                   </div>
-                  {/* ❌ Pro upgrade prompt removed - সবাই বায়োগ্রাফি লিখতে পারবে */}
-                  <p>No biography added yet.</p>
+                  <p className="text-lg mb-2">No biography added yet</p>
+                  <p className="text-sm">Tell your fans about your musical journey</p>
+                  <button className="mt-4 text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    Add Biography
+                  </button>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Audio Tracks - ❌ Pro plan restriction removed */}
-          <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <div className="w-1 h-6 bg-yellow-500 rounded"></div>
-              Audio Tracks
-              <span className="text-sm text-gray-400 ml-2">
-                ({validAudioPreview.length}/{uploadLimits?.audios || 5})
-              </span>
-            </h3>
+          {/* Audio Tracks */}
+          <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="w-2 h-8 bg-gradient-to-b from-green-500 to-emerald-500 rounded-full"></div>
+                Audio Tracks
+                <span className="text-sm font-normal text-gray-500 ml-2">
+                  ({validAudioPreview.length}/{uploadLimits?.audios || 5})
+                </span>
+              </h3>
+              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                Manage Tracks
+              </button>
+            </div>
 
             {validAudioPreview.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {validAudioPreview.map((audio, index) => (
                   <AudioPlayer
-                    key={audio.id || index}
+                    key={index}
                     audio={audio}
                     index={index}
                     isPlaying={playingIndex === index}
+                    isLiked={likedTracks.includes(index)}
                     onToggle={togglePlay}
+                    onLike={toggleLike}
                     onNext={playNext}
                     onPrevious={playPrevious}
                   />
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">
-                <div className="flex justify-center mb-2">
-                  <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center">
-                    <Music2 size={20} className="text-gray-500" />
+              <div className="text-center py-12 text-gray-500">
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-50 to-emerald-50 rounded-full flex items-center justify-center">
+                    <Music2 size={24} className="text-emerald-400" />
                   </div>
                 </div>
-                {/* ❌ Pro upgrade prompt removed - সবাই অডিও আপলোড করতে পারবে */}
-                <p>No audio tracks uploaded yet.</p>
+                <p className="text-lg mb-2">No audio tracks uploaded yet</p>
+                <p className="text-sm mb-4">Share your music with the world</p>
+                <button className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all">
+                  <Music2 className="w-4 h-4" />
+                  Upload Your First Track
+                </button>
               </div>
             )}
           </div>
@@ -229,50 +274,103 @@ export default function OverviewTab({
 
         {/* Right Column */}
         <div className="space-y-8">
-          {/* Details */}
-          <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <div className="w-1 h-6 bg-yellow-500 rounded"></div>
+          {/* Details Card */}
+          <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+              <div className="w-2 h-8 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full"></div>
               Details
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <label className="text-sm text-gray-400">Name</label>
-                <p className="text-white font-medium">
+                <label className="text-sm text-gray-500 mb-2 block">Name</label>
+                <p className="text-lg font-semibold text-gray-900">
                   {artist?.name || "Not set"}
                 </p>
               </div>
               <div>
-                <label className="text-sm text-gray-400">State</label>
-                <p className="text-white font-medium">{getDisplayState()}</p>
+                <label className="text-sm text-gray-500 mb-2 block">Location</label>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <span className="text-blue-600 font-bold">📍</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{getDisplayCity()}</p>
+                    <p className="text-sm text-gray-600">{getDisplayState()}</p>
+                  </div>
+                </div>
               </div>
               <div>
-                <label className="text-sm text-gray-400">City</label>
-                <p className="text-white font-medium">{getDisplayCity()}</p>
+                <label className="text-sm text-gray-500 mb-2 block">Genre</label>
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-purple-50 px-4 py-2 rounded-full">
+                  <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+                  <span className="font-medium text-gray-900 capitalize">
+                    {artist?.genre || "Not set"}
+                  </span>
+                </div>
               </div>
               <div>
-                <label className="text-sm text-gray-400">Genre</label>
-                <p className="text-white font-medium capitalize">
-                  {artist?.genre || "Not set"}
-                </p>
+                <label className="text-sm text-gray-500 mb-2 block">Verification</label>
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${artist?.isVerified
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-yellow-100 text-yellow-700'
+                  }`}>
+                  <div className={`w-2 h-2 rounded-full ${artist?.isVerified ? 'bg-green-500' : 'bg-yellow-500'
+                    }`}></div>
+                  <span className="font-medium">
+                    {artist?.isVerified ? 'Verified Artist' : 'Pending Verification'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Photos */}
-          <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <div className="w-1 h-6 bg-yellow-500 rounded"></div>
-              Photos
-              <span className="text-sm text-gray-400 ml-2">
-                ({validPreviewImages.length}/{uploadLimits?.photos || 5})
-              </span>
-            </h3>
+          {/* Photos Gallery */}
+          <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="w-2 h-8 bg-gradient-to-b from-pink-500 to-rose-500 rounded-full"></div>
+                Photos
+                <span className="text-sm font-normal text-gray-500 ml-2">
+                  ({validPreviewImages.length}/{uploadLimits?.photos || 5})
+                </span>
+              </h3>
+              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                Add Photos
+              </button>
+            </div>
 
-            <PhotoGallery
-              images={validPreviewImages}
-              subscriptionPlan={subscriptionPlan}
-            />
+            {validPreviewImages.length > 0 ? (
+              <div className="grid grid-cols-2 gap-4">
+                {validPreviewImages.slice(0, 4).map((img, index) => (
+                  <div key={index} className="aspect-square rounded-xl overflow-hidden border border-gray-100 group relative">
+                    <Image
+                      src={typeof img === 'object' ? img.url : img}
+                      alt={`Photo ${index + 1}`}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                    />
+                    {index === 3 && validPreviewImages.length > 4 && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">
+                          +{validPreviewImages.length - 4}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-pink-50 to-rose-50 rounded-full flex items-center justify-center">
+                    <ImageIcon size={24} className="text-rose-400" />
+                  </div>
+                </div>
+                <p className="text-lg mb-2">No photos uploaded yet</p>
+                <p className="text-sm">Add photos to showcase your brand</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

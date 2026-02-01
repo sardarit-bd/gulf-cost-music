@@ -17,20 +17,32 @@ export default function DashboardPage() {
       return;
     }
 
-    switch (user.userType?.toLowerCase()) {
+    const role = user.userType?.toLowerCase();
+
+    switch (role) {
       case "artist":
         router.replace("/dashboard/artist");
+        break;
+      case "photographer":
+        router.replace("/dashboard/photographer");
         break;
       case "venue":
         router.replace("/dashboard/venue");
         break;
+      case "studio":
+        router.replace("/dashboard/studio");
+        break;
       case "journalist":
         router.replace("/dashboard/journalist");
+        break;
+      case "fan":
+        router.replace("/dashboard/fan");
         break;
       case "admin":
         router.replace("/dashboard/admin");
         break;
       default:
+        // fallback – invalid / corrupted role
         router.replace("/");
     }
   }, [user, loading, router]);
@@ -40,7 +52,7 @@ export default function DashboardPage() {
       <div className="flex justify-center items-center py-20">
         <div className="text-center">
           <Loader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
-          <p className="text-gray-400">Checking your session.. </p>
+          <p className="text-gray-400">Checking your session…</p>
         </div>
       </div>
     );
