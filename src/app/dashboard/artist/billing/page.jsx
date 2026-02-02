@@ -85,17 +85,17 @@ export default function BillingPage() {
           <head>
             <title>Invoice ${invoiceNumber}</title>
             <style>
-              body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
-              .header { text-align: center; margin-bottom: 40px; }
-              .company { font-size: 24px; font-weight: bold; color: #333; }
+              body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; background: #fff; color: #333; }
+              .header { text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #f0f0f0; }
+              .company { font-size: 24px; font-weight: bold; color: #111; }
               .invoice-title { font-size: 32px; margin: 20px 0; color: #666; }
-              .details { margin: 30px 0; }
+              .details { margin: 30px 0; background: #f9f9f9; padding: 20px; border-radius: 8px; }
               .detail-row { display: flex; justify-content: space-between; margin: 10px 0; }
-              .table { width: 100%; border-collapse: collapse; margin: 30px 0; }
-              .table th { background: #f5f5f5; padding: 12px; text-align: left; }
+              .table { width: 100%; border-collapse: collapse; margin: 30px 0; background: #fff; }
+              .table th { background: #f5f5f5; padding: 12px; text-align: left; color: #555; font-weight: 600; }
               .table td { padding: 12px; border-bottom: 1px solid #eee; }
-              .total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 30px; }
-              .footer { margin-top: 50px; text-align: center; color: #666; font-size: 12px; }
+              .total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 30px; padding-top: 20px; border-top: 2px solid #f0f0f0; }
+              .footer { margin-top: 50px; text-align: center; color: #666; font-size: 12px; padding-top: 20px; border-top: 1px solid #eee; }
             </style>
           </head>
           <body>
@@ -119,7 +119,7 @@ export default function BillingPage() {
               </div>
               <div class="detail-row">
                 <span>User Type:</span>
-                <span>Artist</span>
+                <span>${user?.userType || "User"}</span>
               </div>
             </div>
             
@@ -194,23 +194,23 @@ export default function BillingPage() {
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto"></div>
-                    <p className="text-gray-400 mt-4">Loading...</p>
+                    <p className="text-gray-600 mt-4">Loading user data...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black py-8 px-4 md:px-16">
-            <Toaster />
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white py-8 px-4 md:px-16">
+            <Toaster position="top-right" />
 
-            <div className="bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border border-gray-700 mt-8">
-                <div className="border-b border-gray-700">
+            <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 mt-8">
+                <div className="border-b border-gray-200">
                     <div className="flex items-center px-6 py-4">
-                        <h1 className="text-xl font-bold text-white">Billing</h1>
+                        <h1 className="text-xl font-bold text-gray-900">Billing & Subscription</h1>
                     </div>
                 </div>
 

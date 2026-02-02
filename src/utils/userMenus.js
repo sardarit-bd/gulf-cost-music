@@ -1,15 +1,15 @@
 export const ROLE_MENUS = {
     artist: [
-        { label: "Dashboard", href: "/dashboard/artist/artistdashboard" },
+        { label: "Dashboard", href: "/dashboard/artist" },
         { label: "Manage Profile", href: "/dashboard/artist/manageProfile" },
         { label: "Marketplace", href: "/dashboard/artist/marketplace" },
         { label: "Billing", href: "/dashboard/artist/billing" },
         { label: "Orders", href: "/dashboard/artist/orders" },
     ],
     photographer: [
-        { label: "Overview", href: "/dashboard/photographer/overview" },
-        { label: "Edit Profile", href: "/dashboard/photographer/edit" },
-        { label: "Services", href: "/dashboard/photographer/services" },
+        { label: "Overview", href: "/dashboard/photographer" },
+        { label: "Manage Profile", href: "/dashboard/photographer/manageprofile" },
+        { label: "Service", href: "/dashboard/photographer/service" },
         { label: "Photos", href: "/dashboard/photographer/photos" },
         { label: "Videos", href: "/dashboard/photographer/videos" },
         { label: "Market", href: "/dashboard/photographer/market" },

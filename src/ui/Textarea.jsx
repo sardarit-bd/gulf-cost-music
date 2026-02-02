@@ -1,45 +1,59 @@
+// components/ui/Textarea.js
+"use client";
 
-const Textarea = ({
+export default function Textarea({
     label,
     name,
     value,
     onChange,
-    icon,
-    placeholder,
-    rows = 4,
+    placeholder = "",
     required = false,
-    disabled = false
-}) => {
+    disabled = false,
+    rows = 4,
+    icon,
+    className = "",
+    error = false,
+}) {
     return (
-        <div className="space-y-2">
+        <div className={className}>
             {label && (
-                <label
-                    htmlFor={name}
-                    className="block text-sm font-medium text-gray-300"
-                >
-                    {label}
-                    {required && <span className="text-red-400 ml-1">*</span>}
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {label} {required && <span className="text-red-500">*</span>}
                 </label>
             )}
+
             <div className="relative">
                 {icon && (
                     <div className="absolute left-3 top-3 text-gray-400">
                         {icon}
                     </div>
                 )}
+
                 <textarea
                     name={name}
-                    id={name}
                     value={value}
                     onChange={onChange}
-                    disabled={disabled}
                     placeholder={placeholder}
+                    required={required}
+                    disabled={disabled}
                     rows={rows}
-                    className={`w-full bg-gray-800 border border-gray-600 text-white rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition resize-none ${icon ? 'pl-10' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`
+                        text-gray-600
+                        w-full px-4 py-3 rounded-xl border transition-all duration-200
+                        ${icon ? 'pl-10' : ''}
+                        ${error
+                            ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500'
+                            : 'border-gray-300 hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500'
+                        }
+                        ${disabled ? 'cursor-not-allowed opacity-60 bg-gray-50' : 'bg-white'}
+                        focus:outline-none focus:border-transparent resize-none
+                    `}
                 />
             </div>
+
+            {error && (
+                <p className="mt-1 text-xs text-red-500">{error}</p>
+            )}
         </div>
     );
-};
-
-export default Textarea;
+}

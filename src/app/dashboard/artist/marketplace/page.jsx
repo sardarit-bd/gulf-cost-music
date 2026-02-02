@@ -50,7 +50,11 @@ export default function MarketplacePage() {
         const initializeData = async () => {
             setPageLoading(true);
             try {
-                await Promise.all([loadMarketplaceData(), loadBillingData(), loadAnalytics()]);
+                await Promise.all([
+                    loadMarketplaceData(),
+                    loadBillingData(),
+                    // loadAnalytics()
+                ]);
             } catch (error) {
                 console.error("Error initializing marketplace:", error);
                 toast.error("Failed to load marketplace data");
@@ -115,16 +119,16 @@ export default function MarketplacePage() {
         }
     };
 
-    const loadAnalytics = async () => {
-        try {
-            const analyticsRes = await api.getMarketplaceAnalytics();
-            if (analyticsRes.success) {
-                setStats(analyticsRes.data);
-            }
-        } catch (error) {
-            console.error("Error loading analytics:", error);
-        }
-    };
+    // const loadAnalytics = async () => {
+    //     try {
+    //         const analyticsRes = await api.getMarketplaceAnalytics();
+    //         if (analyticsRes.success) {
+    //             setStats(analyticsRes.data);
+    //         }
+    //     } catch (error) {
+    //         console.error("Error loading analytics:", error);
+    //     }
+    // };
 
     const handleListingChange = (e) => {
         const { name, value } = e.target;
@@ -179,7 +183,10 @@ export default function MarketplacePage() {
 
             if (response.success) {
                 toast.success("🎉 Listing created successfully!");
-                await Promise.all([loadMarketplaceData(), loadAnalytics()]);
+                await Promise.all([
+                    loadMarketplaceData(),
+                    // loadAnalytics()
+                ]);
             } else {
                 toast.error(response.message || "Failed to create listing");
             }
@@ -217,7 +224,10 @@ export default function MarketplacePage() {
             if (response.success) {
                 toast.success("✅ Listing updated successfully!");
                 setDeletedPhotoIndexes([]);
-                await Promise.all([loadMarketplaceData(), loadAnalytics()]);
+                await Promise.all([
+                    loadMarketplaceData(),
+                    // loadAnalytics()
+                ]);
                 setIsEditingListing(false);
             } else {
                 toast.error(response.message || "Failed to update listing");
@@ -249,7 +259,7 @@ export default function MarketplacePage() {
                 setListingPhotos([]);
                 setListingVideos([]);
                 setIsEditingListing(false);
-                await loadAnalytics();
+                // await loadAnalytics();
             } else {
                 toast.error(response.message || "Failed to delete listing");
             }
@@ -376,7 +386,10 @@ export default function MarketplacePage() {
     const handleRefreshData = async () => {
         setPageLoading(true);
         try {
-            await Promise.all([loadMarketplaceData(), loadAnalytics()]);
+            await Promise.all([
+                loadMarketplaceData(),
+                // loadAnalytics()
+            ]);
             toast.success("Data refreshed successfully!");
         } catch (error) {
             toast.error("Failed to refresh data");
@@ -442,7 +455,7 @@ export default function MarketplacePage() {
             {/* Header */}
             <div className="relative overflow-hidden bg-white">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-transparent to-purple-50"></div>
-                <div className="container mx-auto px-4 md:px-8 pt-8 pb-6 relative">
+                <div className="px-4 md:px-8 pt-8 pb-6 relative">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div>
                             <div className="flex items-center gap-4 mb-4">
@@ -510,7 +523,7 @@ export default function MarketplacePage() {
             </div>
 
             {/* Main Content */}
-            <div className="container mx-auto px-4 md:px-8 pb-12">
+            <div className="px-4 md:px-8 pb-12">
                 <div className="bg-white/90 backdrop-blur-sm rounded-3xl border border-gray-200 shadow-xl overflow-hidden">
                     <div className="p-6 md:p-8">
                         <ArtistMarketplaceTab

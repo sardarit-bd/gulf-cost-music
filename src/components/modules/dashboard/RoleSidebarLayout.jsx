@@ -161,7 +161,21 @@ export default function RoleSidebarLayout({ role, children }) {
                 <nav className="flex-1 space-y-2 overflow-y-auto custom-scrollbar border-t-1 border-white/20 pt-4">
                     {enhancedMenu.map((item) => {
                         const Icon = item.icon;
-                        const active = pathname === item.href || pathname.startsWith(item.href);
+                        // const active = pathname === item.href || pathname.startsWith(item.href);
+                        const dashboardRoot = `/dashboard/${role}`;
+
+                        let active = false;
+
+                        if (item.href === dashboardRoot) {
+                            // Dashboard only active on exact match
+                            active = pathname === dashboardRoot;
+                        } else {
+                            // Other menus active on exact or sub-routes
+                            active =
+                                pathname === item.href ||
+                                pathname.startsWith(item.href + "/");
+                        }
+
                         return (
                             <Link
                                 key={item.href}

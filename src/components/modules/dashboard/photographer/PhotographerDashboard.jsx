@@ -16,8 +16,8 @@ import BillingTab from "../billing/BillingTab";
 import EditProfileTab from "./photographer/EditProfileTab";
 import MarketTab from "./photographer/MarketTab";
 import OverviewTab from "./photographer/OverviewTab";
-import PhotosTab from "./photographer/PhotosTab";
-import ServicesTab from "./photographer/ServicesTab";
+import PhotosTab from "./photographer/PhotosPage";
+import ServicesTab from "./photographer/ServicesPage";
 import VideosTab from "./photographer/VideosTab";
 
 // Plan Badge Component
