@@ -19,8 +19,8 @@ export default function MediaUpload({
     onVideoUpload,
     onRemovePhoto,
     onRemoveVideo,
-    onRemoveExistingPhoto, // নতুন prop
-    onRemoveExistingVideo, // নতুন prop
+    onRemoveExistingPhoto,
+    onRemoveExistingVideo,
     errors
 }) {
     const [activePhotoIndex, setActivePhotoIndex] = useState(0);
@@ -106,7 +106,7 @@ export default function MediaUpload({
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                     {/* Existing Photos */}
                     {existingItem?.photos?.map((photo, index) => (
-                        <div key={`existing-${index}`} className="relative group">
+                        <div key={`existing-${photo.public_id || index}`} className="relative group">
                             <div className="aspect-square overflow-hidden rounded-xl border border-gray-300 bg-white">
                                 <img
                                     src={typeof photo === 'string' ? photo : photo.url}
@@ -115,7 +115,10 @@ export default function MediaUpload({
                                 />
                             </div>
                             <button
-                                onClick={() => onRemoveExistingPhoto(index)}
+                                onClick={() => {
+                                    console.log("Removing existing photo:", photo);
+                                    onRemoveExistingPhoto(photo);
+                                }}
                                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition shadow-lg"
                                 title="Delete photo"
                             >
@@ -124,7 +127,7 @@ export default function MediaUpload({
                         </div>
                     ))}
 
-                    {/* New Photos */}
+                    {/* New Photos - শুধুমাত্র new photo-র জন্য */}
                     {photoFiles.map((file, index) => (
                         <div key={`new-${index}`} className="relative group">
                             <div className="aspect-square overflow-hidden rounded-xl border-2 border-blue-500 bg-white">
@@ -135,7 +138,10 @@ export default function MediaUpload({
                                 />
                             </div>
                             <button
-                                onClick={() => onRemovePhoto(totalExistingPhotos + index)}
+                                onClick={() => {
+                                    console.log("Removing new photo at index:", index);
+                                    onRemovePhoto(index); // 🔥 FIXED: শুধুমাত্র index পাঠানো
+                                }}
                                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition shadow-lg"
                                 title="Remove new photo"
                             >
@@ -227,7 +233,13 @@ export default function MediaUpload({
                         </div>
 
                         <button
-                            onClick={hasExistingVideo ? onRemoveExistingVideo : onRemoveVideo}
+                            onClick={() => {
+                                console.log("Removing video:", {
+                                    hasExistingVideo,
+                                    existingVideo: existingItem?.videos?.[0]
+                                });
+                                hasExistingVideo ? onRemoveExistingVideo() : onRemoveVideo();
+                            }}
                             className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition shadow-lg"
                             title={hasExistingVideo ? "Delete existing video" : "Remove new video"}
                         >

@@ -18,7 +18,7 @@ import MarketTab from "./photographer/MarketTab";
 import OverviewTab from "./photographer/OverviewTab";
 import PhotosTab from "./photographer/PhotosPage";
 import ServicesTab from "./photographer/ServicesPage";
-import VideosTab from "./photographer/VideosTab";
+import VideosTab from "./photographer/VideosPage";
 
 // Plan Badge Component
 const PlanBadge = ({ subscriptionPlan }) => (

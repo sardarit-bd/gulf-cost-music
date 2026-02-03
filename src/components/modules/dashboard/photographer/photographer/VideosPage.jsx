@@ -2,7 +2,6 @@
 
 import {
   AlertCircle,
-  AlertTriangle,
   CheckCircle2,
   Clock,
   Edit,
@@ -12,18 +11,15 @@ import {
   Info,
   Loader2,
   Plus,
-  Save,
   Trash2,
-  Upload,
-  Video,
-  X
+  Video
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
-import { VideoUploadForm } from "./VideoUploadForm";
-import { EditVideoModal } from "./EditVideoModal";
 import { DeleteConfirmationModal } from "./DeleteConfirmationModal";
+import { EditVideoModal } from "./EditVideoModal";
 import { SuccessModal } from "./SuccessModal";
+import { VideoUploadForm } from "./VideoUploadForm";
 
 // Utility to get cookie safely
 const getCookie = (name) => {
@@ -32,7 +28,7 @@ const getCookie = (name) => {
   return match ? match[2] : null;
 };
 
-export default function VideosTab({
+export default function VideoPage({
   videos = [],
   subscriptionPlan = "free",
   onVideoAdded,

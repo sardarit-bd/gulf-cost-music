@@ -104,55 +104,59 @@ export default function CreateListingTab({
     };
 
     const handleRemovePhoto = (index) => {
-        const totalExistingPhotos = existingPhotos.length;
-
-        if (index < totalExistingPhotos) {
-            const photoToDelete = existingPhotos[index];
-
-            if (photoToDelete.public_id) {
-                setPhotosToDelete(prev => [...prev, {
-                    url: photoToDelete.url,
-                    public_id: photoToDelete.public_id
-                }]);
-            } else {
-                setPhotosToDelete(prev => [...prev, {
-                    url: photoToDelete.url || photoToDelete,
-                    public_id: null
-                }]);
-            }
-
-            // UI থেকে সরান
-            const updatedPhotos = [...existingPhotos];
-            updatedPhotos.splice(index, 1);
-            setExistingPhotos(updatedPhotos);
-
-            toast.success("Photo removed. Save to update.");
-        } else {
-            const adjustedIndex = index - totalExistingPhotos;
-            setPhotoFiles(prev => prev.filter((_, i) => i !== adjustedIndex));
-        }
+        console.log("Removing new photo at index:", index);
+        setPhotoFiles(prev => prev.filter((_, i) => i !== index));
+        toast.success("New photo removed");
     };
 
     const handleRemoveVideo = () => {
-        if (hasExistingVideo && existingVideo) {
-            setDeleteExistingVideo({
-                delete: true,
-                public_id: existingVideo.public_id
-            });
-            setHasExistingVideo(false);
-            setExistingVideo(null);
-            toast.success("Video marked for deletion. Save to update.");
-        } else {
-            setVideoFile(null);
-        }
+        console.log("Removing new video");
+        setVideoFile(null);
+        toast.success("New video removed");
     };
 
-    const handleRemoveExistingPhoto = (index) => {
-        handleRemovePhoto(index);
+    const handleRemoveExistingPhoto = (photo) => {
+        console.log("Removing existing photo:", photo);
+
+        if (!photo) {
+            toast.error("Invalid photo data");
+            return;
+        }
+
+        // Convert photo to URL string
+        const photoUrl = typeof photo === 'string' ? photo : photo.url || photo;
+
+        // Add to deletion list
+        setPhotosToDelete(prev => {
+            const alreadyExists = prev.includes(photoUrl);
+            if (alreadyExists) {
+                return prev;
+            }
+            return [...prev, photoUrl];
+        });
+
+        // Remove from UI
+        setExistingPhotos(prev =>
+            prev.filter(p => {
+                const pUrl = typeof p === 'string' ? p : p.url || p;
+                return pUrl !== photoUrl;
+            })
+        );
+
+        toast.success("Photo marked for deletion. Click Save to confirm.");
     };
 
     const handleRemoveExistingVideo = () => {
-        handleRemoveVideo();
+        console.log("Removing existing video:", existingVideo);
+
+        if (existingVideo) {
+            setDeleteExistingVideo(true);
+            setHasExistingVideo(false);
+            setExistingVideo(null);
+            toast.success("Video marked for deletion. Click Save to confirm.");
+        } else {
+            toast.error("No existing video to delete");
+        }
     };
 
     const handleSubmit = async () => {
@@ -172,41 +176,83 @@ export default function CreateListingTab({
                 throw new Error("Please sign in again");
             }
 
-            // Prepare form data
+            /* =========================
+               CREATE FORMDATA
+            ========================= */
             const submitFormData = new FormData();
+
+            // Basic fields
             submitFormData.append("title", formData.title.trim());
             submitFormData.append("description", formData.description.trim());
-            submitFormData.append("price", parseFloat(formData.price).toFixed(2));
-            submitFormData.append("location", formData.location.trim());
+            submitFormData.append(
+                "price",
+                parseFloat(formData.price).toFixed(2)
+            );
+            submitFormData.append("location", formData.location);
             submitFormData.append("status", formData.status);
 
-            // Append photos to delete with public_id
-            photosToDelete.forEach((photo) => {
-                submitFormData.append("photosToDelete[]", JSON.stringify(photo));
-            });
-
-            // Append delete video info
-            if (deleteExistingVideo && deleteExistingVideo.delete) {
-                submitFormData.append("deleteExistingVideo", JSON.stringify(deleteExistingVideo));
+            /* =========================
+               PHOTOS DELETE (🔥 FIXED)
+            ========================= */
+            if (photosToDelete.length > 0) {
+                console.log("Sending photos to delete:", photosToDelete);
+                photosToDelete.forEach((photoUrl, index) => {
+                    // Send as simple object with URL
+                    submitFormData.append(
+                        `photosToDelete[${index}]`,
+                        JSON.stringify({ url: photoUrl })
+                    );
+                });
             }
 
-            // Append new photos
-            photoFiles.forEach(file => {
+            /* =========================
+               VIDEO DELETE (🔥 FIXED)
+            ========================= */
+            if (deleteExistingVideo === true) {
+                console.log("Sending video delete flag");
+                submitFormData.append(
+                    "deleteExistingVideo",
+                    JSON.stringify({ delete: true })
+                );
+            }
+
+            /* =========================
+               NEW PHOTOS
+            ========================= */
+            photoFiles.forEach((file) => {
                 submitFormData.append("photos", file);
             });
 
-            // Append new video if exists
+            /* =========================
+               NEW VIDEO
+            ========================= */
             if (videoFile) {
                 submitFormData.append("video", videoFile);
             }
 
-            // Determine endpoint and method
+            /* =========================
+               DEBUG (REMOVE LATER)
+            ========================= */
+            console.log("Submitting FormData:");
+            for (let [key, value] of submitFormData.entries()) {
+                if (value instanceof File) {
+                    console.log(key, `[File: ${value.name}]`);
+                } else {
+                    console.log(key, value);
+                }
+            }
+
+            /* =========================
+               API CALL
+            ========================= */
             const endpoint = `${API_BASE}/api/market/me`;
             const method = existingItem ? "PUT" : "POST";
 
             const res = await fetch(endpoint, {
                 method,
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
                 body: submitFormData,
             });
 
@@ -216,10 +262,21 @@ export default function CreateListingTab({
                 throw new Error(data.message || "Save failed");
             }
 
-            // Call success callback
+            /* =========================
+               SUCCESS - Reset states
+            ========================= */
+            setPhotosToDelete([]);
+            setDeleteExistingVideo(false);
+            setPhotoFiles([]);
+            setVideoFile(null);
+
+            // Update existing photos and video from response
+            setExistingPhotos(data.data.photos || []);
+            setHasExistingVideo(data.data.videos?.length > 0);
+            setExistingVideo(data.data.videos?.[0] || null);
+
             onSuccess(data.data);
 
-            // Reset form if creating new
             if (!existingItem) {
                 setFormData({
                     title: "",
@@ -228,20 +285,12 @@ export default function CreateListingTab({
                     location: "",
                     status: "active",
                 });
-                setPhotoFiles([]);
-                setVideoFile(null);
-                setPhotosToDelete([]);
-                setDeleteExistingVideo(false);
-                setExistingPhotos([]);
-                setHasExistingVideo(false);
-                setExistingVideo(null);
-            } else {
-                setPhotosToDelete([]);
-                setDeleteExistingVideo(false);
             }
 
             toast.success(
-                existingItem ? "Listing updated successfully!" : "Listing created successfully!"
+                existingItem
+                    ? "Listing updated successfully!"
+                    : "Listing created successfully!"
             );
 
         } catch (error) {
@@ -251,6 +300,7 @@ export default function CreateListingTab({
             setLoading(false);
         }
     };
+
 
     return (
         <div className="p-6 space-y-8">
@@ -274,7 +324,7 @@ export default function CreateListingTab({
             <MediaUpload
                 existingItem={{
                     ...existingItem,
-                    photos: existingPhotos, // Updated photos array
+                    photos: existingPhotos,
                     videos: hasExistingVideo ? [existingVideo] : []
                 }}
                 photoFiles={photoFiles}

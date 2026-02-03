@@ -28,9 +28,9 @@ export const ROLE_MENUS = {
         { label: "Billing", href: "/dashboard/journalist/billing" },
     ],
     studio: [
-        { label: "Overview", href: "/dashboard/studio/overview" },
+        { label: "Overview", href: "/dashboard/studio" },
         { label: "Edit Profile", href: "/dashboard/studio/edit" },
-        { label: "Rooms", href: "/dashboard/studio/rooms" },
+        { label: "Media", href: "/dashboard/studio/media" },
         { label: "Bookings", href: "/dashboard/studio/bookings" },
         { label: "Billing", href: "/dashboard/studio/billing" },
     ],
