@@ -31,7 +31,7 @@ export const ROLE_MENUS = {
     { label: "Overview", href: "/dashboard/studio" },
     { label: "Edit Profile", href: "/dashboard/studio/profile" },
     { label: "Media", href: "/dashboard/studio/media" },
-    { label: "Bookings", href: "/dashboard/studio/bookings" },
-    { label: "Billing", href: "/dashboard/studio/billing" },
+    { label: "Services", href: "/dashboard/studio/profile/services" },
+    // { label: "Billing", href: "/dashboard/studio/billing" },
   ],
 };

@@ -176,8 +176,6 @@ export default function StudioProfile() {
               )}
             </div>
           </div>
-
-          {/* Progress Bar */}
           <div className="mt-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm">Profile Progress</span>

@@ -396,7 +396,7 @@ export default function StudioServices() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Pricing Tips */}
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
+          {/* <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
             <h3 className="text-xl font-bold mb-4">Pricing Tips</h3>
 
             <ul className="space-y-3">
@@ -433,7 +433,7 @@ export default function StudioServices() {
                 </span>
               </li>
             </ul>
-          </div>
+          </div> */}
 
           {/* Service Examples */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
