@@ -1,5 +1,6 @@
 import { ExternalLink, FileVideo, Loader2, Upload, X } from "lucide-react";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 export const VideoUploadForm = ({
     isOpen,
