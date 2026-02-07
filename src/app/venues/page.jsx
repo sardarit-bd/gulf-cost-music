@@ -1,5 +1,5 @@
 "use client";
-import { Loader2, MapPin, Users } from "lucide-react";
+import { Loader2, MapPin, Users, Search, Filter } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -15,46 +15,58 @@ export default function VenuesPage() {
 
   const cities = ["All", "New Orleans", "Biloxi", "Mobile", "Pensacola"];
 
-  // Fetch all venues from backend
   useEffect(() => {
     const fetchVenues = async () => {
-      setLoading(true);
       if (initialLoading) {
-        setInitialLoading(true);
+        setLoading(true);
+      } else {
+        setLoading(true);
       }
+
       try {
-        const cityParam = selectedCity === "All" ? "" : `?city=${selectedCity}`;
+        const cityParam =
+          selectedCity === "All"
+            ? ""
+            : `?city=${selectedCity.toLowerCase()}`;
+
+
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues${cityParam}`
         );
+
         const data = await res.json();
 
-        if (res.ok) {
-          // Fallback image if photos missing
-          const fixed = (data.data.venues || []).map((v) => ({
-            ...v,
-            photos:
-              v.photos?.length > 0
-                ? v.photos
-                : [
-                  {
-                    url: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80",
-                  },
-                ],
-          }));
-          setVenues(fixed);
-        } else {
-          console.error("Error fetching venues:", data.message);
+        if (!res.ok || !data.success) {
+          console.error("Error fetching venues:", data?.message);
+          setVenues([]);
+          return;
         }
+
+        const fixedVenues = (data.data.venues || []).map((v) => ({
+          ...v,
+          photos:
+            v.photos && v.photos.length > 0
+              ? v.photos
+              : [
+                {
+                  url: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=2070&q=80",
+                },
+              ],
+        }));
+
+        setVenues(fixedVenues);
       } catch (error) {
         console.error("Server error fetching venues:", error);
+        setVenues([]);
       } finally {
         setLoading(false);
         setInitialLoading(false);
       }
     };
+
     fetchVenues();
   }, [selectedCity]);
+
 
   // Filter and sort venues
   const filteredAndSortedVenues = venues
@@ -77,10 +89,10 @@ export default function VenuesPage() {
     });
 
   const cityColors = {
-    "New Orleans": "from-purple-600/80 to-indigo-700/80",
-    "Biloxi": "from-teal-400/80 to-cyan-600/80",
-    "Mobile": "from-orange-400/80 to-red-500/80",
-    "Pensacola": "from-yellow-400/80 to-amber-600/80",
+    "new orleans": "from-purple-600/80 to-indigo-700/80",
+    "biloxi": "from-teal-400/80 to-cyan-600/80",
+    "mobile": "from-orange-400/80 to-red-500/80",
+    "pensacola": "from-yellow-400/80 to-amber-600/80",
   };
 
   const getCapacityColor = (capacity) => {
@@ -89,6 +101,14 @@ export default function VenuesPage() {
     if (capacity > 500) return "text-blue-600";
     if (capacity > 200) return "text-yellow-600";
     return "text-gray-600";
+  };
+
+  const formatCityName = (city) => {
+    if (!city) return "Unknown";
+    return city
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   // Initial Loading State
@@ -148,7 +168,74 @@ export default function VenuesPage() {
         </div>
 
         {/* Filters and Search */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-white/20">
+          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+            {/* Search Bar */}
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search venues by name, city, or description..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+              />
+            </div>
 
+            {/* City Filter */}
+            <div className="flex gap-3 w-full lg:w-auto">
+              <div className="relative">
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center justify-between gap-2 px-4 py-3 bg-gray-800/50 border border-gray-700 text-white rounded-xl hover:bg-gray-700/50 transition w-full lg:w-48"
+                >
+                  <span className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    {selectedCity === "All" ? "All Cities" : selectedCity}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 transition-transform ${dropdownOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {dropdownOpen && (
+                  <div className="absolute z-10 mt-2 w-full bg-gray-800 border border-gray-700 rounded-xl shadow-lg overflow-hidden">
+                    {cities.map((city) => (
+                      <button
+                        key={city}
+                        onClick={() => {
+                          setSelectedCity(city);
+                          setDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 hover:bg-gray-700/50 transition ${selectedCity === city ? "bg-yellow-500/20 text-yellow-400" : "text-white"}`}
+                      >
+                        {city}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Sort Filter */}
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="appearance-none flex items-center justify-between gap-2 px-4 py-3 bg-gray-800/50 border border-gray-700 text-white rounded-xl hover:bg-gray-700/50 transition w-full lg:w-48 cursor-pointer"
+                >
+                  <option value="name" className="bg-gray-800">Sort by Name</option>
+                  <option value="capacity" className="bg-gray-800">Sort by Capacity</option>
+                  <option value="city" className="bg-gray-800">Sort by City</option>
+                </select>
+                <Filter className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Results Info */}
         <div className="flex flex-wrap items-center justify-between mb-8">
@@ -199,7 +286,7 @@ export default function VenuesPage() {
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div
-                      className={`absolute inset-0 bg-gradient-to-t ${cityColors[venue.city] || "from-gray-800/90 to-gray-900/70"
+                      className={`absolute inset-0 bg-gradient-to-t ${cityColors[venue.city?.toLowerCase()] || "from-gray-800/90 to-gray-900/70"
                         }`}
                     ></div>
 
@@ -207,7 +294,7 @@ export default function VenuesPage() {
                     <div className="absolute top-3 left-3">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-800 backdrop-blur-sm">
                         <MapPin className="w-3 h-3 mr-1" />
-                        {venue.city || "Unknown"}
+                        {formatCityName(venue.city) || "Unknown"}
                       </span>
                     </div>
                   </div>
@@ -232,7 +319,7 @@ export default function VenuesPage() {
                         </span>
                       </div>
                       <Link
-                        href={`/venues/${venue.city?.toLowerCase().replace(/\s+/g, '-') || 'unknown'}/${venue._id}`}
+                        href={`/venues/${venue.state?.toLowerCase() || 'alabama'}/${venue.city?.toLowerCase() || 'mobile'}/${venue._id}`}
                         className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm font-semibold rounded-full transition-all duration-200 hover:shadow-lg transform hover:scale-105"
                       >
                         View Details

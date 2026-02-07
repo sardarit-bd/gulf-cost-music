@@ -4,28 +4,28 @@ export default function AudioTab({ studio, setShowAudioPlayer }) {
   // Sample audio data - in real app, this would come from API
   const audioSamples = studio.audioFile
     ? [
-        {
-          id: 1,
-          title: "Studio Demo Track",
-          description: "Showcase of recording quality",
-          duration: "2:45",
-          file: studio.audioFile.url,
-        },
-        {
-          id: 2,
-          title: "Mixing Sample",
-          description: "Before and after mixing example",
-          duration: "3:20",
-          file: "/audio/mixing-sample.mp3",
-        },
-        {
-          id: 3,
-          title: "Live Session",
-          description: "Recorded live band session",
-          duration: "4:15",
-          file: "/audio/live-session.mp3",
-        },
-      ]
+      {
+        id: 1,
+        title: "Studio Demo Track",
+        description: "Showcase of recording quality",
+        // duration: "2:45",
+        file: studio.audioFile.url,
+      },
+      // {
+      //   id: 2,
+      //   title: "Mixing Sample",
+      //   description: "Before and after mixing example",
+      //   duration: "3:20",
+      //   file: "/audio/mixing-sample.mp3",
+      // },
+      // {
+      //   id: 3,
+      //   title: "Live Session",
+      //   description: "Recorded live band session",
+      //   duration: "4:15",
+      //   file: "/audio/live-session.mp3",
+      // },
+    ]
     : [];
 
   return (
@@ -34,7 +34,7 @@ export default function AudioTab({ studio, setShowAudioPlayer }) {
 
       {audioSamples.length > 0 ? (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 space-y-4">
             {/* Featured Audio Sample */}
             {studio.audioFile && (
               <div className="md:col-span-2 lg:col-span-3">
@@ -104,7 +104,7 @@ export default function AudioTab({ studio, setShowAudioPlayer }) {
           </div>
 
           {/* Audio Equipment Info */}
-          <div className="mt-8 bg-gradient-to-r from-gray-700/30 to-gray-800/30 rounded-2xl p-6 border border-gray-600">
+          {/* <div className="mt-8 bg-gradient-to-r from-gray-700/30 to-gray-800/30 rounded-2xl p-6 border border-gray-600">
             <h4 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <Headphones className="text-yellow-500" />
               Recording Equipment Used
@@ -127,7 +127,7 @@ export default function AudioTab({ studio, setShowAudioPlayer }) {
                 </ul>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       ) : (
         <div className="text-center py-12">
