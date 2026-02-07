@@ -130,12 +130,13 @@ function NewsDetailModal({ news, isOpen, onClose }) {
           {news.photos?.length > 0 && (
             <div className="p-6 border-b border-gray-700">
               <div
-                className={`grid gap-4 ${news.photos.length === 1
-                  ? "grid-cols-1"
-                  : news.photos.length === 2
-                    ? "grid-cols-2"
-                    : "grid-cols-1 md:grid-cols-2"
-                  }`}
+                className={`grid gap-4 ${
+                  news.photos.length === 1
+                    ? "grid-cols-1"
+                    : news.photos.length === 2
+                      ? "grid-cols-2"
+                      : "grid-cols-1 md:grid-cols-2"
+                }`}
               >
                 {news.photos.map((photo, index) => (
                   <div
@@ -204,10 +205,11 @@ function NewsDetailModal({ news, isOpen, onClose }) {
                   Status
                 </h4>
                 <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${news.published
-                    ? "bg-green-500/20 text-green-400"
-                    : "bg-yellow-500/20 text-yellow-400"
-                    }`}
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    news.published
+                      ? "bg-green-500/20 text-green-400"
+                      : "bg-yellow-500/20 text-yellow-400"
+                  }`}
                 >
                   {news.published ? "Published" : "Draft"}
                 </span>
@@ -288,9 +290,12 @@ export default function JournalistDashboard() {
           fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/journalists/profile`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/news/my-news`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+          fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/journalist/my-news`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          ),
         ]);
 
         const [profileData, newsData] = await Promise.all([
@@ -552,7 +557,7 @@ export default function JournalistDashboard() {
 
       // Refresh list
       const listRes = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/my-news`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/journalist/my-news`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -721,10 +726,11 @@ export default function JournalistDashboard() {
                 <button
                   key={id}
                   onClick={() => setActiveTab(id)}
-                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === id
-                    ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
-                    : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
-                    }`}
+                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${
+                    activeTab === id
+                      ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
+                      : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
+                  }`}
                 >
                   <Icon size={18} />
                   {label}
@@ -898,11 +904,11 @@ export default function JournalistDashboard() {
                               value={journalist.city}
                               options={
                                 journalist.state &&
-                                  cityByState[journalist.state]
+                                cityByState[journalist.state]
                                   ? [
-                                    { value: "", label: "Select City" },
-                                    ...cityByState[journalist.state],
-                                  ]
+                                      { value: "", label: "Select City" },
+                                      ...cityByState[journalist.state],
+                                    ]
                                   : [{ value: "", label: "Select State First" }]
                               }
                               onChange={(e) =>
@@ -1293,10 +1299,11 @@ export default function JournalistDashboard() {
                       </h3>
 
                       <label
-                        className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg transition ${previewImages.length >= 5
-                          ? "border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed"
-                          : "border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20"
-                          }`}
+                        className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg transition ${
+                          previewImages.length >= 5
+                            ? "border-gray-600 bg-gray-800 text-gray-500 cursor-not-allowed"
+                            : "border-yellow-400/50 bg-yellow-400/10 text-yellow-400 hover:bg-yellow-400/20"
+                        }`}
                       >
                         <Upload size={24} />
                         <span className="text-sm font-medium">
