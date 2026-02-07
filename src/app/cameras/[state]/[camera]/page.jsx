@@ -13,12 +13,22 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function PhotographerProfile() {
-  const { city, camera: photographerId } = useParams();
+  const { state, camera: photographerId } = useParams(); // Changed from {city, camera} to {state, camera}
   const router = useRouter();
   const [photographer, setPhotographer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("portfolio");
   const [isFavorite, setIsFavorite] = useState(false);
+
+  // State mapping for display
+  const stateMap = {
+    louisiana: "Louisiana",
+    mississippi: "Mississippi",
+    alabama: "Alabama",
+    florida: "Florida"
+  };
+
+  const formattedState = stateMap[state] || state;
 
   useEffect(() => {
     fetch(
@@ -81,25 +91,24 @@ export default function PhotographerProfile() {
         </div>
 
         <div className="relative container mx-auto h-full flex items-end pb-6 sm:pb-8 px-4 sm:px-6">
-          {/* Navigation */}
+          {/* Navigation - Updated back link to use state */}
           <div className="absolute top-4 sm:top-6 left-4 sm:left-6 right-4 sm:right-6 flex items-center justify-between">
             <button
-              onClick={() => router.push(`/cameras/${city}`)}
+              onClick={() => router.push(`/cameras/${state}`)}
               className="flex items-center gap-2 text-white/90 hover:text-yellow-400 transition-all duration-300 bg-black/30 backdrop-blur-sm px-3 py-2 sm:px-4 sm:py-2 rounded-lg border border-white/10 hover:border-yellow-400/30 text-sm sm:text-base"
             >
               <ArrowLeft size={18} className="sm:w-5" />
-              <span className="hidden xs:inline">Back to {city}</span>
+              <span className="hidden xs:inline">Back to {formattedState}</span>
               <span className="xs:hidden">Back</span>
             </button>
 
             <div className="flex gap-2 sm:gap-3">
               <button
                 onClick={() => setIsFavorite(!isFavorite)}
-                className={`p-2 sm:p-3 rounded-lg backdrop-blur-sm border transition-all duration-300 ${
-                  isFavorite
+                className={`p-2 sm:p-3 rounded-lg backdrop-blur-sm border transition-all duration-300 ${isFavorite
                     ? "bg-red-500/20 border-red-400/30 text-red-400"
                     : "bg-black/30 border-white/10 text-white/90 hover:border-red-400/30 hover:text-red-400"
-                }`}
+                  }`}
               >
                 <Heart
                   size={18}
@@ -140,7 +149,7 @@ export default function PhotographerProfile() {
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full w-fit">
                   <MapPin size={16} className="sm:w-4 text-yellow-400" />
                   <span className="capitalize font-medium">
-                    {photographer.city}
+                    {photographer.city}, {formattedState}
                   </span>
                 </div>
 
@@ -240,6 +249,14 @@ export default function PhotographerProfile() {
                     Videos
                   </div>
                 </div>
+                <div className="text-center p-3 sm:p-4 bg-gray-700/30 rounded-lg sm:rounded-xl border border-gray-600/30">
+                  <div className="text-xl sm:text-2xl font-bold text-blue-400 capitalize">
+                    {photographer.state}
+                  </div>
+                  <div className="text-xs sm:text-sm text-gray-300 mt-1">
+                    State
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -268,21 +285,19 @@ export default function PhotographerProfile() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 md:px-8 py-3 sm:py-4 font-semibold transition-all duration-300 whitespace-nowrap border-b-2 text-sm sm:text-base ${
-                        activeTab === tab.id
+                      className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 md:px-8 py-3 sm:py-4 font-semibold transition-all duration-300 whitespace-nowrap border-b-2 text-sm sm:text-base ${activeTab === tab.id
                           ? "text-yellow-400 border-yellow-400 bg-yellow-400/5"
                           : "text-gray-400 hover:text-white border-transparent hover:bg-white/5"
-                      }`}
+                        }`}
                     >
                       <tab.icon size={18} className="sm:w-5 md:w-6" />
                       {tab.label}
                       {tab.count > 0 && (
                         <span
-                          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold ${
-                            activeTab === tab.id
+                          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold ${activeTab === tab.id
                               ? "bg-yellow-400 text-black"
                               : "bg-gray-700 text-gray-300"
-                          }`}
+                            }`}
                         >
                           {tab.count}
                         </span>
@@ -372,13 +387,19 @@ export default function PhotographerProfile() {
                           <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-600/30 rounded-lg text-sm sm:text-base">
                             <span className="text-gray-300">Based in</span>
                             <span className="text-white font-semibold capitalize">
-                              {photographer.city}
+                              {photographer.city}, {formattedState}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-600/30 rounded-lg text-sm sm:text-base">
+                            <span className="text-gray-300">State</span>
+                            <span className="text-white font-semibold capitalize">
+                              {formattedState}
                             </span>
                           </div>
                           <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-600/30 rounded-lg text-sm sm:text-base">
                             <span className="text-gray-300">Coverage Area</span>
                             <span className="text-white font-semibold">
-                              Gulf Coast
+                              Gulf Coast Region
                             </span>
                           </div>
                         </div>
