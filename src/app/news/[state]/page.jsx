@@ -25,7 +25,7 @@ export default function StateNewsPage() {
         "Monroe",
       ],
       color: "from-purple-600 to-indigo-700",
-      description: "News from the vibrant cities of Louisiana",
+      // description: "News from the vibrant cities of Louisiana",
     },
     mississippi: {
       name: "Mississippi",
@@ -169,7 +169,7 @@ export default function StateNewsPage() {
           </div>
 
           {/* City Navigation */}
-          {currentState?.cities && (
+          {/* {currentState?.cities && (
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-white mb-3">
                 Cities in {decodedState}
@@ -198,7 +198,7 @@ export default function StateNewsPage() {
                 })}
               </div>
             </div>
-          )}
+          )} */}
         </div>
 
         {/* News Content */}
