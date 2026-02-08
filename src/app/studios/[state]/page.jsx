@@ -92,8 +92,8 @@ export default function StudiosByState() {
     selectedCity === "All"
       ? studios
       : studios.filter(
-          (studio) => studio.city.toLowerCase() === selectedCity.toLowerCase(),
-        );
+        (studio) => studio.city.toLowerCase() === selectedCity.toLowerCase(),
+      );
 
   const getStartingPrice = (services) => {
     if (!services || services.length === 0) return "Contact for price";
@@ -156,11 +156,10 @@ export default function StudiosByState() {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => setSelectedCity("All")}
-                className={`px-4 py-2 rounded-lg border-2 ${
-                  selectedCity === "All"
-                    ? "bg-yellow-500 text-black border-yellow-500"
-                    : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-500"
-                }`}
+                className={`px-4 py-2 rounded-lg border-2 ${selectedCity === "All"
+                  ? "bg-yellow-500 text-black border-yellow-500"
+                  : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-500"
+                  }`}
               >
                 All Cities
               </button>
@@ -168,11 +167,10 @@ export default function StudiosByState() {
                 <button
                   key={city.value}
                   onClick={() => setSelectedCity(city.value)}
-                  className={`px-4 py-2 rounded-lg border-2 ${
-                    selectedCity === city.value
-                      ? "bg-yellow-500 text-black border-yellow-500"
-                      : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-500"
-                  }`}
+                  className={`px-4 py-2 rounded-lg border-2 ${selectedCity === city.value
+                    ? "bg-yellow-500 text-black border-yellow-500"
+                    : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-500"
+                    }`}
                 >
                   {city.label}
                 </button>
@@ -208,7 +206,7 @@ export default function StudiosByState() {
             {filteredStudios.map((studio) => (
               <div
                 key={studio._id}
-                className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group"
+                className="bg-[var(--card)] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group"
               >
                 {/* Studio Image */}
                 <div className="relative w-full h-64 overflow-hidden">
@@ -240,18 +238,18 @@ export default function StudiosByState() {
 
                 {/* Studio Info */}
                 <div className="p-6">
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">
+                  <h2 className="text-xl font-bold text-white mb-2">
                     {studio.name}
                   </h2>
 
-                  <div className="flex items-center gap-1 text-gray-600 mb-3">
+                  <div className="flex items-center gap-1 text-white mb-3">
                     <MapPin size={16} />
                     <span className="text-sm capitalize">{studio.city}</span>
                   </div>
 
                   {/* Biography Excerpt */}
                   {studio.biography && (
-                    <p className="text-gray-600 text-sm line-clamp-2 mb-4">
+                    <p className="text-white text-sm line-clamp-2 mb-4">
                       {studio.biography}
                     </p>
                   )}
@@ -259,15 +257,15 @@ export default function StudiosByState() {
                   {/* Services Count */}
                   <div className="flex items-center gap-2 mb-4">
                     <Headphones size={16} className="text-blue-500" />
-                    <span className="text-sm text-gray-700">
+                    <span className="text-sm text-white">
                       {studio.services?.length || 0} services available
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                     <div className="flex items-center gap-2">
-                      <DollarSign size={16} className="text-green-600" />
-                      <span className="font-bold text-green-700">
+                      <DollarSign size={16} className="text-green-300" />
+                      <span className="font-bold text-green-300">
                         {getStartingPrice(studio.services)}
                       </span>
                     </div>

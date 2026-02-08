@@ -30,9 +30,8 @@ export default function MediaUpload({
     const remainingSlots = 5 - totalPhotos;
     const hasExistingVideo = existingItem?.videos?.length > 0;
 
-    // Existing video URL handle (object বা string হতে পারে)
     const existingVideoUrl = hasExistingVideo
-        ? (existingItem.videos[0]?.url || existingItem.videos[0])
+        ? existingItem.videos[0]
         : null;
 
     const handleFileSelect = (e, type) => {
@@ -59,14 +58,14 @@ export default function MediaUpload({
             const file = files[0];
             if (file) {
                 const validTypes = ["video/mp4", "video/quicktime", "video/mov"];
-                const maxSize = 50 * 1024 * 1024; // 50MB
+                const maxSize = 200 * 1024 * 1024; // 200MB
 
                 if (!validTypes.includes(file.type)) {
                     toast.error(`Invalid file type. Only MP4, MOV allowed.`);
                     return;
                 }
                 if (file.size > maxSize) {
-                    toast.error(`File too large. Max size is 50MB.`);
+                    toast.error(`File too large. Max size is 200MB.`);
                     return;
                 }
 
@@ -106,10 +105,10 @@ export default function MediaUpload({
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                     {/* Existing Photos */}
                     {existingItem?.photos?.map((photo, index) => (
-                        <div key={`existing-${photo.public_id || index}`} className="relative group">
+                        <div key={`existing-${index}`} className="relative group">
                             <div className="aspect-square overflow-hidden rounded-xl border border-gray-300 bg-white">
                                 <img
-                                    src={typeof photo === 'string' ? photo : photo.url}
+                                    src={photo}
                                     alt={`Listing photo ${index + 1}`}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
@@ -127,7 +126,6 @@ export default function MediaUpload({
                         </div>
                     ))}
 
-                    {/* New Photos - শুধুমাত্র new photo-র জন্য */}
                     {photoFiles.map((file, index) => (
                         <div key={`new-${index}`} className="relative group">
                             <div className="aspect-square overflow-hidden rounded-xl border-2 border-blue-500 bg-white">
@@ -140,7 +138,7 @@ export default function MediaUpload({
                             <button
                                 onClick={() => {
                                     console.log("Removing new photo at index:", index);
-                                    onRemovePhoto(index); // 🔥 FIXED: শুধুমাত্র index পাঠানো
+                                    onRemovePhoto(index);
                                 }}
                                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition shadow-lg"
                                 title="Remove new photo"
@@ -210,7 +208,7 @@ export default function MediaUpload({
                                 Add Video (Optional)
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
-                                MP4, MOV • Max 50MB
+                                MP4, MOV • Max 200MB
                             </p>
                         </div>
 

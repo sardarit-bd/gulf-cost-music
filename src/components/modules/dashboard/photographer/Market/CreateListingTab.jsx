@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import ActionButtons from "./ActionButtons";
 import ListingForm from "./ListingForm";
@@ -39,6 +39,23 @@ export default function CreateListingTab({
         }
         return null;
     };
+
+
+    useEffect(() => {
+        if (existingItem) {
+            setExistingPhotos(existingItem.photos || []);
+            setHasExistingVideo(existingItem.videos?.length > 0);
+            setExistingVideo(existingItem.videos?.[0] || null);
+            setFormData({
+                title: existingItem.title || "",
+                description: existingItem.description || "",
+                price: existingItem.price ? String(existingItem.price) : "",
+                location: existingItem.location || "",
+                status: existingItem.status || "active",
+            });
+        }
+    }, [existingItem]);
+
 
     const validateListingForm = () => {
         const errors = {};
@@ -115,8 +132,9 @@ export default function CreateListingTab({
         toast.success("New video removed");
     };
 
+    // Existing photo removal function - FIXED
     const handleRemoveExistingPhoto = (photo) => {
-        console.log("Removing existing photo:", photo);
+        console.log("🗑️ Removing existing photo:", photo);
 
         if (!photo) {
             toast.error("Invalid photo data");
@@ -126,38 +144,70 @@ export default function CreateListingTab({
         // Convert photo to URL string
         const photoUrl = typeof photo === 'string' ? photo : photo.url || photo;
 
-        // Add to deletion list
+        console.log('Photo URL to delete:', photoUrl);
+
+        // Add to deletion list (ensuring it's properly formatted)
         setPhotosToDelete(prev => {
-            const alreadyExists = prev.includes(photoUrl);
+            const alreadyExists = prev.some(p => {
+                const existingUrl = typeof p === 'string' ? p : p.url || p;
+                return existingUrl === photoUrl;
+            });
+
             if (alreadyExists) {
+                console.log('Photo already in deletion list');
                 return prev;
             }
-            return [...prev, photoUrl];
+
+            const newList = [...prev, photoUrl];
+            console.log('Updated deletion list:', newList);
+            return newList;
         });
 
-        // Remove from UI
-        setExistingPhotos(prev =>
-            prev.filter(p => {
+        // Remove from UI immediately
+        setExistingPhotos(prev => {
+            const newList = prev.filter(p => {
                 const pUrl = typeof p === 'string' ? p : p.url || p;
-                return pUrl !== photoUrl;
-            })
-        );
+                const shouldKeep = pUrl !== photoUrl;
+                if (!shouldKeep) {
+                    console.log('Removing from UI:', pUrl);
+                }
+                return shouldKeep;
+            });
+            console.log('Updated UI photos:', newList.length);
+            return newList;
+        });
 
         toast.success("Photo marked for deletion. Click Save to confirm.");
     };
 
+    // Video removal function - FIXED
     const handleRemoveExistingVideo = () => {
-        console.log("Removing existing video:", existingVideo);
+        console.log("🎥 Removing existing video:", existingVideo);
 
         if (existingVideo) {
             setDeleteExistingVideo(true);
             setHasExistingVideo(false);
             setExistingVideo(null);
+
+            console.log('Video deletion flag set to true');
             toast.success("Video marked for deletion. Click Save to confirm.");
         } else {
             toast.error("No existing video to delete");
         }
     };
+
+    // const handleRemoveExistingVideo = () => {
+    //     console.log("Removing existing video:", existingVideo);
+
+    //     if (existingVideo) {
+    //         setDeleteExistingVideo(true);
+    //         setHasExistingVideo(false);
+    //         setExistingVideo(null);
+    //         toast.success("Video marked for deletion. Click Save to confirm.");
+    //     } else {
+    //         toast.error("No existing video to delete");
+    //     }
+    // };
 
     const handleSubmit = async () => {
         const validationErrors = validateListingForm();
@@ -287,11 +337,11 @@ export default function CreateListingTab({
                 });
             }
 
-            toast.success(
-                existingItem
-                    ? "Listing updated successfully!"
-                    : "Listing created successfully!"
-            );
+            // toast.success(
+            //     existingItem
+            //         ? "Listing updated successfully!"
+            //         : "Listing created successfully!"
+            // );
 
         } catch (error) {
             console.error("Save error:", error);

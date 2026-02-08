@@ -1,10 +1,11 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { Camera, Edit3, ImageIcon, MapPin, Video } from "lucide-react";
+import { Camera, Edit3, ImageIcon, MapPin, Video, X, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 // Function to get cookie value by name
 const getCookie = (name) => {
@@ -70,23 +71,8 @@ const MiniStatCard = ({ icon, label, value, change, color }) => {
   );
 };
 
-// Activity Item Component
-const ActivityItem = ({ icon, title, time, description, color }) => {
-  return (
-    <div className="flex gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
-      <div className={`p-2 rounded-lg ${color}`}>{icon}</div>
-      <div className="flex-1">
-        <div className="flex justify-between items-start">
-          <p className="font-medium text-gray-900">{title}</p>
-          <span className="text-xs text-gray-500">{time}</span>
-        </div>
-        <p className="text-sm text-gray-600 mt-1">{description}</p>
-      </div>
-    </div>
-  );
-};
-
-export default function ModernDashboard() {
+export default function PhotographerDashboard() {
+  const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [photographer, setPhotographer] = useState({
     name: "",
@@ -102,10 +88,14 @@ export default function ModernDashboard() {
     completedBookings: 18,
     pendingBookings: 6,
     revenue: 2450,
-    // avgRating: 4.8,
     responseTime: "2h",
   });
   const [loading, setLoading] = useState(true);
+
+  // Fullscreen gallery state
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -158,6 +148,28 @@ export default function ModernDashboard() {
     }
   }, [authLoading, API_BASE]);
 
+  // Handle keyboard navigation for gallery
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!isGalleryOpen) return;
+
+      switch (e.key) {
+        case 'Escape':
+          closeGallery();
+          break;
+        case 'ArrowRight':
+          nextImage();
+          break;
+        case 'ArrowLeft':
+          prevImage();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isGalleryOpen]);
+
   // Format city and state names for display
   const formatCityName = (city) => {
     if (!city) return "—";
@@ -172,6 +184,48 @@ export default function ModernDashboard() {
     return state.charAt(0).toUpperCase() + state.slice(1);
   };
 
+  // Gallery functions
+  const openGallery = (index, image) => {
+    setCurrentGalleryIndex(index);
+    setSelectedImage(image);
+    setIsGalleryOpen(true);
+  };
+
+  const closeGallery = () => {
+    setIsGalleryOpen(false);
+    setSelectedImage(null);
+  };
+
+  const nextImage = () => {
+    if (photographer.photos && photographer.photos.length > 0) {
+      const nextIndex = (currentGalleryIndex + 1) % photographer.photos.length;
+      setCurrentGalleryIndex(nextIndex);
+      setSelectedImage(photographer.photos[nextIndex]);
+    }
+  };
+
+  const prevImage = () => {
+    if (photographer.photos && photographer.photos.length > 0) {
+      const prevIndex = (currentGalleryIndex - 1 + photographer.photos.length) % photographer.photos.length;
+      setCurrentGalleryIndex(prevIndex);
+      setSelectedImage(photographer.photos[prevIndex]);
+    }
+  };
+
+  // Navigation functions for buttons
+  const handleEditProfile = () => {
+    router.push("/dashboard/photographer/manageprofile");
+  };
+
+
+  const handleAddPhotos = () => {
+    router.push("dashboard/photographer/photos");
+  };
+
+  const handleViewAnalytics = () => {
+    router.push("/dashboard/photographer/service");
+  };
+
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-white">
@@ -184,348 +238,378 @@ export default function ModernDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white py-8 px-4 md:px-6 lg:px-8">
-      {/* Header with Quick Stats */}
-      <div className="mb-8">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Welcome back, {photographer.name || "Photographer"}!
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Here's what's happening with your photography business today.
-            </p>
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white py-8 px-4 md:px-6 lg:px-8">
+        {/* Header with Quick Stats */}
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Welcome back, {photographer.name || "Photographer"}!
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Here's what's happening with your photography business today.
+              </p>
+            </div>
           </div>
-          {/* <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors font-medium">
-              <Zap size={18} />
-              Quick Actions
-            </button>
-          </div> */}
         </div>
 
-        {/* Quick Stats Grid */}
-        {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <MiniStatCard
-            icon={<Briefcase size={20} />}
-            label="Active Bookings"
-            value={stats.pendingBookings}
-            change={12}
-            color="blue"
-          />
-          <MiniStatCard
-            icon={<DollarSign size={20} />}
-            label="Revenue"
-            value={`$${stats.revenue}`}
-            change={8}
-            color="green"
-          />
-          <MiniStatCard
-            icon={<Star size={20} />}
-            label="Rating"
-            value={stats.avgRating}
-            change={3}
-            color="yellow"
-          />
-          <MiniStatCard
-            icon={<MessageSquare size={20} />}
-            label="Response Time"
-            value={stats.responseTime}
-            color="purple"
-          />
-        </div> */}
-      </div>
-
-      {/* Main Dashboard Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Profile & Performance */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Profile Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-                <div className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                  {photographer.photos?.[0]?.url ? (
-                    <Image
-                      src={photographer.photos[0].url}
-                      alt="Profile"
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                      <Camera size={32} className="text-white" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
-                    <h2 className="text-2xl font-bold text-gray-900">
-                      {photographer.name || "Unknown Photographer"}
-                    </h2>
-                    <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
-                      Professional
-                    </span>
+        {/* Main Dashboard Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Profile & Performance */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Profile Card */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+                  <div
+                    className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg cursor-pointer"
+                    onClick={() => photographer.photos?.[0]?.url && openGallery(0, photographer.photos[0])}
+                  >
+                    {photographer.photos?.[0]?.url ? (
+                      <Image
+                        src={photographer.photos[0].url}
+                        alt="Profile"
+                        fill
+                        className="object-cover hover:scale-110 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                        <Camera size={32} className="text-white" />
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-4 text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <MapPin size={16} />
-                      <span>
-                        {photographer.city
-                          ? formatCityName(photographer.city)
-                          : "—"}
-                        ,{" "}
-                        {photographer.state
-                          ? formatStateName(photographer.state)
-                          : "—"}
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-3 mb-2">
+                      <h2 className="text-2xl font-bold text-gray-900">
+                        {photographer.name || "Unknown Photographer"}
+                      </h2>
+                      <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                        Professional
                       </span>
                     </div>
-                    {/* <div className="flex items-center gap-1">
-                      <Star size={16} className="text-yellow-500" />
-                      <span>{stats.avgRating}/5</span>
-                    </div> */}
+                    <div className="flex items-center gap-4 text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <MapPin size={16} />
+                        <span>
+                          {photographer.city
+                            ? formatCityName(photographer.city)
+                            : "—"}
+                          ,{" "}
+                          {photographer.state
+                            ? formatStateName(photographer.state)
+                            : "—"}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Performance Metrics */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="text-center p-4 bg-gray-50 rounded-xl">
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.totalBookings}
-                  </p>
-                  <p className="text-gray-600 text-sm">Total Bookings</p>
+                {/* Performance Metrics */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {photographer.services?.length || 0}
+                    </p>
+                    <p className="text-gray-600 text-sm">Services</p>
+                  </div>
+                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {photographer.photos?.length +
+                        photographer.videos?.length || 0}
+                    </p>
+                    <p className="text-gray-600 text-sm">Portfolio Items</p>
+                  </div>
                 </div>
-                <div className="text-center p-4 bg-gray-50 rounded-xl">
-                  <p className="text-2xl font-bold text-gray-900">
-                    {photographer.services?.length || 0}
-                  </p>
-                  <p className="text-gray-600 text-sm">Services</p>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-xl">
-                  <p className="text-2xl font-bold text-gray-900">
-                    {photographer.photos?.length +
-                      photographer.videos?.length || 0}
-                  </p>
-                  <p className="text-gray-600 text-sm">Portfolio Items</p>
-                </div>
-              </div>
 
-              {/* Profile Progress */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-gray-900">
-                  Profile Completion
-                </h3>
-                <ProgressBar
-                  value={85}
-                  label="Basic Information"
-                  color="blue"
-                />
-                <ProgressBar value={60} label="Portfolio" color="green" />
-                <ProgressBar value={45} label="Services" color="yellow" />
-                <ProgressBar value={30} label="Client Reviews" color="purple" />
-              </div>
-            </div>
-          </div>
-
-          {/* Portfolio Preview */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">
-                Portfolio Highlights
-              </h3>
-              <button className="text-yellow-600 hover:text-yellow-700 font-medium text-sm">
-                View All →
-              </button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {photographer.photos?.slice(0, 6).map((photo, idx) => (
-                <div
-                  key={photo._id || idx}
-                  className="relative aspect-square rounded-xl overflow-hidden group cursor-pointer"
-                >
-                  <Image
-                    src={photo.url}
-                    alt={`Portfolio ${idx + 1}`}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-300"
+                {/* Profile Progress */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-900">
+                    Profile Completion
+                  </h3>
+                  <ProgressBar
+                    value={85}
+                    label="Basic Information"
+                    color="blue"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                    <p className="text-white text-sm truncate">
-                      {photo.caption || `Photo ${idx + 1}`}
-                    </p>
-                  </div>
+                  <ProgressBar value={60} label="Portfolio" color="green" />
+                  <ProgressBar value={45} label="Services" color="yellow" />
+                  <ProgressBar value={30} label="Client Reviews" color="purple" />
                 </div>
-              ))}
-              {(!photographer.photos || photographer.photos.length === 0) && (
-                <div className="col-span-3 text-center py-12">
-                  <Camera size={48} className="text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-600">No portfolio photos yet</p>
-                </div>
-              )}
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Right Column - Activity & Details */}
-        <div className="space-y-6">
-          {/* Quick Stats Card */}
-          {/* <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
-                        <h3 className="font-bold text-lg mb-4">Business Overview</h3>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-white/20 rounded-lg">
-                                        <Calendar size={20} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm opacity-90">This Month</p>
-                                        <p className="text-xl font-bold">8 Bookings</p>
-                                    </div>
-                                </div>
-                                <TrendingUp size={24} className="text-green-300" />
-                            </div>
-                            <div className="h-px bg-white/20"></div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-white/20 rounded-lg">
-                                        <DollarSign size={20} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm opacity-90">Revenue</p>
-                                        <p className="text-xl font-bold">$1,250</p>
-                                    </div>
-                                </div>
-                                <div className="text-green-300 font-medium">+15%</div>
-                            </div>
-                        </div>
-                    </div> */}
-
-          {/* Recent Activity */}
-          {/* <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <h3 className="font-bold text-gray-900 mb-4">Recent Activity</h3>
-            <div className="space-y-3">
-              <ActivityItem
-                icon={<Camera size={16} className="text-blue-600" />}
-                title="New Photo Uploaded"
-                time="2h ago"
-                description="Added 3 new photos to portfolio"
-                color="bg-blue-50"
-              />
-              <ActivityItem
-                icon={<Briefcase size={16} className="text-green-600" />}
-                title="Booking Confirmed"
-                time="4h ago"
-                description="John D. booked Wedding Photography"
-                color="bg-green-50"
-              />
-              <ActivityItem
-                icon={<Star size={16} className="text-yellow-600" />}
-                title="New Review"
-                time="1d ago"
-                description="Received 5-star rating from Sarah M."
-                color="bg-yellow-50"
-              />
-              <ActivityItem
-                icon={<DollarSign size={16} className="text-purple-600" />}
-                title="Payment Received"
-                time="2d ago"
-                description="$450 for portrait session"
-                color="bg-purple-50"
-              />
-            </div>
-          </div> */}
-
-          {/* Services Preview */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-gray-900">Top Services</h3>
-              <span className="text-sm text-gray-500">
-                {photographer.services?.length || 0} total
-              </span>
-            </div>
-            <div className="space-y-3">
-              {photographer.services?.slice(0, 3).map((service, idx) => (
-                <div
-                  key={service._id || idx}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {service.service}
-                    </p>
-                    <p className="text-sm text-gray-600">Starting from</p>
-                  </div>
-                  <span className="font-bold text-yellow-600">
-                    {service.price}
-                  </span>
-                </div>
-              ))}
-              {(!photographer.services ||
-                photographer.services.length === 0) && (
-                <div className="text-center py-4">
-                  <p className="text-gray-600">No services added yet</p>
-                  <button className="mt-2 text-yellow-600 hover:text-yellow-700 text-sm font-medium">
-                    Add Your First Service
+            {/* Portfolio Preview */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900">
+                  Portfolio Highlights
+                </h3>
+                {photographer.photos && photographer.photos.length > 0 && (
+                  <button
+                    onClick={() => openGallery(0, photographer.photos[0])}
+                    className="text-yellow-600 hover:text-yellow-700 font-medium text-sm"
+                  >
+                    View All →
                   </button>
-                </div>
-              )}
+                )}
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {photographer.photos?.slice(0, 6).map((photo, idx) => (
+                  <div
+                    key={photo._id || idx}
+                    className="relative aspect-square rounded-xl overflow-hidden group cursor-pointer"
+                    onClick={() => openGallery(idx, photo)}
+                  >
+                    <Image
+                      src={photo.url}
+                      alt={`Portfolio ${idx + 1}`}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                      <p className="text-white text-sm truncate">
+                        {photo.caption || `Photo ${idx + 1}`}
+                      </p>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="bg-black/50 backdrop-blur-sm p-3 rounded-full">
+                        <Camera className="text-white" size={24} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {(!photographer.photos || photographer.photos.length === 0) && (
+                  <div className="col-span-3 text-center py-12">
+                    <Camera size={48} className="text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600">No portfolio photos yet</p>
+                    <button
+                      onClick={handleAddPhotos}
+                      className="mt-4 text-yellow-600 hover:text-yellow-700 font-medium"
+                    >
+                      Upload Photos
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
+          </div>
+
+          {/* Right Column - Activity & Details */}
+          <div className="space-y-6">
+            {/* Services Preview */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-gray-900">Top Services</h3>
+                <span className="text-sm text-gray-500">
+                  {photographer.services?.length || 0} total
+                </span>
+              </div>
+              <div className="space-y-3">
+                {photographer.services?.slice(0, 3).map((service, idx) => (
+                  <div
+                    key={service._id || idx}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {service.service}
+                      </p>
+                      <p className="text-sm text-gray-600">Starting from</p>
+                    </div>
+                    <span className="font-bold text-yellow-600">
+                      {service.price}
+                    </span>
+                  </div>
+                ))}
+                {(!photographer.services ||
+                  photographer.services.length === 0) && (
+                    <div className="text-center py-4">
+                      <p className="text-gray-600">No services added yet</p>
+                      <button
+                        onClick={handleEditProfile}
+                        className="mt-2 text-yellow-600 hover:text-yellow-700 text-sm font-medium"
+                      >
+                        Add Your First Service
+                      </button>
+                    </div>
+                  )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Section - Quick Actions */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Update Profile Button */}
+          <div className="bg-white p-6 rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-300 cursor-pointer">
+            <div
+              className="flex items-center gap-3 mb-4"
+              onClick={handleEditProfile}
+            >
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <Edit3 size={24} className="text-blue-600" />
+              </div>
+              <div>
+                <h4 className="font-bold text-gray-900">Update Profile</h4>
+                <p className="text-sm text-gray-600">
+                  Keep your information fresh
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleEditProfile}
+              className="w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg font-medium transition-colors"
+            >
+              Edit Profile
+            </button>
+          </div>
+
+          {/* Add Photos Button */}
+          <div className="bg-white p-6 rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-300 cursor-pointer">
+            <div
+              className="flex items-center gap-3 mb-4"
+              onClick={handleAddPhotos}
+            >
+              <div className="p-3 bg-green-50 rounded-lg">
+                <ImageIcon size={24} className="text-green-600" />
+              </div>
+              <div>
+                <h4 className="font-bold text-gray-900">Add Photos</h4>
+                <p className="text-sm text-gray-600">
+                  Upload new portfolio items
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleAddPhotos}
+              className="w-full py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg font-medium transition-colors"
+            >
+              Upload Now
+            </button>
+          </div>
+
+          {/* Add Service Button */}
+          <div className="bg-white p-6 rounded-2xl border border-gray-200 hover:shadow-md transition-all duration-300 cursor-pointer">
+            <div
+              className="flex items-center gap-3 mb-4"
+              onClick={handleViewAnalytics}
+            >
+              <div className="p-3 bg-purple-50 rounded-lg">
+                <Video size={24} className="text-purple-600" />
+              </div>
+              <div>
+                <h4 className="font-bold text-gray-900">Add Service</h4>
+                <p className="text-sm text-gray-600">Add a new service to your portfolio</p>
+              </div>
+            </div>
+            <button
+              onClick={handleViewAnalytics}
+              className="w-full py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg font-medium transition-colors"
+            >
+              Add Service
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Bottom Section - Quick Actions */}
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-6 rounded-2xl border border-gray-200">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <Edit3 size={24} className="text-blue-600" />
-            </div>
-            <div>
-              <h4 className="font-bold text-gray-900">Update Profile</h4>
-              <p className="text-sm text-gray-600">
-                Keep your information fresh
-              </p>
-            </div>
-          </div>
-          <button className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium transition-colors">
-            Edit Profile
+      {/* Fullscreen Gallery Modal */}
+      {isGalleryOpen && selectedImage && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-lg">
+          {/* Close Button */}
+          <button
+            onClick={closeGallery}
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70"
+            aria-label="Close gallery"
+          >
+            <X size={24} />
           </button>
-        </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-gray-200">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-green-50 rounded-lg">
-              <ImageIcon size={24} className="text-green-600" />
-            </div>
-            <div>
-              <h4 className="font-bold text-gray-900">Add Photos</h4>
-              <p className="text-sm text-gray-600">
-                Upload new portfolio items
-              </p>
-            </div>
-          </div>
-          <button className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium transition-colors">
-            Upload Now
-          </button>
-        </div>
+          {/* Navigation Buttons */}
+          {photographer.photos && photographer.photos.length > 1 && (
+            <>
+              <button
+                onClick={prevImage}
+                className="absolute left-4 sm:left-6 top-1/2 transform -translate-y-1/2 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70"
+                aria-label="Previous image"
+              >
+                <ChevronLeft size={24} />
+              </button>
 
-        <div className="bg-white p-6 rounded-2xl border border-gray-200">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-purple-50 rounded-lg">
-              <Video size={24} className="text-purple-600" />
+              <button
+                onClick={nextImage}
+                className="absolute right-4 sm:right-6 top-1/2 transform -translate-y-1/2 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70"
+                aria-label="Next image"
+              >
+                <ChevronRight size={24} />
+              </button>
+            </>
+          )}
+
+          {/* Main Image Container */}
+          <div className="relative w-full h-full max-w-7xl mx-auto p-4">
+            <div className="relative w-full h-full flex items-center justify-center">
+              <Image
+                src={selectedImage.url}
+                alt={`Portfolio Image ${currentGalleryIndex + 1}`}
+                fill
+                className="object-contain"
+                sizes="100vw"
+                priority
+              />
             </div>
-            <div>
-              <h4 className="font-bold text-gray-900">View Analytics</h4>
-              <p className="text-sm text-gray-600">Check your performance</p>
+
+            {/* Image Counter */}
+            {photographer.photos && photographer.photos.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full">
+                <span className="text-sm font-medium">
+                  {currentGalleryIndex + 1} / {photographer.photos.length}
+                </span>
+              </div>
+            )}
+
+            {/* Image Info */}
+            <div className="absolute bottom-4 left-4 text-white bg-black/50 backdrop-blur-sm px-4 py-2 rounded-lg max-w-md">
+              <p className="text-sm font-medium">
+                {selectedImage.caption || `Photo ${currentGalleryIndex + 1}`}
+              </p>
+              <p className="text-xs text-gray-300">By {photographer.name}</p>
             </div>
+
+            {/* Thumbnail Strip */}
+            {photographer.photos && photographer.photos.length > 1 && (
+              <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 flex gap-2 p-2 bg-black/30 backdrop-blur-sm rounded-lg">
+                {photographer.photos.map((photo, index) => (
+                  <button
+                    key={photo._id || index}
+                    onClick={() => {
+                      setCurrentGalleryIndex(index);
+                      setSelectedImage(photo);
+                    }}
+                    className={`w-16 h-16 rounded overflow-hidden border-2 transition-all ${currentGalleryIndex === index
+                      ? "border-yellow-400 scale-110"
+                      : "border-transparent hover:border-white/50"
+                      }`}
+                  >
+                    <Image
+                      src={photo.url}
+                      alt={`Thumbnail ${index + 1}`}
+                      width={64}
+                      height={64}
+                      className="object-cover w-full h-full"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <button className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium transition-colors">
-            See Analytics
-          </button>
+
+          {/* Instructions */}
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-white/70 text-sm">
+            <p>Use ← → arrows or click thumbnails to navigate • Press ESC to close</p>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }

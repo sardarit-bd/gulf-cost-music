@@ -92,11 +92,12 @@ export default function MarketplacePage({ API_BASE, subscriptionPlan, user }) {
     }, [API_BASE, hasMarketplaceAccess, user]);
 
     // Handle listing creation/update
-    const handleListingUpdate = (updatedItem) => {
+    const handleListingUpdate = (updatedItem, isNew = false) => {
         setExistingItem(updatedItem);
         setActiveTab("listings");
-        toast.success(updatedItem ? "Listing updated successfully!" : "Listing created successfully!");
+        toast.success(isNew ? "Listing created successfully!" : "Listing updated successfully!");
     };
+
 
     // Handle listing deletion
     const handleListingDelete = () => {

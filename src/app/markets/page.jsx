@@ -4,6 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+// States based on client requirement
+const states = [
+    { name: "Louisiana", code: "LA", color: "from-purple-500 to-blue-500" },
+    { name: "Mississippi", code: "MS", color: "from-red-500 to-orange-500" },
+    { name: "Alabama", code: "AL", color: "from-green-500 to-emerald-500" },
+    { name: "Florida", code: "FL", color: "from-yellow-500 to-orange-500" },
+];
+
 const sellerTypes = [
     { id: "all", label: "All", icon: ShoppingBag },
     { id: "artist", label: "Artists", icon: Users },
@@ -16,7 +24,7 @@ export default function MarketPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [selectedType, setSelectedType] = useState("all");
-    const [location, setLocation] = useState("");
+    const [selectedState, setSelectedState] = useState("");
     const [pagination, setPagination] = useState({
         page: 1,
         limit: 12,
@@ -26,7 +34,7 @@ export default function MarketPage() {
 
     useEffect(() => {
         fetchItems();
-    }, [selectedType, location, pagination.page]);
+    }, [selectedType, selectedState, pagination.page]);
 
     const fetchItems = async () => {
         try {
@@ -35,7 +43,7 @@ export default function MarketPage() {
                 page: pagination.page,
                 limit: pagination.limit,
                 ...(selectedType !== "all" && { sellerType: selectedType }),
-                ...(location && { location }),
+                ...(selectedState && { location: selectedState }),
                 ...(search && { search }),
             });
 
@@ -61,6 +69,11 @@ export default function MarketPage() {
         fetchItems();
     };
 
+    const handleStateClick = (stateName) => {
+        setSelectedState(stateName);
+        setPagination(prev => ({ ...prev, page: 1 }));
+    };
+
     if (loading && items.length === 0) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
@@ -81,7 +94,7 @@ export default function MarketPage() {
                         Gulf Coast Marketplace
                     </h1>
                     <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-                        Discover artwork, photography services, and venues from talented creators
+                        Discover artwork, photography services, and venues from talented creators across the Gulf Coast
                     </p>
                 </div>
 
@@ -103,16 +116,21 @@ export default function MarketPage() {
                             </div>
                         </div>
 
-                        {/* Location Filter */}
+                        {/* State Filter */}
                         <div className="flex gap-2 items-center">
                             <MapPin className="text-gray-400" size={20} />
-                            <input
-                                type="text"
-                                placeholder="Location..."
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
-                                className="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                            />
+                            <select
+                                value={selectedState}
+                                onChange={(e) => setSelectedState(e.target.value)}
+                                className="px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                            >
+                                <option value="">All States</option>
+                                {states.map((state) => (
+                                    <option key={state.name} value={state.name}>
+                                        {state.name}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         {/* Search Button */}
@@ -145,11 +163,36 @@ export default function MarketPage() {
                     </div>
                 </div>
 
+                {/* State Quick Links */}
+                <div className="mb-8">
+                    <h2 className="text-2xl font-bold text-white mb-4">Browse by State</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        {states.map((state) => (
+                            <Link
+                                key={state.name}
+                                href={`/markets/${state.name.toLowerCase()}`}
+                                onClick={() => handleStateClick(state.name)}
+                                className={`group relative overflow-hidden rounded-xl p-6 ${state.color} bg-gradient-to-br transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-xl`}
+                            >
+                                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
+                                <div className="relative z-10">
+                                    <h3 className="text-2xl font-bold text-white mb-2">{state.name}</h3>
+                                    <p className="text-white/80 text-sm">Browse items from {state.name}</p>
+                                    <div className="mt-4 flex items-center text-white/90">
+                                        <span className="text-sm">Explore →</span>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+
                 {/* Stats */}
                 <div className="flex justify-between items-center mb-8">
                     <p className="text-gray-300">
                         Showing <span className="font-semibold text-white">{items.length}</span> of{" "}
                         <span className="font-semibold text-white">{pagination.total}</span> items
+                        {selectedState && ` in ${selectedState}`}
                     </p>
                     <p className="text-gray-400 text-sm">
                         Page {pagination.page} of {pagination.pages}
@@ -165,7 +208,7 @@ export default function MarketPage() {
                         <button
                             onClick={() => {
                                 setSelectedType("all");
-                                setLocation("");
+                                setSelectedState("");
                                 setSearch("");
                                 setPagination(prev => ({ ...prev, page: 1 }));
                             }}
@@ -180,7 +223,7 @@ export default function MarketPage() {
                             {items.map((item) => (
                                 <div
                                     key={item._id}
-                                    className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group"
+                                    className="bg-[var(--card)] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group"
                                 >
                                     {/* Item Photo */}
                                     <div className="relative w-full h-64 overflow-hidden">
@@ -223,7 +266,7 @@ export default function MarketPage() {
                                     {/* Item Info */}
                                     <div className="p-6">
                                         <div className="flex items-start justify-between mb-3">
-                                            <h3 className="text-xl font-bold text-gray-900 line-clamp-1">{item.title}</h3>
+                                            <h3 className="text-xl font-bold text-white line-clamp-1">{item.title}</h3>
                                         </div>
 
                                         {/* Seller Info */}
@@ -232,7 +275,7 @@ export default function MarketPage() {
                                                 {item.seller?.name?.charAt(0) || "S"}
                                             </div>
                                             <div>
-                                                <p className="font-medium text-gray-900 text-sm">{item.seller?.name}</p>
+                                                <p className="font-medium text-text-white text-sm">{item.seller?.name}</p>
                                                 {item.seller?.isVerified && (
                                                     <span className="text-xs text-green-600">✓ Verified</span>
                                                 )}
@@ -241,18 +284,33 @@ export default function MarketPage() {
 
                                         {/* Location */}
                                         {item.location && (
-                                            <div className="flex items-center gap-1 text-gray-600 mb-3">
+                                            <div className="flex items-center gap-1 text-text-white mb-3">
                                                 <MapPin size={16} />
                                                 <span className="text-sm truncate">{item.location}</span>
                                             </div>
                                         )}
 
                                         {/* Description Preview */}
-                                        <p className="text-gray-600 text-sm line-clamp-2 mb-4">
+                                        <p className="text-white text-sm line-clamp-2 mb-4">
                                             {item.description}
                                         </p>
+
+                                        {/* Fee Info (Client Requirement) */}
+                                        {item.feeInfo && (
+                                            <div className="mb-4 p-3 bg-gray-800 border border-gray-700 rounded-lg">
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="text-white">Fee ({item.feeInfo.percentage}%):</span>
+                                                    <span className="font-semibold">${item.feeInfo.amount.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-sm mt-1">
+                                                    <span className="text-text-white">Total:</span>
+                                                    <span className="font-bold">${item.feeInfo.total.toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         <Link
-                                            href={`/markets/${item.city || "all"}/${item._id}`}
+                                            href={`/markets/${item.location.toLowerCase() || 'all'}/${item._id}`}
                                             className="w-full bg-yellow-500 text-black text-center py-3 rounded-lg font-semibold hover:bg-yellow-400 transition block"
                                         >
                                             View Details
