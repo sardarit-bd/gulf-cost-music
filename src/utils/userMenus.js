@@ -18,17 +18,19 @@ export const ROLE_MENUS = {
   venue: [
     { label: "Overview", href: "/dashboard/venue" },
     { label: "Edit Profile", href: "/dashboard/venue/edit" },
-    // { label: "Events", href: "/dashboard/venue/events" },
+    { label: "Add Show", href: "/dashboard/venue/addshow" },
     { label: "Market", href: "/dashboard/venue/marketplace" },
     { label: "Orders", href: "/dashboard/venue/orders" },
-    { label: "Billing", href: "/dashboard/venue/billing" },
+    // { label: "Billing", href: "/dashboard/venue/billing" },
   ],
   journalist: [
-    { label: "Overview", href: "/dashboard/journalist/overview" },
-    { label: "My Posts", href: "/dashboard/journalist/posts" },
-    { label: "Create Post", href: "/dashboard/journalist/create" },
+    { label: "Overview", href: "/journalist/dashboard" },
+    { label: "My Posts", href: "/dashboard/journalist/profile" },
+    { label: "Create Post", href: "/dashboard/journalist/create-news" },
+    { label: "Edit Post", href: "/dashboard/journalist/edit-news" },
     { label: "Billing", href: "/dashboard/journalist/billing" },
   ],
+
   studio: [
     { label: "Overview", href: "/dashboard/studio" },
     { label: "Edit Profile", href: "/dashboard/studio/profile" },

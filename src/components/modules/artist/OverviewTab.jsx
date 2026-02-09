@@ -1,9 +1,10 @@
 "use client";
 
-import { ImageIcon, Music2, User } from "lucide-react";
+import { ImageIcon, Map, MapPin, Music2, User } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import AudioPlayer from "./AudioPlayer";
+import ImageModal from "./ImageModal";
 
 export default function OverviewTab({
   user,
@@ -17,36 +18,45 @@ export default function OverviewTab({
 }) {
   const [playingIndex, setPlayingIndex] = useState(null);
   const [likedTracks, setLikedTracks] = useState([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
+  // Image click handler
+  const handleImageClick = (index) => {
+    setSelectedImageIndex(index);
+    setIsImageModalOpen(true);
+  };
+
+  // Audio controls
   const togglePlay = (index) => {
     if (playingIndex === index) {
-      setPlayingIndex(null); // Pause
+      setPlayingIndex(null);
     } else {
-      setPlayingIndex(index); // Play new track
+      setPlayingIndex(index);
     }
   };
 
   const toggleLike = (index) => {
-    setLikedTracks(prev =>
-      prev.includes(index)
-        ? prev.filter(i => i !== index)
-        : [...prev, index]
+    setLikedTracks((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
     );
   };
 
   const playNext = () => {
     if (!validAudioPreview.length) return;
-    const nextIndex = playingIndex === null || playingIndex === validAudioPreview.length - 1
-      ? 0
-      : playingIndex + 1;
+    const nextIndex =
+      playingIndex === null || playingIndex === validAudioPreview.length - 1
+        ? 0
+        : playingIndex + 1;
     setPlayingIndex(nextIndex);
   };
 
   const playPrevious = () => {
     if (!validAudioPreview.length) return;
-    const prevIndex = playingIndex === null || playingIndex === 0
-      ? validAudioPreview.length - 1
-      : playingIndex - 1;
+    const prevIndex =
+      playingIndex === null || playingIndex === 0
+        ? validAudioPreview.length - 1
+        : playingIndex - 1;
     setPlayingIndex(prevIndex);
   };
 
@@ -88,7 +98,7 @@ export default function OverviewTab({
     });
   }, [audioPreview]);
 
-  // Function to format state name (if available)
+  // Function to format state name
   const getDisplayState = () => {
     if (!artist?.state) return "Not set";
 
@@ -115,11 +125,23 @@ export default function OverviewTab({
 
   return (
     <div className="animate-fadeIn">
+      {/* Image Modal */}
+      <ImageModal
+        images={validPreviewImages}
+        initialIndex={selectedImageIndex}
+        isOpen={isImageModalOpen}
+        onClose={() => setIsImageModalOpen(false)}
+      />
+
       {/* Profile Header */}
       <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 mb-8 border border-blue-100">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-8">
+          {/* Profile Image */}
           <div className="relative">
-            <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
+            <div
+              className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 cursor-pointer hover:scale-105 transition-transform duration-300"
+              onClick={() => firstImage && handleImageClick(0)}
+            >
               {firstImage ? (
                 <Image
                   src={firstImage}
@@ -138,47 +160,49 @@ export default function OverviewTab({
               )}
             </div>
             {artist?.isVerified && (
-              <div className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-2 rounded-full shadow-lg">
-                <div className="w-6 h-6 flex items-center justify-center">
+              <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white p-2 rounded-full shadow-lg">
+                <div className="w-6 h-6 flex items-center justify-center font-bold">
                   ✓
                 </div>
               </div>
             )}
           </div>
 
+          {/* Profile Info */}
           <div className="flex-1">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-3">
                   {artist?.name || "Unnamed Artist"}
                 </h2>
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-3">
                   <div className="flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                    <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"></div>
                     <span className="font-medium capitalize">
                       {artist?.genre || "No genre"}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-full">
-                    <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+                  <div className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 px-4 py-2 rounded-full">
+                    <MapPin size={14} className="text-purple-500" />
                     <span className="font-medium">{getDisplayCity()}</span>
                   </div>
-                  <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full">
-                    <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                  <div className="flex items-center gap-2 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 px-4 py-2 rounded-full">
+                    <Map size={14} className="text-green-500" />
                     <span className="font-medium">{getDisplayState()}</span>
                   </div>
                 </div>
               </div>
 
+              {/* Stats */}
               <div className="flex gap-6">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600">
+                  <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
                     {validPreviewImages.length}
                   </div>
                   <div className="text-sm text-gray-600">Photos</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-600">
+                  <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                     {validAudioPreview.length}
                   </div>
                   <div className="text-sm text-gray-600">Tracks</div>
@@ -189,6 +213,7 @@ export default function OverviewTab({
         </div>
       </div>
 
+      {/* Main Content Grid */}
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-8">
@@ -199,8 +224,8 @@ export default function OverviewTab({
                 <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
                 Biography
               </h3>
-              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Edit
+              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-50 transition">
+                Edit Biography
               </button>
             </div>
             <div className="text-gray-700 leading-relaxed">
@@ -209,15 +234,14 @@ export default function OverviewTab({
               ) : (
                 <div className="text-center py-12 text-gray-500">
                   <div className="flex justify-center mb-4">
-                    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-purple-50 rounded-full flex items-center justify-center">
                       <ImageIcon size={24} className="text-blue-400" />
                     </div>
                   </div>
                   <p className="text-lg mb-2">No biography added yet</p>
-                  <p className="text-sm">Tell your fans about your musical journey</p>
-                  <button className="mt-4 text-blue-600 hover:text-blue-700 text-sm font-medium">
-                    Add Biography
-                  </button>
+                  <p className="text-sm">
+                    Tell your fans about your musical journey
+                  </p>
                 </div>
               )}
             </div>
@@ -233,9 +257,6 @@ export default function OverviewTab({
                   ({validAudioPreview.length}/{uploadLimits?.audios || 5})
                 </span>
               </h3>
-              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Manage Tracks
-              </button>
             </div>
 
             {validAudioPreview.length > 0 ? (
@@ -263,10 +284,6 @@ export default function OverviewTab({
                 </div>
                 <p className="text-lg mb-2">No audio tracks uploaded yet</p>
                 <p className="text-sm mb-4">Share your music with the world</p>
-                <button className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all">
-                  <Music2 className="w-4 h-4" />
-                  Upload Your First Track
-                </button>
               </div>
             )}
           </div>
@@ -281,43 +298,83 @@ export default function OverviewTab({
               Details
             </h3>
             <div className="space-y-6">
+              {/* Name */}
               <div>
                 <label className="text-sm text-gray-500 mb-2 block">Name</label>
                 <p className="text-lg font-semibold text-gray-900">
                   {artist?.name || "Not set"}
                 </p>
               </div>
+
+              {/* Location with Icons */}
               <div>
-                <label className="text-sm text-gray-500 mb-2 block">Location</label>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-blue-600 font-bold">📍</span>
+                <label className="text-sm text-gray-500 mb-2 block">
+                  Location
+                </label>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-purple-50 p-3 rounded-lg">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                      <MapPin size={18} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {getDisplayCity()}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        City • {getDisplayState()}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{getDisplayCity()}</p>
-                    <p className="text-sm text-gray-600">{getDisplayState()}</p>
+                  <div className="flex items-center gap-3 bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                      <Map size={18} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {getDisplayState()}
+                      </p>
+                      <p className="text-sm text-gray-600">State</p>
+                    </div>
                   </div>
                 </div>
               </div>
+
+              {/* Genre */}
               <div>
-                <label className="text-sm text-gray-500 mb-2 block">Genre</label>
+                <label className="text-sm text-gray-500 mb-2 block">
+                  Primary Genre
+                </label>
                 <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-purple-50 px-4 py-2 rounded-full">
                   <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
-                  <span className="font-medium text-gray-900 capitalize">
+                  <span className="font-semibold text-gray-900 capitalize">
                     {artist?.genre || "Not set"}
                   </span>
                 </div>
               </div>
+
+              {/* Verification */}
               <div>
-                <label className="text-sm text-gray-500 mb-2 block">Verification</label>
-                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${artist?.isVerified
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-yellow-100 text-yellow-700'
-                  }`}>
-                  <div className={`w-2 h-2 rounded-full ${artist?.isVerified ? 'bg-green-500' : 'bg-yellow-500'
-                    }`}></div>
-                  <span className="font-medium">
-                    {artist?.isVerified ? 'Verified Artist' : 'Pending Verification'}
+                <label className="text-sm text-gray-500 mb-2 block">
+                  Verification Status
+                </label>
+                <div
+                  className={`inline-flex items-center gap-3 px-4 py-2 rounded-lg ${
+                    artist?.isVerified
+                      ? "bg-gradient-to-r from-green-50 to-emerald-50 text-green-700"
+                      : "bg-gradient-to-r from-yellow-50 to-amber-50 text-yellow-700"
+                  }`}
+                >
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      artist?.isVerified
+                        ? "bg-gradient-to-r from-green-500 to-emerald-500"
+                        : "bg-gradient-to-r from-yellow-500 to-amber-500"
+                    }`}
+                  ></div>
+                  <span className="font-semibold">
+                    {artist?.isVerified
+                      ? "Verified Artist"
+                      : "Pending Verification"}
                   </span>
                 </div>
               </div>
@@ -329,36 +386,52 @@ export default function OverviewTab({
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
                 <div className="w-2 h-8 bg-gradient-to-b from-pink-500 to-rose-500 rounded-full"></div>
-                Photos
+                Photo Gallery
                 <span className="text-sm font-normal text-gray-500 ml-2">
                   ({validPreviewImages.length}/{uploadLimits?.photos || 5})
                 </span>
               </h3>
-              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Add Photos
-              </button>
             </div>
 
             {validPreviewImages.length > 0 ? (
-              <div className="grid grid-cols-2 gap-4">
-                {validPreviewImages.slice(0, 4).map((img, index) => (
-                  <div key={index} className="aspect-square rounded-xl overflow-hidden border border-gray-100 group relative">
-                    <Image
-                      src={typeof img === 'object' ? img.url : img}
-                      alt={`Photo ${index + 1}`}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                    />
-                    {index === 3 && validPreviewImages.length > 4 && (
-                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                        <span className="text-white font-bold text-lg">
-                          +{validPreviewImages.length - 4}
+              <div className="grid grid-cols-2 gap-3">
+                {validPreviewImages.slice(0, 4).map((img, index) => {
+                  const imageUrl = typeof img === "object" ? img.url : img;
+                  return (
+                    <div
+                      key={index}
+                      className="relative aspect-square rounded-xl overflow-hidden border border-gray-100 group cursor-pointer"
+                      onClick={() => handleImageClick(index)}
+                    >
+                      <Image
+                        src={imageUrl}
+                        alt={`Photo ${index + 1}`}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-300"
+                        sizes="(max-width: 768px) 50vw, 25vw"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                        <span className="text-white text-sm font-medium">
+                          View Photo {index + 1}
                         </span>
                       </div>
-                    )}
-                  </div>
-                ))}
+
+                      {/* View More Overlay */}
+                      {index === 3 && validPreviewImages.length > 4 && (
+                        <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                          <span className="text-white font-bold text-xl">
+                            +{validPreviewImages.length - 4}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
@@ -370,6 +443,16 @@ export default function OverviewTab({
                 <p className="text-lg mb-2">No photos uploaded yet</p>
                 <p className="text-sm">Add photos to showcase your brand</p>
               </div>
+            )}
+
+            {/* View All Button */}
+            {validPreviewImages.length > 4 && (
+              <button
+                onClick={() => handleImageClick(0)}
+                className="w-full mt-4 py-3 text-center text-blue-600 hover:text-blue-700 font-medium rounded-lg border border-blue-200 hover:border-blue-300 transition-colors"
+              >
+                View All {validPreviewImages.length} Photos
+              </button>
             )}
           </div>
         </div>

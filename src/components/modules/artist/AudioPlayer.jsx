@@ -1,430 +1,273 @@
 "use client";
 
-import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
+import {
+  Heart,
+  MoreVertical,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Volume2,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-export default function AudioPlayer({ audio, index, isPlaying, onToggle, onNext, onPrevious }) {
-    const audioRef = useRef(null);
-    const progressBarRef = useRef(null);
-    const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
-    const [volume, setVolume] = useState(0.7);
-    const [isMuted, setIsMuted] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
+export default function AudioPlayer({
+  audio,
+  index,
+  isPlaying,
+  isLiked,
+  onToggle,
+  onLike,
+  onNext,
+  onPrevious,
+}) {
+  const audioRef = useRef(null);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
 
-    // Load audio and set up event listeners
-    useEffect(() => {
-        const audioEl = audioRef.current;
-        if (!audioEl || !audio?.url) return;
+  // Audio URL নির্ধারণ
+  const audioUrl = typeof audio === "object" ? audio.url || audio : audio;
+  const audioName =
+    typeof audio === "object"
+      ? audio.name || `Track ${index + 1}`
+      : `Track ${index + 1}`;
 
-        const handleLoadStart = () => {
-            setIsLoading(true);
-            setError(null);
-        };
+  // Audio metadata লোড
+  useEffect(() => {
+    if (!audioRef.current) return;
 
-        const handleLoadedData = () => {
-            setIsLoading(false);
-            setDuration(audioEl.duration || 0);
-        };
-
-        const handleTimeUpdate = () => {
-            if (!isDragging) {
-                setCurrentTime(audioEl.currentTime);
-            }
-        };
-
-        const handleEnded = () => {
-            setCurrentTime(0);
-            onNext?.();
-        };
-
-        const handleError = (e) => {
-            console.error("Audio error:", e);
-            setError("Failed to load audio");
-            setIsLoading(false);
-        };
-
-        // Set initial volume
-        audioEl.volume = volume;
-
-        // Add event listeners
-        audioEl.addEventListener("loadstart", handleLoadStart);
-        audioEl.addEventListener("loadeddata", handleLoadedData);
-        audioEl.addEventListener("timeupdate", handleTimeUpdate);
-        audioEl.addEventListener("ended", handleEnded);
-        audioEl.addEventListener("error", handleError);
-
-        // Load the audio source
-        audioEl.load();
-
-        return () => {
-            audioEl.removeEventListener("loadstart", handleLoadStart);
-            audioEl.removeEventListener("loadeddata", handleLoadedData);
-            audioEl.removeEventListener("timeupdate", handleTimeUpdate);
-            audioEl.removeEventListener("ended", handleEnded);
-            audioEl.removeEventListener("error", handleError);
-        };
-    }, [audio?.url, isDragging, volume, onNext]);
-
-    // Handle play/pause based on isPlaying prop
-    useEffect(() => {
-        if (!audioRef.current || !audio?.url) return;
-
-        const playAudio = async () => {
-            try {
-                if (isPlaying) {
-                    await audioRef.current.play();
-                } else {
-                    audioRef.current.pause();
-                }
-            } catch (err) {
-                console.error("Playback error:", err);
-                setError("Playback failed");
-            }
-        };
-
-        playAudio();
-    }, [isPlaying, audio?.url]);
-
-    // Format time to MM:SS
-    const formatTime = (time) => {
-        if (!time || isNaN(time)) return "0:00";
-        const minutes = Math.floor(time / 60);
-        const seconds = Math.floor(time % 60);
-        return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+    const handleLoadedMetadata = () => {
+      setDuration(audioRef.current.duration);
     };
 
-    // Handle progress bar click
-    const handleProgressClick = (e) => {
-        if (!progressBarRef.current || !audioRef.current || !duration) return;
-
-        const rect = progressBarRef.current.getBoundingClientRect();
-        const clickPosition = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-        const newTime = clickPosition * duration;
-
-        audioRef.current.currentTime = newTime;
-        setCurrentTime(newTime);
+    const handleTimeUpdate = () => {
+      if (!audioRef.current) return;
+      const current = audioRef.current.currentTime;
+      const total = audioRef.current.duration || 1;
+      setCurrentTime(current);
+      setProgress((current / total) * 100);
     };
 
-    // Handle progress bar drag
-    const handleProgressDragStart = (e) => {
-        e.preventDefault();
-        setIsDragging(true);
-        document.addEventListener("mousemove", handleProgressDrag);
-        document.addEventListener("mouseup", handleProgressDragEnd);
-        document.addEventListener("touchmove", handleProgressDrag);
-        document.addEventListener("touchend", handleProgressDragEnd);
+    const handleEnded = () => {
+      onNext?.();
     };
 
-    const handleProgressDrag = (e) => {
-        if (!isDragging || !progressBarRef.current || !duration) return;
+    audioRef.current.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audioRef.current.addEventListener("timeupdate", handleTimeUpdate);
+    audioRef.current.addEventListener("ended", handleEnded);
 
-        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-        const rect = progressBarRef.current.getBoundingClientRect();
-        const clickPosition = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-        const newTime = clickPosition * duration;
-
-        setCurrentTime(newTime);
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.removeEventListener(
+          "loadedmetadata",
+          handleLoadedMetadata,
+        );
+        audioRef.current.removeEventListener("timeupdate", handleTimeUpdate);
+        audioRef.current.removeEventListener("ended", handleEnded);
+      }
     };
+  }, [onNext]);
 
-    const handleProgressDragEnd = () => {
-        if (isDragging && audioRef.current && duration) {
-            audioRef.current.currentTime = currentTime;
-        }
-        setIsDragging(false);
+  // Play/Pause নিয়ন্ত্রণ
+  useEffect(() => {
+    if (!audioRef.current) return;
 
-        // Clean up event listeners
-        document.removeEventListener("mousemove", handleProgressDrag);
-        document.removeEventListener("mouseup", handleProgressDragEnd);
-        document.removeEventListener("touchmove", handleProgressDrag);
-        document.removeEventListener("touchend", handleProgressDragEnd);
-    };
+    if (isPlaying) {
+      audioRef.current.play().catch((error) => {
+        console.error("Audio play failed:", error);
+      });
+    } else {
+      audioRef.current.pause();
+    }
+  }, [isPlaying]);
 
-    // Handle volume change
-    const handleVolumeChange = (e) => {
-        const newVolume = parseFloat(e.target.value);
-        setVolume(newVolume);
-        if (newVolume > 0 && isMuted) {
-            setIsMuted(false);
-        }
-        if (audioRef.current) {
-            audioRef.current.volume = newVolume;
-        }
-    };
+  // Volume নিয়ন্ত্রণ
+  useEffect(() => {
+    if (!audioRef.current) return;
+    audioRef.current.volume = volume;
+    audioRef.current.muted = isMuted;
+  }, [volume, isMuted]);
 
-    // Handle mute toggle
-    const toggleMute = () => {
-        setIsMuted(!isMuted);
-        if (audioRef.current) {
-            audioRef.current.muted = !isMuted;
-        }
-    };
+  // Progress bar ক্লিক হ্যান্ডলার
+  const handleProgressClick = (e) => {
+    if (!audioRef.current || !duration) return;
 
-    // Handle play/pause click
-    const handlePlayPause = () => {
-        if (isLoading || error) return;
-        onToggle(index);
-    };
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const width = rect.width;
+    const percentage = clickX / width;
+    const newTime = percentage * duration;
 
-    return (
-        <div className={`relative p-4 rounded-2xl border transition-all duration-300 ${isPlaying
-            ? "border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg shadow-blue-200/50"
-            : "border-gray-200 bg-white hover:border-blue-200 hover:bg-blue-50/30"
-            }`}>
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+    setProgress(percentage * 100);
+  };
 
-            {/* Hidden audio element */}
-            <audio
-                ref={audioRef}
-                preload="metadata"
-                crossOrigin="anonymous"
-            >
-                <source src={audio?.url} type="audio/mpeg" />
-                <source src={audio?.url} type="audio/mp3" />
-                Your browser does not support the audio element.
-            </audio>
+  // Time format ফাংশন
+  const formatTime = (timeInSeconds) => {
+    if (!timeInSeconds) return "0:00";
 
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                {/* Play/Pause Button */}
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={handlePlayPause}
-                        disabled={isLoading || error}
-                        className={`relative flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${isPlaying
-                            ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/30"
-                            : "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 hover:from-blue-100 hover:to-indigo-100 hover:text-blue-600"
-                            }`}
-                        aria-label={isPlaying ? "Pause" : "Play"}
-                    >
-                        {isLoading ? (
-                            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        ) : isPlaying ? (
-                            <Pause size={20} className="fill-current" />
-                        ) : (
-                            <Play size={20} className="fill-current ml-0.5" />
-                        )}
-                    </button>
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = Math.floor(timeInSeconds % 60);
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
 
-                    {/* Skip Controls */}
-                    <div className="flex items-center gap-1">
-                        <button
-                            onClick={onPrevious}
-                            disabled={!onPrevious}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                            aria-label="Previous track"
-                        >
-                            <SkipBack size={18} />
-                        </button>
-                        <button
-                            onClick={onNext}
-                            disabled={!onNext}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-100 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                            aria-label="Next track"
-                        >
-                            <SkipForward size={18} />
-                        </button>
-                    </div>
-                </div>
+  // Volume toggle
+  const handleVolumeToggle = () => {
+    setIsMuted(!isMuted);
+  };
 
-                {/* Track Info */}
-                <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                        <div className="min-w-0">
-                            <p className="font-semibold text-gray-900 truncate">
-                                {audio?.name || `Track ${index + 1}`}
-                            </p>
-                            <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
-                                <span>{formatTime(currentTime)}</span>
-                                <span className="text-gray-400">/</span>
-                                <span>{formatTime(duration)}</span>
+  // Volume change
+  const handleVolumeChange = (e) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    setIsMuted(newVolume === 0);
+  };
 
-                                {/* Loading/Error Indicators */}
-                                {isLoading && (
-                                    <span className="text-xs text-blue-500 bg-blue-100 px-2 py-0.5 rounded">
-                                        Loading...
-                                    </span>
-                                )}
-                                {error && (
-                                    <span className="text-xs text-red-500 bg-red-100 px-2 py-0.5 rounded">
-                                        {error}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
+  // Like toggle
+  const handleLikeClick = () => {
+    onLike?.(index);
+  };
 
-                        {/* Volume Control (Desktop only) */}
-                        {/* <div className="hidden lg:flex items-center gap-2 min-w-[140px]">
-                            <button
-                                onClick={toggleMute}
-                                className="p-1.5 text-gray-500 hover:text-blue-600 transition hover:bg-blue-100 rounded"
-                                aria-label={isMuted ? "Unmute" : "Mute"}
-                            >
-                                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                            </button>
-                            <div className="relative flex-1 group">
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="1"
-                                    step="0.01"
-                                    value={isMuted ? 0 : volume}
-                                    onChange={handleVolumeChange}
-                                    className="w-full h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500"
-                                    aria-label="Volume"
-                                />
-                                <div className="absolute inset-0 h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full pointer-events-none"
-                                    style={{ width: `${(isMuted ? 0 : volume) * 100}%` }} />
-                            </div>
-                        </div> */}
-                    </div>
+  return (
+    <div className="group bg-gradient-to-br from-white to-gray-50 rounded-xl p-5 border border-gray-200 hover:border-blue-300 transition-all duration-300 hover:shadow-md">
+      {/* Hidden audio element */}
+      <audio ref={audioRef} src={audioUrl} preload="metadata" />
 
-                    {/* Progress Bar */}
-                    <div className="mt-4">
-                        <div
-                            ref={progressBarRef}
-                            className="w-full h-2 bg-gray-200 rounded-full cursor-pointer overflow-hidden relative group/progress"
-                            onClick={handleProgressClick}
-                            onMouseDown={handleProgressDragStart}
-                            onTouchStart={handleProgressDragStart}
-                        >
-                            {/* Background */}
-                            <div className="absolute inset-0 bg-gray-200"></div>
-
-                            {/* Progress */}
-                            <div
-                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-100"
-                                style={{ width: duration ? `${(currentTime / duration) * 100}%` : "0%" }}
-                            />
-
-                            {/* Thumb */}
-                            <div
-                                className="absolute top-1/2 w-4 h-4 bg-white rounded-full shadow-lg transform -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover/progress:opacity-100 transition-opacity border-2 border-blue-500"
-                                style={{ left: duration ? `${(currentTime / duration) * 100}%` : "0%" }}
-                            />
-                        </div>
-
-                        {/* Time Display */}
-                        <div className="flex justify-between text-xs text-gray-500 mt-2">
-                            <span>{formatTime(currentTime)}</span>
-                            <span className="text-gray-400">
-                                -{formatTime(Math.max(0, duration - currentTime))}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+      <div className="flex items-start gap-4">
+        {/* Album Art/Thumbnail */}
+        <div className="relative flex-shrink-0">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg overflow-hidden">
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-white">
+                {isPlaying ? (
+                  <div className="flex gap-1">
+                    <div className="w-1 h-4 bg-white animate-pulse"></div>
+                    <div className="w-1 h-6 bg-white animate-pulse delay-75"></div>
+                    <div className="w-1 h-8 bg-white animate-pulse delay-150"></div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <div className="text-xs font-bold">MP3</div>
+                    <div className="text-xs">AUDIO</div>
+                  </div>
+                )}
+              </div>
             </div>
+          </div>
 
-            {/* Mobile Volume Control */}
-            <div className="lg:hidden mt-4 pt-4 border-t border-gray-100">
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={toggleMute}
-                        className="p-2 text-gray-500 hover:text-blue-600 transition"
-                        aria-label={isMuted ? "Unmute" : "Mute"}
-                    >
-                        {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-                    </button>
-                    <div className="relative flex-1">
-                        <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.01"
-                            value={isMuted ? 0 : volume}
-                            onChange={handleVolumeChange}
-                            className="w-full h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500"
-                            aria-label="Volume"
-                        />
-                        <div className="absolute inset-y-0 left-0 h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full pointer-events-none"
-                            style={{ width: `${(isMuted ? 0 : volume) * 100}%` }} />
-                    </div>
-                    <span className="text-xs text-gray-500 min-w-[45px] text-right">
-                        {isMuted ? "Muted" : `${Math.round(volume * 100)}%`}
-                    </span>
-                </div>
-            </div>
-
-            {/* Status Indicator */}
-            {isPlaying && (
-                <div className="absolute top-3 right-3">
-                    <div className="flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs rounded-full">
-                        <div className="flex items-center gap-1">
-                            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
-                            <span className="font-medium">Playing</span>
-                        </div>
-                    </div>
-                </div>
+          {/* Play/Pause Overlay */}
+          <button
+            onClick={() => onToggle?.(index)}
+            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center rounded-lg"
+          >
+            {isPlaying ? (
+              <Pause className="w-8 h-8 text-white" />
+            ) : (
+              <Play className="w-8 h-8 text-white ml-1" />
             )}
-
-            {/* Waveform Animation */}
-            {isPlaying && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 overflow-hidden rounded-b-2xl opacity-30">
-                    <div className="flex items-end h-full gap-[1px] px-2">
-                        {[...Array(24)].map((_, i) => {
-                            const height = 30 + Math.sin(i * 0.7 + Date.now() * 0.008) * 25;
-                            const delay = i * 0.05;
-                            return (
-                                <div
-                                    key={i}
-                                    className="flex-1 bg-gradient-to-t from-blue-500 to-indigo-500 rounded-t"
-                                    style={{
-                                        height: `${height}%`,
-                                        animation: `wave 1.4s ease-in-out ${delay}s infinite alternate`,
-                                    }}
-                                />
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {/* CSS for animations */}
-            <style jsx>{`
-                @keyframes wave {
-                    0% {
-                        height: 20%;
-                    }
-                    100% {
-                        height: 80%;
-                    }
-                }
-
-                /* Custom scrollbar for range inputs */
-                input[type="range"]::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    appearance: none;
-                    width: 16px;
-                    height: 16px;
-                    border-radius: 50%;
-                    background: #3b82f6;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                    border: 2px solid white;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                }
-
-                input[type="range"]::-webkit-slider-thumb:hover {
-                    background: #2563eb;
-                    transform: scale(1.1);
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-                }
-
-                input[type="range"]::-moz-range-thumb {
-                    width: 16px;
-                    height: 16px;
-                    border-radius: 50%;
-                    background: #3b82f6;
-                    cursor: pointer;
-                    border: 2px solid white;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                }
-
-                input[type="range"]::-moz-range-thumb:hover {
-                    background: #2563eb;
-                    transform: scale(1.1);
-                }
-            `}</style>
+          </button>
         </div>
-    );
+
+        {/* Track Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <h4 className="font-bold text-gray-900 truncate">{audioName}</h4>
+              <p className="text-sm text-gray-500 mt-1">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleLikeClick}
+                className={`p-2 rounded-full transition-all ${isLiked ? "text-red-500 bg-red-50" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
+              >
+                <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
+              </button>
+
+              <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
+                <MoreVertical size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mb-3">
+            <div
+              className="h-1.5 bg-gray-200 rounded-full overflow-hidden cursor-pointer group/progress"
+              onClick={handleProgressClick}
+            >
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full relative group-hover/progress:from-blue-600 group-hover/progress:to-purple-600 transition-all"
+                style={{ width: `${progress}%` }}
+              >
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-sm opacity-0 group-hover/progress:opacity-100 transition-opacity"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onPrevious}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition"
+                disabled={!onPrevious}
+              >
+                <SkipBack size={18} />
+              </button>
+
+              <button
+                onClick={() => onToggle?.(index)}
+                className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full hover:shadow-md transition-shadow"
+              >
+                {isPlaying ? (
+                  <Pause size={20} fill="white" />
+                ) : (
+                  <Play size={20} fill="white" className="ml-0.5" />
+                )}
+              </button>
+
+              <button
+                onClick={onNext}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition"
+                disabled={!onNext}
+              >
+                <SkipForward size={18} />
+              </button>
+            </div>
+
+            {/* Volume Control */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleVolumeToggle}
+                className="p-1.5 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100"
+              >
+                {isMuted || volume === 0 ? (
+                  <Volume2 size={16} className="text-gray-400" />
+                ) : (
+                  <Volume2 size={16} />
+                )}
+              </button>
+
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={isMuted ? 0 : volume}
+                onChange={handleVolumeChange}
+                className="w-20 h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-blue-500 [&::-webkit-slider-thumb]:to-purple-500"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
