@@ -35,16 +35,24 @@ export default function Select({
   const handleSelect = (optionValue) => {
     if (optionValue === value || optionValue === "") return;
 
-    const syntheticEvent = {
-      target: {
-        name,
-        value: optionValue,
-      },
-    };
+    if (typeof onChange === "function") {
+      if (onChange.length === 1) {
+        // value-based onChange (like your venue page)
+        onChange(optionValue);
+      } else {
+        // event-based onChange (old usage)
+        onChange({
+          target: {
+            name,
+            value: optionValue,
+          },
+        });
+      }
+    }
 
-    onChange(syntheticEvent);
     setIsOpen(false);
   };
+
 
   const selectedOption = options.find((opt) => opt.value === value);
   const displayValue = selectedOption?.label || placeholder;

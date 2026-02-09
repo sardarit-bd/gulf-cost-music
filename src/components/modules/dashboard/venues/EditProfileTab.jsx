@@ -20,7 +20,6 @@ const EditProfileTab = ({
     previewImages,
     handleSave,
     saving,
-    // subscriptionPlan prop রাখছি (ভবিষ্যতের জন্য) কিন্তু ব্যবহার করছি না
 }) => {
     // State options - Location-based categorization
     const stateOptions = [

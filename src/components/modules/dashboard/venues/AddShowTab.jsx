@@ -7,7 +7,6 @@ const AddShowTab = ({
     setNewShow,
     handleAddShow,
     loading,
-    // subscriptionPlan prop রাখছি কিন্তু ব্যবহার করছি না
     showsThisMonth = 0,
     venue,
 }) => {

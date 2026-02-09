@@ -16,9 +16,11 @@ export const ROLE_MENUS = {
     { label: "Billing", href: "/dashboard/photographer/billing" },
   ],
   venue: [
-    { label: "Overview", href: "/dashboard/venue/overview" },
+    { label: "Overview", href: "/dashboard/venue" },
     { label: "Edit Profile", href: "/dashboard/venue/edit" },
-    { label: "Events", href: "/dashboard/venue/events" },
+    // { label: "Events", href: "/dashboard/venue/events" },
+    { label: "Market", href: "/dashboard/venue/marketplace" },
+    { label: "Orders", href: "/dashboard/venue/orders" },
     { label: "Billing", href: "/dashboard/venue/billing" },
   ],
   journalist: [
