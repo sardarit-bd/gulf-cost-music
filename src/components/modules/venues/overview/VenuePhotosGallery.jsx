@@ -39,7 +39,7 @@ export default function VenuePhotosGallery({ previewImages, venueName }) {
                 sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = "/api/placeholder/300/300";
+                  e.target.src = "/images/placeholder.png";
                   e.target.className =
                     "w-full h-full bg-gray-100 flex items-center justify-center";
                 }}

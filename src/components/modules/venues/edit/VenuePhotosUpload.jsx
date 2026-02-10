@@ -55,11 +55,10 @@ export default function VenuePhotosUpload({
 
       <label
         htmlFor="photo-upload"
-        className={`flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg transition ${
-          previewImages.length >= 10
+        className={`flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg transition ${previewImages.length >= 10
             ? "border-gray-300 bg-gray-50 text-gray-400 cursor-not-allowed"
             : "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer"
-        } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+          } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <ImageIcon size={32} />
         <span className="text-sm font-medium text-center">
@@ -98,7 +97,7 @@ export default function VenuePhotosUpload({
                   sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = "/api/placeholder/300/300";
+                    e.target.src = "/images/placeholder.png";
                     e.target.className =
                       "w-full h-full bg-gray-100 flex items-center justify-center";
                   }}

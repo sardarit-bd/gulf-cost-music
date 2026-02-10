@@ -84,7 +84,7 @@ export default function ProfileTab({
                     className="object-cover"
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = "/api/placeholder/128/128";
+                      e.target.src = "/images/placeholder.png";
                       e.target.className =
                         "w-full h-full bg-gray-200 flex items-center justify-center";
                     }}
@@ -116,11 +116,10 @@ export default function ProfileTab({
             {/* Verification Badge */}
             <div className="mb-4">
               <span
-                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
-                  journalist.isVerified
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${journalist.isVerified
                     ? "bg-green-100 text-green-800"
                     : "bg-yellow-100 text-yellow-800"
-                }`}
+                  }`}
               >
                 {journalist.isVerified ? (
                   <>
@@ -236,9 +235,9 @@ export default function ProfileTab({
                   options={
                     journalist.state && cityByState[journalist.state]
                       ? [
-                          { value: "", label: "Select City" },
-                          ...cityByState[journalist.state],
-                        ]
+                        { value: "", label: "Select City" },
+                        ...cityByState[journalist.state],
+                      ]
                       : [{ value: "", label: "Select State First" }]
                   }
                   onChange={(e) =>

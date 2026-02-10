@@ -128,7 +128,7 @@ export default function NewsListTab({
                         className="object-cover hover:scale-105 transition-transform duration-300"
                         onError={(e) => {
                           e.target.onerror = null;
-                          e.target.src = "/api/placeholder/400/300";
+                          e.target.src = "/images/placeholder.png";
                           e.target.className = "w-full h-full bg-gray-100";
                         }}
                       />
@@ -214,7 +214,7 @@ export default function NewsListTab({
                               className="object-cover hover:scale-110 transition-transform"
                               onError={(e) => {
                                 e.target.onerror = null;
-                                e.target.src = "/api/placeholder/48/48";
+                                e.target.src = "/images/placeholder.png";
                                 e.target.className =
                                   "w-full h-full bg-gray-100";
                               }}

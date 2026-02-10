@@ -533,7 +533,7 @@ export default function AddShowPage() {
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = "/api/placeholder/400/300";
+                        e.target.src = "/images/placeholder.png";
                       }}
                     />
                   </div>
@@ -572,11 +572,10 @@ export default function AddShowPage() {
               <button
                 type="submit"
                 disabled={loading || isLimitReached}
-                className={`flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-semibold transition min-w-[200px] ${
-                  isLimitReached
+                className={`flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-semibold transition min-w-[200px] ${isLimitReached
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300"
                     : "bg-blue-600 hover:bg-blue-700 text-white hover:shadow-md"
-                }`}
+                  }`}
               >
                 {loading ? (
                   <>

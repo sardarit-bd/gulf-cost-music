@@ -25,39 +25,36 @@ export default function ListingDetailView({
       <div className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm">
         {/* Status Banner */}
         <div
-          className={`px-6 py-3 ${
-            listing.status === "active"
-              ? "bg-green-50 border-b border-green-200"
-              : listing.status === "sold"
-                ? "bg-red-50 border-b border-red-200"
-                : listing.status === "reserved"
-                  ? "bg-orange-50 border-b border-orange-200"
-                  : "bg-yellow-50 border-b border-yellow-200"
-          }`}
+          className={`px-6 py-3 ${listing.status === "active"
+            ? "bg-green-50 border-b border-green-200"
+            : listing.status === "sold"
+              ? "bg-red-50 border-b border-red-200"
+              : listing.status === "reserved"
+                ? "bg-orange-50 border-b border-orange-200"
+                : "bg-yellow-50 border-b border-yellow-200"
+            }`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span
-                className={`w-2 h-2 rounded-full ${
-                  listing.status === "active"
-                    ? "bg-green-500"
-                    : listing.status === "sold"
-                      ? "bg-red-500"
-                      : listing.status === "reserved"
-                        ? "bg-orange-500"
-                        : "bg-yellow-500"
-                }`}
+                className={`w-2 h-2 rounded-full ${listing.status === "active"
+                  ? "bg-green-500"
+                  : listing.status === "sold"
+                    ? "bg-red-500"
+                    : listing.status === "reserved"
+                      ? "bg-orange-500"
+                      : "bg-yellow-500"
+                  }`}
               ></span>
               <span
-                className={`text-sm font-medium ${
-                  listing.status === "active"
-                    ? "text-green-800"
-                    : listing.status === "sold"
-                      ? "text-red-800"
-                      : listing.status === "reserved"
-                        ? "text-orange-800"
-                        : "text-yellow-800"
-                }`}
+                className={`text-sm font-medium ${listing.status === "active"
+                  ? "text-green-800"
+                  : listing.status === "sold"
+                    ? "text-red-800"
+                    : listing.status === "reserved"
+                      ? "text-orange-800"
+                      : "text-yellow-800"
+                  }`}
               >
                 {listing.status.charAt(0).toUpperCase() +
                   listing.status.slice(1)}
@@ -95,7 +92,7 @@ export default function ListingDetailView({
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = "/api/placeholder/800/450";
+                      e.target.src = "/images/placeholder.png";
                       e.target.className = "w-full h-full bg-gray-100";
                     }}
                   />
@@ -114,12 +111,11 @@ export default function ListingDetailView({
                         key={index}
                         onClick={() => setSelectedImageIndex(index)}
                         className={`flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all duration-300
-                                                    ${
-                                                      selectedImageIndex ===
-                                                      index
-                                                        ? "border-blue-500"
-                                                        : "border-gray-200 hover:border-blue-400"
-                                                    }`}
+                                                    ${selectedImageIndex ===
+                            index
+                            ? "border-blue-500"
+                            : "border-gray-200 hover:border-blue-400"
+                          }`}
                       >
                         <Image
                           width={96}
@@ -129,7 +125,7 @@ export default function ListingDetailView({
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = "/api/placeholder/96/96";
+                            e.target.src = "/images/placeholder.png";
                             e.target.className = "w-full h-full bg-gray-100";
                           }}
                         />

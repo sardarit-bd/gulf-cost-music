@@ -11,15 +11,19 @@ import {
   Video,
   X,
 } from "lucide-react";
+import { useState } from "react";
 
 export default function CreateListingForm({
   currentListing,
-  listingPhotos,
+  displayPhotos,
   listingVideos,
   formErrors,
   isEditingListing,
   hasListing,
   listing,
+  isSubmitting,
+  photosToDelete,
+  deleteVideo,
   onListingChange,
   onPhotoUpload,
   onVideoUpload,
@@ -29,14 +33,22 @@ export default function CreateListingForm({
   onDeleteListing,
   onCreateOrUpdate,
 }) {
+  const [isUploading, setIsUploading] = useState(false);
+
   const handlePhotoInputChange = (e) => {
     const files = Array.from(e.target.files);
-    const validTypes = ["image/jpeg", "image/png", "image/webp"];
-    const maxSize = 5 * 1024 * 1024;
+    const validTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+    const maxSize = 10 * 1024 * 1024; // 10MB
 
     const validFiles = files.filter((file) => {
-      if (!validTypes.includes(file.type)) return false;
-      if (file.size > maxSize) return false;
+      if (!validTypes.includes(file.type)) {
+        toast.error(`${file.name}: Invalid file type. Use JPEG, PNG, or WebP`);
+        return false;
+      }
+      if (file.size > maxSize) {
+        toast.error(`${file.name}: File too large. Max 10MB`);
+        return false;
+      }
       return true;
     });
 
@@ -48,12 +60,18 @@ export default function CreateListingForm({
 
   const handleVideoInputChange = (e) => {
     const files = Array.from(e.target.files);
-    const validTypes = ["video/mp4", "video/quicktime"];
-    const maxSize = 50 * 1024 * 1024;
+    const validTypes = ["video/mp4", "video/quicktime", "video/mov", "video/avi", "video/webm"];
+    const maxSize = 200 * 1024 * 1024; // 200MB
 
     const validFiles = files.filter((file) => {
-      if (!validTypes.includes(file.type)) return false;
-      if (file.size > maxSize) return false;
+      if (!validTypes.includes(file.type)) {
+        toast.error(`${file.name}: Invalid file type. Use MP4 or MOV`);
+        return false;
+      }
+      if (file.size > maxSize) {
+        toast.error(`${file.name}: File too large. Max 200MB`);
+        return false;
+      }
       return true;
     });
 
@@ -61,6 +79,22 @@ export default function CreateListingForm({
       onVideoUpload(validFiles);
     }
     e.target.value = null;
+  };
+
+  const handleSubmit = async () => {
+    if (isSubmitting) {
+      toast.error("Please wait, submission in progress");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      await onCreateOrUpdate();
+    } catch (error) {
+      console.error("Form submission error:", error);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -86,9 +120,9 @@ export default function CreateListingForm({
               value={currentListing.title}
               onChange={onListingChange}
               placeholder="e.g., Professional PA System, Stage Lighting Kit, Venue Chairs"
-              className={`w-full bg-white border ${
-                formErrors.title ? "border-red-300" : "border-gray-300"
-              } rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition`}
+              className={`w-full bg-white border ${formErrors.title ? "border-red-300" : "border-gray-300"
+                } rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition`}
+              disabled={isSubmitting}
             />
             {formErrors.title && (
               <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
@@ -115,9 +149,9 @@ export default function CreateListingForm({
                 placeholder="0.00"
                 step="0.01"
                 min="0"
-                className={`w-full bg-white border ${
-                  formErrors.price ? "border-red-300" : "border-gray-300"
-                } rounded-lg pl-10 pr-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition`}
+                className={`w-full bg-white border ${formErrors.price ? "border-red-300" : "border-gray-300"
+                  } rounded-lg pl-10 pr-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition`}
+                disabled={isSubmitting}
               />
             </div>
             {formErrors.price && (
@@ -141,14 +175,20 @@ export default function CreateListingForm({
               value={currentListing.location || ""}
               onChange={onListingChange}
               className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              required
+              disabled={isSubmitting}
             >
               <option value="">Select a location</option>
-              <option value="New Orleans">New Orleans</option>
-              <option value="Biloxi">Biloxi</option>
-              <option value="Mobile">Mobile</option>
-              <option value="Pensacola">Pensacola</option>
+              <option value="Louisiana">Louisiana</option>
+              <option value="Mississippi">Mississippi</option>
+              <option value="Alabama">Alabama</option>
+              <option value="Florida">Florida</option>
             </select>
+            {formErrors.location && (
+              <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {formErrors.location}
+              </p>
+            )}
             <p className="mt-2 text-sm text-gray-500">
               Select where the item can be picked up
             </p>
@@ -164,6 +204,7 @@ export default function CreateListingForm({
               value={currentListing.status}
               onChange={onListingChange}
               className="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              disabled={isSubmitting}
             >
               <option value="active">Active</option>
               <option value="draft">Draft</option>
@@ -186,10 +227,10 @@ export default function CreateListingForm({
                 value={currentListing.description}
                 onChange={onListingChange}
                 rows="4"
-                className={`w-full bg-white border ${
-                  formErrors.description ? "border-red-300" : "border-gray-300"
-                } rounded-lg pl-10 pr-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition`}
+                className={`w-full bg-white border ${formErrors.description ? "border-red-300" : "border-gray-300"
+                  } rounded-lg pl-10 pr-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition`}
                 placeholder="Describe your item in detail..."
+                disabled={isSubmitting}
               />
             </div>
             {formErrors.description && (
@@ -223,37 +264,54 @@ export default function CreateListingForm({
               </p>
             </div>
             <span className="text-sm font-medium text-gray-700">
-              {listingPhotos.length}/5 uploaded
+              {displayPhotos.length}/5 uploaded
+              {photosToDelete.length > 0 && ` (${photosToDelete.length} marked for deletion)`}
             </span>
           </div>
 
           {/* Photo Grid */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-            {listingPhotos.map((photo, index) => (
+            {displayPhotos.map((photo, index) => (
               <div key={index} className="relative group">
                 <div className="aspect-square overflow-hidden rounded-lg border border-gray-300 bg-gray-50">
-                  <img
-                    src={photo}
-                    alt={`Listing photo ${index + 1}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "/api/placeholder/200/200";
-                      e.target.className = "w-full h-full bg-gray-100";
-                    }}
-                  />
+                  {typeof photo === 'string' ? (
+                    <img
+                      src={photo}
+                      alt={`Listing photo ${index + 1}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/images/placeholder.png";
+                        e.target.className = "w-full h-full bg-gray-100";
+                      }}
+                    />
+                  ) : photo instanceof File ? (
+                    <img
+                      src={URL.createObjectURL(photo)}
+                      alt={`New photo ${index + 1}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : null}
                 </div>
                 <button
                   onClick={() => onRemovePhoto(index)}
                   className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1.5 hover:bg-red-700 transition shadow-sm"
+                  disabled={isSubmitting}
                 >
                   <X className="w-4 h-4" />
                 </button>
+                {photosToDelete.includes(photo) && (
+                  <div className="absolute inset-0 bg-red-500/20 border-2 border-red-500 rounded-lg flex items-center justify-center">
+                    <span className="text-xs font-bold text-red-700 bg-white/90 px-2 py-1 rounded">
+                      Will be deleted
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
 
             {/* Upload Button */}
-            {listingPhotos.length < 5 && (
+            {displayPhotos.length < 5 && (
               <label className="cursor-pointer">
                 <div className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 group">
                   <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3 group-hover:bg-blue-100 transition">
@@ -263,15 +321,16 @@ export default function CreateListingForm({
                     Click to upload
                   </span>
                   <span className="text-xs text-gray-500 mt-1">
-                    JPEG, PNG, WebP
+                    JPEG, PNG, WebP (Max 10MB)
                   </span>
                 </div>
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/jpeg,image/png,image/webp,image/jpg"
                   multiple
                   onChange={handlePhotoInputChange}
                   className="hidden"
+                  disabled={isSubmitting}
                 />
               </label>
             )}
@@ -298,6 +357,7 @@ export default function CreateListingForm({
             </div>
             <span className="text-sm font-medium text-gray-700">
               {listingVideos.length}/1 uploaded
+              {deleteVideo && " (marked for deletion)"}
             </span>
           </div>
 
@@ -312,36 +372,50 @@ export default function CreateListingForm({
                   Click to upload video
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  MP4, MOV • Max 50MB • &lt; 2 min
+                  MP4, MOV, AVI, WebM • Max 200MB
                 </p>
               </div>
               <input
                 type="file"
-                accept="video/mp4,video/quicktime"
+                accept="video/mp4,video/quicktime,video/mov,video/avi,video/webm"
                 onChange={handleVideoInputChange}
                 className="hidden"
+                disabled={isSubmitting}
               />
             </label>
           ) : (
             <div className="relative max-w-md">
               <div className="rounded-lg overflow-hidden border border-gray-300 bg-gray-50">
-                <video
-                  src={
-                    listingVideos[0] instanceof File
-                      ? URL.createObjectURL(listingVideos[0])
-                      : listingVideos[0]
-                  }
-                  controls
-                  preload="metadata"
-                  className="w-full h-auto max-h-[280px] object-contain"
-                />
+                {listingVideos[0] instanceof File ? (
+                  <video
+                    src={URL.createObjectURL(listingVideos[0])}
+                    controls
+                    preload="metadata"
+                    className="w-full h-auto max-h-[280px] object-contain"
+                  />
+                ) : (
+                  <video
+                    src={listingVideos[0]}
+                    controls
+                    preload="metadata"
+                    className="w-full h-auto max-h-[280px] object-contain"
+                  />
+                )}
               </div>
               <button
-                onClick={() => onRemoveVideo(0)}
+                onClick={onRemoveVideo}
                 className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1.5 hover:bg-red-700 transition shadow-sm"
+                disabled={isSubmitting}
               >
                 <X className="w-4 h-4" />
               </button>
+              {deleteVideo && (
+                <div className="absolute inset-0 bg-red-500/20 border-2 border-red-500 rounded-lg flex items-center justify-center">
+                  <span className="text-xs font-bold text-red-700 bg-white/90 px-2 py-1 rounded">
+                    Will be deleted
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -353,7 +427,8 @@ export default function CreateListingForm({
           {isEditingListing && (
             <button
               onClick={onCancelEdit}
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+              disabled={isSubmitting}
             >
               Cancel Edit
             </button>
@@ -363,8 +438,9 @@ export default function CreateListingForm({
         <div className="flex gap-4">
           {hasListing && !isEditingListing && (
             <button
-              onClick={() => onDeleteListing(listing._id)}
-              className="px-6 py-3 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition flex items-center gap-2 border border-red-200"
+              onClick={() => onDeleteListing()}
+              className="px-6 py-3 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition flex items-center gap-2 border border-red-200 disabled:opacity-50"
+              disabled={isSubmitting}
             >
               <Trash2 className="w-4 h-4" />
               Delete Listing
@@ -372,19 +448,25 @@ export default function CreateListingForm({
           )}
 
           <button
-            onClick={onCreateOrUpdate}
-            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg hover:shadow-md transition-all duration-300 shadow-sm"
+            onClick={handleSubmit}
+            disabled={isSubmitting || isUploading}
+            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg hover:shadow-md transition-all duration-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {isEditingListing ? (
-              <span className="flex items-center gap-2">
+            {isSubmitting || isUploading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                {isEditingListing ? "Updating..." : "Publishing..."}
+              </>
+            ) : isEditingListing ? (
+              <>
                 <CheckCircle className="w-5 h-5" />
                 Update Listing
-              </span>
+              </>
             ) : (
-              <span className="flex items-center gap-2">
+              <>
                 <Upload className="w-5 h-5" />
                 Publish Listing
-              </span>
+              </>
             )}
           </button>
         </div>

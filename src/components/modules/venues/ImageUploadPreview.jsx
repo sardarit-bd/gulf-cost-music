@@ -27,7 +27,7 @@ export default function ImageUploadPreview({
               className="w-full h-full object-cover"
               onError={(e) => {
                 e.target.onerror = null;
-                e.target.src = "/api/placeholder/400/300";
+                e.target.src = "/images/placeholder.png";
               }}
             />
             <button

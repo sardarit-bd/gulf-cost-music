@@ -28,13 +28,12 @@ export default function NewsDetailModal({ news, isOpen, onClose }) {
           {news.photos?.length > 0 && (
             <div className="p-6 border-b border-gray-200">
               <div
-                className={`grid gap-4 ${
-                  news.photos.length === 1
+                className={`grid gap-4 ${news.photos.length === 1
                     ? "grid-cols-1"
                     : news.photos.length === 2
                       ? "grid-cols-2"
                       : "grid-cols-1 md:grid-cols-2"
-                }`}
+                  }`}
               >
                 {news.photos.map((photo, index) => (
                   <div
@@ -48,7 +47,7 @@ export default function NewsDetailModal({ news, isOpen, onClose }) {
                       className="object-cover"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = "/api/placeholder/400/300";
+                        e.target.src = "/images/placeholder.png";
                         e.target.className = "w-full h-full bg-gray-100";
                       }}
                     />
@@ -110,11 +109,10 @@ export default function NewsDetailModal({ news, isOpen, onClose }) {
                   Status
                 </h4>
                 <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    news.published
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${news.published
                       ? "bg-green-100 text-green-800"
                       : "bg-yellow-100 text-yellow-800"
-                  }`}
+                    }`}
                 >
                   {news.published ? "Published" : "Draft"}
                 </span>
