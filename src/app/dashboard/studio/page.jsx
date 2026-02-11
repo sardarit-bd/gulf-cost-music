@@ -2,7 +2,6 @@
 
 import MediaGalleryPreview from "@/components/modules/dashboard/studio/MediaGalleryPreview";
 import QuickActions from "@/components/modules/dashboard/studio/QuickActions";
-import RecentActivity from "@/components/modules/dashboard/studio/RecentActivity";
 import ServicesPreview from "@/components/modules/dashboard/studio/ServicesPreview";
 import { useSession } from "@/lib/auth";
 import {
@@ -11,10 +10,8 @@ import {
   Building2,
   Camera,
   CheckCircle,
-  Music,
   Package,
   Star,
-  TrendingUp,
   Upload,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -276,7 +273,7 @@ export default function StudioDashboard() {
           <ServicesPreview services={studioData?.services || []} />
 
           {/* Recent Activity */}
-          <RecentActivity />
+          {/* <RecentActivity /> */}
         </div>
 
         {/* Right Column - Media Gallery & Profile Status */}
@@ -335,7 +332,7 @@ export default function StudioDashboard() {
           </div>
 
           {/* Tips & Updates */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+          {/* <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
               Tips for Success
             </h3>
@@ -365,7 +362,7 @@ export default function StudioDashboard() {
                 </span>
               </li>
             </ul>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

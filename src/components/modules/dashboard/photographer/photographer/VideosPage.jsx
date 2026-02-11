@@ -476,7 +476,7 @@ export default function VideoPage() {
 
   return (
     <>
-      <div className="space-y-6 md:space-y-8 px-3 sm:px-4 lg:px-6">
+      <div className="space-y-10 md:space-y-10 py-5 px-3 sm:px-4 lg:px-8">
         {/* Header Card */}
         <div className="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-200 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-6">

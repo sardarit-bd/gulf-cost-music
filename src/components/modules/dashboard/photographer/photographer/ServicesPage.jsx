@@ -1,11 +1,24 @@
-// components/modules/dashboard/photographer/ServicesPage.js
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import DeleteModal from "@/ui/DeleteModal";
 import Input from "@/ui/Input";
 import Select from "@/ui/Select";
 import Textarea from "@/ui/Textarea";
-import { Briefcase, CheckCircle, Clock, DollarSign, Edit2, Loader2, Mail, Phone, Plus, Tag, Trash2, User } from "lucide-react";
+import {
+  Briefcase,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  Edit2,
+  Loader2,
+  Mail,
+  Phone,
+  Plus,
+  Tag,
+  Trash2,
+  User,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -26,9 +39,6 @@ export default function ServicesPage() {
     description: "",
     duration: "",
     category: "photography",
-    // deliveryTime: "",
-    // revisions: "",
-    // includes: "",
     contact: {
       email: user?.email || "",
       phone: "",
@@ -46,9 +56,6 @@ export default function ServicesPage() {
     description: "",
     duration: "",
     category: "photography",
-    // deliveryTime: "",
-    // revisions: "",
-    // includes: "",
     contact: {
       email: "",
       phone: "",
@@ -60,6 +67,10 @@ export default function ServicesPage() {
   const [formErrors, setFormErrors] = useState({});
   const [editErrors, setEditErrors] = useState({});
 
+  // ===== DELETE MODAL STATE =====
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState(null);
+
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
   const serviceCategories = [
@@ -69,7 +80,7 @@ export default function ServicesPage() {
     { value: "consultation", label: "Consultation" },
     { value: "workshop", label: "Workshop" },
     { value: "equipment", label: "Equipment" },
-    { value: "other", label: "Other" }
+    { value: "other", label: "Other" },
   ];
 
   const durationOptions = [
@@ -82,29 +93,8 @@ export default function ServicesPage() {
     { value: "6hours", label: "6 hours" },
     { value: "8hours", label: "8 hours" },
     { value: "fullday", label: "Full day" },
-    { value: "custom", label: "Custom" }
+    { value: "custom", label: "Custom" },
   ];
-
-  // const deliveryTimeOptions = [
-  //   { value: "", label: "Select Delivery", disabled: true },
-  //   { value: "24h", label: "24 hours" },
-  //   { value: "48h", label: "48 hours" },
-  //   { value: "3days", label: "3 days" },
-  //   { value: "1week", label: "1 week" },
-  //   { value: "2weeks", label: "2 weeks" },
-  //   { value: "1month", label: "1 month" },
-  //   { value: "custom", label: "Custom" }
-  // ];
-
-  // const revisionOptions = [
-  //   { value: "", label: "Select Revisions", disabled: true },
-  //   { value: "0", label: "No revisions" },
-  //   { value: "1", label: "1 revision" },
-  //   { value: "2", label: "2 revisions" },
-  //   { value: "3", label: "3 revisions" },
-  //   { value: "unlimited", label: "Unlimited" },
-  //   { value: "custom", label: "Custom" }
-  // ];
 
   // Fetch services
   useEffect(() => {
@@ -119,9 +109,12 @@ export default function ServicesPage() {
           return;
         }
 
-        const profileRes = await fetch(`${API_BASE}/api/photographers/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const profileRes = await fetch(
+          `${API_BASE}/api/photographers/profile`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
 
         if (profileRes.ok) {
           const profileData = await profileRes.json();
@@ -187,10 +180,7 @@ export default function ServicesPage() {
         description: newService.description.trim() || "",
         duration: newService.duration || "",
         category: newService.category,
-        // deliveryTime: newService.deliveryTime || "",
-        // revisions: newService.revisions || "",
-        // includes: newService.includes || "",
-        contact: newService.contact
+        contact: newService.contact,
       };
 
       const res = await fetch(`${API_BASE}/api/photographers/services`, {
@@ -206,22 +196,19 @@ export default function ServicesPage() {
 
       if (!res.ok) throw new Error(data.message || "Failed to add service.");
 
-      setServices(prev => [...prev, data.data.service]);
+      setServices((prev) => [...prev, data.data.service]);
       setNewService({
         service: "",
         price: "",
         description: "",
         duration: "",
         category: "photography",
-        // deliveryTime: "",
-        // revisions: "",
-        // includes: "",
         contact: {
           email: user?.email || "",
           phone: "",
           preferredContact: "email",
           showPhonePublicly: false,
-        }
+        },
       });
       setFormErrors({});
       toast.success("Service added successfully!");
@@ -233,8 +220,15 @@ export default function ServicesPage() {
     }
   };
 
-  const handleDeleteService = async (serviceId) => {
-    if (!confirm("Are you sure you want to delete this service?")) return;
+  // ===== OPEN DELETE MODAL =====
+  const openDeleteModal = (service) => {
+    setServiceToDelete(service);
+    setDeleteModalOpen(true);
+  };
+
+  // ===== HANDLE DELETE SERVICE =====
+  const handleDeleteService = async () => {
+    if (!serviceToDelete) return;
 
     const token = getCookie("token");
     if (!token) {
@@ -243,23 +237,27 @@ export default function ServicesPage() {
     }
 
     try {
-      setDeletingId(serviceId);
+      setDeletingId(serviceToDelete._id);
       const res = await fetch(
-        `${API_BASE}/api/photographers/services/${serviceId}`,
+        `${API_BASE}/api/photographers/services/${serviceToDelete._id}`,
         {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.message || "Failed to delete service.");
 
-      setServices(prev => prev.filter(service => service._id !== serviceId));
+      setServices((prev) =>
+        prev.filter((service) => service._id !== serviceToDelete._id),
+      );
       toast.success("Service deleted successfully!");
+      setDeleteModalOpen(false);
+      setServiceToDelete(null);
     } catch (error) {
       console.error("Delete service error:", error);
       toast.error(error.message || "Error deleting service.");
@@ -276,9 +274,6 @@ export default function ServicesPage() {
       description: service.description || "",
       duration: service.duration || "",
       category: service.category || "photography",
-      // deliveryTime: service.deliveryTime || "",
-      // revisions: service.revisions || "",
-      // includes: service.includes || "",
       contact: service.contact || {
         email: user?.email || "",
         phone: "",
@@ -296,15 +291,12 @@ export default function ServicesPage() {
       description: "",
       duration: "",
       category: "photography",
-      // deliveryTime: "",
-      // revisions: "",
-      // includes: "",
       contact: {
         email: user?.email || "",
         phone: "",
         preferredContact: "email",
         showPhonePublicly: false,
-      }
+      },
     });
     setEditErrors({});
   };
@@ -324,22 +316,27 @@ export default function ServicesPage() {
     try {
       setSaving(true);
 
-      const res = await fetch(`${API_BASE}/api/photographers/services/${serviceId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${API_BASE}/api/photographers/services/${serviceId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(editForm),
         },
-        body: JSON.stringify(editForm),
-      });
+      );
 
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.message || "Failed to update service.");
 
-      setServices(prev => prev.map(service =>
-        service._id === serviceId ? data.data.service : service
-      ));
+      setServices((prev) =>
+        prev.map((service) =>
+          service._id === serviceId ? data.data.service : service,
+        ),
+      );
       setEditingId(null);
       setEditForm({
         service: "",
@@ -347,15 +344,12 @@ export default function ServicesPage() {
         description: "",
         duration: "",
         category: "photography",
-        // deliveryTime: "",
-        // revisions: "",
-        // includes: "",
         contact: {
           email: user?.email || "",
           phone: "",
           preferredContact: "email",
           showPhonePublicly: false,
-        }
+        },
       });
       setEditErrors({});
       toast.success("Service updated successfully!");
@@ -369,19 +363,19 @@ export default function ServicesPage() {
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
-    setEditForm(prev => ({ ...prev, [name]: value }));
+    setEditForm((prev) => ({ ...prev, [name]: value }));
 
     if (editErrors[name]) {
-      setEditErrors(prev => ({ ...prev, [name]: "" }));
+      setEditErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const handleNewServiceChange = (e) => {
     const { name, value } = e.target;
-    setNewService(prev => ({ ...prev, [name]: value }));
+    setNewService((prev) => ({ ...prev, [name]: value }));
 
     if (formErrors[name]) {
-      setFormErrors(prev => ({ ...prev, [name]: "" }));
+      setFormErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
@@ -393,7 +387,7 @@ export default function ServicesPage() {
       consultation: "bg-amber-100 text-amber-800 border-amber-200",
       workshop: "bg-indigo-100 text-indigo-800 border-indigo-200",
       equipment: "bg-rose-100 text-rose-800 border-rose-200",
-      other: "bg-gray-100 text-gray-800 border-gray-200"
+      other: "bg-gray-100 text-gray-800 border-gray-200",
     };
     return colors[category] || colors.other;
   };
@@ -403,7 +397,7 @@ export default function ServicesPage() {
 
     const updater = isEdit ? setEditForm : setNewService;
 
-    updater(prev => ({
+    updater((prev) => ({
       ...prev,
       contact: {
         ...prev.contact,
@@ -421,12 +415,14 @@ export default function ServicesPage() {
       amber: "text-amber-600",
       gray: "text-gray-600",
       rose: "text-rose-600",
-      indigo: "text-indigo-600"
+      indigo: "text-indigo-600",
     };
 
     return (
       <div className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
-        <div className={`p-2 rounded-lg ${colorClasses[color]} bg-white border border-gray-200`}>
+        <div
+          className={`p-2 rounded-lg ${colorClasses[color]} bg-white border border-gray-200`}
+        >
           <Icon className="w-4 h-4" />
         </div>
         <div className="flex-1">
@@ -444,11 +440,13 @@ export default function ServicesPage() {
       purple: "bg-purple-50 text-purple-700 border-purple-200",
       green: "bg-green-50 text-green-700 border-green-200",
       amber: "bg-amber-50 text-amber-700 border-amber-200",
-      gray: "bg-gray-50 text-gray-700 border-gray-200"
+      gray: "bg-gray-50 text-gray-700 border-gray-200",
     };
 
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${colorClasses[color]}`}>
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-medium border ${colorClasses[color]}`}
+      >
         {children}
       </span>
     );
@@ -476,7 +474,9 @@ export default function ServicesPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Services</h1>
-              <p className="text-gray-600 mt-1">Manage your photography services and pricing</p>
+              <p className="text-gray-600 mt-1">
+                Manage your photography services and pricing
+              </p>
             </div>
           </div>
         </div>
@@ -488,17 +488,28 @@ export default function ServicesPage() {
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">Your Services</h2>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      Your Services
+                    </h2>
                     <p className="text-gray-600 text-sm mt-1">
-                      {services.length} {services.length === 1 ? 'service' : 'services'} available
+                      {services.length}{" "}
+                      {services.length === 1 ? "service" : "services"} available
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                      {services.filter(s => s.category === 'photography').length} Photography
+                      {
+                        services.filter((s) => s.category === "photography")
+                          .length
+                      }{" "}
+                      Photography
                     </div>
                     <div className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                      {services.filter(s => s.category === 'videography').length} Videography
+                      {
+                        services.filter((s) => s.category === "videography")
+                          .length
+                      }{" "}
+                      Videography
                     </div>
                   </div>
                 </div>
@@ -510,9 +521,12 @@ export default function ServicesPage() {
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-6">
                       <Briefcase className="w-8 h-8 text-gray-400" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-3">No Services Yet</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                      No Services Yet
+                    </h3>
                     <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                      Start by adding your first photography service. Show clients what you offer.
+                      Start by adding your first photography service. Show
+                      clients what you offer.
                     </p>
                     <div className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg font-medium">
                       <Plus className="w-5 h-5" />
@@ -569,34 +583,6 @@ export default function ServicesPage() {
                                 icon={<Clock className="w-4 h-4" />}
                               />
 
-                              {/* <Select
-                                label="Delivery Time"
-                                name="deliveryTime"
-                                value={editForm.deliveryTime}
-                                onChange={handleEditChange}
-                                options={deliveryTimeOptions}
-                                icon={<Calendar className="w-4 h-4" />}
-                              /> */}
-
-                              {/* <Select
-                                label="Revisions"
-                                name="revisions"
-                                value={editForm.revisions}
-                                onChange={handleEditChange}
-                                options={revisionOptions}
-                                icon={<MessageSquare className="w-4 h-4" />}
-                              /> */}
-
-                              {/* <Input
-                                label="What's Included"
-                                name="includes"
-                                value={editForm.includes}
-                                onChange={handleEditChange}
-                                placeholder="e.g., 10 edited photos"
-                                icon={<CheckCircle className="w-4 h-4" />}
-                                className="md:col-span-2"
-                              /> */}
-
                               <Textarea
                                 label="Description"
                                 name="description"
@@ -608,13 +594,17 @@ export default function ServicesPage() {
                               />
 
                               <div className="md:col-span-2 border-t pt-4">
-                                <h4 className="font-medium text-gray-900 mb-3">Contact</h4>
+                                <h4 className="font-medium text-gray-900 mb-3">
+                                  Contact
+                                </h4>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <Input
                                     label="Email"
                                     name="email"
                                     value={editForm.contact.email}
-                                    onChange={(e) => handleContactChange(e, true)}
+                                    onChange={(e) =>
+                                      handleContactChange(e, true)
+                                    }
                                     icon={<Mail className="w-4 h-4" />}
                                   />
 
@@ -622,7 +612,9 @@ export default function ServicesPage() {
                                     label="Phone"
                                     name="phone"
                                     value={editForm.contact.phone}
-                                    onChange={(e) => handleContactChange(e, true)}
+                                    onChange={(e) =>
+                                      handleContactChange(e, true)
+                                    }
                                     icon={<Phone className="w-4 h-4" />}
                                   />
 
@@ -630,7 +622,9 @@ export default function ServicesPage() {
                                     label="Preferred Contact"
                                     name="preferredContact"
                                     value={editForm.contact.preferredContact}
-                                    onChange={(e) => handleContactChange(e, true)}
+                                    onChange={(e) =>
+                                      handleContactChange(e, true)
+                                    }
                                     options={[
                                       { value: "email", label: "Email" },
                                       { value: "phone", label: "Phone" },
@@ -642,8 +636,12 @@ export default function ServicesPage() {
                                       <input
                                         type="checkbox"
                                         name="showPhonePublicly"
-                                        checked={editForm.contact.showPhonePublicly}
-                                        onChange={(e) => handleContactChange(e, true)}
+                                        checked={
+                                          editForm.contact.showPhonePublicly
+                                        }
+                                        onChange={(e) =>
+                                          handleContactChange(e, true)
+                                        }
                                         className="rounded"
                                       />
                                       Show phone publicly
@@ -681,19 +679,34 @@ export default function ServicesPage() {
                             <div className="flex items-start justify-between mb-4">
                               <div>
                                 <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="text-lg font-bold text-gray-900">{service.service}</h3>
-                                  <ServiceTag color={
-                                    service.category === 'photography' ? 'blue' :
-                                      service.category === 'videography' ? 'purple' :
-                                        service.category === 'editing' ? 'green' :
-                                          service.category === 'consultation' ? 'amber' :
-                                            service.category === 'workshop' ? 'indigo' : 'gray'
-                                  }>
-                                    {serviceCategories.find(c => c.value === service.category)?.label || service.category}
+                                  <h3 className="text-lg font-bold text-gray-900">
+                                    {service.service}
+                                  </h3>
+                                  <ServiceTag
+                                    color={
+                                      service.category === "photography"
+                                        ? "blue"
+                                        : service.category === "videography"
+                                          ? "purple"
+                                          : service.category === "editing"
+                                            ? "green"
+                                            : service.category ===
+                                                "consultation"
+                                              ? "amber"
+                                              : service.category === "workshop"
+                                                ? "indigo"
+                                                : "gray"
+                                    }
+                                  >
+                                    {serviceCategories.find(
+                                      (c) => c.value === service.category,
+                                    )?.label || service.category}
                                   </ServiceTag>
                                 </div>
                                 {service.description && (
-                                  <p className="text-gray-600 text-sm mb-4">{service.description}</p>
+                                  <p className="text-gray-600 text-sm mb-4">
+                                    {service.description}
+                                  </p>
                                 )}
                               </div>
                               <div className="flex items-center gap-1">
@@ -705,7 +718,7 @@ export default function ServicesPage() {
                                   <Edit2 className="w-4 h-4" />
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteService(service._id)}
+                                  onClick={() => openDeleteModal(service)}
                                   disabled={deletingId === service._id}
                                   className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50"
                                   title="Delete service"
@@ -732,31 +745,17 @@ export default function ServicesPage() {
                                 <InfoItem
                                   icon={Clock}
                                   label="Duration"
-                                  value={durationOptions.find(d => d.value === service.duration)?.label || service.duration}
+                                  value={
+                                    durationOptions.find(
+                                      (d) => d.value === service.duration,
+                                    )?.label || service.duration
+                                  }
                                   color="blue"
                                 />
-                                {/* <InfoItem
-                                  icon={Calendar}
-                                  label="Delivery Time"
-                                  value={deliveryTimeOptions.find(d => d.value === service.deliveryTime)?.label || service.deliveryTime}
-                                  color="purple"
-                                /> */}
-                                {/* <InfoItem
-                                  icon={MessageSquare}
-                                  label="Revisions"
-                                  value={revisionOptions.find(r => r.value === service.revisions)?.label || service.revisions}
-                                  color="amber"
-                                /> */}
                               </div>
 
                               {/* Right Column */}
                               <div className="space-y-1">
-                                {/* <InfoItem
-                                  icon={CheckCircle}
-                                  label="Includes"
-                                  value={service.includes}
-                                  color="green"
-                                /> */}
                                 <InfoItem
                                   icon={Mail}
                                   label="Email"
@@ -767,16 +766,21 @@ export default function ServicesPage() {
                                   icon={Phone}
                                   label="Phone"
                                   value={
-                                    service.contact?.phone ?
-                                      `${service.contact.phone} ${service.contact.showPhonePublicly ? '(Public)' : '(Private)'}` :
-                                      null
+                                    service.contact?.phone
+                                      ? `${service.contact.phone} ${service.contact.showPhonePublicly ? "(Public)" : "(Private)"}`
+                                      : null
                                   }
                                   color="gray"
                                 />
                                 <InfoItem
                                   icon={User}
                                   label="Preferred Contact"
-                                  value={service.contact?.preferredContact === 'phone' ? 'Phone' : 'Email'}
+                                  value={
+                                    service.contact?.preferredContact ===
+                                    "phone"
+                                      ? "Phone"
+                                      : "Email"
+                                  }
                                   color="gray"
                                 />
                               </div>
@@ -800,8 +804,12 @@ export default function ServicesPage() {
                     <Plus className="w-5 h-5 text-gray-700" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900">Add New Service</h3>
-                    <p className="text-gray-600 text-sm">Fill in the details below</p>
+                    <h3 className="text-lg font-bold text-gray-900">
+                      Add New Service
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      Fill in the details below
+                    </p>
                   </div>
                 </div>
               </div>
@@ -846,35 +854,10 @@ export default function ServicesPage() {
                   icon={<Clock className="w-4 h-4" />}
                 />
 
-                {/* <Select
-                  label="Delivery Time"
-                  name="deliveryTime"
-                  value={newService.deliveryTime}
-                  onChange={handleNewServiceChange}
-                  options={deliveryTimeOptions}
-                  icon={<Calendar className="w-4 h-4" />}
-                /> */}
-
-                {/* <Select
-                  label="Revisions"
-                  name="revisions"
-                  value={newService.revisions}
-                  onChange={handleNewServiceChange}
-                  options={revisionOptions}
-                  icon={<MessageSquare className="w-4 h-4" />}
-                /> */}
-
-                {/* <Input
-                  label="What's Included"
-                  name="includes"
-                  value={newService.includes}
-                  onChange={handleNewServiceChange}
-                  placeholder="10 edited photos, print release"
-                  icon={<CheckCircle className="w-4 h-4" />}
-                /> */}
-
                 <div className="border-t pt-4">
-                  <h4 className="font-medium text-gray-900 mb-3">Contact Information</h4>
+                  <h4 className="font-medium text-gray-900 mb-3">
+                    Contact Information
+                  </h4>
                   <div className="space-y-4">
                     <Input
                       label="Email"
@@ -947,15 +930,21 @@ export default function ServicesPage() {
 
             {/* Service Stats */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Service Stats</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Service Stats
+              </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <span className="text-gray-900 font-bold">{services.length}</span>
+                      <span className="text-gray-900 font-bold">
+                        {services.length}
+                      </span>
                     </div>
                     <div>
-                      <p className="text-gray-700 font-medium">Total Services</p>
+                      <p className="text-gray-700 font-medium">
+                        Total Services
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -964,13 +953,19 @@ export default function ServicesPage() {
                   <div className="p-3 bg-gray-50 rounded-lg">
                     <p className="text-gray-700 text-sm">Photography</p>
                     <p className="text-gray-900 font-bold text-lg">
-                      {services.filter(s => s.category === 'photography').length}
+                      {
+                        services.filter((s) => s.category === "photography")
+                          .length
+                      }
                     </p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-lg">
                     <p className="text-gray-700 text-sm">Videography</p>
                     <p className="text-gray-900 font-bold text-lg">
-                      {services.filter(s => s.category === 'videography').length}
+                      {
+                        services.filter((s) => s.category === "videography")
+                          .length
+                      }
                     </p>
                   </div>
                 </div>
@@ -979,6 +974,23 @@ export default function ServicesPage() {
           </div>
         </div>
       </div>
+
+      {/* ===== COMMON DELETE MODAL ===== */}
+      <DeleteModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setServiceToDelete(null);
+        }}
+        onConfirm={handleDeleteService}
+        title="Delete Service"
+        description={`Are you sure you want to delete "${serviceToDelete?.service}"? This action cannot be undone.`}
+        confirmText="Delete Service"
+        cancelText="Cancel"
+        loading={deletingId === serviceToDelete?._id}
+        type="danger"
+        itemName={serviceToDelete?.service}
+      />
     </div>
   );
 }

@@ -3,17 +3,14 @@
 import {
   AlertCircle,
   Building2,
-  Calendar,
   Camera,
   CheckCircle,
   DollarSign,
   Edit,
-  Eye,
   FileText,
   Headphones,
   MapPin,
   Package,
-  TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -192,7 +189,7 @@ export default function StudioProfile() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
@@ -264,7 +261,7 @@ export default function StudioProfile() {
             +18% this month
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* Profile Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -313,9 +310,9 @@ export default function StudioProfile() {
       {/* Quick Actions */}
       <div className="mt-8">
         <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link
-            href="/dashboard/studios/media/upload"
+            href="/dashboard/studio/media"
             className="p-6 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-2xl hover:from-blue-100 hover:to-blue-200 transition-all group"
           >
             <div className="flex items-center gap-4 mb-3">
@@ -335,7 +332,7 @@ export default function StudioProfile() {
           </Link>
 
           <Link
-            href="/dashboard/studios/profile/services"
+            href="/dashboard/studio/profile/services"
             className="p-6 bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-2xl hover:from-green-100 hover:to-green-200 transition-all group"
           >
             <div className="flex items-center gap-4 mb-3">
@@ -354,7 +351,7 @@ export default function StudioProfile() {
             </p>
           </Link>
 
-          <Link
+          {/* <Link
             href="/dashboard/studios/profile/edit"
             className="p-6 bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-2xl hover:from-purple-100 hover:to-purple-200 transition-all group"
           >
@@ -372,12 +369,12 @@ export default function StudioProfile() {
             <p className="text-xs text-gray-500">
               {profileCompletion}% complete
             </p>
-          </Link>
+          </Link> */}
         </div>
       </div>
 
       {/* Verification Status */}
-      {studioData && (
+      {/* {studioData && (
         <div className="mt-8">
           <div
             className={`p-6 rounded-2xl ${studioData.isVerified ? "bg-green-50 border border-green-200" : "bg-yellow-50 border border-yellow-200"}`}
@@ -412,7 +409,7 @@ export default function StudioProfile() {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

@@ -1,11 +1,20 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { Camera, Edit3, ImageIcon, MapPin, Video, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  Edit3,
+  ImageIcon,
+  MapPin,
+  Video,
+  X,
+} from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
 
 // Function to get cookie value by name
 const getCookie = (name) => {
@@ -154,20 +163,20 @@ export default function PhotographerDashboard() {
       if (!isGalleryOpen) return;
 
       switch (e.key) {
-        case 'Escape':
+        case "Escape":
           closeGallery();
           break;
-        case 'ArrowRight':
+        case "ArrowRight":
           nextImage();
           break;
-        case 'ArrowLeft':
+        case "ArrowLeft":
           prevImage();
           break;
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isGalleryOpen]);
 
   // Format city and state names for display
@@ -206,7 +215,9 @@ export default function PhotographerDashboard() {
 
   const prevImage = () => {
     if (photographer.photos && photographer.photos.length > 0) {
-      const prevIndex = (currentGalleryIndex - 1 + photographer.photos.length) % photographer.photos.length;
+      const prevIndex =
+        (currentGalleryIndex - 1 + photographer.photos.length) %
+        photographer.photos.length;
       setCurrentGalleryIndex(prevIndex);
       setSelectedImage(photographer.photos[prevIndex]);
     }
@@ -217,9 +228,8 @@ export default function PhotographerDashboard() {
     router.push("/dashboard/photographer/manageprofile");
   };
 
-
   const handleAddPhotos = () => {
-    router.push("dashboard/photographer/photos");
+    router.push("/dashboard/photographer/photos");
   };
 
   const handleViewAnalytics = () => {
@@ -264,7 +274,10 @@ export default function PhotographerDashboard() {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
                   <div
                     className="relative w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg cursor-pointer"
-                    onClick={() => photographer.photos?.[0]?.url && openGallery(0, photographer.photos[0])}
+                    onClick={() =>
+                      photographer.photos?.[0]?.url &&
+                      openGallery(0, photographer.photos[0])
+                    }
                   >
                     {photographer.photos?.[0]?.url ? (
                       <Image
@@ -334,7 +347,11 @@ export default function PhotographerDashboard() {
                   />
                   <ProgressBar value={60} label="Portfolio" color="green" />
                   <ProgressBar value={45} label="Services" color="yellow" />
-                  <ProgressBar value={30} label="Client Reviews" color="purple" />
+                  <ProgressBar
+                    value={30}
+                    label="Client Reviews"
+                    color="purple"
+                  />
                 </div>
               </div>
             </div>
@@ -424,16 +441,16 @@ export default function PhotographerDashboard() {
                 ))}
                 {(!photographer.services ||
                   photographer.services.length === 0) && (
-                    <div className="text-center py-4">
-                      <p className="text-gray-600">No services added yet</p>
-                      <button
-                        onClick={handleEditProfile}
-                        className="mt-2 text-yellow-600 hover:text-yellow-700 text-sm font-medium"
-                      >
-                        Add Your First Service
-                      </button>
-                    </div>
-                  )}
+                  <div className="text-center py-4">
+                    <p className="text-gray-600">No services added yet</p>
+                    <button
+                      onClick={handleEditProfile}
+                      className="mt-2 text-yellow-600 hover:text-yellow-700 text-sm font-medium"
+                    >
+                      Add Your First Service
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -500,7 +517,9 @@ export default function PhotographerDashboard() {
               </div>
               <div>
                 <h4 className="font-bold text-gray-900">Add Service</h4>
-                <p className="text-sm text-gray-600">Add a new service to your portfolio</p>
+                <p className="text-sm text-gray-600">
+                  Add a new service to your portfolio
+                </p>
               </div>
             </div>
             <button
@@ -586,10 +605,11 @@ export default function PhotographerDashboard() {
                       setCurrentGalleryIndex(index);
                       setSelectedImage(photo);
                     }}
-                    className={`w-16 h-16 rounded overflow-hidden border-2 transition-all ${currentGalleryIndex === index
-                      ? "border-yellow-400 scale-110"
-                      : "border-transparent hover:border-white/50"
-                      }`}
+                    className={`w-16 h-16 rounded overflow-hidden border-2 transition-all ${
+                      currentGalleryIndex === index
+                        ? "border-yellow-400 scale-110"
+                        : "border-transparent hover:border-white/50"
+                    }`}
                   >
                     <Image
                       src={photo.url}
@@ -606,7 +626,10 @@ export default function PhotographerDashboard() {
 
           {/* Instructions */}
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-white/70 text-sm">
-            <p>Use ← → arrows or click thumbnails to navigate • Press ESC to close</p>
+            <p>
+              Use ← → arrows or click thumbnails to navigate • Press ESC to
+              close
+            </p>
           </div>
         </div>
       )}

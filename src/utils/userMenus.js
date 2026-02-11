@@ -13,7 +13,7 @@ export const ROLE_MENUS = {
     { label: "Photos", href: "/dashboard/photographer/photos" },
     { label: "Videos", href: "/dashboard/photographer/videos" },
     { label: "Market", href: "/dashboard/photographer/market" },
-    { label: "Billing", href: "/dashboard/photographer/billing" },
+    // { label: "Billing", href: "/dashboard/photographer/billing" },
   ],
   venue: [
     { label: "Overview", href: "/dashboard/venue" },

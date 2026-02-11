@@ -1,163 +1,141 @@
+// components/modules/dashboard/studio/ImagePreview.jsx
 "use client";
 
-import { Eye, Image, X, ZoomIn } from "lucide-react";
-import { useState } from "react";
+import { File, X } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 
 export default function ImagePreview({ file, index, onRemove }) {
-    const [imageError, setImageError] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-    const getFileSize = (size) => {
-        if (size < 1024 * 1024) {
-            return `${(size / 1024).toFixed(2)} KB`;
-        }
-        return `${(size / (1024 * 1024)).toFixed(2)} MB`;
-    };
+  useEffect(() => {
+    if (!file) return;
 
-    const getImageDimensions = (url) => {
-        return new Promise((resolve) => {
-            const img = new window.Image();
-            img.onload = () => {
-                resolve({ width: img.width, height: img.height });
-            };
-            img.onerror = () => {
-                resolve({ width: 0, height: 0 });
-            };
-            img.src = url;
-        });
-    };
+    // 🔥 FIX: Handle different file types
+    if (typeof file === "string") {
+      // Direct URL string
+      setPreviewUrl(file);
+      setLoading(false);
+    } else if (file.url) {
+      // Object with url property
+      setPreviewUrl(file.url);
+      setLoading(false);
+    } else if (file instanceof File) {
+      // File object from input
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      setLoading(false);
 
-    const handleImageLoad = async (e) => {
-        const img = e.target;
-        const url = URL.createObjectURL(file);
-        const dimensions = await getImageDimensions(url);
+      // Cleanup
+      return () => URL.revokeObjectURL(url);
+    } else if (file.publicId) {
+      // Construct URL from publicId
+      const cloudName =
+        process.env.NEXT_PUBLIC_CLOUDINARY_NAME ||
+        process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+      const url = `https://res.cloudinary.com/${cloudName}/image/upload/${file.publicId}`;
+      setPreviewUrl(url);
+      setLoading(false);
+    }
+  }, [file]);
 
-        // You could store dimensions in state if needed
-        console.log(`Image ${index}: ${dimensions.width}x${dimensions.height}`);
-    };
+  const handleImageError = () => {
+    console.error("❌ Image failed to load:", previewUrl);
+    setError(true);
+    setLoading(false);
+  };
 
+  const handleRetry = () => {
+    setError(false);
+    setLoading(true);
+    // Force reload
+    setTimeout(() => setLoading(false), 500);
+  };
+
+  if (!previewUrl || error) {
     return (
-        <div
-            className="relative group overflow-hidden rounded-xl border border-gray-200 bg-white"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+      <div className="flex items-center gap-4 p-4 bg-red-50 rounded-xl border border-red-200">
+        <div className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <File className="w-6 h-6 text-red-600" />
+        </div>
+        <div className="flex-1">
+          <p className="font-medium text-gray-900">
+            {typeof file === "object" && file.name
+              ? file.name
+              : "Image failed to load"}
+          </p>
+          <p className="text-sm text-red-600 mt-1">
+            Failed to load image.
+            <button
+              onClick={handleRetry}
+              className="ml-2 text-red-700 underline hover:no-underline"
+            >
+              Retry
+            </button>
+          </p>
+        </div>
+        {onRemove && (
+          <button
+            onClick={() => onRemove(index)}
+            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:border-blue-200 transition-all">
+      <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
+        <Image
+          src={previewUrl}
+          alt={`Preview ${index + 1}`}
+          fill
+          className={`object-cover transition-opacity duration-300 ${loading ? "opacity-0" : "opacity-100"}`}
+          sizes="64px"
+          onError={handleImageError}
+          onLoad={() => setLoading(false)}
+          unoptimized={previewUrl?.includes("cloudinary")} // 🔥 For Cloudinary URLs
+        />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-gray-900 truncate">
+          {typeof file === "object" && file.name
+            ? file.name
+            : `Photo ${index + 1}`}
+        </p>
+        <div className="flex items-center gap-3 mt-1">
+          <span className="text-xs text-gray-600">
+            {file.size
+              ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+              : "✓ Uploaded"}
+          </span>
+          {!file.size && (
+            <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+              <span className="w-1.5 h-1.5 bg-green-600 rounded-full"></span>
+              Ready
+            </span>
+          )}
+        </div>
+      </div>
+      {onRemove && (
+        <button
+          onClick={() => onRemove(index)}
+          className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+          title="Remove file"
         >
-            {/* Image */}
-            <div className="aspect-square bg-gray-100 relative">
-                {imageError ? (
-                    <div className="w-full h-full flex items-center justify-center">
-                        <Image className="w-12 h-12 text-gray-400" />
-                    </div>
-                ) : (
-                    <img
-                        src={file ? URL.createObjectURL(file) : ""}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-full object-cover"
-                        onLoad={handleImageLoad}
-                        onError={() => setImageError(true)}
-                    />
-                )}
-
-                {/* Hover Overlay */}
-                {isHovered && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-3 transition-opacity">
-                        <button className="p-2 bg-white/90 text-gray-900 rounded-lg hover:bg-white">
-                            <ZoomIn className="w-5 h-5" />
-                        </button>
-                        <button className="p-2 bg-white/90 text-gray-900 rounded-lg hover:bg-white">
-                            <Eye className="w-5 h-5" />
-                        </button>
-                    </div>
-                )}
-
-                {/* Remove Button */}
-                {onRemove && (
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onRemove(index);
-                        }}
-                        className="absolute top-2 right-2 p-1.5 bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
-                )}
-
-                {/* Index Badge */}
-                <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 text-white text-xs rounded">
-                    #{index + 1}
-                </div>
-            </div>
-
-            {/* Info */}
-            <div className="p-3">
-                <p className="font-medium text-gray-900 text-sm truncate">
-                    {file?.name || `Image ${index + 1}`}
-                </p>
-                <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs text-gray-600">
-                        {getFileSize(file?.size || 0)}
-                    </span>
-                    <span className="text-xs text-green-600 font-medium">
-                        Ready
-                    </span>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// Compact version for lists
-export function CompactImagePreview({ file, index, onRemove }) {
-    const [imageError, setImageError] = useState(false);
-
-    const getFileSize = (size) => {
-        return `${(size / 1024).toFixed(0)} KB`;
-    };
-
-    return (
-        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
-            {/* Thumbnail */}
-            <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                {imageError ? (
-                    <div className="w-full h-full flex items-center justify-center">
-                        <Image className="w-5 h-5 text-gray-400" />
-                    </div>
-                ) : (
-                    <img
-                        src={file ? URL.createObjectURL(file) : ""}
-                        alt={`Preview ${index}`}
-                        className="w-full h-full object-cover"
-                        onError={() => setImageError(true)}
-                    />
-                )}
-            </div>
-
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 text-sm truncate">
-                    {file?.name || `Image ${index + 1}`}
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-gray-600">
-                        {getFileSize(file?.size || 0)}
-                    </span>
-                    <span className="text-xs text-gray-600">•</span>
-                    <span className="text-xs text-blue-600 font-medium">
-                        Ready to upload
-                    </span>
-                </div>
-            </div>
-
-            {/* Remove Button */}
-            {onRemove && (
-                <button
-                    onClick={() => onRemove(index)}
-                    className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                >
-                    <X className="w-4 h-4" />
-                </button>
-            )}
-        </div>
-    );
+          <X className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  );
 }
