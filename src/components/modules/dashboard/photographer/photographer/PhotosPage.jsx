@@ -6,13 +6,10 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 // Import all components
-// import DeleteModal from "./DeleteModal";
 import DeleteModal from "@/ui/DeleteModal";
-// import PhotoGallery from "./PhotoGallery";
-import PhotoStats from "./PhotoStats";
-// import SuccessModal from "./SuccessModal";
 import SuccessModal from "@/ui/SuccessModal";
 import PhotoGallery from "./PhotoGallery";
+import PhotoStats from "./PhotoStats";
 import UploadSection from "./UploadSection";
 
 const getCookie = (name) => {
@@ -33,6 +30,9 @@ export default function PhotosPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+
+  // 🔥 NEW: Toast ID for managing delete toast
+  const [deleteToastId, setDeleteToastId] = useState(null);
 
   const MAX_PHOTOS = 5;
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
@@ -138,6 +138,7 @@ export default function PhotosPage() {
     }
   };
 
+  // 🔥 FIXED: Handle Delete Photo with Toast Loading State
   const handleDeletePhoto = async () => {
     if (!selectedPhoto) return;
 
@@ -147,8 +148,39 @@ export default function PhotosPage() {
       return;
     }
 
+    // Get photo name for display
+    const photoName =
+      selectedPhoto.caption ||
+      `Photo ${photos.indexOf(selectedPhoto) + 1}` ||
+      "Untitled";
+
+    // 🔥 SHOW LOADING TOAST
+    const toastId = toast.loading(
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          <div className="w-5 h-5 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+        </div>
+        <div>
+          <p className="font-medium">Deleting photo...</p>
+          <p className="text-sm text-gray-500">{photoName}</p>
+        </div>
+      </div>,
+      {
+        duration: Infinity, // Keep until manually dismissed
+        icon: "🗑️",
+        style: {
+          background: "#f3f4f6",
+          color: "#1f2937",
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+        },
+      },
+    );
+
+    setDeleteToastId(toastId);
+    setDeletingId(selectedPhoto._id);
+
     try {
-      setDeletingId(selectedPhoto._id);
       const response = await fetch(
         `${API_BASE}/api/photographers/photos/${selectedPhoto._id}`,
         {
@@ -163,22 +195,69 @@ export default function PhotosPage() {
 
       if (!response.ok) throw new Error(data.message || "Delete failed");
 
+      // ✅ SUCCESS: Dismiss loading toast and show success
+      toast.dismiss(toastId);
+
+      toast.success(
+        <div className="flex items-center gap-2">
+          <span className="text-lg">✅</span>
+          <div>
+            <p className="font-medium">Photo deleted successfully!</p>
+            <p className="text-sm text-gray-600">{photoName}</p>
+          </div>
+        </div>,
+        {
+          duration: 4000,
+          icon: "🗑️",
+          style: {
+            background: "#f0fdf4",
+            color: "#166534",
+            border: "1px solid #bbf7d0",
+          },
+        },
+      );
+
       // Update photos state
       setPhotos((prev) =>
         prev.filter((photo) => photo._id !== selectedPhoto._id),
       );
+
       setShowDeleteModal(false);
       setSelectedPhoto(null);
+
       setSuccessMessage(
-        "Photo deleted successfully! Your portfolio has been updated.",
+        `"${photoName}" has been successfully deleted from your portfolio.`,
       );
       setShowSuccessModal(true);
-      toast.success("Photo deleted successfully!");
     } catch (error) {
       console.error("Delete photo error:", error);
-      toast.error(error.message || "Failed to delete photo");
+
+      // ❌ ERROR: Dismiss loading toast and show error
+      toast.dismiss(toastId);
+
+      toast.error(
+        <div className="flex items-center gap-2">
+          <span className="text-lg">❌</span>
+          <div>
+            <p className="font-medium">Delete failed</p>
+            <p className="text-sm text-gray-600">
+              {error.message || "Please try again"}
+            </p>
+          </div>
+        </div>,
+        {
+          duration: 5000,
+          icon: "⚠️",
+          style: {
+            background: "#fef2f2",
+            color: "#991b1b",
+            border: "1px solid #fecaca",
+          },
+        },
+      );
     } finally {
       setDeletingId(null);
+      setDeleteToastId(null);
     }
   };
 
@@ -276,6 +355,11 @@ export default function PhotosPage() {
         onConfirm={handleDeletePhoto}
         photo={selectedPhoto}
         deleting={deletingId === selectedPhoto?._id}
+        photoName={
+          selectedPhoto?.caption ||
+          (selectedPhoto && `Photo ${photos.indexOf(selectedPhoto) + 1}`) ||
+          "this photo"
+        }
       />
 
       {/* Success Modal */}

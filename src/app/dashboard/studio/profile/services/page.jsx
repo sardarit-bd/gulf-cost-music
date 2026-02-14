@@ -2,7 +2,6 @@
 
 import {
   AlertCircle,
-  ArrowLeft,
   CheckCircle,
   Edit,
   Loader2,
@@ -142,13 +141,13 @@ export default function StudioServices() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 p-4 md:p-8">
       {/* Header */}
       <div className="mb-8">
-        <button
+        {/* <button
           onClick={() => router.push("/dashboard/studios/profile")}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Profile
-        </button>
+        </button> */}
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

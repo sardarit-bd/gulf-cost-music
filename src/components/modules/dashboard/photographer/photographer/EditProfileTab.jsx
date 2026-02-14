@@ -1,11 +1,21 @@
-// components/modules/dashboard/photographer/ManageProfile.js
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
 import Input from "@/ui/Input";
 import Select from "@/ui/Select";
 import Textarea from "@/ui/Textarea";
-import { Briefcase, Camera, Edit3, Globe, ImageIcon, Loader2, MapPin, Save, User, Video } from "lucide-react";
+import {
+  Briefcase,
+  Camera,
+  Edit3,
+  Globe,
+  ImageIcon,
+  Loader2,
+  MapPin,
+  Save,
+  User,
+  Video,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -26,7 +36,7 @@ export default function ManageProfile() {
     biography: "",
     photos: [],
     services: [],
-    videos: []
+    videos: [],
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -36,7 +46,7 @@ export default function ManageProfile() {
     louisiana: ["new orleans"],
     mississippi: ["biloxi"],
     alabama: ["mobile"],
-    florida: ["pensacola"]
+    florida: ["pensacola"],
   };
 
   const stateOptions = [
@@ -44,11 +54,11 @@ export default function ManageProfile() {
     { value: "louisiana", label: "Louisiana" },
     { value: "mississippi", label: "Mississippi" },
     { value: "alabama", label: "Alabama" },
-    { value: "florida", label: "Florida" }
+    { value: "florida", label: "Florida" },
   ];
 
   const [cityOptions, setCityOptions] = useState([
-    { value: "", label: "Select State First", disabled: true }
+    { value: "", label: "Select State First", disabled: true },
   ]);
 
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
@@ -86,7 +96,7 @@ export default function ManageProfile() {
             biography: p.biography || "",
             photos: p.photos || [],
             services: p.services || [],
-            videos: p.videos || []
+            videos: p.videos || [],
           });
         }
       } catch (error) {
@@ -106,57 +116,57 @@ export default function ManageProfile() {
   useEffect(() => {
     if (photographer?.state && STATE_CITY_MAPPING[photographer.state]) {
       const citiesForState = STATE_CITY_MAPPING[photographer.state];
-      const formattedCityOptions = citiesForState.map(city => ({
+      const formattedCityOptions = citiesForState.map((city) => ({
         value: city,
-        label: city.charAt(0).toUpperCase() + city.slice(1).replace(/\b\w/g, char => char.toUpperCase())
+        label:
+          city.charAt(0).toUpperCase() +
+          city.slice(1).replace(/\b\w/g, (char) => char.toUpperCase()),
       }));
       setCityOptions(formattedCityOptions);
     } else {
       setCityOptions([
-        { value: "", label: "Select State First", disabled: true }
+        { value: "", label: "Select State First", disabled: true },
       ]);
     }
   }, [photographer?.state]);
 
   const handleChange = (e) => {
+    if (!e || !e.target) {
+      console.warn("Invalid event received:", e);
+      return;
+    }
+
     const { name, value } = e.target;
-    setPhotographer(prev => ({ ...prev, [name]: value }));
+    setPhotographer((prev) => ({ ...prev, [name]: value }));
 
     // Clear error for this field
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  const handleCustomChange = (e) => {
-    const { name, value } = e.target;
-
-    if (name === "state") {
-      handleChange(e);
-
-      if (value && STATE_CITY_MAPPING[value]) {
-        const cities = STATE_CITY_MAPPING[value];
+  const handleStateChange = (e) => {
+    handleChange(e);
+    if (e.target.name === "state" && e.target.value) {
+      const stateValue = e.target.value;
+      if (stateValue && STATE_CITY_MAPPING[stateValue]) {
+        const cities = STATE_CITY_MAPPING[stateValue];
         if (cities.length === 1) {
-          const cityEvent = {
-            target: {
-              name: "city",
-              value: cities[0]
-            }
-          };
           setTimeout(() => {
-            handleChange(cityEvent);
+            setPhotographer((prev) => ({
+              ...prev,
+              city: cities[0],
+            }));
           }, 100);
         }
       }
-    } else {
-      handleChange(e);
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!photographer.name.trim()) {
+    if (!photographer.name?.trim()) {
       newErrors.name = "Name is required";
     } else if (photographer.name.trim().length < 2) {
       newErrors.name = "Name must be at least 2 characters";
@@ -211,14 +221,17 @@ export default function ManageProfile() {
 
       if (!res.ok) {
         if (res.status === 404) {
-          const createRes = await fetch(`${API_BASE}/api/photographers/profile`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+          const createRes = await fetch(
+            `${API_BASE}/api/photographers/profile`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify(profileData),
             },
-            body: JSON.stringify(profileData),
-          });
+          );
 
           const createData = await createRes.json();
 
@@ -245,7 +258,7 @@ export default function ManageProfile() {
     if (!city) return "";
     return city
       .split(" ")
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
   };
 
@@ -271,7 +284,9 @@ export default function ManageProfile() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Edit Profile</h1>
-              <p className="text-gray-600 mt-1">Update your photographer information</p>
+              <p className="text-gray-600 mt-1">
+                Update your photographer information
+              </p>
             </div>
           </div>
         </div>
@@ -303,7 +318,7 @@ export default function ManageProfile() {
                     name="state"
                     value={photographer.state}
                     options={stateOptions}
-                    onChange={handleCustomChange}
+                    onChange={handleStateChange}
                     icon={<Globe className="w-4 h-4" />}
                     required
                     error={errors.state}
@@ -326,7 +341,8 @@ export default function ManageProfile() {
                   <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
                     <p className="text-sm text-blue-700 flex items-center gap-2">
                       <span className="font-semibold">Service Area:</span>
-                      {photographer.state.charAt(0).toUpperCase() + photographer.state.slice(1)}
+                      {photographer.state.charAt(0).toUpperCase() +
+                        photographer.state.slice(1)}
                       {photographer.city && (
                         <>
                           <span>•</span>
@@ -354,10 +370,17 @@ export default function ManageProfile() {
           <div className="space-y-6">
             {/* Save Card */}
             <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Save Changes</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Save Changes
+              </h3>
               <button
                 onClick={handleSave}
-                disabled={saving || !photographer.name || !photographer.state || !photographer.city}
+                disabled={
+                  saving ||
+                  !photographer.name ||
+                  !photographer.state ||
+                  !photographer.city
+                }
                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
@@ -376,7 +399,9 @@ export default function ManageProfile() {
 
             {/* Profile Stats */}
             <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Profile Stats</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Profile Stats
+              </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                   <div className="flex items-center gap-2">
@@ -411,7 +436,9 @@ export default function ManageProfile() {
                     <span className="text-gray-700">Location</span>
                   </div>
                   <span className="font-semibold text-yellow-600 capitalize">
-                    {photographer.city ? formatCityName(photographer.city) : "Not set"}
+                    {photographer.city
+                      ? formatCityName(photographer.city)
+                      : "Not set"}
                   </span>
                 </div>
               </div>
