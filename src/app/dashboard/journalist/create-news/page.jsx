@@ -1,6 +1,7 @@
 "use client";
 
 import CreateEditNewsTab from "@/components/modules/journalist/CreateEditNewsTab";
+// import CreateEditNewsTab from "@/components/modules/journalist/CreateEditNewsTab";
 // import CreateEditNewsTab from "@/components/journalist/CreateEditNewsTab";
 // import JournalistHeader from "@/components/journalist/JournalistHeader";
 import { useAuth } from "@/context/AuthContext";

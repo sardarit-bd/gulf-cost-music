@@ -1,8 +1,9 @@
 "use client";
 
+import JournalistHeader from "@/components/modules/journalist/JournalistHeader";
 // import JournalistHeader from "@/components/journalist/JournalistHeader";
 // import ProfileTab from "@/components/journalist/ProfileTab";
-import JournalistHeader from "@/components/modules/journalist/JournalistHeader";
+// import JournalistHeader from "@/components/modules/journalist/JournalistHeader";
 import ProfileTab from "@/components/modules/journalist/ProfileTab";
 import { useAuth } from "@/context/AuthContext";
 import { getCookie } from "@/utils/cookies";

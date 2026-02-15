@@ -1,6 +1,7 @@
 "use client";
 
 import JournalistHeader from "@/components/modules/journalist/JournalistHeader";
+// import JournalistHeader from "@/components/modules/journalist/JournalistHeader";
 import NewsDetailModal from "@/components/modules/journalist/NewsDetailModal";
 import NewsListTab from "@/components/modules/journalist/NewsListTab";
 // import JournalistHeader from "@/components/journalist/JournalistHeader";

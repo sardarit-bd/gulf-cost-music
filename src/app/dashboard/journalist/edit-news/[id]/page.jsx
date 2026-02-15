@@ -1,7 +1,8 @@
 "use client";
 
-import CreateEditNewsTab from "@/components/journalist/CreateEditNewsTab";
+// import CreateEditNewsTab from "@/components/journalist/CreateEditNewsTab";
 import JournalistHeader from "@/components/journalist/JournalistHeader";
+import CreateEditNewsTab from "@/components/modules/journalist/CreateEditNewsTab";
 import { useAuth } from "@/context/AuthContext";
 import { getCookie } from "@/utils/cookies";
 import { useParams, useRouter } from "next/navigation";
@@ -97,10 +98,10 @@ export default function EditNewsPage() {
 
           const newsState = foundLocation
             ? Object.keys(cityByState).find((state) =>
-                cityByState[state].some(
-                  (city) => city.value === newsLocation.toLowerCase(),
-                ),
-              )
+              cityByState[state].some(
+                (city) => city.value === newsLocation.toLowerCase(),
+              ),
+            )
             : "";
 
           setForm({

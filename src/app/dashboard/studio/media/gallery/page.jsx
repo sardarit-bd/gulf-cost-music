@@ -1,28 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+// import ImageGrid from "@/components/studio/ImageGrid";
+// import ImageList from "@/components/studio/ImageList";
+// import Lightbox from "@/components/studio/Lightbox";
 import {
+    ArrowLeft,
     Camera,
+    Download,
+    Filter,
     Grid,
+    Image as ImageIcon,
     List,
     Search,
-    Filter,
-    Download,
     Share2,
     Trash2,
-    Eye,
-    ZoomIn,
-    ArrowLeft,
-    Check,
-    X,
-    Image as ImageIcon
+    X
 } from "lucide-react";
-import ImageGrid from "@/components/studio/ImageGrid";
-import ImageList from "@/components/studio/ImageList";
-import Lightbox from "@/components/studio/Lightbox";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import EmptyState from "@/components/ui/EmptyState";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+// import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+// import EmptyState from "@/components/ui/EmptyState";
 import { api } from "../../lib/api";
 
 export default function GalleryPage() {
