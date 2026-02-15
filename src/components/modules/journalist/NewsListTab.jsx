@@ -10,17 +10,25 @@ import {
   User,
 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function NewsListTab({
   newsList,
   onViewDetails,
   onEditNews,
   onDeleteNews,
-  onSetActiveTab,
-  onSetForm,
-  onSetEditingNews,
-  onSetPreviewImages,
+  onCreateNews,
 }) {
+  const router = useRouter();
+
+  const handleEditClick = (item) => {
+    if (onEditNews) {
+      onEditNews(item);
+    } else {
+      router.push(`/dashboard/journalist/edit-news/${item._id}`);
+    }
+  };
+
   return (
     <div>
       {/* Stats Header */}
@@ -63,20 +71,7 @@ export default function NewsListTab({
             </div>
             <div>
               <button
-                onClick={() => {
-                  onSetForm({
-                    title: "",
-                    state: "",
-                    city: "",
-                    location: "",
-                    credit: "",
-                    description: "",
-                    photos: [],
-                  });
-                  onSetEditingNews(null);
-                  onSetPreviewImages([]);
-                  onSetActiveTab("edit");
-                }}
+                onClick={onCreateNews}
                 className="text-blue-600 hover:text-blue-800 font-semibold text-lg"
               >
                 Create News
@@ -99,7 +94,7 @@ export default function NewsListTab({
             Start by creating your first news story
           </p>
           <button
-            onClick={() => onSetActiveTab("edit")}
+            onClick={onCreateNews}
             className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold shadow-sm"
           >
             <Plus size={20} /> Create First News
@@ -129,7 +124,6 @@ export default function NewsListTab({
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = "/images/placeholder.png";
-                          e.target.className = "w-full h-full bg-gray-100";
                         }}
                       />
                       <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-all flex items-center justify-center">
@@ -158,15 +152,18 @@ export default function NewsListTab({
                         >
                           <Eye size={16} />
                         </button>
+
+                        {/* Dynamic Edit Button */}
                         <button
-                          onClick={() => onEditNews(item)}
+                          onClick={() => handleEditClick(item)}
                           className="p-2 rounded-lg bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition"
                           title="Edit"
                         >
                           <Pencil size={16} />
                         </button>
+
                         <button
-                          onClick={() => onDeleteNews(item._id)}
+                          onClick={() => onDeleteNews(item)}
                           className="p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
                           title="Delete"
                         >
@@ -215,8 +212,6 @@ export default function NewsListTab({
                               onError={(e) => {
                                 e.target.onerror = null;
                                 e.target.src = "/images/placeholder.png";
-                                e.target.className =
-                                  "w-full h-full bg-gray-100";
                               }}
                             />
                           </div>

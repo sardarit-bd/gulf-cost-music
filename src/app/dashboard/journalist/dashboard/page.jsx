@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
-export default function JournalistDashboard() {
+export default function JournalistPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [newsList, setNewsList] = useState([]);
@@ -64,7 +64,7 @@ export default function JournalistDashboard() {
   };
 
   const editNews = (news) => {
-    router.push(`/journalist/edit-news/${news._id}`);
+    router.push(`/dashboard/journalist/edit-news/${news._id}`);
   };
 
   const handleDeleteClick = (news) => {
@@ -102,7 +102,7 @@ export default function JournalistDashboard() {
   };
 
   const navigateToCreateNews = () => {
-    router.push("/journalist/create-news");
+    router.push("/dashboard/journalist/create-news");
   };
 
   if (newsLoading) {
@@ -114,7 +114,7 @@ export default function JournalistDashboard() {
   }
 
   return (
-    <div className="py-8 px-4">
+    <div className="py-8 px-8">
       <Toaster position="top-center" />
 
       <div className="max-w-7xl mx-auto">
@@ -140,7 +140,7 @@ export default function JournalistDashboard() {
           type="danger"
         />
 
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-white rounded-xl shadow-sm p-8">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">My News Articles</h2>
             <button

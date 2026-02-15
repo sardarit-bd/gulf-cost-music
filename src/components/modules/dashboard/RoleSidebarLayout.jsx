@@ -8,7 +8,6 @@ import {
   Building2,
   Calendar,
   Camera,
-  ChevronDown,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -25,6 +24,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -156,11 +156,17 @@ export default function RoleSidebarLayout({ role, children }) {
         className={`hidden lg:flex fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-blue-600 to-blue-700 rounded-3xl m-2 p-6 flex-col text-white shadow-2xl z-20`}
       >
         {/* Logo Section */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-wide">Gulf Coast</h1>
-          <p className="text-sm text-blue-100 mt-1">
-            {role.charAt(0).toUpperCase() + role.slice(1)} Dashboard
-          </p>
+        <div className="mb-10 flex items-center justify-center">
+          <Link href="/" className="cursor-pointer">
+            <Image
+              src="/images/logo.png"
+              alt="Gulf Coast Logo"
+              width={100}
+              height={100}
+              className="object-contain drop-shadow-lg hover:scale-105 transition-transform duration-300"
+              priority
+            />
+          </Link>
         </div>
 
         {/* Navigation */}
@@ -206,7 +212,6 @@ export default function RoleSidebarLayout({ role, children }) {
             );
           })}
         </nav>
-
         {/* User Profile Section */}
         <div className="mt-6 pt-6 border-t border-white/20">
           <div className="flex items-center gap-3 p-3 rounded-2xl hover:bg-white/10 transition-colors">
@@ -219,7 +224,6 @@ export default function RoleSidebarLayout({ role, children }) {
             </div>
           </div>
         </div>
-
         {/* Social Links and Logout */}
         <div className="mt-6 pt-6 border-t border-white/20">
           <button
@@ -353,99 +357,6 @@ export default function RoleSidebarLayout({ role, children }) {
               {/* Mobile Title */}
               <div className="lg:hidden text-base sm:text-lg font-semibold text-gray-900 truncate">
                 {pathname.split("/").pop()?.replace("-", " ") || "Dashboard"}
-              </div>
-            </div>
-
-            {/* Right Side Actions */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Mobile Search Button */}
-              <button
-                onClick={() => setSearchOpen(!searchOpen)}
-                className="lg:hidden p-2 text-gray-600 hover:text-gray-900"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-
-              {/* Desktop Search Bar */}
-              <div className="hidden lg:block relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="pl-10 pr-4 py-2 w-48 bg-gray-100 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              {/* Notifications */}
-              <div className="relative">
-                <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full">
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
-              </div>
-
-              {/* User Avatar Dropdown */}
-              <div className="relative" ref={userDropdownRef}>
-                <button
-                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center space-x-2 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0">
-                    {getUserInitials()}
-                  </div>
-                  <div className="hidden sm:block text-left">
-                    <p className="text-sm font-medium truncate max-w-[120px]">
-                      {getUserName()}
-                    </p>
-                    <p className="text-xs text-gray-500 capitalize truncate max-w-[120px]">
-                      {role}
-                    </p>
-                  </div>
-                  <ChevronDown
-                    className={`hidden sm:block w-4 h-4 text-gray-400 transition-transform ${userDropdownOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-
-                {/* User Dropdown Menu */}
-                {userDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-                    <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900">
-                        {getUserName()}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {getUserEmail()}
-                      </p>
-                    </div>
-                    <Link
-                      href={`/dashboard/${role}/profile`}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                      onClick={() => setUserDropdownOpen(false)}
-                    >
-                      <User className="w-4 h-4" />
-                      Profile
-                    </Link>
-                    <Link
-                      href={`/dashboard/${role}/settings`}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                      onClick={() => setUserDropdownOpen(false)}
-                    >
-                      <Settings className="w-4 h-4" />
-                      Settings
-                    </Link>
-                    <div className="border-t border-gray-100 my-1"></div>
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setUserDropdownOpen(false);
-                      }}
-                      className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors text-left"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Sign Out
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           </div>

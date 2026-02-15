@@ -69,7 +69,7 @@ export default function ProfileTab({
   onSaveProfile,
 }) {
   return (
-    <div className="grid lg:grid-cols-3 gap-6">
+    <div className="grid lg:grid-cols-3 gap-6 px-4">
       {/* Profile Card */}
       <div className="lg:col-span-1">
         <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
@@ -116,10 +116,11 @@ export default function ProfileTab({
             {/* Verification Badge */}
             <div className="mb-4">
               <span
-                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${journalist.isVerified
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+                  journalist.isVerified
                     ? "bg-green-100 text-green-800"
                     : "bg-yellow-100 text-yellow-800"
-                  }`}
+                }`}
               >
                 {journalist.isVerified ? (
                   <>
@@ -235,9 +236,9 @@ export default function ProfileTab({
                   options={
                     journalist.state && cityByState[journalist.state]
                       ? [
-                        { value: "", label: "Select City" },
-                        ...cityByState[journalist.state],
-                      ]
+                          { value: "", label: "Select City" },
+                          ...cityByState[journalist.state],
+                        ]
                       : [{ value: "", label: "Select State First" }]
                   }
                   onChange={(e) =>

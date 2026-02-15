@@ -1,4 +1,4 @@
-// components/journalist/CreateEditNewsTab.js
+// components/modules/journalist/CreateEditNewsTab.js
 import Select from "@/ui/Select";
 import {
   FileText,
@@ -6,8 +6,8 @@ import {
   Image as ImageIcon,
   MapPin,
   Save,
-  Trash2,
   Upload,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -24,6 +24,7 @@ export default function CreateEditNewsTab({
   editingNews,
   saving,
   previewImages,
+  existingPhotos = [],
   cityOptions,
   stateOptions,
   onFormChange,
@@ -35,13 +36,12 @@ export default function CreateEditNewsTab({
   onCancel,
 }) {
   const handleImageInput = (e) => {
-    const files = Array.from(e.target.files).slice(0, 5);
-    onImageUpload({ target: { files } });
+    onImageUpload(e);
     e.target.value = null;
   };
 
   return (
-    <div>
+    <div className="px-4">
       <div className="bg-blue-50 rounded-xl p-6 border border-blue-100 mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
           <FileText size={24} className="text-blue-700" />
@@ -54,7 +54,7 @@ export default function CreateEditNewsTab({
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-6 ">
         {/* Main Form */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-xl p-6 border border-gray-200">
@@ -156,16 +156,17 @@ export default function CreateEditNewsTab({
             </h3>
 
             <label
-              className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg transition ${previewImages.length >= 5
+              className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg transition ${
+                previewImages.length >= 5
                   ? "border-gray-300 bg-gray-50 text-gray-400 cursor-not-allowed"
                   : "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100"
-                }`}
+              }`}
             >
               <Upload size={24} />
               <span className="text-sm font-medium">
                 {previewImages.length >= 5
-                  ? "Maximum Reached"
-                  : "Upload Photos"}
+                  ? "Maximum Reached (5/5)"
+                  : `Upload Photos (${previewImages.length}/5)`}
               </span>
               <input
                 type="file"
@@ -179,32 +180,45 @@ export default function CreateEditNewsTab({
 
             {previewImages.length > 0 && (
               <div className="mt-4">
-                <p className="text-sm text-gray-600 mb-3">Preview:</p>
+                <p className="text-sm text-gray-600 mb-3">
+                  Preview ({previewImages.length}/5):
+                </p>
                 <div className="grid grid-cols-2 gap-3">
-                  {previewImages.map((src, i) => (
-                    <div
-                      key={i}
-                      className="relative aspect-square rounded-lg overflow-hidden border border-gray-300 group"
-                    >
-                      <Image
-                        src={src}
-                        alt={`Preview ${i + 1}`}
-                        fill
-                        className="object-cover"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "/images/placeholder.png";
-                          e.target.className = "w-full h-full bg-gray-100";
-                        }}
-                      />
-                      <button
-                        onClick={() => onRemoveImage(i)}
-                        className="absolute top-1 right-1 bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-red-700"
+                  {previewImages.map((src, i) => {
+                    const isExisting = !src.startsWith("blob:");
+
+                    return (
+                      <div
+                        key={i}
+                        className="relative aspect-square rounded-lg overflow-hidden border border-gray-300 group"
                       >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  ))}
+                        <Image
+                          src={src}
+                          alt={`Preview ${i + 1}`}
+                          fill
+                          className="object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "/images/placeholder.png";
+                          }}
+                        />
+
+                        {isExisting && (
+                          <div className="absolute top-1 left-1 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                            Saved
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => onRemoveImage(i)}
+                          className="absolute top-1 right-1 bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-red-700"
+                          title="Remove image"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -232,7 +246,7 @@ export default function CreateEditNewsTab({
                 </div>
                 <div className="text-xs text-gray-500 mt-2">
                   This news will appear under {form.state} &gt;{" "}
-                  {formatCityName(form.city)} in the calendar
+                  {formatCityName(form.city)}
                 </div>
               </div>
             </div>
