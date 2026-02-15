@@ -1,8 +1,9 @@
 "use client";
 
 // import CreateEditNewsTab from "@/components/journalist/CreateEditNewsTab";
-import JournalistHeader from "@/components/journalist/JournalistHeader";
+// import JournalistHeader from "@/components/journalist/JournalistHeader";
 import CreateEditNewsTab from "@/components/modules/journalist/CreateEditNewsTab";
+import JournalistHeader from "@/components/modules/journalist/JournalistHeader";
 import { useAuth } from "@/context/AuthContext";
 import { getCookie } from "@/utils/cookies";
 import { useParams, useRouter } from "next/navigation";
