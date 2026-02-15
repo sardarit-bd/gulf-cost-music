@@ -24,11 +24,11 @@ export const ROLE_MENUS = {
     // { label: "Billing", href: "/dashboard/venue/billing" },
   ],
   journalist: [
-    { label: "Overview", href: "/journalist/dashboard" },
-    { label: "My Posts", href: "/dashboard/journalist/profile" },
+    { label: "Overview", href: "/dashboard/journalist/dashboard" },
+    { label: "My Profile", href: "/dashboard/journalist/profile" },
     { label: "Create Post", href: "/dashboard/journalist/create-news" },
-    { label: "Edit Post", href: "/dashboard/journalist/edit-news" },
-    { label: "Billing", href: "/dashboard/journalist/billing" },
+    // { label: "Edit Post", href: "/dashboard/journalist/edit-news" },
+    // { label: "Billing", href: "/dashboard/journalist/billing" },
   ],
 
   studio: [

@@ -172,7 +172,7 @@ export default function CreateNewsPage() {
       if (!res.ok) throw new Error(data.message || "Failed to publish");
 
       toast.success("News published successfully!");
-      router.push("/journalist/dashboard");
+      router.push("/dashboard/journalist/dashboard");
     } catch (err) {
       toast.error(err.message || "Error publishing news");
     } finally {
@@ -181,7 +181,7 @@ export default function CreateNewsPage() {
   };
 
   const navigateToDashboard = () => {
-    router.push("/journalist/dashboard");
+    router.push("/dashboard/journalist/dashboard");
   };
 
   return (

@@ -1,7 +1,5 @@
 "use client";
 
-// import CreateEditNewsTab from "@/components/journalist/CreateEditNewsTab";
-// import JournalistHeader from "@/components/journalist/JournalistHeader";
 import CreateEditNewsTab from "@/components/modules/journalist/CreateEditNewsTab";
 import JournalistHeader from "@/components/modules/journalist/JournalistHeader";
 import { useAuth } from "@/context/AuthContext";
@@ -63,9 +61,11 @@ export default function EditNewsPage() {
     location: "",
     credit: "",
     description: "",
-    photos: [],
+    newPhotos: [], // Only new File objects
   });
-  const [previewImages, setPreviewImages] = useState([]);
+
+  const [previewImages, setPreviewImages] = useState([]); // All images for display
+  const [removedPhotoUrls, setRemovedPhotoUrls] = useState([]); // Track removed image URLs
   const [cityOptions, setCityOptions] = useState([]);
   const [saving, setSaving] = useState(false);
   const [news, setNews] = useState(null);
@@ -91,42 +91,43 @@ export default function EditNewsPage() {
           const n = data.data.news;
           setNews(n);
 
-          // Set form data
+          // Find state from location
           const newsLocation = n.location || "";
-          const foundLocation = Object.values(cityByState)
-            .flat()
-            .find((loc) => loc.value === newsLocation.toLowerCase());
+          let newsState = "";
 
-          const newsState = foundLocation
-            ? Object.keys(cityByState).find((state) =>
-              cityByState[state].some(
-                (city) => city.value === newsLocation.toLowerCase(),
-              ),
-            )
-            : "";
+          for (const [state, cities] of Object.entries(cityByState)) {
+            if (
+              cities.some((city) => city.value === newsLocation.toLowerCase())
+            ) {
+              newsState = state;
+              break;
+            }
+          }
 
           setForm({
-            title: n.title,
+            title: n.title || "",
             state: newsState,
             city: newsLocation.toLowerCase(),
             location: newsLocation.toLowerCase(),
             credit: n.credit || "",
             description: n.description || "",
-            photos: [],
+            newPhotos: [],
           });
 
+          // Set preview images from existing photos
           setPreviewImages(n.photos?.map((p) => p.url) || []);
 
-          if (newsState && cityByState[newsState]) {
+          if (newsState) {
             setCityOptions(cityByState[newsState]);
           }
         } else {
           toast.error("News not found");
-          router.push("/journalist/dashboard");
+          router.push("/dashboard/journalist/dashboard");
         }
       } catch (err) {
+        console.error("Error fetching news:", err);
         toast.error("Failed to load news");
-        router.push("/journalist/dashboard");
+        router.push("/dashboard/journalist/dashboard");
       } finally {
         setLoading(false);
       }
@@ -135,9 +136,91 @@ export default function EditNewsPage() {
     fetchNews();
   }, [user, newsId, router]);
 
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const currentTotal =
+      previewImages.length - removedPhotoUrls.length + form.newPhotos.length;
+    const maxAllowed = 5 - currentTotal;
+
+    if (maxAllowed <= 0) {
+      toast.error("Maximum 5 photos allowed");
+      return;
+    }
+
+    const validFiles = files.slice(0, maxAllowed).filter((file) => {
+      if (!file.type.startsWith("image/")) {
+        toast.error(`${file.name} is not an image`);
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`${file.name} is larger than 5MB`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    // Create preview URLs
+    const urls = validFiles.map((f) => URL.createObjectURL(f));
+
+    // Update state
+    setPreviewImages((prev) => [...prev, ...urls]);
+    setForm((prev) => ({
+      ...prev,
+      newPhotos: [...prev.newPhotos, ...validFiles],
+    }));
+
+    toast.success(`Added ${validFiles.length} photo(s)`);
+  };
+
+  const handleRemoveImage = (index) => {
+    const removedUrl = previewImages[index];
+
+    // Check if it's an existing image (not a blob URL)
+    if (!removedUrl.startsWith("blob:")) {
+      // Add to removed photos list
+      setRemovedPhotoUrls((prev) => [...prev, removedUrl]);
+    } else {
+      // It's a newly uploaded image - remove from newPhotos
+      URL.revokeObjectURL(removedUrl);
+
+      // Find which new photo corresponds to this URL
+      const photoIndex = form.newPhotos.findIndex((file) => {
+        return URL.createObjectURL(file) === removedUrl;
+      });
+
+      if (photoIndex !== -1) {
+        setForm((prev) => ({
+          ...prev,
+          newPhotos: prev.newPhotos.filter((_, idx) => idx !== photoIndex),
+        }));
+      }
+    }
+
+    // Remove from preview
+    setPreviewImages((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
   const handleSaveNews = async () => {
-    if (!form.title.trim() || !form.description.trim()) {
-      toast.error("Please fill in required fields");
+    // Validation
+    if (!form.title.trim()) {
+      toast.error("Please enter a title");
+      return;
+    }
+
+    if (!form.description.trim()) {
+      toast.error("Please enter a description");
+      return;
+    }
+
+    if (!form.state) {
+      toast.error("Please select a state");
+      return;
+    }
+
+    if (!form.city) {
+      toast.error("Please select a city");
       return;
     }
 
@@ -148,9 +231,16 @@ export default function EditNewsPage() {
       const formData = new FormData();
       formData.append("title", form.title);
       formData.append("description", form.description);
-      formData.append("credit", form.credit);
+      formData.append("credit", form.credit || "");
       formData.append("location", form.city);
-      form.photos.forEach((p) => formData.append("photos", p));
+
+      // Add removed photo URLs
+      formData.append("removedPhotoUrls", JSON.stringify(removedPhotoUrls));
+
+      // Add new photos
+      form.newPhotos.forEach((photo) => {
+        formData.append("photos", photo);
+      });
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/${newsId}`,
@@ -164,9 +254,17 @@ export default function EditNewsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to update");
 
+      // Cleanup blob URLs
+      previewImages.forEach((url) => {
+        if (url.startsWith("blob:")) {
+          URL.revokeObjectURL(url);
+        }
+      });
+
       toast.success("News updated successfully!");
-      router.push("/journalist/dashboard");
+      router.push("/dashboard/journalist/dashboard");
     } catch (err) {
+      console.error("Error saving news:", err);
       toast.error(err.message || "Error updating news");
     } finally {
       setSaving(false);
@@ -174,7 +272,13 @@ export default function EditNewsPage() {
   };
 
   const navigateToDashboard = () => {
-    router.push("/journalist/dashboard");
+    // Cleanup blob URLs
+    previewImages.forEach((url) => {
+      if (url.startsWith("blob:")) {
+        URL.revokeObjectURL(url);
+      }
+    });
+    router.push("/dashboard/journalist/dashboard");
   };
 
   if (loading) {
@@ -197,18 +301,23 @@ export default function EditNewsPage() {
           editingNews={news}
           saving={saving}
           previewImages={previewImages}
+          existingPhotos={previewImages.filter(
+            (url) => !url.startsWith("blob:"),
+          )}
           cityOptions={cityOptions}
           stateOptions={stateOptions}
           onFormChange={(e) =>
             setForm({ ...form, [e.target.name]: e.target.value })
           }
           onStateChange={(e) => {
+            const selectedState = e.target.value;
             setForm({
               ...form,
-              state: e.target.value,
+              state: selectedState,
               city: "",
               location: "",
             });
+            setCityOptions(cityByState[selectedState] || []);
           }}
           onCityChange={(e) => {
             setForm({
@@ -217,28 +326,8 @@ export default function EditNewsPage() {
               location: e.target.value,
             });
           }}
-          onImageUpload={(e) => {
-            const files = Array.from(e.target.files).slice(0, 5);
-            const validFiles = files.filter((file) => {
-              if (!file.type.startsWith("image/")) return false;
-              if (file.size > 5 * 1024 * 1024) return false;
-              return true;
-            });
-
-            const urls = validFiles.map((f) => URL.createObjectURL(f));
-            setPreviewImages((prev) => [...prev, ...urls]);
-            setForm((prev) => ({
-              ...prev,
-              photos: [...prev.photos, ...validFiles],
-            }));
-          }}
-          onRemoveImage={(i) => {
-            setPreviewImages((p) => p.filter((_, idx) => idx !== i));
-            setForm({
-              ...form,
-              photos: form.photos.filter((_, idx) => idx !== i),
-            });
-          }}
+          onImageUpload={handleImageUpload}
+          onRemoveImage={handleRemoveImage}
           onSaveNews={handleSaveNews}
           onCancel={navigateToDashboard}
         />
