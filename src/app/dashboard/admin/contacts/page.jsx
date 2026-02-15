@@ -437,6 +437,12 @@ const ContactManagement = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex justify-end items-center space-x-2">
+                              <button
+                                onClick={() => viewMessageDetails(msg)}
+                                className="p-2 bg-yellow-100 text-yellow-600 rounded-lg hover:bg-yellow-200 transition-colors"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
                               {!msg.isRead && (
                                 <button
                                   onClick={() => markAsRead(msg._id)}

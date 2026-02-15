@@ -49,15 +49,14 @@ const Tooltip = ({ content, children, position = "top" }) => {
           <div className="bg-gray-900 text-white text-sm px-3 py-2 rounded-lg shadow-xl max-w-xs break-words whitespace-normal">
             {content}
             <div
-              className={`absolute w-2 h-2 bg-gray-900 transform rotate-45 ${
-                position === "top"
+              className={`absolute w-2 h-2 bg-gray-900 transform rotate-45 ${position === "top"
                   ? "top-full left-1/2 -translate-x-1/2 -mt-1"
                   : position === "bottom"
-                  ? "bottom-full left-1/2 -translate-x-1/2 -mb-1"
-                  : position === "left"
-                  ? "left-full top-1/2 -translate-y-1/2 -ml-1"
-                  : "right-full top-1/2 -translate-y-1/2 -mr-1"
-              }`}
+                    ? "bottom-full left-1/2 -translate-x-1/2 -mb-1"
+                    : position === "left"
+                      ? "left-full top-1/2 -translate-y-1/2 -ml-1"
+                      : "right-full top-1/2 -translate-y-1/2 -mr-1"
+                }`}
             />
           </div>
         </div>
@@ -423,11 +422,10 @@ export default function OrderManagement() {
                 key={option.value}
                 onClick={() => onStatusUpdate("delivery", option.value)}
                 disabled={loading || order.deliveryStatus === option.value}
-                className={`p-2 text-xs font-medium rounded-lg border transition-all duration-200 ${
-                  order.deliveryStatus === option.value
+                className={`p-2 text-xs font-medium rounded-lg border transition-all duration-200 ${order.deliveryStatus === option.value
                     ? "bg-blue-100 text-blue-700 border-blue-300"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <span className={option.color}>{option.label}</span>
               </button>
@@ -445,11 +443,10 @@ export default function OrderManagement() {
                 key={option.value}
                 onClick={() => onStatusUpdate("payment", option.value)}
                 disabled={loading || order.paymentStatus === option.value}
-                className={`p-2 text-xs font-medium rounded-lg border transition-all duration-200 ${
-                  order.paymentStatus === option.value
+                className={`p-2 text-xs font-medium rounded-lg border transition-all duration-200 ${order.paymentStatus === option.value
                     ? "bg-green-100 text-green-700 border-green-300"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <span className={option.color}>{option.label}</span>
               </button>
@@ -632,9 +629,8 @@ export default function OrderManagement() {
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-500">
                 <Loader2
-                  className={`w-4 h-4 ${
-                    loading ? "animate-spin" : "opacity-0"
-                  }`}
+                  className={`w-4 h-4 ${loading ? "animate-spin" : "opacity-0"
+                    }`}
                 />
                 {loading ? "Loading..." : "Updated just now"}
               </div>
@@ -950,15 +946,14 @@ export default function OrderManagement() {
                             Payment Status
                           </p>
                           <span
-                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold mt-2 ${
-                              selectedOrder.paymentStatus === "paid"
+                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold mt-2 ${selectedOrder.paymentStatus === "paid"
                                 ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
                                 : selectedOrder.paymentStatus === "pending"
-                                ? "bg-amber-100 text-amber-700 border border-amber-200"
-                                : selectedOrder.paymentStatus === "failed"
-                                ? "bg-rose-100 text-rose-700 border border-rose-200"
-                                : "bg-purple-100 text-purple-700 border border-purple-200"
-                            }`}
+                                  ? "bg-amber-100 text-amber-700 border border-amber-200"
+                                  : selectedOrder.paymentStatus === "failed"
+                                    ? "bg-rose-100 text-rose-700 border border-rose-200"
+                                    : "bg-purple-100 text-purple-700 border border-purple-200"
+                              }`}
                           >
                             {selectedOrder.paymentStatus === "paid" && (
                               <CheckCircle className="w-4 h-4" />
@@ -987,22 +982,21 @@ export default function OrderManagement() {
                         Delivery Status
                       </p>
                       <span
-                        className={`inline-flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold ${
-                          selectedOrder.deliveryStatus === "delivered"
+                        className={`inline-flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold ${selectedOrder.deliveryStatus === "delivered"
                             ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
                             : selectedOrder.deliveryStatus === "pending"
-                            ? "bg-amber-100 text-amber-700 border border-amber-200"
-                            : selectedOrder.deliveryStatus === "confirmed"
-                            ? "bg-blue-100 text-blue-700 border border-blue-200"
-                            : selectedOrder.deliveryStatus === "processing"
-                            ? "bg-indigo-100 text-indigo-700 border border-indigo-200"
-                            : selectedOrder.deliveryStatus ===
-                              "ready-for-pickup"
-                            ? "bg-purple-100 text-purple-700 border border-purple-200"
-                            : selectedOrder.deliveryStatus === "shipped"
-                            ? "bg-cyan-100 text-cyan-700 border border-cyan-200"
-                            : "bg-rose-100 text-rose-700 border border-rose-200"
-                        }`}
+                              ? "bg-amber-100 text-amber-700 border border-amber-200"
+                              : selectedOrder.deliveryStatus === "confirmed"
+                                ? "bg-blue-100 text-blue-700 border border-blue-200"
+                                : selectedOrder.deliveryStatus === "processing"
+                                  ? "bg-indigo-100 text-indigo-700 border border-indigo-200"
+                                  : selectedOrder.deliveryStatus ===
+                                    "ready-for-pickup"
+                                    ? "bg-purple-100 text-purple-700 border border-purple-200"
+                                    : selectedOrder.deliveryStatus === "shipped"
+                                      ? "bg-cyan-100 text-cyan-700 border border-cyan-200"
+                                      : "bg-rose-100 text-rose-700 border border-rose-200"
+                          }`}
                       >
                         {selectedOrder.deliveryStatus === "delivered" && (
                           <CheckCircle className="w-5 h-5" />

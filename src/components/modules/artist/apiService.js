@@ -1,11 +1,20 @@
 const API_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
 
 const getToken = () => {
-    if (typeof document !== "undefined") {
-        return document.cookie
-            .split("; ")
-            .find((row) => row.startsWith("token="))
-            ?.split("=")[1];
+    if (typeof window !== "undefined") {
+        // Try to get from cookie
+        const cookies = document.cookie.split("; ");
+        const tokenCookie = cookies.find(row => row.startsWith("token="));
+        if (tokenCookie) {
+            return tokenCookie.split("=")[1];
+        }
+
+        // Try to get from localStorage as fallback
+        try {
+            return localStorage.getItem("token");
+        } catch {
+            return null;
+        }
     }
     return null;
 };
@@ -16,6 +25,7 @@ const getHeaders = (isFormData = false) => {
 
     if (!isFormData) {
         headers["Content-Type"] = "application/json";
+        headers["Accept"] = "application/json";
     }
 
     if (token) {
@@ -24,142 +34,231 @@ const getHeaders = (isFormData = false) => {
 
     return headers;
 };
+
+// Helper function to handle responses
+const handleResponse = async (res) => {
+    let data;
+
+    try {
+        data = await res.json();
+    } catch {
+        data = { message: "Invalid response from server" };
+    }
+
+    if (!res.ok) {
+        // Extract error message properly
+        let errorMessage = "Request failed";
+
+        if (data.message) {
+            errorMessage = data.message;
+        } else if (data.error) {
+            errorMessage = data.error;
+        } else if (typeof data === 'string') {
+            errorMessage = data;
+        } else {
+            errorMessage = `HTTP Error ${res.status}`;
+        }
+
+        // If there are validation details, log them
+        if (data.details) {
+            console.error("Validation details:", data.details);
+        }
+
+        const error = new Error(errorMessage);
+        error.status = res.status;
+        error.data = data;
+        throw error;
+    }
+
+    return data;
+};
+
 export const api = {
-    getMyArtistProfile: () =>
-        fetch(`${API_URL}/api/artists/profile/me`, { headers: getHeaders() }).then(
-            async (res) => {
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.message || "Failed to fetch profile");
-                return data;
-            }
-        ),
-
-    updateArtistProfile: (formData) => {
-        return fetch(`${API_URL}/api/artists/profile`, {
-            method: "POST",
-            headers: getHeaders(true),
-            body: formData,
-        }).then(async (res) => {
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to update profile");
-            return data;
-        });
+    // Artist Profile
+    getMyArtistProfile: async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/artists/profile/me`, {
+                method: "GET",
+                headers: getHeaders(false),
+                credentials: 'include'
+            });
+            return await handleResponse(res);
+        } catch (error) {
+            console.error("API Error (getMyArtistProfile):", error);
+            throw error;
+        }
     },
 
-    getMyMarketItem: () =>
-        fetch(`${API_URL}/api/market/me`, { headers: getHeaders() }).then(
-            async (res) => {
-                const data = await res.json();
-                if (!res.ok)
-                    throw new Error(data.message || "Failed to fetch market item");
-                return data;
-            }
-        ),
-
-    createMarketItem: (formData) => {
-        return fetch(`${API_URL}/api/market/me`, {
-            method: "POST",
-            headers: getHeaders(true),
-            body: formData,
-        }).then(async (res) => {
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to create listing");
-            return data;
-        });
+    updateArtistProfile: async (formData) => {
+        try {
+            const res = await fetch(`${API_URL}/api/artists/profile`, {
+                method: "POST",
+                headers: getHeaders(true), // true for FormData (no Content-Type)
+                body: formData,
+                credentials: 'include'
+            });
+            return await handleResponse(res);
+        } catch (error) {
+            console.error("API Error (updateArtistProfile):", error);
+            throw error;
+        }
     },
 
-    updateMarketItem: (formData) => {
-        return fetch(`${API_URL}/api/market/me`, {
-            method: "PUT",
-            headers: getHeaders(true),
-            body: formData,
-        }).then(async (res) => {
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to update listing");
-            return data;
-        });
+    // Market Items
+    getMyMarketItem: async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/market/me`, {
+                method: "GET",
+                headers: getHeaders(false),
+                credentials: 'include'
+            });
+            return await handleResponse(res);
+        } catch (error) {
+            console.error("API Error (getMyMarketItem):", error);
+            throw error;
+        }
     },
 
-    deleteMarketItem: () =>
-        fetch(`${API_URL}/api/market/me`, {
-            method: "DELETE",
-            headers: getHeaders(),
-        }).then(async (res) => {
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to delete listing");
-            return data;
-        }),
+    createMarketItem: async (formData) => {
+        try {
+            const res = await fetch(`${API_URL}/api/market/me`, {
+                method: "POST",
+                headers: getHeaders(true),
+                body: formData,
+                credentials: 'include'
+            });
+            return await handleResponse(res);
+        } catch (error) {
+            console.error("API Error (createMarketItem):", error);
+            throw error;
+        }
+    },
 
-    deleteMarketPhoto: (index) =>
-        fetch(`${API_URL}/api/market/me/photos/${index}`, {
-            method: "DELETE",
-            headers: getHeaders(),
-        }).then(async (res) => {
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to delete photo");
-            return data;
-        }),
+    updateMarketItem: async (formData) => {
+        try {
+            const res = await fetch(`${API_URL}/api/market/me`, {
+                method: "PUT",
+                headers: getHeaders(true),
+                body: formData,
+                credentials: 'include'
+            });
+            return await handleResponse(res);
+        } catch (error) {
+            console.error("API Error (updateMarketItem):", error);
+            throw error;
+        }
+    },
+
+    deleteMarketItem: async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/market/me`, {
+                method: "DELETE",
+                headers: getHeaders(false),
+                credentials: 'include'
+            });
+            return await handleResponse(res);
+        } catch (error) {
+            console.error("API Error (deleteMarketItem):", error);
+            throw error;
+        }
+    },
+
+    deleteMarketPhoto: async (index) => {
+        try {
+            const res = await fetch(`${API_URL}/api/market/me/photos/${index}`, {
+                method: "DELETE",
+                headers: getHeaders(false),
+                credentials: 'include'
+            });
+            return await handleResponse(res);
+        } catch (error) {
+            console.error("API Error (deleteMarketPhoto):", error);
+            throw error;
+        }
+    },
 
     // Billing
-    getBillingStatus: () =>
-        fetch(`${API_URL}/api/subscription/status`, { headers: getHeaders() }).then(
-            async (res) => {
-                const data = await res.json();
-                if (!res.ok)
-                    throw new Error(data.message || "Failed to fetch billing status");
-                return data;
-            }
-        ),
+    getBillingStatus: async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/subscription/status`, {
+                method: "GET",
+                headers: getHeaders(false),
+                credentials: 'include'
+            });
+            return await handleResponse(res);
+        } catch (error) {
+            console.error("API Error (getBillingStatus):", error);
+            throw error;
+        }
+    },
 
-    createCheckoutSession: () =>
-        fetch(`${API_URL}/api/subscription/checkout/pro`, {
-            method: "POST",
-            headers: getHeaders(),
-        }).then(async (res) => {
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to create checkout");
-            return data;
-        }),
+    createCheckoutSession: async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/subscription/checkout/pro`, {
+                method: "POST",
+                headers: getHeaders(false),
+                credentials: 'include'
+            });
+            return await handleResponse(res);
+        } catch (error) {
+            console.error("API Error (createCheckoutSession):", error);
+            throw error;
+        }
+    },
 
-    createBillingPortal: () =>
-        fetch(`${API_URL}/api/subscription/portal`, {
-            method: "POST",
-            headers: getHeaders(),
-        }).then(async (res) => {
-            const data = await res.json();
-            if (!res.ok)
-                throw new Error(data.message || "Failed to create billing portal");
-            return data;
-        }),
+    createBillingPortal: async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/subscription/portal`, {
+                method: "POST",
+                headers: getHeaders(false),
+                credentials: 'include'
+            });
+            return await handleResponse(res);
+        } catch (error) {
+            console.error("API Error (createBillingPortal):", error);
+            throw error;
+        }
+    },
 
-    cancelSubscription: () =>
-        fetch(`${API_URL}/api/subscription/cancel`, {
-            method: "POST",
-            headers: getHeaders(),
-        }).then(async (res) => {
-            const data = await res.json();
-            if (!res.ok)
-                throw new Error(data.message || "Failed to cancel subscription");
-            return data;
-        }),
+    cancelSubscription: async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/subscription/cancel`, {
+                method: "POST",
+                headers: getHeaders(false),
+                credentials: 'include'
+            });
+            return await handleResponse(res);
+        } catch (error) {
+            console.error("API Error (cancelSubscription):", error);
+            throw error;
+        }
+    },
 
-    resumeSubscription: () =>
-        fetch(`${API_URL}/api/subscription/resume`, {
-            method: "POST",
-            headers: getHeaders(),
-        }).then(async (res) => {
-            const data = await res.json();
-            if (!res.ok)
-                throw new Error(data.message || "Failed to resume subscription");
-            return data;
-        }),
+    resumeSubscription: async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/subscription/resume`, {
+                method: "POST",
+                headers: getHeaders(false),
+                credentials: 'include'
+            });
+            return await handleResponse(res);
+        } catch (error) {
+            console.error("API Error (resumeSubscription):", error);
+            throw error;
+        }
+    },
 
-    getInvoices: () =>
-        fetch(`${API_URL}/api/subscription/invoices`, {
-            headers: getHeaders(),
-        }).then(async (res) => {
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || "Failed to fetch invoices");
-            return data;
-        }),
+    getInvoices: async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/subscription/invoices`, {
+                method: "GET",
+                headers: getHeaders(false),
+                credentials: 'include'
+            });
+            return await handleResponse(res);
+        } catch (error) {
+            console.error("API Error (getInvoices):", error);
+            throw error;
+        }
+    },
 };

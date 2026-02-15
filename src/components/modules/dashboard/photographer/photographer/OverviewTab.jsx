@@ -3,6 +3,7 @@ import {
     Briefcase,
     Camera,
     Edit3,
+    Globe,
     ImageIcon,
     MapPin,
     Star,
@@ -12,6 +13,20 @@ import {
 import Image from "next/image";
 
 export default function OverviewTab({ photographer, previewImages }) {
+    // Format city and state names for display
+    const formatCityName = (city) => {
+        if (!city) return "—";
+        return city
+            .split(" ")
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+    };
+
+    const formatStateName = (state) => {
+        if (!state) return "—";
+        return state.charAt(0).toUpperCase() + state.slice(1);
+    };
+
     return (
         <div className="animate-fadeIn space-y-8">
             {/* Stats Cards */}
@@ -58,7 +73,11 @@ export default function OverviewTab({ photographer, previewImages }) {
                             <MapPin size={24} className="text-yellow-400" />
                         </div>
                         <div>
-                            <p className="text-lg font-bold text-white capitalize">{photographer.city || "—"}</p>
+                            <p className="text-lg font-bold text-white capitalize">
+                                {photographer.city && photographer.state
+                                    ? `${formatCityName(photographer.city)}, ${formatStateName(photographer.state)}`
+                                    : "—"}
+                            </p>
                             <p className="text-gray-400">Location</p>
                         </div>
                     </div>
@@ -79,13 +98,21 @@ export default function OverviewTab({ photographer, previewImages }) {
                             label="Photographer Name"
                             value={photographer.name}
                         />
+
+                        <InfoCard
+                            icon={<Globe className="text-blue-400" size={20} />}
+                            label="State"
+                            value={photographer.state ? formatStateName(photographer.state) : "—"}
+                        />
+
                         <InfoCard
                             icon={<MapPin className="text-red-400" size={20} />}
-                            label="Location"
-                            value={photographer.city ? photographer.city.charAt(0).toUpperCase() + photographer.city.slice(1) : "—"}
+                            label="City"
+                            value={photographer.city ? formatCityName(photographer.city) : "—"}
                         />
+
                         <InfoCard
-                            icon={<Briefcase className="text-blue-400" size={20} />}
+                            icon={<Briefcase className="text-green-400" size={20} />}
                             label="Total Services"
                             value={photographer.services?.length ? `${photographer.services.length} services` : "—"}
                         />
@@ -103,7 +130,6 @@ export default function OverviewTab({ photographer, previewImages }) {
                             </p>
                         </div>
                     )}
-
 
                     {/* Services Preview */}
                     {photographer.services && photographer.services.length > 0 && (
@@ -175,7 +201,28 @@ export default function OverviewTab({ photographer, previewImages }) {
                         </div>
                     )}
 
-
+                    {/* State Information (PDF Requirement) */}
+                    {photographer.state && (
+                        <div className="mt-6 pt-6 border-t border-gray-700">
+                            <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                                <Globe size={18} className="text-blue-400" />
+                                State Category
+                            </h4>
+                            <div className="flex items-center gap-3 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                                <div className="p-2 bg-blue-500/20 rounded-lg">
+                                    <Globe size={20} className="text-blue-400" />
+                                </div>
+                                <div>
+                                    <p className="text-white font-semibold">
+                                        {formatStateName(photographer.state)}
+                                    </p>
+                                    <p className="text-gray-400 text-sm">
+                                        You will appear in the "{formatStateName(photographer.state)}" category on the homepage
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

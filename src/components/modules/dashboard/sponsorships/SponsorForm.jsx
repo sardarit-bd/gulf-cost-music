@@ -181,7 +181,8 @@ export default function SponsorForm({ sponsor, onClose, onSave }) {
             ? "Sponsor updated successfully!"
             : "Sponsor created successfully!"
         );
-        onSave(data.data || data.sponsor); // Pass the saved data back
+        onSave(data.data || data.sponsor);
+        onClose();
       } else {
         throw new Error(data.message || "Operation failed");
       }
@@ -228,7 +229,7 @@ export default function SponsorForm({ sponsor, onClose, onSave }) {
                 onChange={handleInputChange}
                 required
                 disabled={loading}
-                className="text-gray-600 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus: focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="text-gray-600 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus: focus:border-[var(--primary)] focus:border-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 placeholder="Enter sponsor name"
               />
             </div>
@@ -263,7 +264,7 @@ export default function SponsorForm({ sponsor, onClose, onSave }) {
                 <label
                   className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${dragOver
                     ? "border-blue-500 bg-blue-50"
-                    : "border-gray-300 hover:border-blue-500"
+                    : "border-gray-300 hover:border-[var(--primary)]"
                     } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -303,7 +304,7 @@ export default function SponsorForm({ sponsor, onClose, onSave }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-3 bg-[var(--primary)] text-black rounded-lg hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 {loading && <Loader2 className="w-5 h-5 animate-spin" />}
                 {sponsor ? "Update Sponsor" : "Create Sponsor"}

@@ -7,6 +7,7 @@ import {
   Crown,
   Edit3,
   ImageIcon,
+  MapPin,
   ShoppingBag,
   Users,
   Video,
@@ -15,18 +16,17 @@ import BillingTab from "../billing/BillingTab";
 import EditProfileTab from "./photographer/EditProfileTab";
 import MarketTab from "./photographer/MarketTab";
 import OverviewTab from "./photographer/OverviewTab";
-import PhotosTab from "./photographer/PhotosTab";
-import ServicesTab from "./photographer/ServicesTab";
-import VideosTab from "./photographer/VideosTab";
+import PhotosTab from "./photographer/PhotosPage";
+import ServicesTab from "./photographer/ServicesPage";
+import VideosTab from "./photographer/VideosPage";
 
 // Plan Badge Component
 const PlanBadge = ({ subscriptionPlan }) => (
   <div
-    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
-      subscriptionPlan === "pro"
-        ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-        : "bg-gray-700 text-gray-300 border border-gray-600"
-    }`}
+    className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${subscriptionPlan === "pro"
+      ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+      : "bg-gray-700 text-gray-300 border border-gray-600"
+      }`}
   >
     {subscriptionPlan === "pro" ? (
       <>
@@ -53,6 +53,7 @@ export default function PhotographerDashboard({
   saving,
   uploadingPhotos,
   subscriptionPlan,
+  stateOptions, // Added
   cityOptions,
   MAX_PHOTOS,
   handleChange,
@@ -87,72 +88,18 @@ export default function PhotographerDashboard({
             </h1>
             <div className="flex items-center justify-center gap-3 mt-2">
               <PlanBadge subscriptionPlan={subscriptionPlan} />
+              {photographer.state && (
+                <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-sm">
+                  <MapPin size={12} />
+                  {photographer.state.charAt(0).toUpperCase() + photographer.state.slice(1)}
+                </div>
+              )}
             </div>
           </div>
         </div>
         <p className="text-gray-400 text-lg">
           Manage your photography services and portfolio
         </p>
-      </div>
-
-      {/* Plan Stats Bar */}
-      <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 mb-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <ImageIcon size={20} className="text-blue-400" />
-            </div>
-            <div>
-              <p className="text-white font-medium">Photo Uploads</p>
-              <p className="text-gray-400 text-sm">
-                {subscriptionPlan === "pro"
-                  ? `${previewImages.length}/5 photos allowed`
-                  : "Not available in Free plan"}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="p-2 bg-purple-500/20 rounded-lg">
-              <Video size={20} className="text-purple-400" />
-            </div>
-            <div>
-              <p className="text-white font-medium">Video Uploads</p>
-              <p className="text-gray-400 text-sm">
-                {subscriptionPlan === "pro"
-                  ? `${photographer.videos?.length || 0}/5 videos allowed`
-                  : "Not available in Free plan"}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="p-2 bg-green-500/20 rounded-lg">
-              <Briefcase size={20} className="text-green-400" />
-            </div>
-            <div>
-              <p className="text-white font-medium">Services</p>
-              <p className="text-gray-400 text-sm">
-                {subscriptionPlan === "pro"
-                  ? `${photographer.services?.length || 0} services allowed`
-                  : "Not available in Free plan"}
-              </p>
-            </div>
-          </div>
-
-          {subscriptionPlan === "free" && (
-            <button
-              onClick={onUpgrade}
-              className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg font-semibold transition"
-            >
-              <Crown size={16} />
-              <span>
-                Upgrade to Pro
-                <span className="ml-1 text-sm text-black/70">· $10/month</span>
-              </span>
-            </button>
-          )}
-        </div>
       </div>
 
       {/* Main Container */}
@@ -172,11 +119,10 @@ export default function PhotographerDashboard({
               <button
                 key={id}
                 onClick={() => setActiveTab(id)}
-                className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${
-                  activeTab === id
-                    ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
-                    : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
-                }`}
+                className={`flex items-center gap-2 px-6 py-4 font-medium transition-all whitespace-nowrap ${activeTab === id
+                  ? "text-yellow-400 border-b-2 border-yellow-400 bg-gray-800"
+                  : "text-gray-400 hover:text-yellow-300 hover:bg-gray-800/50"
+                  }`}
               >
                 <Icon size={18} />
                 {label}
@@ -205,15 +151,11 @@ export default function PhotographerDashboard({
             <EditProfileTab
               photographer={photographer}
               subscriptionPlan={subscriptionPlan}
+              stateOptions={stateOptions} // Added
               cityOptions={cityOptions}
               handleChange={handleChange}
-              handleImageUpload={handleImageUpload}
-              removeImage={removeImage}
-              previewImages={previewImages}
               handleSave={handleSave}
               saving={saving}
-              uploadingPhotos={uploadingPhotos}
-              maxPhotos={MAX_PHOTOS}
             />
           )}
 
@@ -266,7 +208,7 @@ export default function PhotographerDashboard({
               onResume={onResume}
               onRefresh={onRefresh}
               invoices={[]}
-              onDownloadInvoice={() => {}}
+              onDownloadInvoice={() => { }}
             />
           )}
         </div>

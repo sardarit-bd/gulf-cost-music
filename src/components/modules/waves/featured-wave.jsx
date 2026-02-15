@@ -3,7 +3,7 @@ import YouTubePlayer from "@/components/modules/Casts/youtube-player";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-export default function FeaturedWave({ wave }) {
+export default function FeaturedWave({ wave, sectionText }) {
   const [autoPlay, setAutoPlay] = useState(false);
 
   useEffect(() => {
@@ -31,19 +31,19 @@ export default function FeaturedWave({ wave }) {
   return (
     <div className="space-y-9">
       <div>
-        <h2 className="text-black text-2xl font-bold mb-2">Waves</h2>
+        <h2 className="text-black text-2xl font-bold mb-2">
+          {sectionText?.sectionTitle || "Waves"}
+        </h2>
         <p className="text-gray-600">
-          Explore the freshest waves and top audio experiences.
+          {sectionText?.sectionSubtitle || "Explore the freshest waves and top audio experiences."}
         </p>
       </div>
 
       <div className="relative rounded-xl overflow-hidden shadow-lg bg-black">
-
         {/* CASE 1: YouTube video available */}
         {videoId ? (
           <YouTubePlayer videoId={videoId} autoPlay={autoPlay} />
         ) : wave.audioUrl ? (
-
           /* CASE 2: Audio URL available */
           <audio
             src={wave.audioUrl}
@@ -51,9 +51,7 @@ export default function FeaturedWave({ wave }) {
             autoPlay={autoPlay}
             className="w-full h-[80px] bg-black text-white"
           />
-
         ) : (
-
           /* CASE 3: Thumbnail fallback */
           <div className="relative h-[550px] w-full">
             <Image
@@ -63,7 +61,6 @@ export default function FeaturedWave({ wave }) {
               className="object-cover"
             />
           </div>
-
         )}
 
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent space-y-4">

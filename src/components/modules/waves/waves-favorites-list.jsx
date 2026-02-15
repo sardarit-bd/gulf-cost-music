@@ -5,7 +5,8 @@ import WaveItem from "./wave-item";
 export default function WavesFavoritesList({
   setWave,
   playingWaveId,
-  setPlayingWaveId
+  setPlayingWaveId,
+  sectionText
 }) {
   const [waves, setWaves] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +38,6 @@ export default function WavesFavoritesList({
 
   const handlePlayClick = (waveId) => {
     setPlayingWaveId(waveId);
-    // Find and set the wave
     const selected = waves.find(w => w._id === waveId);
     if (selected) {
       setWave(selected);
@@ -52,7 +52,9 @@ export default function WavesFavoritesList({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-black">Your Waves</h2>
+      <h2 className="text-2xl font-bold text-black">
+        {sectionText?.yourWavesTitle || "Your Waves"}
+      </h2>
 
       <div className="space-y-3 max-h-[600px] overflow-y-auto p-4">
         {waves.map((wave) => (

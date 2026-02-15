@@ -1,31 +1,69 @@
 "use client";
 
+import Select from "@/ui/Select";
+import { Camera, Music, Save, X } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import SaveButton from "./SaveButton";
-import UpgradePrompt from "./UpgradePrompt";
-import UploadSection from "./UploadSection";
 
 const genreOptions = [
-  "Pop",
-  "Rock",
-  "Rap",
-  "Country",
-  "Jazz",
-  "Reggae",
-  "EDM",
-  "Classical",
-  "Other",
+  { value: "pop", label: "Pop" },
+  { value: "rock", label: "Rock" },
+  { value: "rap", label: "Rap" },
+  { value: "country", label: "Country" },
+  { value: "jazz", label: "Jazz" },
+  { value: "reggae", label: "Reggae" },
+  { value: "edm", label: "EDM" },
+  { value: "classical", label: "Classical" },
+  { value: "other", label: "Other" },
 ];
 
-const cityOptions = ["New Orleans", "Biloxi", "Mobile", "Pensacola"];
+const STATE_OPTIONS = [
+  { value: "", label: "Select State", disabled: true },
+  { value: "Louisiana", label: "Louisiana" },
+  { value: "Mississippi", label: "Mississippi" },
+  { value: "Alabama", label: "Alabama" },
+  { value: "Florida", label: "Florida" },
+];
+
+const CITY_OPTIONS = {
+  Louisiana: [
+    { value: "new orleans", label: "New Orleans" },
+    { value: "baton rouge", label: "Baton Rouge" },
+    { value: "lafayette", label: "Lafayette" },
+    { value: "shreveport", label: "Shreveport" },
+    { value: "lake charles", label: "Lake Charles" },
+    { value: "monroe", label: "Monroe" },
+  ],
+  Mississippi: [
+    { value: "jackson", label: "Jackson" },
+    { value: "biloxi", label: "Biloxi" },
+    { value: "gulfport", label: "Gulfport" },
+    { value: "oxford", label: "Oxford" },
+    { value: "hattiesburg", label: "Hattiesburg" },
+  ],
+  Alabama: [
+    { value: "birmingham", label: "Birmingham" },
+    { value: "mobile", label: "Mobile" },
+    { value: "huntsville", label: "Huntsville" },
+    { value: "tuscaloosa", label: "Tuscaloosa" },
+  ],
+  Florida: [
+    { value: "tampa", label: "Tampa" },
+    { value: "st. petersburg", label: "St. Petersburg" },
+    { value: "clearwater", label: "Clearwater" },
+    { value: "pensacola", label: "Pensacola" },
+    { value: "panama city", label: "Panama City" },
+    { value: "fort myers", label: "Fort Myers" },
+  ],
+};
 
 export default function EditProfileTab({
   artist,
   previewImages = [],
   audioPreview = [],
   subscriptionPlan,
-  uploadLimits = { photos: 0, audios: 0 },
+  uploadLimits = { photos: 5, audios: 5 },
   onChange,
   onImageUpload,
   onRemoveImage,
@@ -33,404 +71,522 @@ export default function EditProfileTab({
   onRemoveAudio,
   onSave,
   saving = false,
-  onUpgrade,
 }) {
-  const [removedPhotos, setRemovedPhotos] = useState([]);
-  const [removedAudios, setRemovedAudios] = useState([]);
-  const [localImages, setLocalImages] = useState([]);
-  const [localAudios, setLocalAudios] = useState([]);
+  // Track which existing files are marked for deletion
+  const [photosToDelete, setPhotosToDelete] = useState([]);
+  const [audiosToDelete, setAudiosToDelete] = useState([]);
 
-  // Initialize local state
+  // Local state for UI display
+  const [displayImages, setDisplayImages] = useState([]);
+  const [displayAudios, setDisplayAudios] = useState([]);
+  const [selectedState, setSelectedState] = useState("");
+  const [filteredCities, setFilteredCities] = useState([]);
+
+  // Initialize display state from props
   useEffect(() => {
-    // ================= IMAGES (UNCHANGED) =================
-    const formattedImages = previewImages.map((img) => {
-      if (typeof img === "string") {
-        const filename = img.split("/").pop();
-        return {
-          url: img,
-          filename,
-          isNew: false,
-          isRemoved: false,
-        };
+    console.log("📸 Preview Images from parent:", previewImages);
+
+    // Format images for display
+    const formattedImages = previewImages.map((img, index) => ({
+      id: img.id || `img-${Date.now()}-${index}`,
+      url: img.url,
+      filename: img.filename || img.url?.split("/").pop(),
+      publicId: img.publicId,
+      isExisting: img.isExisting || false,
+      file: img.file, // Make sure file is preserved
+    }));
+    setDisplayImages(formattedImages);
+
+    // Format audios for display
+    const formattedAudios = audioPreview.map((audio, index) => ({
+      id: audio.id || `audio-${Date.now()}-${index}`,
+      url: audio.url,
+      filename: audio.filename || audio.url?.split("/").pop(),
+      name: audio.name || audio.filename || `Track ${index + 1}`,
+      publicId: audio.publicId,
+      isExisting: audio.isExisting || false,
+      file: audio.file, // Make sure file is preserved
+    }));
+    setDisplayAudios(formattedAudios);
+
+    // Auto-detect state from current city
+    if (artist?.city && artist?.state) {
+      const currentState = artist.state;
+      setSelectedState(currentState);
+      setFilteredCities(CITY_OPTIONS[currentState] || []);
+    } else if (artist?.city) {
+      // Try to detect state from city
+      for (const [state, cities] of Object.entries(CITY_OPTIONS)) {
+        const cityValues = cities.map(c => c.value);
+        if (cityValues.includes(artist.city.toLowerCase())) {
+          setSelectedState(state);
+          setFilteredCities(CITY_OPTIONS[state] || []);
+          break;
+        }
       }
-
-      return {
-        url: img.url || "",
-        filename: img.filename || img.url?.split("/").pop() || "",
-        file: img.file,
-        isNew: img.isNew || false,
-        isRemoved: false,
-      };
-    }).filter(img => img.url && img.url.trim() !== "");
-
-    setLocalImages(formattedImages);
-
-    // ================= AUDIO (FIXED PART) =================
-    setLocalAudios(prev => {
-      // 🔥 keep newly uploaded audios (file সহ)
-      const existingNewAudios = prev.filter(a => a.isNew && a.file);
-
-      // backend / preview audios normalize
-      const formattedAudios = audioPreview
-        .map((audio) => {
-          if (typeof audio === "string") {
-            const filename = audio.split("/").pop();
-            return {
-              url: audio,
-              filename,
-              name: filename,
-              isNew: false,
-              isRemoved: false,
-            };
-          }
-
-          if (audio?.url) {
-            return {
-              url: audio.url,
-              filename: audio.filename || audio.url.split("/").pop(),
-              name: audio.name || audio.filename || "",
-              isNew: false,
-              isRemoved: false,
-            };
-          }
-
-          return null;
-        })
-        .filter(Boolean);
-
-      // ✅ merge: backend audios + new uploads
-      return [...formattedAudios, ...existingNewAudios];
-    });
-
-    setRemovedPhotos([]);
-    setRemovedAudios([]);
-  }, [previewImages, audioPreview]);
-
-
-  const handleImageUpload = async (files) => {
-    if (subscriptionPlan !== "pro") {
-      toast.error("Upgrade to Pro to upload photos");
-      return;
     }
+  }, [previewImages, audioPreview, artist?.city, artist?.state]);
 
-    const currentVisibleImages = localImages.filter(img => !img.isRemoved);
-    const totalPhotos = currentVisibleImages.length + files.length;
+  // Handle state selection change
+  const handleStateChange = (e) => {
+    const state = e.target.value;
+    setSelectedState(state);
 
-    if (totalPhotos > uploadLimits.photos) {
-      toast.error(
-        `Maximum ${uploadLimits.photos} photos allowed for ${subscriptionPlan} plan`
-      );
-      return;
-    }
-
-    const newImages = [...localImages];
-    files.forEach((file) => {
-      newImages.push({
-        url: URL.createObjectURL(file),
-        filename: file.name,
-        file: file,
-        isNew: true,
-        isRemoved: false
+    if (state && state !== "") {
+      setFilteredCities(CITY_OPTIONS[state] || []);
+      onChange({
+        target: {
+          name: "state",
+          value: state,
+        },
       });
-    });
+    } else {
+      setFilteredCities([]);
+      onChange({
+        target: {
+          name: "city",
+          value: "",
+        },
+      });
+    }
+  };
 
-    setLocalImages(newImages);
+  // Handle city selection change
+  const handleCityChange = (e) => {
+    onChange(e);
+  };
+
+  // Handle new image uploads
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    console.log("📸 Uploading files:", files.map(f => f.name));
     onImageUpload(files);
+    e.target.value = ''; // Reset input
   };
 
+  // Handle image removal
   const handleRemoveImage = (index) => {
-    const imageToRemove = localImages[index];
+    const imageToRemove = displayImages[index];
 
-    if (!imageToRemove.isNew) {
-      // Mark existing image as removed
-      const updatedImages = [...localImages];
-      updatedImages[index] = {
-        ...imageToRemove,
-        isRemoved: true
-      };
-      setLocalImages(updatedImages);
-
-      // Add filename to removed list
-      if (imageToRemove.filename) {
-        setRemovedPhotos(prev => [...prev, imageToRemove.filename]);
-      }
-    } else {
-      // Remove new image completely
-      const updatedImages = [...localImages];
-      updatedImages.splice(index, 1);
-      setLocalImages(updatedImages);
+    // If it's an existing image, mark it for deletion
+    if (imageToRemove.isExisting && imageToRemove.url) {
+      setPhotosToDelete(prev => [...prev, imageToRemove.url]);
     }
 
-    // onRemoveImage(index);
+    // Remove from display
+    const newImages = [...displayImages];
+    newImages.splice(index, 1);
+    setDisplayImages(newImages);
+
+    // Call parent handler
+    if (onRemoveImage) onRemoveImage(index);
   };
 
-  const handleAudioUpload = async (files) => {
-    if (subscriptionPlan !== "pro") {
-      toast.error("Upgrade to Pro to upload audio");
-      return;
-    }
+  // Handle new audio uploads
+  const handleAudioUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-    const currentVisibleAudios = localAudios.filter(audio => !audio.isRemoved);
-    const totalAudios = currentVisibleAudios.length + files.length;
-
-    if (totalAudios > uploadLimits.audios) {
-      toast.error(
-        `Maximum ${uploadLimits.audios} audio files allowed for ${subscriptionPlan} plan`
-      );
-      return;
-    }
-
-    const newAudios = [...localAudios];
-    files.forEach((file) => {
-      newAudios.push({
-        url: URL.createObjectURL(file),
-        filename: file.name,
-        name: file.name,
-        file: file,
-        isNew: true,
-        isRemoved: false
-      });
-    });
-
-    setLocalAudios(newAudios);
-    // onAudioUpload(files);
+    console.log("🎵 Uploading audio files:", files.map(f => f.name));
+    onAudioUpload(files);
+    e.target.value = ''; // Reset input
   };
 
+  // Handle audio removal
   const handleRemoveAudio = (index) => {
-    const audioToRemove = localAudios[index];
+    const audioToRemove = displayAudios[index];
 
-    if (!audioToRemove.isNew) {
-      // Mark existing audio as removed
-      const updatedAudios = [...localAudios];
-      updatedAudios[index] = {
-        ...audioToRemove,
-        isRemoved: true
-      };
-      setLocalAudios(updatedAudios);
-
-      // Add filename to removed list
-      if (audioToRemove.filename) {
-        setRemovedAudios(prev => [...prev, audioToRemove.filename]);
-      }
-    } else {
-      // Remove new audio completely
-      const updatedAudios = [...localAudios];
-      updatedAudios.splice(index, 1);
-      setLocalAudios(updatedAudios);
+    // If it's an existing audio, mark it for deletion
+    if (audioToRemove.isExisting && audioToRemove.url) {
+      setAudiosToDelete(prev => [...prev, audioToRemove.url]);
     }
 
-    // onRemoveAudio(index);
+    // Remove from display
+    const newAudios = [...displayAudios];
+    newAudios.splice(index, 1);
+    setDisplayAudios(newAudios);
+
+    // Call parent handler
+    if (onRemoveAudio) onRemoveAudio(index);
   };
 
+  // Handle save
   const handleSave = async () => {
-    // Create FormData object
+    // Validation
+    if (!selectedState) {
+      toast.error("Please select a state");
+      return;
+    }
+
+    if (!artist?.city) {
+      toast.error("Please select a city");
+      return;
+    }
+
+    if (!artist?.name?.trim()) {
+      toast.error("Please enter your name");
+      return;
+    }
+
+    if (!artist?.genre) {
+      toast.error("Please select a genre");
+      return;
+    }
+
+    const selectedCity = artist.city.toLowerCase();
+    const stateCities = (CITY_OPTIONS[selectedState] || []).map((c) => c.value);
+
+    if (!stateCities.includes(selectedCity)) {
+      toast.error(`Please select a valid city for ${selectedState}`);
+      return;
+    }
+
     const formData = new FormData();
 
-    // Add basic info
+    // Add basic fields
     formData.append("name", artist.name || "");
     formData.append("city", artist.city || "");
     formData.append("genre", artist.genre || "");
+    formData.append("biography", artist.biography || "");
 
-    if (subscriptionPlan === "pro") {
-      formData.append("biography", artist.biography || "");
+    // Add photos to delete as JSON string
+    if (photosToDelete.length > 0) {
+      formData.append("photosToDelete", JSON.stringify(photosToDelete));
+      console.log("📸 Photos to delete:", photosToDelete);
     }
 
-    // Add removed photos
-    removedPhotos.forEach(filename => {
-      if (filename) {
-        formData.append("removedPhotos", filename);
-      }
+    // Add audios to delete as JSON string
+    if (audiosToDelete.length > 0) {
+      formData.append("audiosToDelete", JSON.stringify(audiosToDelete));
+      console.log("🎵 Audios to delete:", audiosToDelete);
+    }
+
+    // Add new photos - FIX: Use correct field name 'photos'
+    const newPhotos = displayImages.filter(img => !img.isExisting && img.file);
+    console.log("📸 New photos to upload:", newPhotos.length);
+
+    newPhotos.forEach(img => {
+      formData.append("photos", img.file); // Make sure field name is 'photos'
+      console.log("  - Adding photo:", img.file.name);
     });
 
-    // Add removed audios
-    removedAudios.forEach(filename => {
-      if (filename) {
-        formData.append("removedAudios", filename);
-      }
+    // Add new audios - FIX: Use correct field name 'mp3Files'
+    const newAudios = displayAudios.filter(audio => !audio.isExisting && audio.file);
+    console.log("🎵 New audios to upload:", newAudios.length);
+
+    newAudios.forEach(audio => {
+      formData.append("mp3Files", audio.file); // Make sure field name is 'mp3Files'
+      console.log("  - Adding audio:", audio.file.name);
     });
 
-    // Add new photos
-    localImages
-      .filter(img => img.isNew && img.file && !img.isRemoved)
-      .forEach(img => {
-        formData.append("photos", img.file);
-      });
-
-    // Add new audios
-    localAudios
-      .filter(audio => audio.isNew && audio.file && !audio.isRemoved)
-      .forEach(audio => {
-        formData.append("mp3Files", audio.file);
-      });
-
-    console.log("Saving with FormData:");
-    console.log("Removed photos:", removedPhotos);
-    console.log("Removed audios:", removedAudios);
-    console.log("New photos:", localImages.filter(img => img.isNew && !img.isRemoved).length);
-    console.log("New audios:", localAudios.filter(audio => audio.isNew && !audio.isRemoved).length);
-
-    // Debug form data
+    // Log FormData contents for debugging
+    console.log("📦 Final FormData contents:");
     for (let pair of formData.entries()) {
-      console.log(pair[0] + ':', pair[1]);
+      if (pair[1] instanceof File) {
+        console.log(`  ${pair[0]}: ${pair[1].name} (${(pair[1].size / 1024).toFixed(2)} KB)`);
+      } else {
+        console.log(`  ${pair[0]}: ${pair[1]}`);
+      }
     }
 
     try {
       await onSave(formData);
-      // Clear removed lists after successful save
-      setRemovedPhotos([]);
-      setRemovedAudios([]);
+      // Reset deletion tracking after successful save
+      setPhotosToDelete([]);
+      setAudiosToDelete([]);
     } catch (error) {
       console.error("Save failed:", error);
+      throw error;
     }
   };
 
-  // Get visible images and audios for display
-  const visibleImages = localImages.filter(img => !img.isRemoved);
-  const visibleAudios = localAudios.filter(audio => !audio.isRemoved);
-
   return (
-    <div className="animate-fadeIn space-y-10">
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Name *
-          </label>
-          <input
-            name="name"
-            value={artist?.name || ""}
-            onChange={onChange}
-            placeholder="Enter your name"
-            className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 placeholder-gray-400 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 outline-none transition"
-          />
-        </div>
+    <div className="animate-fadeIn space-y-8">
+      {/* Basic Information */}
+      <div className="bg-white rounded-2xl p-6 border border-gray-200">
+        <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <div className="w-2 h-6 bg-blue-500 rounded-full"></div>
+          Basic Information
+        </h3>
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              name="name"
+              value={artist?.name || ""}
+              onChange={onChange}
+              placeholder="Enter your full name"
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 text-gray-900 border border-gray-300 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+            />
+          </div>
 
-        {/* City */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            City *
-          </label>
-          <select
+          {/* State */}
+          <Select
+            label="State *"
+            name="state"
+            value={selectedState}
+            options={STATE_OPTIONS}
+            onChange={handleStateChange}
+            required={true}
+            placeholder="Select State"
+            className="w-full"
+          />
+
+          {/* City */}
+          <Select
+            label="City *"
             name="city"
             value={artist?.city?.toLowerCase() || ""}
-            onChange={onChange}
-            className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 outline-none transition"
-          >
-            <option value="">Select City</option>
-            {cityOptions.map((city) => (
-              <option key={city} value={city.toLowerCase()}>
-                {city}
-              </option>
-            ))}
-          </select>
-        </div>
+            options={[
+              {
+                value: "",
+                label: selectedState
+                  ? `Select City in ${selectedState}`
+                  : "First select a state",
+                disabled: true,
+              },
+              ...(filteredCities || []),
+            ]}
+            onChange={handleCityChange}
+            required={true}
+            disabled={!selectedState}
+            placeholder={
+              selectedState
+                ? `Select City in ${selectedState}`
+                : "First select a state"
+            }
+            className="w-full"
+          />
 
-        {/* Genre */}
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Genre *
-          </label>
-          <select
+          {/* Genre */}
+          <Select
+            label="Genre *"
             name="genre"
             value={artist?.genre?.toLowerCase() || ""}
+            options={[
+              { value: "", label: "Select Genre", disabled: true },
+              ...genreOptions,
+            ]}
             onChange={onChange}
-            className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20 outline-none transition"
-          >
-            <option value="">Select Genre</option>
-            {genreOptions.map((g) => (
-              <option key={g} value={g.toLowerCase()}>
-                {g}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Biography */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Biography
-            {subscriptionPlan === "free" && (
-              <span className="text-yellow-500 text-xs ml-2">
-                (Pro feature)
-              </span>
-            )}
-          </label>
-          <textarea
-            name="biography"
-            value={artist?.biography || ""}
-            onChange={onChange}
-            rows={4}
-            placeholder={
-              subscriptionPlan === "free"
-                ? "Upgrade to Pro to add biography..."
-                : "Write a short biography about yourself and your music..."
-            }
-            className={`w-full px-4 py-3 rounded-lg text-white border placeholder-gray-400 outline-none resize-vertical transition ${subscriptionPlan === "free"
-              ? "bg-gray-800 border-gray-700 text-gray-500 cursor-not-allowed"
-              : "bg-gray-700 border-gray-600 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/20"
-              }`}
-            disabled={subscriptionPlan === "free"}
+            required={true}
+            placeholder="Select Genre"
+            className="w-full"
           />
-          {subscriptionPlan === "free" && (
-            <UpgradePrompt
-              feature="Biography"
-              onUpgrade={onUpgrade}
-            />
-          )}
 
+          {/* Biography */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Biography
+            </label>
+            <textarea
+              name="biography"
+              value={artist?.biography || ""}
+              onChange={onChange}
+              rows={4}
+              placeholder="Write a short biography about yourself and your music..."
+              className="w-full px-4 py-3 rounded-xl bg-gray-50 text-gray-900 border border-gray-300 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none resize-vertical transition"
+            />
+          </div>
         </div>
       </div>
 
       {/* Upload Sections */}
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid md:grid-cols-2 gap-6">
         {/* Photos Upload */}
-        <div>
-          <UploadSection
-            type="image"
-            label="Upload Photos"
-            accept="image/*"
-            maxFiles={uploadLimits.photos || 0}
-            currentFiles={visibleImages.map((img, idx) => ({
-              url: img.url,
-              id: idx,
-              name: img.filename || `Photo ${idx + 1}`,
-              isNew: img.isNew,
-            }))}
-            onUpload={handleImageUpload}
-            onRemove={handleRemoveImage}
-            subscriptionPlan={subscriptionPlan}
-            disabled={subscriptionPlan !== "pro"}
-            showLimits={true}
-            currentCount={visibleImages.length}
-          />
+        <div className="bg-white rounded-2xl p-6 border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <Camera className="w-5 h-5 text-blue-600" />
+              Photos
+            </h3>
+            <div className="text-sm text-gray-600">
+              {displayImages.length}/{uploadLimits.photos} uploaded
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {/* Upload Area */}
+            <label className="block cursor-pointer">
+              <div className={`border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 hover:bg-blue-50/20 transition-all duration-300 ${displayImages.length >= uploadLimits.photos ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Camera className="w-6 h-6 text-blue-600" />
+                </div>
+                <p className="text-gray-700 font-medium mb-2">
+                  Click to upload photos
+                </p>
+                <p className="text-sm text-gray-500">
+                  PNG, JPG, WebP • Max 5MB each
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Upload up to {uploadLimits.photos} photos
+                </p>
+              </div>
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                multiple
+                onChange={handleImageUpload}
+                className="hidden"
+                disabled={displayImages.length >= uploadLimits.photos}
+              />
+            </label>
+
+            {/* Image Preview Grid */}
+            {displayImages.length > 0 && (
+              <div className="grid grid-cols-3 gap-3">
+                {displayImages.map((img, idx) => (
+                  <div key={img.id || idx} className="relative group">
+                    <div className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                      {img.url ? (
+                        <Image
+                          src={img.url}
+                          alt={`Upload ${idx + 1}`}
+                          fill
+                          sizes="(max-width: 768px) 100px, 150px"
+                          unoptimized={img.url?.startsWith("blob:")}
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+                          Invalid Image
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => handleRemoveImage(idx)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition opacity-0 group-hover:opacity-100"
+                      type="button"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+
+                    {!img.isExisting && (
+                      <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded">
+                        New
+                      </div>
+                    )}
+                    {img.isExisting && photosToDelete.includes(img.url) && (
+                      <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded">
+                        Will Delete
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Audio Upload */}
-        <div>
-          <UploadSection
-            type="audio"
-            label="Upload Audio"
-            accept="audio/*"
-            maxFiles={uploadLimits.audios || 0}
-            currentFiles={visibleAudios.map((audio, idx) => ({
-              url: audio.url,
-              id: idx,
-              name: audio.name || audio.filename || `Audio ${idx + 1}`,
-              isNew: audio.isNew,
-            }))}
-            onUpload={handleAudioUpload}
-            onRemove={handleRemoveAudio}
-            subscriptionPlan={subscriptionPlan}
-            disabled={subscriptionPlan !== "pro"}
-            showLimits={true}
-            currentCount={visibleAudios.length}
-          />
+        <div className="bg-white rounded-2xl p-6 border border-gray-200">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <Music className="w-5 h-5 text-purple-600" />
+              Audio Tracks
+            </h3>
+            <div className="text-sm text-gray-600">
+              {displayAudios.length}/{uploadLimits.audios} uploaded
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {/* Upload Area */}
+            <label className="block cursor-pointer">
+              <div className={`border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-400 hover:bg-purple-50/20 transition-all duration-300 ${displayAudios.length >= uploadLimits.audios ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Music className="w-6 h-6 text-purple-600" />
+                </div>
+                <p className="text-gray-700 font-medium mb-2">
+                  Click to upload audio tracks
+                </p>
+                <p className="text-sm text-gray-500">
+                  MP3, WAV, M4A • Max 10MB each
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Upload up to {uploadLimits.audios} audio tracks
+                </p>
+              </div>
+              <input
+                type="file"
+                accept="audio/mpeg,audio/wav,audio/mp3,audio/m4a"
+                multiple
+                onChange={handleAudioUpload}
+                className="hidden"
+                disabled={displayAudios.length >= uploadLimits.audios}
+              />
+            </label>
+
+            {/* Audio Preview List */}
+            {displayAudios.length > 0 && (
+              <div className="space-y-2">
+                {displayAudios.map((audio, idx) => (
+                  <div key={audio.id || idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 group">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Music className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 text-sm truncate">
+                          {audio.name || `Track ${idx + 1}`}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {audio.filename}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {!audio.isExisting && (
+                        <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                          New
+                        </span>
+                      )}
+                      {audio.isExisting && audiosToDelete.includes(audio.url) && (
+                        <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">
+                          Will Delete
+                        </span>
+                      )}
+                      <button
+                        onClick={() => handleRemoveAudio(idx)}
+                        className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+                        type="button"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-center">
-        <SaveButton onClick={handleSave} saving={saving} disabled={saving} />
+      <div className="flex justify-center pt-6">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          type="button"
+        >
+          {saving ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              Save Changes
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

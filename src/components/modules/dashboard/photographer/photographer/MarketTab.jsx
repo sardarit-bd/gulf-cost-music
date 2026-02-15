@@ -1,5 +1,6 @@
 "use client";
 
+import Select from "@/ui/Select";
 import {
     AlertCircle,
     ArrowRight,
@@ -37,6 +38,14 @@ const getToken = () => {
     return null;
 };
 
+const STATE_OPTIONS = [
+    { value: "", label: "Select a state", disabled: true },
+    { value: "Louisiana", label: "Louisiana" },
+    { value: "Mississippi", label: "Mississippi" },
+    { value: "Alabama", label: "Alabama" },
+    { value: "Florida", label: "Florida" }
+];
+
 export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -61,6 +70,13 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
     const [videoFile, setVideoFile] = useState(null);
     const [activePhotoIndex, setActivePhotoIndex] = useState(0);
     const [isEditing, setIsEditing] = useState(false);
+
+    // Status options
+    const STATUS_OPTIONS = [
+        { value: "active", label: "Active" },
+        { value: "hidden", label: "Hidden" },
+        { value: "sold", label: "Sold" }
+    ];
 
     // Check permissions
     const isVerified = !!user?.isVerified;
@@ -137,6 +153,25 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
         }
     }, [existingItem]);
 
+    // Handle select changes
+    const handleSelectChange = (e) => {
+        const { name, value } = e.target;
+
+        if (name === "location") {
+            setLocation(value);
+        } else if (name === "status") {
+            setStatus(value);
+        }
+
+        // Clear error for this field
+        if (formErrors[name]) {
+            setFormErrors(prev => ({
+                ...prev,
+                [name]: ""
+            }));
+        }
+    };
+
     // Validate form
     const validateForm = () => {
         const errors = {};
@@ -151,6 +186,10 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
 
         if (!description.trim()) {
             errors.description = "Description is required";
+        }
+
+        if (!location) {
+            errors.location = "Please select a state";
         }
 
         if (totalPhotos === 0) {
@@ -491,6 +530,36 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
         setIsEditing(true);
     };
 
+    const handleStripeConnect = async () => {
+        try {
+            const token = document.cookie
+                .split("; ")
+                .find((row) => row.startsWith("token="))
+                ?.split("=")[1];
+
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_BASE_URL}/api/stripe/connect/onboard`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const data = await res.json();
+
+            if (data.success && data.url) {
+                window.location.href = data.url;
+            } else {
+                toast.error(data.message || "Stripe connection failed");
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error("Something went wrong");
+        }
+    };
+
     if (!hasMarketplaceAccess) {
         return (
             <div className="text-center py-12">
@@ -561,7 +630,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <h1 className="text-2xl font-bold text-white mb-2">
-                                Artist Marketplace
+                                Photographer Marketplace
                             </h1>
                             <p className="text-gray-400">
                                 {existingItem
@@ -575,19 +644,44 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                 <Package className="w-4 h-4" />
                                 Verified Artist
                             </span>
-
-                            {/*{existingItem && !isEditing && (*/}
-                            {/*    <button*/}
-                            {/*        onClick={handleEditListing}*/}
-                            {/*        className="flex items-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-400 transition"*/}
-                            {/*    >*/}
-                            {/*        <Edit2 className="w-4 h-4" />*/}
-                            {/*        Edit Listing*/}
-                            {/*    </button>*/}
-                            {/*)}*/}
                         </div>
                     </div>
                 </div>
+
+                {(!user?.stripeAccountId ||
+                    !user?.stripeOnboardingComplete) && (
+                        <div className="mt-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 max-w-md">
+                            <h3 className="text-yellow-400 font-semibold text-lg mb-2">
+                                Before listing an item
+                            </h3>
+
+                            <ul className="space-y-2 text-sm text-gray-300">
+                                <li className="flex items-start gap-2">
+                                    <span className="text-yellow-400">1.</span>
+                                    Connect your <strong>Stripe account</strong> to receive payments
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-yellow-400">2.</span>
+                                    Complete identity & payout verification
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="text-yellow-400">3.</span>
+                                    Then publish your listing
+                                </li>
+                            </ul>
+
+                            <button
+                                onClick={handleStripeConnect}
+                                className="mt-4 w-full bg-yellow-500 text-black py-2 rounded-lg font-semibold hover:bg-yellow-400 transition"
+                            >
+                                Connect Stripe Account
+                            </button>
+
+                            <p className="text-xs text-gray-400 mt-2">
+                                Stripe is required to securely send your earnings to you.
+                            </p>
+                        </div>
+                    )}
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -732,23 +826,27 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                 )}
                             </div>
 
-                            {/* Location */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                                    <MapPin className="w-4 h-4" />
-                                    Pickup Location *
+                                <label className="block text-sm font-medium text-gray-300 mb-2">
+                                    State *
                                 </label>
-                                <select
+                                <Select
+                                    name="location"
                                     value={location}
-                                    onChange={(e) => setLocation(e.target.value)}
-                                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                                >
-                                    <option value="">Select a location</option>
-                                    <option value="New Orleans">New Orleans</option>
-                                    <option value="Biloxi">Biloxi</option>
-                                    <option value="Mobile">Mobile</option>
-                                    <option value="Pensacola">Pensacola</option>
-                                </select>
+                                    options={STATE_OPTIONS}
+                                    onChange={handleSelectChange}
+                                    placeholder="Select a state"
+                                    required={true}
+                                    icon={<MapPin className="w-4 h-4 text-gray-400" />}
+                                    error={formErrors.location}
+                                    className="mb-2"
+                                />
+                                {formErrors.location && (
+                                    <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                                        <AlertCircle className="w-4 h-4" />
+                                        {formErrors.location}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Listing Status */}
@@ -756,16 +854,14 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                 <label className="block text-sm font-medium text-gray-300 mb-2">
                                     Listing Status
                                 </label>
-                                <select
+                                <Select
+                                    name="status"
                                     value={status}
-                                    onChange={(e) => setStatus(e.target.value)}
-                                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                                >
-                                    <option value="active">Active</option>
-                                    <option value="hidden">Hidden</option>
-                                    <option value="sold">Sold</option>
-                                    <option value="reserved">Reserved</option>
-                                </select>
+                                    options={STATUS_OPTIONS}
+                                    onChange={handleSelectChange}
+                                    placeholder="Select status"
+                                    className="mb-2"
+                                />
                             </div>
 
                             {/* Description (full width) */}
@@ -780,6 +876,12 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                     className={`w-full bg-gray-800 border ${formErrors.description ? "border-red-500" : "border-gray-700"
                                         } rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-500`}
                                 />
+                                {formErrors.description && (
+                                    <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                                        <AlertCircle className="w-4 h-4" />
+                                        {formErrors.description}
+                                    </p>
+                                )}
                                 <p className="mt-2 text-sm text-gray-400">
                                     Detailed descriptions increase trust and sales
                                 </p>
@@ -1068,9 +1170,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                     ? "bg-gradient-to-r from-green-500/10 to-emerald-500/5"
                                     : existingItem.status === "sold"
                                         ? "bg-gradient-to-r from-red-500/10 to-rose-500/5"
-                                        : existingItem.status === "reserved"
-                                            ? "bg-gradient-to-r from-orange-500/10 to-amber-500/5"
-                                            : "bg-gradient-to-r from-yellow-500/10 to-yellow-500/5"
+                                        : "bg-gradient-to-r from-yellow-500/10 to-yellow-500/5"
                                     }`}>
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                         <div className="flex items-center gap-3">
@@ -1078,17 +1178,13 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                 ? "bg-green-500/20"
                                                 : existingItem.status === "sold"
                                                     ? "bg-red-500/20"
-                                                    : existingItem.status === "reserved"
-                                                        ? "bg-orange-500/20"
-                                                        : "bg-yellow-500/20"
+                                                    : "bg-yellow-500/20"
                                                 }`}>
                                                 <div className={`w-3 h-3 rounded-full ${existingItem.status === "active"
                                                     ? "bg-green-500 animate-pulse"
                                                     : existingItem.status === "sold"
                                                         ? "bg-red-500"
-                                                        : existingItem.status === "reserved"
-                                                            ? "bg-orange-500"
-                                                            : "bg-yellow-500"
+                                                        : "bg-yellow-500"
                                                     }`}></div>
                                             </div>
                                             <div>
@@ -1097,9 +1193,7 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                     ? "text-green-400"
                                                     : existingItem.status === "sold"
                                                         ? "text-red-400"
-                                                        : existingItem.status === "reserved"
-                                                            ? "text-orange-400"
-                                                            : "text-yellow-400"
+                                                        : "text-yellow-400"
                                                     }`}>
                                                     {existingItem.status.charAt(0).toUpperCase() + existingItem.status.slice(1)}
                                                     {existingItem.status === "active" && " • Accepting Offers"}
@@ -1138,6 +1232,13 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                                                         ${existingItem.price}
                                                     </span>
                                                 </div>
+                                                {/* ✅ State Badge Display */}
+                                                {existingItem.location && (
+                                                    <div className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-sm mt-3">
+                                                        <MapPin size={14} />
+                                                        {existingItem.location} {/* Now shows state name */}
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Main Image Gallery */}

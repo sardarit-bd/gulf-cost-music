@@ -1,6 +1,7 @@
 "use client";
 
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import CastSectionTextEditor from "@/components/modules/dashboard/casts/CastSectionTextEditor";
 import DeleteConfirmationModal from "@/components/modules/dashboard/casts/DeleteConfirmationModal";
 import PodcastForm from "@/components/modules/dashboard/casts/PodcastForm";
 import PodcastHeader from "@/components/modules/dashboard/casts/PodcastHeader";
@@ -25,6 +26,12 @@ export default function PodcastPage() {
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [showSectionTextEditor, setShowSectionTextEditor] = useState(false);
+  const [sectionText, setSectionText] = useState({
+    sectionTitle: "Cast",
+    sectionSubtitle: "Tune into engaging podcast episodes featuring your favorite personalities",
+    yourCastsTitle: "Your Favorites"
+  });
 
   // Delete modal state
   const [deleteModal, setDeleteModal] = useState({
@@ -84,6 +91,28 @@ export default function PodcastPage() {
       toast.error(handleApiError(error, "Failed to load podcasts"));
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch section text
+  const fetchSectionText = async () => {
+    try {
+      const token = getCookie("token");
+      if (!token) return;
+
+      const { data } = await axios.get(`${API_BASE}/api/casts/section/text`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (data.success) {
+        setSectionText({
+          sectionTitle: data.data.sectionTitle || "Cast",
+          sectionSubtitle: data.data.sectionSubtitle || "Tune into engaging podcast episodes featuring your favorite personalities",
+          yourCastsTitle: data.data.yourCastsTitle || "Your Favorites"
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch section text:", error);
     }
   };
 
@@ -167,8 +196,16 @@ export default function PodcastPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Handle section text update
+  const handleSectionTextUpdate = () => {
+    fetchSectionText();
+    toast.success("Section text updated successfully!");
+    setShowSectionTextEditor(false);
+  };
+
   useEffect(() => {
     fetchPodcasts();
+    fetchSectionText();
   }, []);
 
   return (
@@ -176,11 +213,30 @@ export default function PodcastPage() {
       <div className="min-h-screen bg-gray-50 p-6">
         <Toaster />
         <div className="">
+          {/* Section Text Editor Modal */}
+          {showSectionTextEditor && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <CastSectionTextEditor
+                  onClose={() => setShowSectionTextEditor(false)}
+                  onUpdate={handleSectionTextUpdate}
+                  token={token}
+                  API_BASE={API_BASE}
+                />
+              </div>
+            </div>
+          )}
+
           <PodcastHeader
             loading={loading}
             showForm={showForm}
-            onRefresh={fetchPodcasts}
+            onRefresh={() => {
+              fetchPodcasts();
+              fetchSectionText();
+            }}
             onToggleForm={() => setShowForm(!showForm)}
+            onEditSectionText={() => setShowSectionTextEditor(true)}
+            setShowSectionTextEditor={setShowSectionTextEditor}
           />
 
           {showForm && (

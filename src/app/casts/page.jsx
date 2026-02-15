@@ -6,26 +6,78 @@ import { useEffect, useState } from "react";
 export default function CastsSection() {
   const [cast, setCast] = useState(null);
   const [allCasts, setAllCasts] = useState([]);
+  const [sectionText, setSectionText] = useState({
+    sectionTitle: "Cast",
+    sectionSubtitle: "Tune into engaging podcast episodes featuring your favorite personalities",
+    yourCastsTitle: "Your Favorites"
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCasts = async () => {
+    const fetchData = async () => {
       const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
       try {
-        const res = await fetch(`${API_BASE}/api/casts`, { cache: "no-store" });
-        const data = await res.json();
-        console.log("cust section", data)
-        if (res.ok && data.success && Array.isArray(data.data.casts)) {
-          setAllCasts(data.data.casts);
-          if (data.data.casts.length > 0 && !cast) {
-            setCast(data.data.casts[0]);
+        const [castsRes, sectionTextRes] = await Promise.all([
+          fetch(`${API_BASE}/api/casts`, { cache: "no-store" }),
+          fetch(`${API_BASE}/api/casts/section/text`, { cache: "no-store" })
+        ]);
+
+        // Casts data
+        const castsData = await castsRes.json();
+        if (castsRes.ok && castsData.success && Array.isArray(castsData.data.casts)) {
+          setAllCasts(castsData.data.casts);
+          if (castsData.data.casts.length > 0 && !cast) {
+            setCast(castsData.data.casts[0]);
           }
         }
+
+        // Section text data
+        const sectionTextData = await sectionTextRes.json();
+        if (sectionTextRes.ok && sectionTextData.success) {
+          setSectionText({
+            sectionTitle: sectionTextData.data.sectionTitle || "Cast",
+            sectionSubtitle: sectionTextData.data.sectionSubtitle || "Tune into engaging podcast episodes featuring your favorite personalities",
+            yourCastsTitle: sectionTextData.data.yourCastsTitle || "Your Favorites"
+          });
+        }
       } catch (error) {
-        console.error("Error fetching casts:", error);
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchCasts();
+
+    fetchData();
   }, []);
+
+  if (loading) {
+    return (
+      <div
+        className="py-16 px-6 md:px-16 mt-20"
+        style={{
+          background: "linear-gradient(to bottom, #F9FAFB 0%, #ffffff 100%)",
+        }}
+      >
+        <div className="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-24 bg-gray-200 rounded"></div>
+              ))}
+            </div>
+          </div>
+          <div className="lg:col-span-2">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              <div className="h-[400px] bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -40,14 +92,18 @@ export default function CastsSection() {
           <FavoritesList
             setCast={setCast}
             activeCast={cast}
+            sectionText={sectionText}
           />
         </div>
 
         {/* Right Column - Featured Cast */}
         <div className="lg:col-span-2">
-          <FeaturedCast cast={cast} />
+          <FeaturedCast
+            cast={cast}
+            sectionText={sectionText}
+          />
         </div>
       </div>
     </div>
-  )
+  );
 }

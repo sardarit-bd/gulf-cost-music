@@ -1,45 +1,58 @@
+// components/ui/Input.js
+"use client";
 
-const Input = ({
+export default function Input({
     label,
     name,
     value,
     onChange,
-    icon,
-    placeholder,
     type = "text",
+    placeholder = "",
     required = false,
-    disabled = false
-}) => {
+    disabled = false,
+    icon,
+    className = "",
+    error = false,
+}) {
     return (
-        <div className="space-y-2">
+        <div className={className}>
             {label && (
-                <label
-                    htmlFor={name}
-                    className="block text-sm font-medium text-gray-300"
-                >
-                    {label}
-                    {required && <span className="text-red-400 ml-1">*</span>}
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {label} {required && <span className="text-red-500">*</span>}
                 </label>
             )}
+
             <div className="relative">
                 {icon && (
                     <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
                         {icon}
                     </div>
                 )}
+
                 <input
                     type={type}
                     name={name}
-                    id={name}
                     value={value}
                     onChange={onChange}
-                    disabled={disabled}
                     placeholder={placeholder}
-                    className={`w-full bg-gray-800 border border-gray-600 text-white rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition ${icon ? 'pl-10' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    required={required}
+                    disabled={disabled}
+                    className={` text-gray-600
+            w-full px-4 py-3 rounded-xl border transition-all duration-200
+            ${icon ? 'pl-10' : ''}
+            ${error
+                            ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500'
+                            : 'border-gray-300 hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500'
+                        }
+            ${disabled ? 'cursor-not-allowed opacity-60 bg-gray-50' : 'bg-white'}
+            focus:outline-none focus:border-transparent
+          `}
                 />
             </div>
+
+            {error && (
+                <p className="mt-1 text-xs text-red-500">{error}</p>
+            )}
         </div>
     );
-};
-
-export default Input;
+}

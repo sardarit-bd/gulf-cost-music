@@ -4,7 +4,6 @@ import { Loader2, Save, Trash2, Upload } from "lucide-react";
 import { CldUploadWidget } from "next-cloudinary";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import VideoPreview from "./VideoPreview";
 import { saveHeroData } from "./heroUtils";
 
 export default function HeroEditor({ heroData, onChange, onSave }) {
@@ -87,71 +86,73 @@ export default function HeroEditor({ heroData, onChange, onSave }) {
                             placeholder="Enter button text"
                         />
                     </div>
-                </div>
-            </div>
 
-            {/* Video Upload Card */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-lg font-semibold text-gray-900">
-                        Hero Video
-                    </h2>
-                    {heroData.videoUrl && (
-                        <button
-                            onClick={removeVideo}
-                            className="text-red-600 hover:text-red-700 flex items-center gap-1 text-xs font-medium"
-                        >
-                            <Trash2 className="w-3 h-3" />
-                            Remove
-                        </button>
-                    )}
-                </div>
-
-                {/* Video Preview with Fallback */}
-                <VideoPreview videoUrl={heroData.videoUrl} />
-
-                {!heroData.videoUrl && (
-                    <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center bg-gray-50">
-                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                        <p className="text-gray-500 text-sm mb-1">
-                            No video uploaded
-                        </p>
-                        <p className="text-xs text-gray-400">
-                            Upload a background video for your hero section
-                        </p>
-                    </div>
-                )}
-
-                {/* Upload Button */}
-                <CldUploadWidget
-                    uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
-                    options={{
-                        sources: ["local"],
-                        multiple: false,
-                        resourceType: "video",
-                        maxFileSize: 104857600,
-                        clientAllowedFormats: ["mp4", "mov", "avi", "mkv", "webm"],
-                    }}
-                    onUpload={() => setUploading(true)}
-                    onSuccess={handleUploadSuccess}
-                    onError={handleUploadError}
-                >
-                    {({ open }) => (
-                        <button
-                            onClick={() => open()}
-                            disabled={uploading}
-                            className="w-full mt-3 bg-[var(--primary)] hover:bg-primary/80 text-white py-2 rounded-md flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {uploading ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                                <Upload className="w-4 h-4" />
+                    {/* Video Upload Card */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-lg font-semibold text-gray-900">
+                                Hero Video
+                            </h2>
+                            {heroData.videoUrl && (
+                                <button
+                                    onClick={removeVideo}
+                                    className="text-red-600 hover:text-red-700 flex items-center gap-1 text-xs font-medium"
+                                >
+                                    <Trash2 className="w-3 h-3" />
+                                    Remove
+                                </button>
                             )}
-                            {uploading ? "Uploading..." : "Upload Video"}
-                        </button>
-                    )}
-                </CldUploadWidget>
+                        </div>
+
+
+
+                        {!heroData.videoUrl && (
+                            <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center bg-gray-50">
+                                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                                <p className="text-gray-500 text-sm mb-1">
+                                    No video uploaded
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                    Upload a background video for your hero section
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Upload Button */}
+                        <CldUploadWidget
+                            uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+                            options={{
+                                sources: ["local"],
+                                multiple: false,
+                                resourceType: "video",
+                                maxFileSize: 104857600,
+                                clientAllowedFormats: ["mp4", "mov", "avi", "mkv", "webm"],
+                            }}
+                            onUpload={() => setUploading(true)}
+                            onSuccess={handleUploadSuccess}
+                            onError={handleUploadError}
+                        >
+                            {({ open }) => (
+                                <button
+                                    onClick={() => open()}
+                                    disabled={uploading}
+                                    className="w-full mt-3 bg-[var(--primary)] hover:bg-primary/80 text-black py-2 rounded-md flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {uploading ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Upload className="w-4 h-4" />
+                                    )}
+                                    {uploading ? "Uploading..." : "Upload Video"}
+                                </button>
+                            )}
+                        </CldUploadWidget>
+                    </div>
+
+                </div>
             </div>
+
+
 
             {/* Save Button */}
             <button

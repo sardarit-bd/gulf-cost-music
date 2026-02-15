@@ -1,15 +1,44 @@
 "use client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, MapPin, Users } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Filter, MapPin, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
-// City options (same as backend)
-const CITIES = [
-  { key: "mobile", label: "Mobile" },
-  { key: "biloxi", label: "Biloxi" },
-  { key: "new orleans", label: "New Orleans" },
-  { key: "pensacola", label: "Pensacola" },
-];
+// State-City Mapping (same as backend)
+const STATE_CITY_MAPPING = {
+  Louisiana: [
+    { key: "new orleans", label: "New Orleans" },
+    { key: "baton rouge", label: "Baton Rouge" },
+    { key: "lafayette", label: "Lafayette" },
+    { key: "shreveport", label: "Shreveport" },
+    { key: "lake charles", label: "Lake Charles" },
+    { key: "monroe", label: "Monroe" }
+  ],
+  Mississippi: [
+    { key: "jackson", label: "Jackson" },
+    { key: "biloxi", label: "Biloxi" },
+    { key: "gulfport", label: "Gulfport" },
+    { key: "oxford", label: "Oxford" },
+    { key: "hattiesburg", label: "Hattiesburg" }
+  ],
+  Alabama: [
+    { key: "birmingham", label: "Birmingham" },
+    { key: "mobile", label: "Mobile" },
+    { key: "huntsville", label: "Huntsville" },
+    { key: "tuscaloosa", label: "Tuscaloosa" }
+  ],
+  Florida: [
+    { key: "tampa", label: "Tampa" },
+    { key: "st. petersburg", label: "St. Petersburg" },
+    { key: "clearwater", label: "Clearwater" },
+    { key: "pensacola", label: "Pensacola" },
+    { key: "panama city", label: "Panama City" },
+    { key: "fort myers", label: "Fort Myers" }
+  ]
+};
+
+// Default values
+const DEFAULT_STATE = "Alabama";
+const DEFAULT_CITY = "mobile";
 
 const monthNames = [
   "January", "February", "March", "April", "May", "June",
@@ -23,68 +52,103 @@ export default function CalendarBoard() {
   const [view, setView] = useState("month");
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCity, setSelectedCity] = useState("mobile");
+
+  // State and City selection
+  const [selectedState, setSelectedState] = useState(DEFAULT_STATE);
+  const [selectedCity, setSelectedCity] = useState(DEFAULT_CITY);
+  const [availableCities, setAvailableCities] = useState(STATE_CITY_MAPPING[DEFAULT_STATE]);
+
   const [venues, setVenues] = useState([]);
   const [showEventModal, setShowEventModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [filteredVenueIds, setFilteredVenueIds] = useState([]);
+  const [allStates] = useState(Object.keys(STATE_CITY_MAPPING));
 
+  // Update available cities when state changes
+  useEffect(() => {
+    const cities = STATE_CITY_MAPPING[selectedState] || [];
+    setAvailableCities(cities);
 
+    // Auto-select first city if current city is not in the new state
+    if (!cities.some(city => city.key === selectedCity)) {
+      setSelectedCity(cities[0]?.key || DEFAULT_CITY);
+    }
+  }, [selectedState]);
 
-  const getWeekDates = (date) => {
-    const start = new Date(date);
-    start.setDate(date.getDate() - date.getDay()); // Sunday
-
-    return Array.from({ length: 7 }).map((_, i) => {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      return d;
-    });
-  };
+  // Fetch events when state, city, or date changes
+  useEffect(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    fetchEvents(selectedState, selectedCity, year, month);
+  }, [selectedState, selectedCity, currentDate]);
 
   // Fetch events from backend API
-  const fetchEvents = async (city, year = null, month = null) => {
+  const fetchEvents = async (state, city, year = null, month = null) => {
     setLoading(true);
     try {
-      // Build query parameters
+      // Build query parameters for NEW API endpoint
       const params = new URLSearchParams({
+        state: state,
         city: city
       });
 
       // If specific month/year is selected
-      if (year && month !== null) {
+      if (year !== null && month !== null) {
         const startDate = new Date(year, month, 1);
         const endDate = new Date(year, month + 1, 0);
         params.append('startDate', startDate.toISOString());
         params.append('endDate', endDate.toISOString());
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/events/calendar?${params.toString()}`);
+      // Use the new state-city endpoint
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/events/calendar?${params.toString()}`
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to fetch events: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("Calendar:", data);
+      console.log("Calendar API Response:", data);
+
       if (data.success) {
         // Transform backend events to frontend format
-        const transformedEvents = data.data.events.map(event => ({
-          id: event.id,
-          title: event.title,
-          date: new Date(event.date),
-          time: event.time,
-          venue: event.venue,
-          venueId: event.venueId,
-          color: event.color || "#000000",
-          city: event.city,
-          verified: event.verified || false,
-          rawData: event // Keep original data for details
-        }));
+        const transformedEvents = data.data.events.map(event => {
+          // Parse date correctly (handle UTC from backend)
+          let eventDate;
+          if (event.date) {
+            // If backend returns ISO string
+            eventDate = new Date(event.date);
+          } else if (event.rawUTC) {
+            eventDate = new Date(event.rawUTC);
+          } else {
+            // Fallback to current date
+            eventDate = new Date();
+          }
+
+          return {
+            id: event.id || event._id,
+            title: event.title || event.artistBandName,
+            date: eventDate,
+            time: event.time || event.eventTime,
+            venue: event.venue,
+            venueId: event.venueId,
+            color: event.color || "#000000",
+            state: event.state,
+            city: event.city,
+            verified: event.verified || false,
+            image: event.image,
+            description: event.description,
+            rawData: event
+          };
+        });
 
         setEvents(transformedEvents);
+        console.log("Transformed events:", transformedEvents);
 
-        // Also fetch venues for this city to show in sidebar
-        fetchVenues(city);
+        // Fetch venues for this city
+        fetchVenues(state, city);
       } else {
         console.error('API Error:', data.message);
         setEvents([]);
@@ -98,15 +162,18 @@ export default function CalendarBoard() {
   };
 
   // Fetch venues for the selected city
-  const fetchVenues = async (city) => {
+  const fetchVenues = async (state, city) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/venues?city=${city}`);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues?state=${state}&city=${city}`
+      );
+
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
           // Filter only venues with color codes
           const venuesWithColors = data.data.venues.filter(
-            venue => venue.colorCode && venue.colorCode !== "#000000"
+            venue => venue.colorCode && venue.colorCode !== "#000000" && venue.colorCode !== null
           );
           setVenues(venuesWithColors);
         }
@@ -115,13 +182,6 @@ export default function CalendarBoard() {
       console.error('Error fetching venues:', error);
     }
   };
-
-  // Initial fetch and when city changes
-  useEffect(() => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    fetchEvents(selectedCity, year, month);
-  }, [selectedCity, currentDate]);
 
   // Calendar grid generation
   const generateCalendarGrid = () => {
@@ -162,8 +222,12 @@ export default function CalendarBoard() {
         events: dayEvents
       });
     }
-    // Next month blanks to fill the grid (up to 42 cells)
-    for (let i = 1; i <= 3; i++) {
+
+    // Next month blanks to fill the grid (6 rows × 7 days = 42 cells total)
+    const totalCells = 42;
+    const nextMonthDays = totalCells - days.length;
+
+    for (let i = 1; i <= nextMonthDays; i++) {
       days.push({
         date: new Date(year, month + 1, i),
         currentMonth: false,
@@ -174,7 +238,6 @@ export default function CalendarBoard() {
 
     return days;
   };
-
 
   // Navigation
   const handlePrevMonth = () => {
@@ -196,8 +259,6 @@ export default function CalendarBoard() {
   };
 
   // Filter events by venue
-  const [filteredVenueIds, setFilteredVenueIds] = useState([]);
-
   const toggleVenueFilter = (venueId) => {
     setFilteredVenueIds(prev => {
       if (prev.includes(venueId)) {
@@ -208,13 +269,37 @@ export default function CalendarBoard() {
     });
   };
 
+  // Clear all venue filters
+  const clearAllFilters = () => {
+    setFilteredVenueIds([]);
+  };
+
   // Get filtered events based on venue filter
   const getFilteredEvents = (dayEvents) => {
     if (filteredVenueIds.length === 0) return dayEvents;
     return dayEvents.filter(event => filteredVenueIds.includes(event.venueId));
   };
 
+  // Get events for week view
+  const getWeekDates = (date) => {
+    const start = new Date(date);
+    start.setDate(date.getDate() - date.getDay()); // Sunday
+
+    return Array.from({ length: 7 }).map((_, i) => {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      return d;
+    });
+  };
+
+  // Format city display name
+  const formatCityDisplay = (cityKey) => {
+    const city = availableCities.find(c => c.key === cityKey);
+    return city ? city.label : cityKey;
+  };
+
   const calendarDays = generateCalendarGrid();
+  const weekDates = getWeekDates(currentDate);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-6">
@@ -226,11 +311,38 @@ export default function CalendarBoard() {
               Gulf Coast Music Calendar
             </h1>
             <p className="text-gray-600 text-sm mt-1">
-              Live shows and events in {CITIES.find(c => c.key === selectedCity)?.label}
+              Live shows and events across the Gulf Coast
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* State Selector */}
+            <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-300">
+              <MapPin className="w-4 h-4 text-gray-500" />
+              <span className="text-sm font-medium text-gray-700">State:</span>
+            </div>
+
+            <Select
+              value={selectedState}
+              onValueChange={(value) => setSelectedState(value)}
+            >
+              <SelectTrigger className="w-[160px] bg-white border-gray-300 text-black">
+                <SelectValue placeholder="Select state" />
+              </SelectTrigger>
+              <SelectContent className="bg-white text-black border border-gray-200 max-h-[300px]">
+                {allStates.map((state) => (
+                  <SelectItem
+                    key={state}
+                    value={state}
+                    className="capitalize"
+                  >
+                    {state}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* City Selector */}
             <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-gray-300">
               <MapPin className="w-4 h-4 text-gray-500" />
               <span className="text-sm font-medium text-gray-700">City:</span>
@@ -238,16 +350,14 @@ export default function CalendarBoard() {
 
             <Select
               value={selectedCity}
-              onValueChange={(value) => {
-                setSelectedCity(value);
-                setCurrentDate(new Date());
-              }}
+              onValueChange={(value) => setSelectedCity(value)}
+              disabled={availableCities.length === 0}
             >
-              <SelectTrigger className="w-[180px] bg-white border-gray-300 text-black">
+              <SelectTrigger className="w-[160px] bg-white border-gray-300 text-black">
                 <SelectValue placeholder="Select city" />
               </SelectTrigger>
-              <SelectContent className="bg-white text-black border border-gray-200">
-                {CITIES.map((city) => (
+              <SelectContent className="bg-white text-black border border-gray-200 max-h-[300px]">
+                {availableCities.map((city) => (
                   <SelectItem
                     key={city.key}
                     value={city.key}
@@ -327,7 +437,7 @@ export default function CalendarBoard() {
                 <div className="flex justify-center items-center h-96">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading events for {CITIES.find(c => c.key === selectedCity)?.label}...</p>
+                    <p className="text-gray-600">Loading events for {formatCityDisplay(selectedCity)}...</p>
                   </div>
                 </div>
               ) : (
@@ -432,7 +542,7 @@ export default function CalendarBoard() {
                         <div className="text-center py-12">
                           <CalendarIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                           <h3 className="text-lg font-medium text-gray-900 mb-2">
-                            No events found for {CITIES.find(c => c.key === selectedCity)?.label}
+                            No events found for {formatCityDisplay(selectedCity)}
                           </h3>
                           <p className="text-gray-600">
                             Try selecting a different city or check back later for upcoming shows.
@@ -446,39 +556,56 @@ export default function CalendarBoard() {
                   {view === "week" && (
                     <div className="p-4">
                       <div className="grid grid-cols-7 gap-2">
-                        {getWeekDates(currentDate).map((date, idx) => {
+                        {weekDates.map((date, idx) => {
                           const dayEvents = events.filter(e =>
                             e.date.toDateString() === date.toDateString()
                           );
+                          const filteredDayEvents = getFilteredEvents(dayEvents);
+                          const isToday = date.toDateString() === new Date().toDateString();
 
                           return (
                             <div
                               key={idx}
-                              className="border rounded-lg p-2 min-h-40 bg-white text-gray-600"
+                              className={`border rounded-lg p-3 min-h-40 ${isToday ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}
                             >
-                              <div className="font-semibold text-sm mb-2">
-                                {date.toLocaleDateString("en-US", {
-                                  weekday: "short",
-                                  day: "numeric"
-                                })}
+                              <div className="text-black font-semibold text-sm mb-2 flex justify-between items-center">
+                                <span>
+                                  {date.toLocaleDateString("en-US", {
+                                    weekday: "short",
+                                    day: "numeric"
+                                  })}
+                                </span>
+                                {isToday && (
+                                  <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
+                                    Today
+                                  </span>
+                                )}
                               </div>
 
                               <div className="space-y-1">
-                                {dayEvents.map(event => (
+                                {filteredDayEvents.map(event => (
                                   <div
                                     key={event.id}
-                                    className="text-xs p-1 rounded text-gray-600"
+                                    className="text-xs p-2 rounded cursor-pointer hover:opacity-90"
                                     style={{
                                       backgroundColor: `${event.color}20`,
                                       borderLeft: `3px solid ${event.color}`
                                     }}
+                                    onClick={() => handleEventClick(event)}
                                   >
-                                    {event.title}
+                                    <div className="font-medium truncate">
+                                      {event.title}
+                                    </div>
+                                    <div className="text-xs text-gray-500 truncate mt-1">
+                                      {event.time}
+                                    </div>
                                   </div>
                                 ))}
 
-                                {dayEvents.length === 0 && (
-                                  <p className="text-xs text-gray-400">No events</p>
+                                {filteredDayEvents.length === 0 && (
+                                  <p className="text-xs text-gray-400 text-center py-4">
+                                    No events
+                                  </p>
                                 )}
                               </div>
                             </div>
@@ -488,13 +615,18 @@ export default function CalendarBoard() {
                     </div>
                   )}
 
-
                   {/* Agenda View */}
                   {view === "agenda" && (
                     <div className="p-6">
-                      <h3 className="text-xl font-bold text-gray-900 mb-4">
-                        Agenda - {CITIES.find(c => c.key === selectedCity)?.label}
-                      </h3>
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-bold text-gray-900">
+                          Agenda - {formatCityDisplay(selectedCity)}
+                        </h3>
+                        <div className="text-sm text-gray-600">
+                          {events.length} event{events.length !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+
                       <div className="space-y-4">
                         {events.length > 0 ? (
                           events.map((event) => (
@@ -538,7 +670,7 @@ export default function CalendarBoard() {
                           ))
                         ) : (
                           <div className="text-center py-12 text-gray-500">
-                            No events scheduled
+                            No events scheduled in {formatCityDisplay(selectedCity)}
                           </div>
                         )}
                       </div>
@@ -562,67 +694,80 @@ export default function CalendarBoard() {
 
               {/* Venue Filters */}
               <div className="mb-6">
-                <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  <Users className="w-4 h-4" />
-                  VENUES IN {CITIES.find(c => c.key === selectedCity)?.label.toUpperCase()}
-                </h4>
-                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
-                  {venues.length > 0 ? (
-                    venues.map((venue) => (
-                      <div
-                        key={venue._id}
-                        className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
-                        onClick={() => toggleVenueFilter(venue._id)}
-                      >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <div
-                            className="w-3 h-3 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: venue.colorCode || "#000000" }}
-                          />
-                          <span className="text-sm text-gray-700 truncate">
-                            {venue.venueName}
-                          </span>
-                          {venue.verifiedOrder > 0 && (
-                            <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
-                              ✓
-                            </span>
-                          )}
-                        </div>
-
-                        {/* <div
-                          className={`w-5 h-5 flex-shrink-0 rounded border flex items-center justify-center transition
-                            ${filteredVenueIds.includes(venue._id)
-                              ? "bg-blue-600 border-blue-600"
-                              : "border-gray-300"
-                            }`}
-                        >
-                          {filteredVenueIds.includes(venue._id) && (
-                            <Check className="w-3 h-3 text-white" />
-                          )}
-                        </div> */}
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500 text-center py-4">
-                      No venues found for this city
-                    </p>
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="font-semibold text-gray-700 flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    VENUES
+                  </h4>
+                  {filteredVenueIds.length > 0 && (
+                    <button
+                      onClick={clearAllFilters}
+                      className="text-xs text-blue-600 hover:text-blue-800"
+                    >
+                      Clear filters
+                    </button>
                   )}
                 </div>
 
-                {/* {filteredVenueIds.length > 0 && (
-                  <button
-                    onClick={() => setFilteredVenueIds([])}
-                    className="w-full mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Clear filters
-                  </button>
-                )} */}
+                {filteredVenueIds.length > 0 && (
+                  <div className="mb-3 p-2 bg-blue-50 rounded-lg">
+                    <p className="text-xs text-blue-800 flex items-center gap-1">
+                      <Filter className="w-3 h-3" />
+                      Filtering {filteredVenueIds.length} venue{filteredVenueIds.length !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                  {venues.length > 0 ? (
+                    venues.map((venue) => {
+                      const isActive = filteredVenueIds.includes(venue._id);
+                      return (
+                        <div
+                          key={venue._id}
+                          className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition ${isActive ? 'bg-blue-50 border border-blue-200' : 'hover:bg-gray-50'}`}
+                          onClick={() => toggleVenueFilter(venue._id)}
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <div
+                              className="w-3 h-3 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: venue.colorCode || "#000000" }}
+                            />
+                            <span className={`text-sm truncate ${isActive ? 'text-blue-700 font-medium' : 'text-gray-700'}`}>
+                              {venue.venueName}
+                            </span>
+                            {venue.verifiedOrder > 0 && (
+                              <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
+                                ✓
+                              </span>
+                            )}
+                          </div>
+                          {isActive && (
+                            <span className="text-xs text-blue-600">✓</span>
+                          )}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                      No venues found for {formatCityDisplay(selectedCity)}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Stats */}
               <div className="border-t pt-4">
                 <h4 className="font-semibold text-gray-700 mb-3">CALENDAR STATS</h4>
                 <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">State:</span>
+                    <span className="font-medium text-gray-600">{selectedState}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">City:</span>
+                    <span className="font-medium text-gray-600">{formatCityDisplay(selectedCity)}</span>
+                  </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Total Events:</span>
                     <span className="font-medium text-gray-600">{events.length}</span>
@@ -631,15 +776,9 @@ export default function CalendarBoard() {
                     <span className="text-gray-600">Active Venues:</span>
                     <span className="font-medium text-gray-600">{venues.length}</span>
                   </div>
-                  {/* <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Filtered:</span>
-                    <span className="font-medium text-gray-600">{filteredVenueIds.length} venue(s)</span>
-                  </div> */}
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Current Month:</span>
-                    <span className="font-medium text-gray-600">
-                      {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-                    </span>
+                    <span className="text-gray-600">Current View:</span>
+                    <span className="font-medium text-gray-600 capitalize">{view}</span>
                   </div>
                 </div>
               </div>
@@ -657,7 +796,7 @@ export default function CalendarBoard() {
                 <h3 className="text-xl font-bold text-gray-900">Event Details</h3>
                 <button
                   onClick={() => setShowEventModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 p-1"
                 >
                   ✕
                 </button>
@@ -672,8 +811,14 @@ export default function CalendarBoard() {
                   <h4 className="text-lg font-semibold text-gray-900">{selectedEvent.title}</h4>
                 </div>
 
+                {selectedEvent.description && (
+                  <div className="text-gray-600">
+                    <p className="text-sm">{selectedEvent.description}</p>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2 text-gray-600">
-                  <CalendarIcon className="w-4 h-4" />
+                  <CalendarIcon className="w-4 h-4 flex-shrink-0" />
                   <span>
                     {selectedEvent.date.toLocaleDateString('en-US', {
                       weekday: 'long',
@@ -685,12 +830,12 @@ export default function CalendarBoard() {
                 </div>
 
                 <div className="flex items-center gap-2 text-gray-600">
-                  <Clock className="w-4 h-4" />
+                  <Clock className="w-4 h-4 flex-shrink-0" />
                   <span>{selectedEvent.time}</span>
                 </div>
 
                 <div className="flex items-center gap-2 text-gray-600">
-                  <MapPin className="w-4 h-4" />
+                  <MapPin className="w-4 h-4 flex-shrink-0" />
                   <span>{selectedEvent.venue}</span>
                   {selectedEvent.verified && (
                     <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
@@ -700,13 +845,13 @@ export default function CalendarBoard() {
                 </div>
 
                 <div className="flex items-center gap-2 text-gray-600">
-                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: selectedEvent.color }} />
+                  <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: selectedEvent.color }} />
                   <span>Venue Color: {selectedEvent.color}</span>
                 </div>
 
                 <div className="pt-4 border-t">
                   <p className="text-sm text-gray-500">
-                    City: {CITIES.find(c => c.key === selectedEvent.city)?.label || selectedEvent.city}
+                    <span className="font-medium">Location:</span> {selectedEvent.city}, {selectedEvent.state}
                   </p>
                 </div>
               </div>
@@ -722,13 +867,23 @@ export default function CalendarBoard() {
                   onClick={() => {
                     // Add to Google Calendar functionality
                     const startDate = new Date(selectedEvent.date);
-                    const [hours, minutes] = selectedEvent.time.split(':').map(Number);
-                    startDate.setHours(hours, minutes);
+                    const timeMatch = selectedEvent.time.match(/(\d+):(\d+)\s*(am|pm)/i);
+
+                    if (timeMatch) {
+                      let hours = parseInt(timeMatch[1]);
+                      const minutes = parseInt(timeMatch[2]);
+                      const period = timeMatch[3].toLowerCase();
+
+                      if (period === 'pm' && hours < 12) hours += 12;
+                      if (period === 'am' && hours === 12) hours = 0;
+
+                      startDate.setHours(hours, minutes);
+                    }
 
                     const endDate = new Date(startDate);
                     endDate.setHours(endDate.getHours() + 2);
 
-                    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(selectedEvent.title)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(`Venue: ${selectedEvent.venue}`)}&location=${encodeURIComponent(selectedEvent.venue)}`;
+                    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(selectedEvent.title)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(`Venue: ${selectedEvent.venue}\n\n${selectedEvent.description || ''}`)}&location=${encodeURIComponent(selectedEvent.venue)}`;
 
                     window.open(googleCalendarUrl, '_blank');
                   }}
@@ -745,7 +900,7 @@ export default function CalendarBoard() {
   );
 }
 
-// Mini Calendar Component
+// Mini Calendar Component (unchanged)
 export function MiniCalendar({ currentDate, onChange }) {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();

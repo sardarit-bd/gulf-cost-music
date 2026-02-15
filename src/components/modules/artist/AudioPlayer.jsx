@@ -1,349 +1,273 @@
 "use client";
 
-import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
+import {
+  Heart,
+  MoreVertical,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Volume2,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-export default function AudioPlayer({ audio, index, isPlaying, onToggle, onNext, onPrevious }) {
-    const audioRef = useRef(null);
-    const progressBarRef = useRef(null);
-    const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
-    const [volume, setVolume] = useState(0.8);
-    const [isMuted, setIsMuted] = useState(false);
-    const [isDragging, setIsDragging] = useState(false);
+export default function AudioPlayer({
+  audio,
+  index,
+  isPlaying,
+  isLiked,
+  onToggle,
+  onLike,
+  onNext,
+  onPrevious,
+}) {
+  const audioRef = useRef(null);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
 
-    // Update time and duration
-    useEffect(() => {
-        const audioEl = audioRef.current;
-        if (!audioEl) return;
+  // Audio URL নির্ধারণ
+  const audioUrl = typeof audio === "object" ? audio.url || audio : audio;
+  const audioName =
+    typeof audio === "object"
+      ? audio.name || `Track ${index + 1}`
+      : `Track ${index + 1}`;
 
-        const updateTime = () => {
-            if (!isDragging) {
-                setCurrentTime(audioEl.currentTime);
-            }
-        };
+  // Audio metadata লোড
+  useEffect(() => {
+    if (!audioRef.current) return;
 
-        const updateDuration = () => {
-            setDuration(audioEl.duration || 0);
-        };
-
-        const handleEnded = () => {
-            setCurrentTime(0);
-            onToggle(index);
-        };
-
-        audioEl.addEventListener("timeupdate", updateTime);
-        audioEl.addEventListener("loadedmetadata", updateDuration);
-        audioEl.addEventListener("ended", handleEnded);
-
-        return () => {
-            audioEl.removeEventListener("timeupdate", updateTime);
-            audioEl.removeEventListener("loadedmetadata", updateDuration);
-            audioEl.removeEventListener("ended", handleEnded);
-        };
-    }, [index, onToggle, isDragging]);
-
-    // Volume control
-    useEffect(() => {
-        if (audioRef.current) {
-            audioRef.current.volume = isMuted ? 0 : volume;
-        }
-    }, [volume, isMuted]);
-
-    // Play/pause based on isPlaying prop
-    useEffect(() => {
-        if (!audioRef.current) return;
-
-        if (isPlaying) {
-            const playPromise = audioRef.current.play();
-            if (playPromise !== undefined) {
-                playPromise.catch((error) => {
-                    console.error("Error playing audio:", error);
-                });
-            }
-        } else {
-            audioRef.current.pause();
-        }
-    }, [isPlaying]);
-
-    // Format time to MM:SS
-    const formatTime = (time) => {
-        if (!time || isNaN(time)) return "0:00";
-        const minutes = Math.floor(time / 60);
-        const seconds = Math.floor(time % 60);
-        return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+    const handleLoadedMetadata = () => {
+      setDuration(audioRef.current.duration);
     };
 
-    // Handle progress bar click
-    const handleProgressClick = (e) => {
-        if (!progressBarRef.current || !audioRef.current) return;
-
-        const rect = progressBarRef.current.getBoundingClientRect();
-        const clickPosition = (e.clientX - rect.left) / rect.width;
-        const newTime = clickPosition * duration;
-
-        audioRef.current.currentTime = newTime;
-        setCurrentTime(newTime);
+    const handleTimeUpdate = () => {
+      if (!audioRef.current) return;
+      const current = audioRef.current.currentTime;
+      const total = audioRef.current.duration || 1;
+      setCurrentTime(current);
+      setProgress((current / total) * 100);
     };
 
-    // Handle progress bar drag
-    const handleProgressDragStart = () => setIsDragging(true);
-
-    const handleProgressDrag = (e) => {
-        if (!isDragging || !progressBarRef.current || !audioRef.current) return;
-
-        const rect = progressBarRef.current.getBoundingClientRect();
-        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-        const clickPosition = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-        const newTime = clickPosition * duration;
-
-        setCurrentTime(newTime);
+    const handleEnded = () => {
+      onNext?.();
     };
 
-    const handleProgressDragEnd = () => {
-        if (isDragging && audioRef.current) {
-            audioRef.current.currentTime = currentTime;
-        }
-        setIsDragging(false);
+    audioRef.current.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audioRef.current.addEventListener("timeupdate", handleTimeUpdate);
+    audioRef.current.addEventListener("ended", handleEnded);
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.removeEventListener(
+          "loadedmetadata",
+          handleLoadedMetadata,
+        );
+        audioRef.current.removeEventListener("timeupdate", handleTimeUpdate);
+        audioRef.current.removeEventListener("ended", handleEnded);
+      }
     };
+  }, [onNext]);
 
-    // Handle volume change
-    const handleVolumeChange = (e) => {
-        const newVolume = parseFloat(e.target.value);
-        setVolume(newVolume);
-        if (newVolume > 0 && isMuted) {
-            setIsMuted(false);
-        }
-    };
+  // Play/Pause নিয়ন্ত্রণ
+  useEffect(() => {
+    if (!audioRef.current) return;
 
-    // Handle mute toggle
-    const toggleMute = () => {
-        setIsMuted(!isMuted);
-    };
+    if (isPlaying) {
+      audioRef.current.play().catch((error) => {
+        console.error("Audio play failed:", error);
+      });
+    } else {
+      audioRef.current.pause();
+    }
+  }, [isPlaying]);
 
-    // Handle play/pause
-    const handlePlayPause = () => {
-        onToggle(index);
-    };
+  // Volume নিয়ন্ত্রণ
+  useEffect(() => {
+    if (!audioRef.current) return;
+    audioRef.current.volume = volume;
+    audioRef.current.muted = isMuted;
+  }, [volume, isMuted]);
 
-    return (
-        <div className={`group relative p-4 rounded-xl border transition-all ${isPlaying
-            ? "border-yellow-500 bg-yellow-500/10 shadow-lg shadow-yellow-500/10"
-            : "border-gray-700 bg-gray-800/50 hover:bg-gray-800"
-            }`}>
-            <audio
-                ref={audioRef}
-                src={audio.url}
-                preload="metadata"
-                onError={(e) => console.error("Audio load error:", e)}
-            />
+  // Progress bar ক্লিক হ্যান্ডলার
+  const handleProgressClick = (e) => {
+    if (!audioRef.current || !duration) return;
 
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                {/* Play/Pause Button */}
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={handlePlayPause}
-                        className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all transform active:scale-95 ${isPlaying
-                            ? "bg-yellow-500 text-black shadow-lg"
-                            : "bg-gray-700 text-white hover:bg-yellow-500 hover:text-black"
-                            }`}
-                        aria-label={isPlaying ? "Pause" : "Play"}
-                    >
-                        {isPlaying ? (
-                            <Pause size={20} className="fill-current" />
-                        ) : (
-                            <Play size={20} className="fill-current ml-0.5" />
-                        )}
-                    </button>
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const width = rect.width;
+    const percentage = clickX / width;
+    const newTime = percentage * duration;
 
-                    {/* Skip Controls (Desktop only) */}
-                    <div className="hidden md:flex items-center gap-2">
-                        <button
-                            onClick={onPrevious}
-                            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition"
-                            aria-label="Previous track"
-                            disabled={!onPrevious}
-                        >
-                            <SkipBack size={18} />
-                        </button>
-                        <button
-                            onClick={onNext}
-                            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition"
-                            aria-label="Next track"
-                            disabled={!onNext}
-                        >
-                            <SkipForward size={18} />
-                        </button>
-                    </div>
-                </div>
+    audioRef.current.currentTime = newTime;
+    setCurrentTime(newTime);
+    setProgress(percentage * 100);
+  };
 
-                {/* Track Info */}
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0">
-                            <p className="font-semibold text-white truncate">
-                                {audio.name || `Audio Track ${index + 1}`}
-                            </p>
-                            <div className="flex items-center gap-3 text-sm text-gray-400 mt-1">
-                                <span>{formatTime(currentTime)}</span>
-                                <span className="text-gray-600">/</span>
-                                <span>{formatTime(duration)}</span>
-                            </div>
-                        </div>
+  // Time format ফাংশন
+  const formatTime = (timeInSeconds) => {
+    if (!timeInSeconds) return "0:00";
 
-                        {/* Volume Control (Desktop only) */}
-                        <div className="hidden lg:flex items-center gap-2">
-                            <button
-                                onClick={toggleMute}
-                                className="p-1.5 text-gray-400 hover:text-white transition hover:bg-gray-700/50 rounded"
-                                aria-label={isMuted ? "Unmute" : "Mute"}
-                            >
-                                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                            </button>
-                            <input
-                                type="range"
-                                min="0"
-                                max="1"
-                                step="0.01"
-                                value={isMuted ? 0 : volume}
-                                onChange={handleVolumeChange}
-                                className="w-20 accent-yellow-500 cursor-pointer"
-                                aria-label="Volume"
-                            />
-                        </div>
-                    </div>
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = Math.floor(timeInSeconds % 60);
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
 
-                    {/* Progress Bar */}
-                    <div className="mt-4">
-                        <div
-                            ref={progressBarRef}
-                            className="w-full h-2 bg-gray-700 rounded-full cursor-pointer overflow-hidden relative group/progress"
-                            onClick={handleProgressClick}
-                            onMouseDown={handleProgressDragStart}
-                            onMouseMove={handleProgressDrag}
-                            onMouseUp={handleProgressDragEnd}
-                            onMouseLeave={handleProgressDragEnd}
-                            onTouchStart={handleProgressDragStart}
-                            onTouchMove={handleProgressDrag}
-                            onTouchEnd={handleProgressDragEnd}
-                        >
-                            {/* Background */}
-                            <div className="absolute inset-0 bg-gray-600"></div>
+  // Volume toggle
+  const handleVolumeToggle = () => {
+    setIsMuted(!isMuted);
+  };
 
-                            {/* Progress */}
-                            <div
-                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-500 to-yellow-400 rounded-full transition-all duration-100"
-                                style={{ width: duration ? `${(currentTime / duration) * 100}%` : "0%" }}
-                            />
+  // Volume change
+  const handleVolumeChange = (e) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    setIsMuted(newVolume === 0);
+  };
 
-                            {/* Thumb */}
-                            <div
-                                className="absolute top-1/2 w-4 h-4 bg-white rounded-full shadow-lg transform -translate-y-1/2 -translate-x-1/2 opacity-0 group-hover/progress:opacity-100 transition-opacity"
-                                style={{ left: duration ? `${(currentTime / duration) * 100}%` : "0%" }}
-                            />
-                        </div>
+  // Like toggle
+  const handleLikeClick = () => {
+    onLike?.(index);
+  };
 
-                        {/* Time Display */}
-                        <div className="flex justify-between text-xs text-gray-500 mt-2">
-                            <span>{formatTime(currentTime)}</span>
-                            <span className="text-gray-400">
-                                -{formatTime(Math.max(0, duration - currentTime))}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+  return (
+    <div className="group bg-gradient-to-br from-white to-gray-50 rounded-xl p-5 border border-gray-200 hover:border-blue-300 transition-all duration-300 hover:shadow-md">
+      {/* Hidden audio element */}
+      <audio ref={audioRef} src={audioUrl} preload="metadata" />
+
+      <div className="flex items-start gap-4">
+        {/* Album Art/Thumbnail */}
+        <div className="relative flex-shrink-0">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg overflow-hidden">
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="text-white">
+                {isPlaying ? (
+                  <div className="flex gap-1">
+                    <div className="w-1 h-4 bg-white animate-pulse"></div>
+                    <div className="w-1 h-6 bg-white animate-pulse delay-75"></div>
+                    <div className="w-1 h-8 bg-white animate-pulse delay-150"></div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <div className="text-xs font-bold">MP3</div>
+                    <div className="text-xs">AUDIO</div>
+                  </div>
+                )}
+              </div>
             </div>
+          </div>
 
-            {/* Mobile Volume Control */}
-            <div className="lg:hidden mt-4 pt-4 border-t border-gray-700">
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={toggleMute}
-                        className="p-2 text-gray-400 hover:text-white transition"
-                        aria-label={isMuted ? "Unmute" : "Mute"}
-                    >
-                        {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
-                    </button>
-                    <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        value={isMuted ? 0 : volume}
-                        onChange={handleVolumeChange}
-                        className="flex-1 accent-yellow-500 cursor-pointer"
-                        aria-label="Volume"
-                    />
-                    <span className="text-xs text-gray-400 min-w-[40px] text-right">
-                        {isMuted ? "Muted" : `${Math.round(volume * 100)}%`}
-                    </span>
-                </div>
-            </div>
-
-            {/* Status Indicator */}
-            {isPlaying && (
-                <div className="absolute top-3 bottom-3 right-3">
-                    <div className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-pulse"></div>
-                        <span className="text-xs text-yellow-500 font-medium">Now Playing</span>
-                    </div>
-                </div>
+          {/* Play/Pause Overlay */}
+          <button
+            onClick={() => onToggle?.(index)}
+            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center rounded-lg"
+          >
+            {isPlaying ? (
+              <Pause className="w-8 h-8 text-white" />
+            ) : (
+              <Play className="w-8 h-8 text-white ml-1" />
             )}
-
-            {/* Waveform Animation (Optional) */}
-            {isPlaying && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 overflow-hidden rounded-b-xl">
-                    <div className="flex items-end h-full gap-[2px] px-2">
-                        {[...Array(20)].map((_, i) => (
-                            <div
-                                key={i}
-                                className="flex-1 bg-yellow-500/30 rounded-t"
-                                style={{
-                                    height: `${20 + Math.sin(i * 0.5 + Date.now() * 0.01) * 15}%`,
-                                    animation: `wave 1.2s ease-in-out ${i * 0.05}s infinite alternate`,
-                                }}
-                            />
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* CSS for waveform animation */}
-            <style jsx>{`
-        @keyframes wave {
-          0% {
-            height: 20%;
-          }
-          100% {
-            height: 80%;
-          }
-        }
-        
-        /* Custom scrollbar for audio player */
-        ::-webkit-slider-thumb {
-          appearance: none;
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          background: #f59e0b;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        
-        ::-webkit-slider-thumb:hover {
-          background: #fbbf24;
-          transform: scale(1.1);
-        }
-        
-        ::-moz-range-thumb {
-          width: 16px;
-          height: 16px;
-          border-radius: 50%;
-          background: #f59e0b;
-          cursor: pointer;
-          border: none;
-        }
-      `}</style>
+          </button>
         </div>
-    );
+
+        {/* Track Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <h4 className="font-bold text-gray-900 truncate">{audioName}</h4>
+              <p className="text-sm text-gray-500 mt-1">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleLikeClick}
+                className={`p-2 rounded-full transition-all ${isLiked ? "text-red-500 bg-red-50" : "text-gray-400 hover:text-red-500 hover:bg-red-50"}`}
+              >
+                <Heart size={18} fill={isLiked ? "currentColor" : "none"} />
+              </button>
+
+              <button className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
+                <MoreVertical size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mb-3">
+            <div
+              className="h-1.5 bg-gray-200 rounded-full overflow-hidden cursor-pointer group/progress"
+              onClick={handleProgressClick}
+            >
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full relative group-hover/progress:from-blue-600 group-hover/progress:to-purple-600 transition-all"
+                style={{ width: `${progress}%` }}
+              >
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-sm opacity-0 group-hover/progress:opacity-100 transition-opacity"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onPrevious}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition"
+                disabled={!onPrevious}
+              >
+                <SkipBack size={18} />
+              </button>
+
+              <button
+                onClick={() => onToggle?.(index)}
+                className="p-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full hover:shadow-md transition-shadow"
+              >
+                {isPlaying ? (
+                  <Pause size={20} fill="white" />
+                ) : (
+                  <Play size={20} fill="white" className="ml-0.5" />
+                )}
+              </button>
+
+              <button
+                onClick={onNext}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition"
+                disabled={!onNext}
+              >
+                <SkipForward size={18} />
+              </button>
+            </div>
+
+            {/* Volume Control */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleVolumeToggle}
+                className="p-1.5 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100"
+              >
+                {isMuted || volume === 0 ? (
+                  <Volume2 size={16} className="text-gray-400" />
+                ) : (
+                  <Volume2 size={16} />
+                )}
+              </button>
+
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={isMuted ? 0 : volume}
+                onChange={handleVolumeChange}
+                className="w-20 h-1.5 bg-gray-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-gradient-to-r [&::-webkit-slider-thumb]:from-blue-500 [&::-webkit-slider-thumb]:to-purple-500"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

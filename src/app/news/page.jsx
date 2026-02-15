@@ -6,14 +6,36 @@ import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function NewsPage() {
-  const [selectedCity, setSelectedCity] = useState("All");
+  const [selectedState, setSelectedState] = useState("All");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [newsData, setNewsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [initialLoading, setInitialLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const cities = ["All", "New Orleans", "Biloxi", "Mobile", "Pensacola"];
+  const states = ["All", "Louisiana", "Mississippi", "Alabama", "Florida"];
+
+  // State-wise cities mapping (for reference)
+  const stateCities = {
+    Louisiana: [
+      "New Orleans",
+      "Baton Rouge",
+      "Lafayette",
+      "Shreveport",
+      "Lake Charles",
+      "Monroe",
+    ],
+    Mississippi: ["Jackson", "Biloxi", "Gulfport", "Oxford", "Hattiesburg"],
+    Alabama: ["Birmingham", "Mobile", "Huntsville", "Tuscaloosa"],
+    Florida: [
+      "Tampa",
+      "St. Petersburg",
+      "Clearwater",
+      "Pensacola",
+      "Panama City",
+      "Fort Myers",
+    ],
+  };
 
   // Fetch data from backend
   useEffect(() => {
@@ -22,9 +44,12 @@ export default function NewsPage() {
         setLoading(true);
         setErrorMsg("");
         const query =
-          selectedCity === "All" ? "" : `?location=${selectedCity.toLowerCase()}`;
+          selectedState === "All"
+            ? ""
+            : `?state=${selectedState.toLowerCase()}`;
+
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/news${query}`
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/news${query}`,
         );
 
         const data = await res.json();
@@ -49,13 +74,13 @@ export default function NewsPage() {
     };
 
     fetchNews();
-  }, [selectedCity]);
+  }, [selectedState]);
 
-  const cityColors = {
-    "new orleans": "from-purple-600/80 to-indigo-700/80",
-    biloxi: "from-teal-400/80 to-cyan-600/80",
-    mobile: "from-orange-400/80 to-red-500/80",
-    pensacola: "from-yellow-400/80 to-amber-600/80",
+  const stateColors = {
+    louisiana: "from-purple-600/80 to-indigo-700/80",
+    mississippi: "from-teal-400/80 to-cyan-600/80",
+    alabama: "from-orange-400/80 to-red-500/80",
+    florida: "from-yellow-400/80 to-amber-600/80",
   };
 
   // Initial Loading State
@@ -72,7 +97,10 @@ export default function NewsPage() {
           {/* News Grid Skeleton */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {[...Array(8)].map((_, index) => (
-              <div key={index} className="bg-white/10 rounded-2xl overflow-hidden animate-pulse">
+              <div
+                key={index}
+                className="bg-white/10 rounded-2xl overflow-hidden animate-pulse"
+              >
                 <div className="w-full h-56 bg-gray-600/50"></div>
                 <div className="p-5">
                   <div className="h-6 bg-gray-600/50 rounded mb-2"></div>
@@ -98,25 +126,24 @@ export default function NewsPage() {
         <div className="flex flex-wrap justify-between items-center mb-10">
           <div>
             <h1 className="text-4xl md:text-5xl font-bold brandColor mb-2">
-              City News Board
+              Gulf Coast News
             </h1>
-            <p className="text-gray-300">
-              Stay updated with the latest news from Gulf Coast cities
-            </p>
+            <p className="text-gray-300">Latest news from Gulf Coast states</p>
           </div>
 
-          {/* City Dropdown */}
+          {/* State Dropdown */}
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center gap-2 border border-gray-300 rounded-xl px-4 py-3 text-sm font-medium text-gray-700 bg-white hover:border-yellow-400 hover:bg-yellow-50 transition-all duration-200 min-w-[160px]"
             >
               <MapPin className="w-4 h-4" />
-              <span className="font-medium">{selectedCity}</span>
+              <span className="font-medium">{selectedState}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`w-4 h-4 ml-1 transform transition-transform ${dropdownOpen ? "rotate-180" : ""
-                  }`}
+                className={`w-4 h-4 ml-1 transform transition-transform ${
+                  dropdownOpen ? "rotate-180" : ""
+                }`}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -132,19 +159,20 @@ export default function NewsPage() {
 
             {dropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-2">
-                {cities.map((c) => (
+                {states.map((state) => (
                   <button
-                    key={c}
+                    key={state}
                     onClick={() => {
-                      setSelectedCity(c);
+                      setSelectedState(state);
                       setDropdownOpen(false);
                     }}
-                    className={`block w-full text-left px-4 py-2 text-sm hover:bg-yellow-50 transition ${selectedCity === c
-                      ? "bg-yellow-50 font-semibold text-gray-800 border-r-2 border-yellow-400"
-                      : "text-gray-600"
-                      }`}
+                    className={`block w-full text-left px-4 py-2 text-sm hover:bg-yellow-50 transition ${
+                      selectedState === state
+                        ? "bg-yellow-50 font-semibold text-gray-800 border-r-2 border-yellow-400"
+                        : "text-gray-600"
+                    }`}
                   >
-                    {c}
+                    {state}
                   </button>
                 ))}
               </div>
@@ -152,15 +180,34 @@ export default function NewsPage() {
           </div>
         </div>
 
+        {/* State Navigation Tabs */}
+        <div className="flex flex-wrap gap-2 mb-8">
+          {states.map((state) => (
+            <Link
+              key={state}
+              href={state === "All" ? "/news" : `/news/${state.toLowerCase()}`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                selectedState === state
+                  ? "bg-yellow-400 text-gray-900"
+                  : "bg-white/10 text-gray-200 hover:bg-white/20"
+              }`}
+            >
+              {state}
+            </Link>
+          ))}
+        </div>
+
         {/* Results Info */}
         <div className="flex items-center justify-between mb-8">
           <p className="text-gray-200">
             Showing{" "}
             <span className="font-semibold text-white">{newsData.length}</span>{" "}
-            {selectedCity === "All" ? "news articles" : `${selectedCity} news articles`}
+            {selectedState === "All"
+              ? "news articles"
+              : `${selectedState} news articles`}
           </p>
 
-          {/* Loading indicator for city changes */}
+          {/* Loading indicator for state changes */}
           {loading && (
             <div className="flex items-center gap-2 text-yellow-300">
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -169,13 +216,15 @@ export default function NewsPage() {
           )}
         </div>
 
-        {/* Loading State for City Changes */}
+        {/* Loading State for State Changes */}
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <div className="text-center">
               <Loader2 className="w-12 h-12 animate-spin text-yellow-400 mx-auto mb-4" />
               <p className="text-gray-200 text-lg">
-                Loading {selectedCity === "All" ? "all news" : `${selectedCity} news`}...
+                Loading{" "}
+                {selectedState === "All" ? "all news" : `${selectedState} news`}
+                ...
               </p>
             </div>
           </div>
@@ -200,17 +249,16 @@ export default function NewsPage() {
                     No News Found
                   </h3>
                   <p className="text-gray-300 mb-6 max-w-md mx-auto">
-                    {selectedCity === "All"
+                    {selectedState === "All"
                       ? "No news articles are currently available. Check back later!"
-                      : `No news articles found for ${selectedCity}. Try selecting "All" cities.`
-                    }
+                      : `No news articles found for ${selectedState}. Try selecting "All" states.`}
                   </p>
-                  {selectedCity !== "All" && (
+                  {selectedState !== "All" && (
                     <button
-                      onClick={() => setSelectedCity("All")}
+                      onClick={() => setSelectedState("All")}
                       className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold rounded-full transition-colors"
                     >
-                      Show All Cities
+                      Show All States
                     </button>
                   )}
                 </div>
@@ -223,7 +271,7 @@ export default function NewsPage() {
                 {newsData.map((item) => (
                   <div
                     key={item._id}
-                    className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white"
+                    className="relative rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 bg-white group"
                   >
                     <div className="relative w-full h-56 overflow-hidden">
                       <Image
@@ -236,15 +284,20 @@ export default function NewsPage() {
                         className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div
-                        className={`absolute inset-0 bg-gradient-to-t ${cityColors[item.location] || "from-gray-800/90 to-gray-900/70"
-                          }`}
+                        className={`absolute inset-0 bg-gradient-to-t ${
+                          stateColors[item.state?.toLowerCase()] ||
+                          "from-gray-800/90 to-gray-900/70"
+                        }`}
                       ></div>
 
-                      {/* City Badge */}
-                      <div className="absolute top-3 left-3">
+                      {/* State & City Badge */}
+                      <div className="absolute top-3 left-3 flex flex-col gap-1">
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-800 backdrop-blur-sm">
                           <MapPin className="w-3 h-3 mr-1" />
-                          {item.location || "Unknown"}
+                          {item.state || "Unknown State"}
+                        </span>
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-black/70 text-white backdrop-blur-sm">
+                          {item.location || "Unknown City"}
                         </span>
                       </div>
                     </div>
@@ -262,7 +315,7 @@ export default function NewsPage() {
                           </span>
                         </div>
                         <Link
-                          href={`/news/${item.location}/${item._id}`}
+                          href={`/news/${item.state?.toLowerCase() || "all"}/${item.location?.toLowerCase() || "unknown"}/${item._id}`}
                           className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm font-semibold rounded-full transition-all duration-200 hover:shadow-lg transform hover:scale-105"
                         >
                           Read More
