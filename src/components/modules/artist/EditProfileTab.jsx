@@ -72,86 +72,56 @@ export default function EditProfileTab({
   onSave,
   saving = false,
 }) {
-  const [removedPhotos, setRemovedPhotos] = useState([]);
-  const [removedAudios, setRemovedAudios] = useState([]);
-  const [localImages, setLocalImages] = useState([]);
-  const [localAudios, setLocalAudios] = useState([]);
+  // Track which existing files are marked for deletion
+  const [photosToDelete, setPhotosToDelete] = useState([]);
+  const [audiosToDelete, setAudiosToDelete] = useState([]);
+
+  // Local state for UI display
+  const [displayImages, setDisplayImages] = useState([]);
+  const [displayAudios, setDisplayAudios] = useState([]);
   const [selectedState, setSelectedState] = useState("");
   const [filteredCities, setFilteredCities] = useState([]);
 
-  // Initialize local state
+  // Initialize display state from props
   useEffect(() => {
-    // ================= IMAGES =================
-    const formattedImages = previewImages
-      .map((img) => {
-        if (typeof img === "string") {
-          const filename = img.split("/").pop();
-          return {
-            url: img,
-            filename,
-            isNew: false,
-            isRemoved: false,
-          };
-        }
+    console.log("📸 Preview Images from parent:", previewImages);
 
-        return {
-          url: img.url || "",
-          filename: img.filename || img.url?.split("/").pop() || "",
-          file: img.file,
-          isNew: img.isNew || false,
-          isRemoved: false,
-        };
-      })
-      .filter((img) => img.url && img.url.trim() !== "");
+    // Format images for display
+    const formattedImages = previewImages.map((img, index) => ({
+      id: img.id || `img-${Date.now()}-${index}`,
+      url: img.url,
+      filename: img.filename || img.url?.split("/").pop(),
+      publicId: img.publicId,
+      isExisting: img.isExisting || false,
+      file: img.file, // Make sure file is preserved
+    }));
+    setDisplayImages(formattedImages);
 
-    setLocalImages(formattedImages);
-
-    // ================= AUDIO =================
-    setLocalAudios((prev) => {
-      const existingNewAudios = prev.filter((a) => a.isNew && a.file);
-
-      const formattedAudios = audioPreview
-        .map((audio) => {
-          if (typeof audio === "string") {
-            const filename = audio.split("/").pop();
-            return {
-              url: audio,
-              filename,
-              name: filename,
-              isNew: false,
-              isRemoved: false,
-            };
-          }
-
-          if (audio?.url) {
-            return {
-              url: audio.url,
-              filename: audio.filename || audio.url.split("/").pop(),
-              name: audio.name || audio.filename || "",
-              isNew: false,
-              isRemoved: false,
-            };
-          }
-
-          return null;
-        })
-        .filter(Boolean);
-      return [...formattedAudios, ...existingNewAudios];
-    });
-
-    setRemovedPhotos([]);
-    setRemovedAudios([]);
+    // Format audios for display
+    const formattedAudios = audioPreview.map((audio, index) => ({
+      id: audio.id || `audio-${Date.now()}-${index}`,
+      url: audio.url,
+      filename: audio.filename || audio.url?.split("/").pop(),
+      name: audio.name || audio.filename || `Track ${index + 1}`,
+      publicId: audio.publicId,
+      isExisting: audio.isExisting || false,
+      file: audio.file, // Make sure file is preserved
+    }));
+    setDisplayAudios(formattedAudios);
 
     // Auto-detect state from current city
     if (artist?.city && artist?.state) {
-      const currentCity = artist.city.toLowerCase();
       const currentState = artist.state;
-
-      if (CITY_OPTIONS[currentState]) {
-        const cityList = CITY_OPTIONS[currentState].map((c) => c.value);
-        if (cityList.includes(currentCity)) {
-          setSelectedState(currentState);
-          setFilteredCities(CITY_OPTIONS[currentState]);
+      setSelectedState(currentState);
+      setFilteredCities(CITY_OPTIONS[currentState] || []);
+    } else if (artist?.city) {
+      // Try to detect state from city
+      for (const [state, cities] of Object.entries(CITY_OPTIONS)) {
+        const cityValues = cities.map(c => c.value);
+        if (cityValues.includes(artist.city.toLowerCase())) {
+          setSelectedState(state);
+          setFilteredCities(CITY_OPTIONS[state] || []);
+          break;
         }
       }
     }
@@ -164,16 +134,20 @@ export default function EditProfileTab({
 
     if (state && state !== "") {
       setFilteredCities(CITY_OPTIONS[state] || []);
-      if (artist?.city) {
-        onChange({
-          target: {
-            name: "city",
-            value: "",
-          },
-        });
-      }
+      onChange({
+        target: {
+          name: "state",
+          value: state,
+        },
+      });
     } else {
       setFilteredCities([]);
+      onChange({
+        target: {
+          name: "city",
+          value: "",
+        },
+      });
     }
   };
 
@@ -182,103 +156,65 @@ export default function EditProfileTab({
     onChange(e);
   };
 
-  const handleImageUpload = async (files) => {
-    const currentVisibleImages = localImages.filter((img) => !img.isRemoved);
-    const totalPhotos = currentVisibleImages.length + files.length;
+  // Handle new image uploads
+  const handleImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-    if (totalPhotos > 5) {
-      toast.error(`Maximum 5 photos allowed`);
-      return;
-    }
-
-    const newImages = [...localImages];
-    files.forEach((file) => {
-      newImages.push({
-        url: URL.createObjectURL(file),
-        filename: file.name,
-        file: file,
-        isNew: true,
-        isRemoved: false,
-      });
-    });
-
-    setLocalImages(newImages);
-    if (onImageUpload) onImageUpload(files);
+    console.log("📸 Uploading files:", files.map(f => f.name));
+    onImageUpload(files);
+    e.target.value = ''; // Reset input
   };
 
+  // Handle image removal
   const handleRemoveImage = (index) => {
-    const imageToRemove = localImages[index];
+    const imageToRemove = displayImages[index];
 
-    if (!imageToRemove.isNew) {
-      const updatedImages = [...localImages];
-      updatedImages[index] = {
-        ...imageToRemove,
-        isRemoved: true,
-      };
-      setLocalImages(updatedImages);
-
-      if (imageToRemove.filename) {
-        setRemovedPhotos((prev) => [...prev, imageToRemove.filename]);
-      }
-    } else {
-      const updatedImages = [...localImages];
-      updatedImages.splice(index, 1);
-      setLocalImages(updatedImages);
+    // If it's an existing image, mark it for deletion
+    if (imageToRemove.isExisting && imageToRemove.url) {
+      setPhotosToDelete(prev => [...prev, imageToRemove.url]);
     }
 
+    // Remove from display
+    const newImages = [...displayImages];
+    newImages.splice(index, 1);
+    setDisplayImages(newImages);
+
+    // Call parent handler
     if (onRemoveImage) onRemoveImage(index);
   };
 
-  const handleAudioUpload = async (files) => {
-    const currentVisibleAudios = localAudios.filter(
-      (audio) => !audio.isRemoved,
-    );
-    const totalAudios = currentVisibleAudios.length + files.length;
+  // Handle new audio uploads
+  const handleAudioUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-    if (totalAudios > 5) {
-      toast.error(`Maximum 5 audio files allowed`);
-      return;
-    }
-
-    const newAudios = [...localAudios];
-    files.forEach((file) => {
-      newAudios.push({
-        url: URL.createObjectURL(file),
-        filename: file.name,
-        name: file.name,
-        file: file,
-        isNew: true,
-        isRemoved: false,
-      });
-    });
-
-    setLocalAudios(newAudios);
+    console.log("🎵 Uploading audio files:", files.map(f => f.name));
+    onAudioUpload(files);
+    e.target.value = ''; // Reset input
   };
 
+  // Handle audio removal
   const handleRemoveAudio = (index) => {
-    const audioToRemove = localAudios[index];
+    const audioToRemove = displayAudios[index];
 
-    if (!audioToRemove.isNew) {
-      const updatedAudios = [...localAudios];
-      updatedAudios[index] = {
-        ...audioToRemove,
-        isRemoved: true,
-      };
-      setLocalAudios(updatedAudios);
-
-      if (audioToRemove.filename) {
-        setRemovedAudios((prev) => [...prev, audioToRemove.filename]);
-      }
-    } else {
-      const updatedAudios = [...localAudios];
-      updatedAudios.splice(index, 1);
-      setLocalAudios(updatedAudios);
+    // If it's an existing audio, mark it for deletion
+    if (audioToRemove.isExisting && audioToRemove.url) {
+      setAudiosToDelete(prev => [...prev, audioToRemove.url]);
     }
 
+    // Remove from display
+    const newAudios = [...displayAudios];
+    newAudios.splice(index, 1);
+    setDisplayAudios(newAudios);
+
+    // Call parent handler
     if (onRemoveAudio) onRemoveAudio(index);
   };
 
+  // Handle save
   const handleSave = async () => {
+    // Validation
     if (!selectedState) {
       toast.error("Please select a state");
       return;
@@ -286,6 +222,16 @@ export default function EditProfileTab({
 
     if (!artist?.city) {
       toast.error("Please select a city");
+      return;
+    }
+
+    if (!artist?.name?.trim()) {
+      toast.error("Please enter your name");
+      return;
+    }
+
+    if (!artist?.genre) {
+      toast.error("Please select a genre");
       return;
     }
 
@@ -299,47 +245,62 @@ export default function EditProfileTab({
 
     const formData = new FormData();
 
+    // Add basic fields
     formData.append("name", artist.name || "");
     formData.append("city", artist.city || "");
-    formData.append("state", selectedState);
     formData.append("genre", artist.genre || "");
     formData.append("biography", artist.biography || "");
 
-    removedPhotos.forEach((filename) => {
-      if (filename) {
-        formData.append("removedPhotos", filename);
-      }
+    // Add photos to delete as JSON string
+    if (photosToDelete.length > 0) {
+      formData.append("photosToDelete", JSON.stringify(photosToDelete));
+      console.log("📸 Photos to delete:", photosToDelete);
+    }
+
+    // Add audios to delete as JSON string
+    if (audiosToDelete.length > 0) {
+      formData.append("audiosToDelete", JSON.stringify(audiosToDelete));
+      console.log("🎵 Audios to delete:", audiosToDelete);
+    }
+
+    // Add new photos - FIX: Use correct field name 'photos'
+    const newPhotos = displayImages.filter(img => !img.isExisting && img.file);
+    console.log("📸 New photos to upload:", newPhotos.length);
+
+    newPhotos.forEach(img => {
+      formData.append("photos", img.file); // Make sure field name is 'photos'
+      console.log("  - Adding photo:", img.file.name);
     });
 
-    removedAudios.forEach((filename) => {
-      if (filename) {
-        formData.append("removedAudios", filename);
-      }
+    // Add new audios - FIX: Use correct field name 'mp3Files'
+    const newAudios = displayAudios.filter(audio => !audio.isExisting && audio.file);
+    console.log("🎵 New audios to upload:", newAudios.length);
+
+    newAudios.forEach(audio => {
+      formData.append("mp3Files", audio.file); // Make sure field name is 'mp3Files'
+      console.log("  - Adding audio:", audio.file.name);
     });
 
-    localImages
-      .filter((img) => img.isNew && img.file && !img.isRemoved)
-      .forEach((img) => {
-        formData.append("photos", img.file);
-      });
-
-    localAudios
-      .filter((audio) => audio.isNew && audio.file && !audio.isRemoved)
-      .forEach((audio) => {
-        formData.append("mp3Files", audio.file);
-      });
+    // Log FormData contents for debugging
+    console.log("📦 Final FormData contents:");
+    for (let pair of formData.entries()) {
+      if (pair[1] instanceof File) {
+        console.log(`  ${pair[0]}: ${pair[1].name} (${(pair[1].size / 1024).toFixed(2)} KB)`);
+      } else {
+        console.log(`  ${pair[0]}: ${pair[1]}`);
+      }
+    }
 
     try {
       await onSave(formData);
-      setRemovedPhotos([]);
-      setRemovedAudios([]);
+      // Reset deletion tracking after successful save
+      setPhotosToDelete([]);
+      setAudiosToDelete([]);
     } catch (error) {
       console.error("Save failed:", error);
+      throw error;
     }
   };
-
-  const visibleImages = localImages.filter((img) => !img.isRemoved);
-  const visibleAudios = localAudios.filter((audio) => !audio.isRemoved);
 
   return (
     <div className="animate-fadeIn space-y-8">
@@ -444,14 +405,14 @@ export default function EditProfileTab({
               Photos
             </h3>
             <div className="text-sm text-gray-600">
-              {visibleImages.length}/5 uploaded
+              {displayImages.length}/{uploadLimits.photos} uploaded
             </div>
           </div>
 
           <div className="space-y-4">
             {/* Upload Area */}
             <label className="block cursor-pointer">
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 hover:bg-blue-50/20 transition-all duration-300">
+              <div className={`border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 hover:bg-blue-50/20 transition-all duration-300 ${displayImages.length >= uploadLimits.photos ? 'opacity-50 cursor-not-allowed' : ''}`}>
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Camera className="w-6 h-6 text-blue-600" />
                 </div>
@@ -462,42 +423,57 @@ export default function EditProfileTab({
                   PNG, JPG, WebP • Max 5MB each
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Upload up to 5 photos
+                  Upload up to {uploadLimits.photos} photos
                 </p>
               </div>
               <input
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
                 multiple
-                onChange={(e) => handleImageUpload(Array.from(e.target.files))}
+                onChange={handleImageUpload}
                 className="hidden"
-                disabled={visibleImages.length >= 5}
+                disabled={displayImages.length >= uploadLimits.photos}
               />
             </label>
 
             {/* Image Preview Grid */}
-            {visibleImages.length > 0 && (
+            {displayImages.length > 0 && (
               <div className="grid grid-cols-3 gap-3">
-                {visibleImages.map((img, idx) => (
-                  <div key={idx} className="relative group">
-                    <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
-                      <Image
-                        src={img.url}
-                        alt={`Upload ${idx + 1}`}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 33vw, 20vw"
-                      />
+                {displayImages.map((img, idx) => (
+                  <div key={img.id || idx} className="relative group">
+                    <div className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                      {img.url ? (
+                        <Image
+                          src={img.url}
+                          alt={`Upload ${idx + 1}`}
+                          fill
+                          sizes="(max-width: 768px) 100px, 150px"
+                          unoptimized={img.url?.startsWith("blob:")}
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+                          Invalid Image
+                        </div>
+                      )}
                     </div>
+
                     <button
                       onClick={() => handleRemoveImage(idx)}
                       className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition opacity-0 group-hover:opacity-100"
+                      type="button"
                     >
                       <X className="w-3 h-3" />
                     </button>
-                    {img.isNew && (
+
+                    {!img.isExisting && (
                       <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded">
                         New
+                      </div>
+                    )}
+                    {img.isExisting && photosToDelete.includes(img.url) && (
+                      <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded">
+                        Will Delete
                       </div>
                     )}
                   </div>
@@ -515,14 +491,14 @@ export default function EditProfileTab({
               Audio Tracks
             </h3>
             <div className="text-sm text-gray-600">
-              {visibleAudios.length}/5 uploaded
+              {displayAudios.length}/{uploadLimits.audios} uploaded
             </div>
           </div>
 
           <div className="space-y-4">
             {/* Upload Area */}
             <label className="block cursor-pointer">
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-400 hover:bg-purple-50/20 transition-all duration-300">
+              <div className={`border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-400 hover:bg-purple-50/20 transition-all duration-300 ${displayAudios.length >= uploadLimits.audios ? 'opacity-50 cursor-not-allowed' : ''}`}>
                 <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Music className="w-6 h-6 text-purple-600" />
                 </div>
@@ -533,46 +509,52 @@ export default function EditProfileTab({
                   MP3, WAV, M4A • Max 10MB each
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Upload up to 5 audio tracks
+                  Upload up to {uploadLimits.audios} audio tracks
                 </p>
               </div>
               <input
                 type="file"
-                accept="audio/*"
+                accept="audio/mpeg,audio/wav,audio/mp3,audio/m4a"
                 multiple
-                onChange={(e) => handleAudioUpload(Array.from(e.target.files))}
+                onChange={handleAudioUpload}
                 className="hidden"
-                disabled={visibleAudios.length >= 5}
+                disabled={displayAudios.length >= uploadLimits.audios}
               />
             </label>
 
             {/* Audio Preview List */}
-            {visibleAudios.length > 0 && (
+            {displayAudios.length > 0 && (
               <div className="space-y-2">
-                {visibleAudios.map((audio, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 group">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                {displayAudios.map((audio, idx) => (
+                  <div key={audio.id || idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 group">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                         <Music className="w-5 h-5 text-purple-600" />
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900 text-sm">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 text-sm truncate">
                           {audio.name || `Track ${idx + 1}`}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 truncate">
                           {audio.filename}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {audio.isNew && (
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {!audio.isExisting && (
                         <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
                           New
+                        </span>
+                      )}
+                      {audio.isExisting && audiosToDelete.includes(audio.url) && (
+                        <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">
+                          Will Delete
                         </span>
                       )}
                       <button
                         onClick={() => handleRemoveAudio(idx)}
                         className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+                        type="button"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -591,6 +573,7 @@ export default function EditProfileTab({
           onClick={handleSave}
           disabled={saving}
           className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          type="button"
         >
           {saving ? (
             <>

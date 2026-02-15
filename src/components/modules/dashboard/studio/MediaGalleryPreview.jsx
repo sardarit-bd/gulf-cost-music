@@ -10,8 +10,7 @@ import {
     Music,
     Play,
     Plus,
-    Trash2,
-    Upload
+    Trash2
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -64,14 +63,14 @@ export default function MediaGalleryPreview({ photos = [], audioFile = null }) {
                                 <List className="w-4 h-4" />
                             </button>
                         </div>
-
+                        {/* 
                         <Link
                             href="/dashboard/studio/media/upload"
                             className="px-4 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
                         >
                             <Upload className="w-4 h-4" />
                             Upload
-                        </Link>
+                        </Link> */}
                     </div>
                 </div>
             </div>
@@ -93,14 +92,14 @@ export default function MediaGalleryPreview({ photos = [], audioFile = null }) {
                             </div>
                         </div>
 
-                        {photoCount > 0 && (
+                        {/* {photoCount > 0 && (
                             <Link
                                 href="/dashboard/studio/media/gallery"
                                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                             >
                                 View All →
                             </Link>
-                        )}
+                        )} */}
                     </div>
 
                     {photoCount === 0 ? (

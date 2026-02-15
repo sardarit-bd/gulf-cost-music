@@ -4,12 +4,8 @@ import {
     CheckCircle,
     Clock,
     DollarSign,
-    Edit2,
     Package,
-    Plus,
-    Star,
-    Trash2,
-    Zap
+    Plus
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -90,13 +86,13 @@ export default function ServicesPreview({ services = [] }) {
                         <CheckCircle className="w-4 h-4 text-green-600" />
                         <span>{displayServices.length} services active</span>
                     </div>
-                    <Link
+                    {/* <Link
                         href="/dashboard/studios/profile/services"
                         className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-2"
                     >
                         Manage All Services
                         <Zap className="w-4 h-4" />
-                    </Link>
+                    </Link> */}
                 </div>
             </div>
         </div>
@@ -115,10 +111,10 @@ function ServiceCard({ service, color, index }) {
                     <div className={`w-12 h-12 ${color} rounded-lg flex items-center justify-center shadow`}>
                         <Package className="w-6 h-6 text-white" />
                     </div>
-                    <div className="flex items-center gap-1">
+                    {/* <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-500 fill-current" />
                         <span className="text-sm font-medium text-gray-900">{service.rating || "4.8"}</span>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Service Info */}
@@ -142,7 +138,7 @@ function ServiceCard({ service, color, index }) {
                 </div>
 
                 {/* Actions */}
-                <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+                {/* <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
                     <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
                         View Details
                     </button>
@@ -154,7 +150,7 @@ function ServiceCard({ service, color, index }) {
                             <Trash2 className="w-4 h-4" />
                         </button>
                     </div>
-                </div>
+                </div> */}
             </div>
         </div>
     );

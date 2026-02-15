@@ -1,18 +1,16 @@
 "use client";
 
 import MediaGalleryPreview from "@/components/modules/dashboard/studio/MediaGalleryPreview";
-import QuickActions from "@/components/modules/dashboard/studio/QuickActions";
 import ServicesPreview from "@/components/modules/dashboard/studio/ServicesPreview";
 import { useSession } from "@/lib/auth";
 import {
-  AlertCircle,
   BarChart3,
   Building2,
   Camera,
   CheckCircle,
   Package,
   Star,
-  Upload,
+  Upload
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "./lib/api";
@@ -29,7 +27,7 @@ export default function StudioDashboard() {
   const [loading, setLoading] = useState(true);
   const [quickStats, setQuickStats] = useState([
     { label: "Profile Completion", value: "65%", color: "bg-blue-500" },
-    { label: "Verified", value: "Pending", color: "bg-yellow-500" },
+    // { label: "Verified", value: "Pending", color: "bg-yellow-500" },
     { label: "Services", value: "3", color: "bg-green-500" },
     { label: "Photos", value: "2/5", color: "bg-purple-500" },
   ]);
@@ -155,7 +153,7 @@ export default function StudioDashboard() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div
+            {/* <div
               className={`px-4 py-2 rounded-full ${studioData?.isVerified ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"} font-medium flex items-center gap-2`}
             >
               {studioData?.isVerified ? (
@@ -166,7 +164,7 @@ export default function StudioDashboard() {
               {studioData?.isVerified
                 ? "Verified Studio"
                 : "Verification Pending"}
-            </div>
+            </div> */}
             <div className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full font-medium flex items-center gap-2">
               <Building2 className="w-4 h-4" />
               {studioData?.state || "Gulf Coast"}
@@ -174,42 +172,6 @@ export default function StudioDashboard() {
           </div>
         </div>
       </div>
-
-      {/* Stats Grid */}
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <StatCard
-                    title="Profile Views"
-                    value={stats.profileViews.toLocaleString()}
-                    change="+12%"
-                    icon={Eye}
-                    color="bg-blue-500"
-                    trend="up"
-                />
-                <StatCard
-                    title="Audio Plays"
-                    value={stats.audioPlays.toLocaleString()}
-                    change="+23%"
-                    icon={Headphones}
-                    color="bg-green-500"
-                    trend="up"
-                />
-                <StatCard
-                    title="Bookings"
-                    value={stats.bookings}
-                    change="+5%"
-                    icon={Calendar}
-                    color="bg-purple-500"
-                    trend="up"
-                />
-                <StatCard
-                    title="Total Earnings"
-                    value={`$${stats.earnings.toLocaleString()}`}
-                    change="+18%"
-                    icon={DollarSign}
-                    color="bg-orange-500"
-                    trend="up"
-                />
-            </div> */}
 
       {/* Quick Stats */}
       <div className="mb-8">
@@ -264,27 +226,19 @@ export default function StudioDashboard() {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Quick Actions & Services */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Quick Actions */}
-          <QuickActions actions={quickActions} />
+          {/* <QuickActions actions={quickActions} /> */}
 
-          {/* Services Preview */}
           <ServicesPreview services={studioData?.services || []} />
 
-          {/* Recent Activity */}
-          {/* <RecentActivity /> */}
         </div>
 
-        {/* Right Column - Media Gallery & Profile Status */}
         <div className="space-y-8">
-          {/* Media Gallery Preview */}
           <MediaGalleryPreview
             photos={studioData?.photos || []}
             audioFile={studioData?.audioFile}
           />
 
-          {/* Profile Status Card */}
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold">Profile Status</h3>
@@ -325,44 +279,10 @@ export default function StudioDashboard() {
                 </div>
               ))}
             </div>
-
             <button className="w-full mt-6 bg-white text-blue-600 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-colors">
               Complete Profile
             </button>
           </div>
-
-          {/* Tips & Updates */}
-          {/* <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Tips for Success
-            </h3>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Camera className="w-3 h-3" />
-                </div>
-                <span className="text-sm text-gray-600">
-                  Upload high-quality studio photos to attract more clients
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-green-100 text-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Music className="w-3 h-3" />
-                </div>
-                <span className="text-sm text-gray-600">
-                  Add audio samples to showcase your production quality
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <TrendingUp className="w-3 h-3" />
-                </div>
-                <span className="text-sm text-gray-600">
-                  Complete profile for 40% more visibility in search results
-                </span>
-              </li>
-            </ul>
-          </div> */}
         </div>
       </div>
     </div>

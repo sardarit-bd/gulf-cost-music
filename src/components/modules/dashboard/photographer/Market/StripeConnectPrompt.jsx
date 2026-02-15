@@ -1,118 +1,141 @@
 "use client";
 
-import { AlertTriangle, ArrowRight, Loader2 } from "lucide-react";
+import { Camera, DollarSign, ExternalLink, Shield, Zap } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
-export default function StripeConnectPrompt({ onSuccess, user }) {
+export default function StripeConnectPrompt({
+  onSuccess,
+  user,
+  userType = "photographer",
+  onConnect
+}) {
   const [loading, setLoading] = useState(false);
 
-  const handleStripeConnect = async () => {
+  const handleConnect = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/stripe/connect/onboard`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      const data = await res.json();
-
-      if (data.success) {
-        if (data.url) {
-          // Redirect to Stripe onboarding
-          window.location.href = data.url;
-        } else if (
-          data.message === "Already connected" ||
-          data.data?.isStripeConnected
-        ) {
-          // Already connected
-          toast.success("Your Stripe account is already connected!");
-          if (onSuccess) onSuccess();
-        }
-      } else {
-        toast.error(data.message || "Stripe connection failed");
-      }
-    } catch (err) {
-      console.error("Stripe connect error:", err);
-      toast.error("Failed to connect Stripe. Please try again.");
+      await onConnect();
+    } catch (error) {
+      console.error("Connect error:", error);
+      toast.error("Failed to connect Stripe");
     } finally {
       setLoading(false);
     }
   };
 
-  // Check if user is eligible
-  const isEligible = [
-    "artist",
-    "venue",
-    "photographer",
-    "studio",
-    "journalist",
-    "fan",
-  ].includes(String(user?.userType || "").toLowerCase());
+  // User type specific messages
+  const getMessages = () => {
+    switch (userType) {
+      case "photographer":
+        return {
+          title: "Connect Stripe to Sell Your Photography",
+          description: "Start selling your photos, packages, and services to clients",
+          features: [
+            "Accept payments for photo shoots",
+            "Sell digital photo packages",
+            "Receive tips and deposits",
+            "Secure client payments"
+          ]
+        };
+      case "artist":
+        return {
+          title: "Connect Stripe to Sell Your Music",
+          description: "Start selling your music, merchandise, and tickets",
+          features: [
+            "Sell digital downloads",
+            "Accept payments for merch",
+            "Sell event tickets",
+            "Receive royalties"
+          ]
+        };
+      case "venue":
+        return {
+          title: "Connect Stripe for Event Payments",
+          description: "Start selling tickets and accepting bookings",
+          features: [
+            "Sell event tickets",
+            "Accept venue bookings",
+            "Process deposits",
+            "Manage payouts"
+          ]
+        };
+      default:
+        return {
+          title: "Connect Stripe to Start Selling",
+          description: "Start selling your products and services",
+          features: [
+            "Accept secure payments",
+            "Fast payouts",
+            "Simple setup",
+            "Global reach"
+          ]
+        };
+    }
+  };
 
-  if (!isEligible) {
-    return (
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
-        <div className="flex items-start gap-4">
-          <div className="p-2 bg-gray-100 rounded-lg">
-            <AlertTriangle className="w-6 h-6 text-gray-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Stripe Connect Not Available
-            </h3>
-            <p className="text-gray-700">
-              Your account type is not eligible for Stripe Connect at this time.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const messages = getMessages();
 
   return (
-    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
-      <div className="flex items-start gap-4">
-        <div className="p-2 bg-yellow-100 rounded-lg">
-          <AlertTriangle className="w-6 h-6 text-yellow-600" />
+    <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="flex items-start gap-4">
+          <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg">
+            <Camera className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+              {messages.title}
+            </h3>
+            <p className="text-gray-600 max-w-2xl">
+              {messages.description}
+            </p>
+
+            {/* Feature List */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-3">
+              {messages.features.map((feature, index) => (
+                <div key={index} className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="w-1 h-1 bg-purple-500 rounded-full"></div>
+                  <span>{feature}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Benefits */}
+            <div className="flex flex-wrap items-center gap-4 mt-4">
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <Shield className="w-3 h-3" />
+                Secure payments
+              </div>
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <Zap className="w-3 h-3" />
+                2.9% + $0.30 per transaction
+              </div>
+              <div className="flex items-center gap-1 text-xs text-gray-500">
+                <DollarSign className="w-3 h-3" />
+                Fast payouts
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Connect Stripe Account Required
-          </h3>
-          <p className="text-gray-700 mb-4">
-            To receive payments for your listings, you need to connect your
-            Stripe account. This is required for secure payment processing.
-          </p>
-          <button
-            onClick={handleStripeConnect}
-            disabled={loading}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-3 rounded-lg font-medium hover:from-yellow-600 hover:to-yellow-700 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Connecting...
-              </>
-            ) : (
-              <>
-                Connect Stripe Account
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
-          <p className="text-sm text-gray-600 mt-2">
-            Stripe is required to securely send your earnings to you.
-          </p>
-        </div>
+
+        <button
+          onClick={handleConnect}
+          disabled={loading}
+          className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 whitespace-nowrap"
+        >
+          {loading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Connecting...
+            </>
+          ) : (
+            <>
+              <ExternalLink className="w-5 h-5" />
+              Connect with Stripe
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

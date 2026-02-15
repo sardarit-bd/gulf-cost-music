@@ -1,5 +1,6 @@
 "use client";
 
+import StripeConnectedView from "@/components/shared/StripeConnectedView";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import AccessDenied from "./AccessDenied";
@@ -10,7 +11,6 @@ import MarketplaceStats from "./MarketplaceStats";
 import MarketplaceTabs from "./MarketplaceTabs";
 import MyListingsTab from "./MyListingsTab";
 import StripeConnectPrompt from "./StripeConnectPrompt";
-import StripeConnectedView from "./StripeConnectedView";
 import StripePendingView from "./StripePendingView";
 
 const getToken = () => {
@@ -44,7 +44,7 @@ export default function MarketplacePage({ API_BASE, subscriptionPlan, user }) {
 
   const [checkingStripe, setCheckingStripe] = useState(true);
 
-  // Check permissions
+  // Check permissions - Photographer specific
   const isVerified = !!user?.isVerified;
   const isAllowedSeller = [
     "artist",
@@ -75,6 +75,74 @@ export default function MarketplacePage({ API_BASE, subscriptionPlan, user }) {
       console.error("Error checking Stripe status:", error);
     } finally {
       setCheckingStripe(false);
+    }
+  };
+
+  // ===== HANDLE STRIPE CONNECTION =====
+  const handleStripeConnect = async () => {
+    try {
+      const token = getToken();
+      if (!token) {
+        toast.error("Please sign in again");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/api/stripe/connect/onboard`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.url) {
+        // Redirect to Stripe onboarding
+        window.location.href = data.url;
+      } else {
+        toast.error(data.message || "Failed to connect Stripe");
+      }
+    } catch (error) {
+      console.error("Stripe connect error:", error);
+      toast.error("Failed to connect Stripe account");
+    }
+  };
+
+  // ===== REFRESH STRIPE STATUS =====
+  const refreshStripeStatus = async () => {
+    setCheckingStripe(true);
+    await checkStripeStatus();
+  };
+
+  // ===== HANDLE DASHBOARD REDIRECT =====
+  const handleDashboardRedirect = async () => {
+    try {
+      const token = getToken();
+      if (!token) {
+        toast.error("Please sign in again");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/api/stripe/connect/dashboard`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.url) {
+        window.open(data.url, "_blank");
+      } else {
+        if (data.requiresOnboarding) {
+          // Redirect to complete onboarding
+          window.location.href = data.url;
+        } else {
+          toast.error(data.message || "Failed to access dashboard");
+        }
+      }
+    } catch (error) {
+      console.error("Dashboard error:", error);
+      toast.error("Failed to access Stripe dashboard");
     }
   };
 
@@ -127,12 +195,6 @@ export default function MarketplacePage({ API_BASE, subscriptionPlan, user }) {
     }
   }, [API_BASE, hasMarketplaceAccess, user]);
 
-  // ===== REFRESH STRIPE STATUS =====
-  const refreshStripeStatus = async () => {
-    setCheckingStripe(true);
-    await checkStripeStatus();
-  };
-
   // Handle listing creation/update
   const handleListingUpdate = (updatedItem, isNew = false) => {
     setExistingItem(updatedItem);
@@ -156,7 +218,7 @@ export default function MarketplacePage({ API_BASE, subscriptionPlan, user }) {
   };
 
   if (!hasMarketplaceAccess) {
-    return <AccessDenied />;
+    return <AccessDenied userType="photographer" />;
   }
 
   if (loading || checkingStripe) {
@@ -173,7 +235,7 @@ export default function MarketplacePage({ API_BASE, subscriptionPlan, user }) {
           stripeStatus={stripeStatus}
         />
 
-        {/* ===== STRIPE CONNECT SECTION ===== */}
+        {/* ===== STRIPE CONNECT SECTION - PHOTOGRAPHER ===== */}
         {!stripeStatus.isStripeConnected &&
           stripeStatus.stripeAccountStatus === "pending" && (
             <StripePendingView
@@ -184,15 +246,21 @@ export default function MarketplacePage({ API_BASE, subscriptionPlan, user }) {
 
         {!stripeStatus.isStripeConnected &&
           stripeStatus.stripeAccountStatus === "not_connected" && (
-            <StripeConnectPrompt onSuccess={handleStripeSuccess} user={user} />
+            <StripeConnectPrompt
+              onSuccess={handleStripeSuccess}
+              user={user}
+              userType="photographer"
+              onConnect={handleStripeConnect}
+            />
           )}
 
         {stripeStatus.isStripeConnected && (
           <StripeConnectedView
             stripeStatus={stripeStatus}
-            onDashboardClick={() =>
-              window.open("/api/stripe/connect/dashboard", "_blank")
-            }
+            onConnect={handleStripeConnect}
+            onRefresh={refreshStripeStatus}
+            userType="photographer"
+            onDashboardClick={handleDashboardRedirect}
           />
         )}
 
@@ -218,7 +286,7 @@ export default function MarketplacePage({ API_BASE, subscriptionPlan, user }) {
           {!stripeStatus.isStripeConnected && !existingItem ? (
             <div className="p-8 text-center">
               <p className="text-gray-600">
-                Please connect your Stripe account to start selling
+                Please connect your Stripe account to start selling your photography services
               </p>
             </div>
           ) : (
@@ -231,6 +299,7 @@ export default function MarketplacePage({ API_BASE, subscriptionPlan, user }) {
                   onDelete={handleListingDelete}
                   user={user}
                   stripeStatus={stripeStatus}
+                  userType="photographer"
                 />
               ) : (
                 <MyListingsTab
@@ -240,6 +309,7 @@ export default function MarketplacePage({ API_BASE, subscriptionPlan, user }) {
                   API_BASE={API_BASE}
                   user={user}
                   stripeStatus={stripeStatus}
+                  userType="photographer"
                 />
               )}
             </>

@@ -41,49 +41,58 @@ export default function ManageProfilePage() {
         try {
             setLoading(true);
             const response = await api.getMyArtistProfile();
-            if (response.success && response.data.artist) {
-                const artistData = response.data.artist;
-                setArtist(artistData);
 
-                // Ensure we only set valid photos with URLs
+            if (response.success && response.data?.artist) {
+                const artistData = response.data.artist;
+
+                // Set artist basic info
+                setArtist({
+                    name: artistData.name || "",
+                    city: artistData.city || "",
+                    genre: artistData.genre || "",
+                    biography: artistData.biography || "",
+                    photos: artistData.photos || [],
+                    mp3Files: artistData.mp3Files || [],
+                    isVerified: artistData.isVerified || false,
+                });
+
+                // Process photos - ensure valid URLs
                 const validPhotos = (artistData.photos || [])
-                    .filter(
-                        (photo) =>
-                            photo &&
-                            photo.url &&
-                            typeof photo.url === "string" &&
-                            photo.url.trim() !== "" &&
-                            !photo.url.includes("undefined") &&
-                            !photo.url.includes("null"),
-                    )
-                    .map((p) => ({
-                        url: p.url,
-                        filename: p.filename || p.url.split("/").pop(),
-                        isNew: false,
+                    .filter(photo => photo && photo.url && typeof photo.url === "string")
+                    .map(photo => ({
+                        url: photo.url,
+                        filename: photo.filename || photo.url.split("/").pop(),
+                        publicId: photo.publicId,
+                        isExisting: true,
                     }));
 
                 setPreviewImages(validPhotos);
 
-                // Ensure valid audio files
-                const validAudios = (artistData.mp3Files || []).filter(
-                    (audio) =>
-                        audio &&
-                        audio.url &&
-                        typeof audio.url === "string" &&
-                        audio.url.trim() !== "" &&
-                        !audio.url.includes("undefined") &&
-                        !audio.url.includes("null"),
-                );
+                // Process audio files - ensure valid URLs
+                const validAudios = (artistData.mp3Files || [])
+                    .filter(audio => audio && audio.url && typeof audio.url === "string")
+                    .map(audio => ({
+                        url: audio.url,
+                        filename: audio.filename || audio.url.split("/").pop(),
+                        name: audio.originalName || audio.filename || "Audio Track",
+                        publicId: audio.publicId,
+                        isExisting: true,
+                    }));
 
                 setAudioPreview(validAudios);
+
+                console.log("✅ Profile loaded:", {
+                    photos: validPhotos.length,
+                    audios: validAudios.length
+                });
             } else {
-                // Set empty arrays if no valid data
+                // New profile - empty state
                 setPreviewImages([]);
                 setAudioPreview([]);
             }
         } catch (error) {
-            console.error("Error loading artist profile:", error);
-            toast.error("Failed to load profile");
+            console.error("❌ Error loading artist profile:", error);
+            toast.error(error.message || "Failed to load profile");
             setPreviewImages([]);
             setAudioPreview([]);
         } finally {
@@ -99,24 +108,35 @@ export default function ManageProfilePage() {
     const handleSave = async (formData) => {
         try {
             setSaving(true);
+
+            // Log FormData contents for debugging
+            console.log("📦 Sending FormData:");
+            for (let pair of formData.entries()) {
+                if (pair[1] instanceof File) {
+                    console.log(`  ${pair[0]}: ${pair[1].name} (${(pair[1].size / 1024).toFixed(2)} KB)`);
+                } else {
+                    console.log(`  ${pair[0]}: ${pair[1]}`);
+                }
+            }
+
             const response = await api.updateArtistProfile(formData);
 
             if (response.success) {
                 toast.success("Profile updated successfully!");
-                await loadArtistProfile();
-                await refreshUser();
+                await loadArtistProfile(); // Reload fresh data
+                await refreshUser(); // Refresh user context
             } else {
                 toast.error(response.message || "Failed to update profile");
             }
         } catch (error) {
-            console.error("Error updating profile:", error);
-            toast.error("Failed to update profile");
+            console.error("❌ Error updating profile:", error);
+            toast.error(error.message || "Failed to update profile");
         } finally {
             setSaving(false);
         }
     };
 
-    const handleImageUpload = async (files) => {
+    const handleImageUpload = (files) => {
         const totalPhotos = previewImages.length + files.length;
         if (totalPhotos > 5) {
             toast.error(`You can upload maximum 5 photos.`);
@@ -125,10 +145,14 @@ export default function ManageProfilePage() {
 
         const newImages = [...previewImages];
         files.forEach((file) => {
+            // Create object URL for preview
+            const objectUrl = URL.createObjectURL(file);
+
             newImages.push({
-                url: URL.createObjectURL(file),
+                url: objectUrl,
                 filename: file.name,
-                file,
+                file: file,
+                isExisting: false,
                 isNew: true,
             });
         });
@@ -136,7 +160,7 @@ export default function ManageProfilePage() {
         setPreviewImages(newImages);
     };
 
-    const handleAudioUpload = async (files) => {
+    const handleAudioUpload = (files) => {
         const totalAudios = audioPreview.length + files.length;
         if (totalAudios > 5) {
             toast.error(`You can upload maximum 5 audio files.`);
@@ -145,14 +169,64 @@ export default function ManageProfilePage() {
 
         const newAudios = [...audioPreview];
         files.forEach((file) => {
+            // Create object URL for preview
+            const objectUrl = URL.createObjectURL(file);
+
             newAudios.push({
+                url: objectUrl,
+                filename: file.name,
                 name: file.name,
-                url: URL.createObjectURL(file),
                 file: file,
+                isExisting: false,
+                isNew: true,
             });
         });
         setAudioPreview(newAudios);
     };
+
+    // Handle image removal
+    const handleRemoveImage = (index) => {
+        const imageToRemove = previewImages[index];
+
+        // Revoke object URL to free memory (for blob URLs)
+        if (imageToRemove.url && imageToRemove.url.startsWith('blob:')) {
+            URL.revokeObjectURL(imageToRemove.url);
+        }
+
+        const newImages = [...previewImages];
+        newImages.splice(index, 1);
+        setPreviewImages(newImages);
+    };
+
+    // Handle audio removal
+    const handleRemoveAudio = (index) => {
+        const audioToRemove = audioPreview[index];
+
+        // Revoke object URL to free memory (for blob URLs)
+        if (audioToRemove.url && audioToRemove.url.startsWith('blob:')) {
+            URL.revokeObjectURL(audioToRemove.url);
+        }
+
+        const newAudios = [...audioPreview];
+        newAudios.splice(index, 1);
+        setAudioPreview(newAudios);
+    };
+
+    // Cleanup object URLs on unmount
+    useEffect(() => {
+        return () => {
+            previewImages.forEach(img => {
+                if (img.url && img.url.startsWith('blob:')) {
+                    URL.revokeObjectURL(img.url);
+                }
+            });
+            audioPreview.forEach(audio => {
+                if (audio.url && audio.url.startsWith('blob:')) {
+                    URL.revokeObjectURL(audio.url);
+                }
+            });
+        };
+    }, [previewImages, audioPreview]);
 
     if (loading) {
         return (
@@ -178,40 +252,9 @@ export default function ManageProfilePage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-            <Toaster />
-
-            {/* Header Section */}
-            {/* <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div>
-                            <Link
-                                href="/dashboard/artist"
-                                className="inline-flex items-center gap-2 text-blue-100 hover:text-white mb-3"
-                            >
-                                <ArrowLeft size={18} />
-                                Back to Dashboard
-                            </Link>
-                            <h1 className="text-2xl font-bold">Edit Profile</h1>
-                            <p className="text-blue-100 mt-1">
-                                Update your artist information and upload content
-                            </p>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                            <div className="text-right">
-                                <p className="text-sm text-blue-100">Plan</p>
-                                <p className="font-semibold capitalize">
-                                    {subscriptionPlan}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div> */}
-
+            <Toaster position="top-right" />
             {/* Main Content */}
-            <div className=" px-4 sm:px-6 lg:px-8 py-8">
+            <div className="px-4 sm:px-6 lg:px-8 py-8">
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
                     <div className="border-b border-gray-100">
                         <div className="px-6 py-4">
@@ -241,7 +284,9 @@ export default function ManageProfilePage() {
                             uploadLimits={uploadLimits}
                             onChange={handleChange}
                             onImageUpload={handleImageUpload}
+                            onRemoveImage={handleRemoveImage}
                             onAudioUpload={handleAudioUpload}
+                            onRemoveAudio={handleRemoveAudio}
                             onSave={handleSave}
                             saving={saving}
                         />

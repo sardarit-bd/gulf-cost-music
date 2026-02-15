@@ -2,8 +2,9 @@
 
 import { api } from "@/components/modules/artist/apiService";
 import ArtistMarketplaceTab from "@/components/modules/artist/MarketplaceTab";
+import StripeConnectedView from "@/components/shared/StripeConnectedView";
 import { useAuth } from "@/context/AuthContext";
-import { RefreshCw, Shield, ShoppingBag, TrendingUp, Zap } from "lucide-react";
+import { RefreshCw, Shield, ShoppingBag } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 
@@ -21,6 +22,10 @@ export default function MarketplacePage() {
     const [stripeStatus, setStripeStatus] = useState({
         isConnected: false,
         isReady: false,
+        stripeAccountId: null,
+        chargesEnabled: false,
+        payoutsEnabled: false,
+        detailsSubmitted: false,
     });
 
     const [currentListing, setCurrentListing] = useState({
@@ -34,7 +39,13 @@ export default function MarketplacePage() {
     const [listingPhotos, setListingPhotos] = useState([]);
     const [listingVideos, setListingVideos] = useState([]);
     const [isEditingListing, setIsEditingListing] = useState(false);
-    const [deletedPhotoIndexes, setDeletedPhotoIndexes] = useState([]);
+
+    // FIXED: Store actual photo URLs to delete, not indexes
+    const [deletedPhotoUrls, setDeletedPhotoUrls] = useState([]);
+
+    // FIXED: Store video URL to delete
+    const [deletedVideoUrl, setDeletedVideoUrl] = useState(null);
+
     const [pageLoading, setPageLoading] = useState(true);
     const [stats, setStats] = useState({
         totalViews: 0,
@@ -53,7 +64,6 @@ export default function MarketplacePage() {
                 await Promise.all([
                     loadMarketplaceData(),
                     loadBillingData(),
-                    // loadAnalytics()
                 ]);
             } catch (error) {
                 console.error("Error initializing marketplace:", error);
@@ -91,6 +101,10 @@ export default function MarketplacePage() {
                     setListingVideos(
                         Array.isArray(listing.videos) ? listing.videos : [],
                     );
+
+                    // Reset deleted items when loading new data
+                    setDeletedPhotoUrls([]);
+                    setDeletedVideoUrl(null);
                 } else {
                     setListings([]);
                     setIsEditingListing(false);
@@ -110,25 +124,19 @@ export default function MarketplacePage() {
             setBillingData(billingRes.data);
 
             if (user) {
-                const isConnected = !!user.stripeAccountId;
-                const isReady = isConnected && (user.stripeOnboardingComplete || true);
-                setStripeStatus({ isConnected, isReady });
+                setStripeStatus({
+                    isConnected: !!user.stripeAccountId,
+                    isReady: !!(user.stripeAccountId && user.stripeAccountStatus === 'active'),
+                    stripeAccountId: user.stripeAccountId || null,
+                    chargesEnabled: billingRes.data?.chargesEnabled || false,
+                    payoutsEnabled: billingRes.data?.payoutsEnabled || false,
+                    detailsSubmitted: billingRes.data?.detailsSubmitted || false,
+                });
             }
         } catch (error) {
             console.error("Error loading billing data:", error);
         }
     };
-
-    // const loadAnalytics = async () => {
-    //     try {
-    //         const analyticsRes = await api.getMarketplaceAnalytics();
-    //         if (analyticsRes.success) {
-    //             setStats(analyticsRes.data);
-    //         }
-    //     } catch (error) {
-    //         console.error("Error loading analytics:", error);
-    //     }
-    // };
 
     const handleListingChange = (e) => {
         const { name, value } = e.target;
@@ -185,7 +193,6 @@ export default function MarketplacePage() {
                 toast.success("🎉 Listing created successfully!");
                 await Promise.all([
                     loadMarketplaceData(),
-                    // loadAnalytics()
                 ]);
             } else {
                 toast.error(response.message || "Failed to create listing");
@@ -196,38 +203,61 @@ export default function MarketplacePage() {
         }
     };
 
+    // FIXED: Update listing with proper deletion tracking
     const handleUpdateListing = async () => {
         try {
             const formData = new FormData();
+
+            // Add basic fields
             formData.append("title", currentListing.title);
             formData.append("description", currentListing.description);
             formData.append("price", currentListing.price);
             formData.append("location", currentListing.location);
             formData.append("status", currentListing.status);
 
+            // FIXED: Add photos to delete as JSON string
+            if (deletedPhotoUrls.length > 0) {
+                formData.append("photosToDelete", JSON.stringify(deletedPhotoUrls));
+                console.log("📸 Sending photos to delete:", deletedPhotoUrls);
+            }
+
+            // FIXED: Add video to delete flag
+            if (deletedVideoUrl) {
+                formData.append("deleteVideo", "true");
+                console.log("🎥 Sending video to delete:", deletedVideoUrl);
+            }
+
+            // Add new photos
             listingPhotos.forEach((photo) => {
                 if (photo instanceof File) {
                     formData.append("photos", photo);
+                    console.log("📸 Adding new photo:", photo.name);
                 }
             });
 
-            deletedPhotoIndexes.forEach((index) => {
-                formData.append("deletedPhotos[]", index);
-            });
-
-            if (listingVideos[0] instanceof File) {
+            // Add new video
+            if (listingVideos.length > 0 && listingVideos[0] instanceof File) {
                 formData.append("video", listingVideos[0]);
+                console.log("🎥 Adding new video:", listingVideos[0].name);
+            }
+
+            // Log all form data for debugging
+            console.log("📦 FormData contents:");
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));
             }
 
             const response = await api.updateMarketItem(formData);
 
             if (response.success) {
-                toast.success("✅ Listing updated successfully!");
-                setDeletedPhotoIndexes([]);
-                await Promise.all([
-                    loadMarketplaceData(),
-                    // loadAnalytics()
-                ]);
+                // toast.success("✅ Listing updated successfully!");
+
+                // Reset deleted items
+                setDeletedPhotoUrls([]);
+                setDeletedVideoUrl(null);
+
+                // Reload data
+                await loadMarketplaceData();
                 setIsEditingListing(false);
             } else {
                 toast.error(response.message || "Failed to update listing");
@@ -258,8 +288,9 @@ export default function MarketplacePage() {
                 });
                 setListingPhotos([]);
                 setListingVideos([]);
+                setDeletedPhotoUrls([]);
+                setDeletedVideoUrl(null);
                 setIsEditingListing(false);
-                // await loadAnalytics();
             } else {
                 toast.error(response.message || "Failed to delete listing");
             }
@@ -277,10 +308,21 @@ export default function MarketplacePage() {
             location: listing.location,
             status: listing.status,
         });
+
         setListingPhotos(listing.photos || []);
-        setListingVideos(listing.video ? [listing.video] : []);
+
+        // 🔥 FIX HERE
+        setListingVideos(
+            Array.isArray(listing.videos) && listing.videos.length > 0
+                ? listing.videos
+                : []
+        );
+
+        setDeletedPhotoUrls([]);
+        setDeletedVideoUrl(null);
         setIsEditingListing(true);
     };
+
 
     const handleCancelEdit = () => {
         setIsEditingListing(false);
@@ -306,6 +348,36 @@ export default function MarketplacePage() {
             setListingPhotos([]);
             setListingVideos([]);
         }
+        setDeletedPhotoUrls([]);
+        setDeletedVideoUrl(null);
+    };
+
+    // FIXED: Handle photo removal with URL tracking
+    const handleRemovePhoto = (index) => {
+        const photo = listingPhotos[index];
+
+        // If it's an existing photo (string URL), add to deletedPhotoUrls
+        if (typeof photo === "string") {
+            setDeletedPhotoUrls(prev => [...prev, photo]);
+            console.log("📸 Marking for deletion:", photo);
+        }
+
+        // Remove from UI
+        const newPhotos = [...listingPhotos];
+        newPhotos.splice(index, 1);
+        setListingPhotos(newPhotos);
+    };
+
+    // FIXED: Handle video removal with URL tracking
+    const handleRemoveVideo = () => {
+        // If there's an existing video (string URL), set as deleted
+        if (listingVideos.length > 0 && typeof listingVideos[0] === "string") {
+            setDeletedVideoUrl(listingVideos[0]);
+            console.log("🎥 Marking video for deletion:", listingVideos[0]);
+        }
+
+        // Remove from UI
+        setListingVideos([]);
     };
 
     const handleListingPhotoUpload = (files) => {
@@ -336,22 +408,6 @@ export default function MarketplacePage() {
         }
 
         setListingVideos([file]);
-    };
-
-    const removeListingPhoto = (index) => {
-        const photo = listingPhotos[index];
-
-        if (typeof photo === "string") {
-            setDeletedPhotoIndexes((prev) => [...prev, index]);
-        }
-
-        const newPhotos = [...listingPhotos];
-        newPhotos.splice(index, 1);
-        setListingPhotos(newPhotos);
-    };
-
-    const removeListingVideo = () => {
-        setListingVideos([]);
     };
 
     const handleStripeConnect = async () => {
@@ -388,7 +444,7 @@ export default function MarketplacePage() {
         try {
             await Promise.all([
                 loadMarketplaceData(),
-                // loadAnalytics()
+                loadBillingData(),
             ]);
             toast.success("Data refreshed successfully!");
         } catch (error) {
@@ -396,6 +452,11 @@ export default function MarketplacePage() {
         } finally {
             setPageLoading(false);
         }
+    };
+
+    const handleStripeRefresh = async () => {
+        await loadBillingData();
+        await refreshUser();
     };
 
     if (!user) {
@@ -469,27 +530,7 @@ export default function MarketplacePage() {
                                     </p>
                                 </div>
                             </div>
-
-                            {/* Quick Stats */}
                             <div className="flex flex-wrap gap-4 mt-6">
-                                <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-sm">
-                                    <div className="p-2 bg-blue-100 rounded-lg">
-                                        <TrendingUp className="w-5 h-5 text-blue-600" />
-                                    </div>
-                                    <div>
-                                        <div className="text-2xl font-bold text-gray-900">{stats.totalViews}</div>
-                                        <div className="text-sm text-gray-600">Total Views</div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-sm">
-                                    <div className="p-2 bg-green-100 rounded-lg">
-                                        <Zap className="w-5 h-5 text-green-600" />
-                                    </div>
-                                    <div>
-                                        <div className="text-2xl font-bold text-gray-900">{stats.totalClicks}</div>
-                                        <div className="text-sm text-gray-600">Total Clicks</div>
-                                    </div>
-                                </div>
                                 <div className="flex items-center gap-3 bg-white px-4 py-3 rounded-xl border border-gray-200 shadow-sm">
                                     <div className="p-2 bg-purple-100 rounded-lg">
                                         <Shield className="w-5 h-5 text-purple-600" />
@@ -526,6 +567,16 @@ export default function MarketplacePage() {
             <div className="px-4 md:px-8 pb-12">
                 <div className="bg-white/90 backdrop-blur-sm rounded-3xl border border-gray-200 shadow-xl overflow-hidden">
                     <div className="p-6 md:p-8">
+                        {/* Stripe Connected View */}
+                        <div className="mb-8">
+                            <StripeConnectedView
+                                stripeStatus={stripeStatus}
+                                onConnect={handleStripeConnect}
+                                onRefresh={handleStripeRefresh}
+                                userType="artist"
+                            />
+                        </div>
+
                         <ArtistMarketplaceTab
                             subscriptionPlan={subscriptionPlan}
                             hasMarketplaceAccess={hasMarketplaceAccess}
@@ -539,8 +590,8 @@ export default function MarketplacePage() {
                             onListingChange={handleListingChange}
                             onPhotoUpload={handleListingPhotoUpload}
                             onVideoUpload={handleListingVideoUpload}
-                            onRemovePhoto={removeListingPhoto}
-                            onRemoveVideo={removeListingVideo}
+                            onRemovePhoto={handleRemovePhoto}
+                            onRemoveVideo={handleRemoveVideo}
                             onCreateListing={handleCreateListing}
                             onUpdateListing={handleUpdateListing}
                             onEditListing={handleEditListing}
@@ -556,17 +607,6 @@ export default function MarketplacePage() {
                             stats={stats}
                         />
                     </div>
-                </div>
-            </div>
-
-            {/* Footer Note */}
-            <div className="container mx-auto px-4 md:px-8 pb-8">
-                <div className="text-center text-gray-600 text-sm">
-                    <p className="flex items-center justify-center gap-2">
-                        <Shield className="w-4 h-4" />
-                        All transactions are secured with Stripe. Your payment information is never stored on our servers.
-                    </p>
-                    <p className="mt-2">Need help? Contact support at support@gulfcoast.com</p>
                 </div>
             </div>
         </div>

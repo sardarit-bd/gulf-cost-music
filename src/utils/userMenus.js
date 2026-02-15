@@ -3,7 +3,7 @@ export const ROLE_MENUS = {
     { label: "Dashboard", href: "/dashboard/artist" },
     { label: "Manage Profile", href: "/dashboard/artist/manageProfile" },
     { label: "Marketplace", href: "/dashboard/artist/marketplace" },
-    { label: "Billing", href: "/dashboard/artist/billing" },
+    // { label: "Billing", href: "/dashboard/artist/billing" },
     { label: "Orders", href: "/dashboard/artist/orders" },
   ],
   photographer: [
