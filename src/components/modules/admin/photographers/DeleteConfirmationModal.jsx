@@ -93,7 +93,7 @@ export default function DeleteConfirmationModal({
                             type="text"
                             value={confirmationText}
                             onChange={(e) => setConfirmationText(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
+                            className="text-gray-500 w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
                             placeholder="Type DELETE here"
                         />
                     </div>
