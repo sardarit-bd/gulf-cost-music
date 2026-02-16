@@ -39,11 +39,9 @@ export default function VenueProfile() {
     const fetchVenue = async () => {
       setLoading(true);
       try {
-        console.log("Fetching venue ID:", venueId);
 
         const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/${venueId}`);
 
-        console.log("Venue API response status:", res.status);
 
         if (!res.ok) {
           if (res.status === 404) {
@@ -54,7 +52,6 @@ export default function VenueProfile() {
         }
 
         const data = await res.json();
-        console.log("Venue data:", data);
 
         if (data.success && data.data?.venue) {
           setVenue(data.data.venue);
@@ -77,14 +74,9 @@ export default function VenueProfile() {
 
   // Handle back navigation
   const handleBack = () => {
-
-    console.log("clicked")
-    if (canGoBack) {
-      router.back();
-    } else {
-      router.push(`/venues/${state}/${city}`);
-    }
+    router.push(`/venues/${state}/${city}`);
   };
+
 
   // const handleBack = () => {
   //   router.push(`/venues/${state}/${city}`);
@@ -346,7 +338,7 @@ export default function VenueProfile() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/70 to-transparent"></div>
 
           {/* Back Button - Top Left */}
-          <div className="absolute inset-x-0 top-4">
+          <div className="absolute inset-x-0 top-4 z-20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6">
               <button
                 onClick={handleBack}
@@ -357,6 +349,7 @@ export default function VenueProfile() {
               </button>
             </div>
           </div>
+
 
           {/* Venue Verification Badge */}
           {venue.verifiedOrder > 0 && (

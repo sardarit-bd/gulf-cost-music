@@ -115,7 +115,6 @@ export default function MediaUpload({
                             </div>
                             <button
                                 onClick={() => {
-                                    console.log("Removing existing photo:", photo);
                                     onRemoveExistingPhoto(photo);
                                 }}
                                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition shadow-lg"
@@ -137,7 +136,6 @@ export default function MediaUpload({
                             </div>
                             <button
                                 onClick={() => {
-                                    console.log("Removing new photo at index:", index);
                                     onRemovePhoto(index);
                                 }}
                                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition shadow-lg"
@@ -232,10 +230,6 @@ export default function MediaUpload({
 
                         <button
                             onClick={() => {
-                                console.log("Removing video:", {
-                                    hasExistingVideo,
-                                    existingVideo: existingItem?.videos?.[0]
-                                });
                                 hasExistingVideo ? onRemoveExistingVideo() : onRemoveVideo();
                             }}
                             className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition shadow-lg"

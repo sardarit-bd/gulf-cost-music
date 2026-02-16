@@ -81,7 +81,6 @@ export default function VideoPage() {
       const data = await response.json();
 
       if (data.data?.photographer?.videos) {
-        console.log("Fetched videos:", data.data.photographer.videos);
         setVideos(data.data.photographer.videos);
       } else {
         setVideos([]);
@@ -111,8 +110,6 @@ export default function VideoPage() {
       // Upload to Cloudinary
       const cloudinaryResult = await uploadToCloudinary(file);
 
-      console.log("Cloudinary upload result:", cloudinaryResult);
-
       // Save to backend
       const savedData = await saveVideoToBackend({
         title: title || file.name.replace(/\.[^/.]+$/, "") || "Untitled Video",
@@ -123,8 +120,6 @@ export default function VideoPage() {
         bytes: cloudinaryResult.bytes,
         format: cloudinaryResult.format,
       });
-
-      console.log("Backend save response:", savedData);
 
       // Show success message
       setSuccessMessage("Video uploaded successfully!");
@@ -327,7 +322,6 @@ export default function VideoPage() {
     };
 
     const handleLoaded = () => {
-      console.log("Video loaded successfully:", video.url);
       setLoading(false);
       setError(false);
     };
@@ -521,11 +515,10 @@ export default function VideoPage() {
               <button
                 onClick={() => setShowUploadModal(true)}
                 disabled={videos.length >= 1 || uploading}
-                className={`flex items-center justify-center gap-2 px-3 py-2 sm:px-5 sm:py-2.5 rounded-lg md:rounded-xl font-medium transition shadow-sm text-sm sm:text-base ${
-                  videos.length >= 1 || uploading
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:from-blue-700 hover:to-cyan-600 shadow-md hover:shadow-lg"
-                }`}
+                className={`flex items-center justify-center gap-2 px-3 py-2 sm:px-5 sm:py-2.5 rounded-lg md:rounded-xl font-medium transition shadow-sm text-sm sm:text-base ${videos.length >= 1 || uploading
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:from-blue-700 hover:to-cyan-600 shadow-md hover:shadow-lg"
+                  }`}
               >
                 <Plus size={isMobile ? 16 : 20} />
                 <span className="hidden sm:inline">

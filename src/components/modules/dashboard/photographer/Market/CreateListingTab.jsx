@@ -121,20 +121,17 @@ export default function CreateListingTab({
     };
 
     const handleRemovePhoto = (index) => {
-        console.log("Removing new photo at index:", index);
         setPhotoFiles(prev => prev.filter((_, i) => i !== index));
         toast.success("New photo removed");
     };
 
     const handleRemoveVideo = () => {
-        console.log("Removing new video");
         setVideoFile(null);
         toast.success("New video removed");
     };
 
     // Existing photo removal function - FIXED
     const handleRemoveExistingPhoto = (photo) => {
-        console.log("🗑️ Removing existing photo:", photo);
 
         if (!photo) {
             toast.error("Invalid photo data");
@@ -144,8 +141,6 @@ export default function CreateListingTab({
         // Convert photo to URL string
         const photoUrl = typeof photo === 'string' ? photo : photo.url || photo;
 
-        console.log('Photo URL to delete:', photoUrl);
-
         // Add to deletion list (ensuring it's properly formatted)
         setPhotosToDelete(prev => {
             const alreadyExists = prev.some(p => {
@@ -154,12 +149,10 @@ export default function CreateListingTab({
             });
 
             if (alreadyExists) {
-                console.log('Photo already in deletion list');
                 return prev;
             }
 
             const newList = [...prev, photoUrl];
-            console.log('Updated deletion list:', newList);
             return newList;
         });
 
@@ -173,7 +166,6 @@ export default function CreateListingTab({
                 }
                 return shouldKeep;
             });
-            console.log('Updated UI photos:', newList.length);
             return newList;
         });
 
@@ -182,7 +174,6 @@ export default function CreateListingTab({
 
     // Video removal function - FIXED
     const handleRemoveExistingVideo = () => {
-        console.log("🎥 Removing existing video:", existingVideo);
 
         if (existingVideo) {
             setDeleteExistingVideo(true);
@@ -195,19 +186,6 @@ export default function CreateListingTab({
             toast.error("No existing video to delete");
         }
     };
-
-    // const handleRemoveExistingVideo = () => {
-    //     console.log("Removing existing video:", existingVideo);
-
-    //     if (existingVideo) {
-    //         setDeleteExistingVideo(true);
-    //         setHasExistingVideo(false);
-    //         setExistingVideo(null);
-    //         toast.success("Video marked for deletion. Click Save to confirm.");
-    //     } else {
-    //         toast.error("No existing video to delete");
-    //     }
-    // };
 
     const handleSubmit = async () => {
         const validationErrors = validateListingForm();
@@ -245,7 +223,6 @@ export default function CreateListingTab({
                PHOTOS DELETE (🔥 FIXED)
             ========================= */
             if (photosToDelete.length > 0) {
-                console.log("Sending photos to delete:", photosToDelete);
                 photosToDelete.forEach((photoUrl, index) => {
                     // Send as simple object with URL
                     submitFormData.append(
@@ -283,7 +260,6 @@ export default function CreateListingTab({
             /* =========================
                DEBUG (REMOVE LATER)
             ========================= */
-            console.log("Submitting FormData:");
             for (let [key, value] of submitFormData.entries()) {
                 if (value instanceof File) {
                     console.log(key, `[File: ${value.name}]`);

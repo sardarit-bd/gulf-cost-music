@@ -110,7 +110,6 @@ export default function CalendarBoard() {
       }
 
       const data = await response.json();
-      console.log("Calendar API Response:", data);
 
       if (data.success) {
         // Transform backend events to frontend format
@@ -145,7 +144,6 @@ export default function CalendarBoard() {
         });
 
         setEvents(transformedEvents);
-        console.log("Transformed events:", transformedEvents);
 
         // Fetch venues for this city
         fetchVenues(state, city);

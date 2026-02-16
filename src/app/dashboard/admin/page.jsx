@@ -97,7 +97,7 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <div className="w-full mx-auto">
+      <div className="w-full mx-auto p-8">
         <Toaster />
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
@@ -302,15 +302,14 @@ const RecentUsersTable = ({ users }) => {
               </td>
               <td className="py-3">
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                    user.userType === "admin"
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${user.userType === "admin"
                       ? "bg-red-100 text-red-800"
                       : user.userType === "artist"
-                      ? "bg-purple-100 text-purple-800"
-                      : user.userType === "venue"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-blue-100 text-blue-800"
-                  }`}
+                        ? "bg-purple-100 text-purple-800"
+                        : user.userType === "venue"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-blue-100 text-blue-800"
+                    }`}
                 >
                   {user.userType}
                 </span>
@@ -371,9 +370,8 @@ const UserDistributionChart = ({ userStats }) => {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
-                className={`h-2 rounded-full ${
-                  colors[index % colors.length]
-                } transition-all duration-500`}
+                className={`h-2 rounded-full ${colors[index % colors.length]
+                  } transition-all duration-500`}
                 style={{ width: `${percentage}%` }}
               ></div>
             </div>

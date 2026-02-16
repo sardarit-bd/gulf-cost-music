@@ -84,7 +84,6 @@ export default function EditProfileTab({
 
   // Initialize display state from props
   useEffect(() => {
-    console.log("📸 Preview Images from parent:", previewImages);
 
     // Format images for display
     const formattedImages = previewImages.map((img, index) => ({
@@ -161,7 +160,6 @@ export default function EditProfileTab({
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    console.log("📸 Uploading files:", files.map(f => f.name));
     onImageUpload(files);
     e.target.value = ''; // Reset input
   };
@@ -189,7 +187,6 @@ export default function EditProfileTab({
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    console.log("🎵 Uploading audio files:", files.map(f => f.name));
     onAudioUpload(files);
     e.target.value = ''; // Reset input
   };
@@ -254,35 +251,28 @@ export default function EditProfileTab({
     // Add photos to delete as JSON string
     if (photosToDelete.length > 0) {
       formData.append("photosToDelete", JSON.stringify(photosToDelete));
-      console.log("📸 Photos to delete:", photosToDelete);
     }
 
     // Add audios to delete as JSON string
     if (audiosToDelete.length > 0) {
       formData.append("audiosToDelete", JSON.stringify(audiosToDelete));
-      console.log("🎵 Audios to delete:", audiosToDelete);
     }
 
     // Add new photos - FIX: Use correct field name 'photos'
     const newPhotos = displayImages.filter(img => !img.isExisting && img.file);
-    console.log("📸 New photos to upload:", newPhotos.length);
 
     newPhotos.forEach(img => {
-      formData.append("photos", img.file); // Make sure field name is 'photos'
-      console.log("  - Adding photo:", img.file.name);
+      formData.append("photos", img.file);
     });
 
     // Add new audios - FIX: Use correct field name 'mp3Files'
     const newAudios = displayAudios.filter(audio => !audio.isExisting && audio.file);
-    console.log("🎵 New audios to upload:", newAudios.length);
 
     newAudios.forEach(audio => {
-      formData.append("mp3Files", audio.file); // Make sure field name is 'mp3Files'
-      console.log("  - Adding audio:", audio.file.name);
+      formData.append("mp3Files", audio.file);
     });
 
     // Log FormData contents for debugging
-    console.log("📦 Final FormData contents:");
     for (let pair of formData.entries()) {
       if (pair[1] instanceof File) {
         console.log(`  ${pair[0]}: ${pair[1].name} (${(pair[1].size / 1024).toFixed(2)} KB)`);

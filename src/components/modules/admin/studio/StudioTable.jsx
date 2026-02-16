@@ -1,18 +1,22 @@
-// components/studios/StudioTable.js
+// components/modules/admin/studio/StudioTable.js
 "use client";
 
+import DeleteModal from "@/ui/DeleteModal";
+import Select from "@/ui/Select";
 import {
   AlertCircle,
   Building2,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Edit,
   Eye,
+  Filter,
   Search,
   Star,
-  Trash2,
+  Trash2
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
 import StatsCard from "./StatsCard";
 
@@ -20,6 +24,10 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedStudios, setSelectedStudios] = useState([]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, studioId: null, studioName: "" });
   const [sortConfig, setSortConfig] = useState({
     key: "createdAt",
     direction: "desc",
@@ -31,11 +39,24 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
     active: studios.filter((s) => s.isActive).length,
     verified: studios.filter((s) => s.isVerified).length,
     featured: studios.filter((s) => s.isFeatured).length,
-    recent: studios.filter((s) => {
-      const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-      return new Date(s.createdAt) > oneWeekAgo;
-    }).length,
+    withPhotos: studios.filter((s) => s.photos?.length > 0).length,
   };
+
+  // Filter options for Select component
+  const statusOptions = [
+    { value: "all", label: "All Status" },
+    { value: "active", label: "Active Only" },
+    { value: "inactive", label: "Inactive Only" },
+    { value: "verified", label: "Verified Only" },
+    { value: "featured", label: "Featured Only" },
+  ];
+
+  const perPageOptions = [
+    { value: "10", label: "10 per page" },
+    { value: "25", label: "25 per page" },
+    { value: "50", label: "50 per page" },
+    { value: "100", label: "100 per page" },
+  ];
 
   // Filter and sort studios
   const filteredStudios = studios
@@ -66,14 +87,17 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
         bValue = b.name?.toLowerCase() || "";
       }
 
-      if (aValue < bValue) {
-        return sortConfig.direction === "asc" ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return sortConfig.direction === "asc" ? 1 : -1;
-      }
+      if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
       return 0;
     });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredStudios.length / itemsPerPage);
+  const paginatedStudios = filteredStudios.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const handleSort = (key) => {
     setSortConfig((prev) => ({
@@ -84,7 +108,7 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedStudios(filteredStudios.map((s) => s._id));
+      setSelectedStudios(paginatedStudios.map((s) => s._id));
     } else {
       setSelectedStudios([]);
     }
@@ -94,7 +118,7 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
     setSelectedStudios((prev) =>
       prev.includes(id)
         ? prev.filter((studioId) => studioId !== id)
-        : [...prev, id],
+        : [...prev, id]
     );
   };
 
@@ -113,15 +137,69 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
     setSelectedStudios([]);
   };
 
+  const handleDeleteClick = (studioId, studioName) => {
+    setDeleteModal({ isOpen: true, studioId, studioName });
+  };
+
+  const handleDeleteConfirm = async () => {
+    await onDelete(deleteModal.studioId);
+    setDeleteModal({ isOpen: false, studioId: null, studioName: "" });
+  };
+
+  const handleExport = () => {
+    try {
+      const dataToExport = selectedStudios.length > 0
+        ? studios.filter(s => selectedStudios.includes(s._id))
+        : filteredStudios;
+
+      const csvData = dataToExport.map((studio) => ({
+        Name: studio.name,
+        Email: studio.user?.email || "",
+        City: studio.city,
+        State: studio.state,
+        "Services Count": studio.services?.length || 0,
+        Status: studio.isActive ? "Active" : "Inactive",
+        Verified: studio.isVerified ? "Yes" : "No",
+        Featured: studio.isFeatured ? "Yes" : "No",
+        "Created At": new Date(studio.createdAt).toLocaleDateString(),
+        "Photo Count": studio.photos?.length || 0,
+      }));
+
+      const headers = Object.keys(csvData[0] || {});
+      const csv = [
+        headers.join(","),
+        ...csvData.map((row) =>
+          headers
+            .map((header) => `"${String(row[header] || "").replace(/"/g, '""')}"`)
+            .join(",")
+        ),
+      ].join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `studios_${new Date().toISOString().split("T")[0]}.csv`
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Export error:", error);
+    }
+  };
+
   const SortableHeader = ({ children, sortKey }) => (
     <th
-      className="px-6 py-4 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-50"
+      className="px-6 py-4 text-left text-sm font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 transition-colors"
       onClick={() => handleSort(sortKey)}
     >
       <div className="flex items-center gap-1">
-        {children}
+        <span className="text-gray-900">{children}</span>
         {sortConfig.key === sortKey && (
-          <span className="text-xs">
+          <span className="text-xs text-gray-500">
             {sortConfig.direction === "asc" ? "↑" : "↓"}
           </span>
         )}
@@ -131,8 +209,21 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
 
   return (
     <div className="space-y-6">
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Delete Modal */}
+      <DeleteModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, studioId: null, studioName: "" })}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Studio"
+        description={`Are you sure you want to delete "${deleteModal.studioName}"? This will also delete the user account.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+        itemName={deleteModal.studioName}
+      />
+
+      {/* Stats Overview - Fixed text colors */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatsCard
           title="Total Studios"
           value={stats.total}
@@ -141,11 +232,10 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
           description="All registered studios"
         />
         <StatsCard
-          title="Active Studios"
+          title="Active"
           value={stats.active}
           icon={Check}
           color="green"
-          trend={{ type: "up", value: "+12%" }}
           description="Currently active"
         />
         <StatsCard
@@ -160,81 +250,112 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
           value={stats.featured}
           icon={Star}
           color="purple"
-          description="Premium featured studios"
+          description="Premium featured"
+        />
+        <StatsCard
+          title="With Photos"
+          value={stats.withPhotos}
+          icon={Eye}
+          color="gray"
+          description="Have uploaded photos"
         />
       </div>
 
-      {/* Filters and Actions */}
-      <div className="bg-white rounded-xl border p-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 flex-1">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <input
-                type="text"
-                placeholder="Search studios by name, city, state, or email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2.5 w-full border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+      {/* Filters and Actions - Fixed border colors */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 flex-1">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Search by name, city, email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2.5 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-400"
+                />
+              </div>
+
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`px-4 py-2.5 border rounded-lg flex items-center gap-2 transition-colors ${showFilters
+                  ? "bg-blue-50 border-blue-300 text-blue-700"
+                  : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+              >
+                <Filter className="h-4 w-4" />
+                <span className="text-gray-700">Filters</span>
+                {statusFilter !== "all" && (
+                  <span className="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                    1
+                  </span>
+                )}
+              </button>
             </div>
 
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="verified">Verified</option>
-              <option value="featured">Featured</option>
-            </select>
+            <div className="flex items-center gap-2">
+              {selectedStudios.length > 0 && (
+                <>
+                  <span className="text-sm font-medium text-gray-700">
+                    {selectedStudios.length} selected
+                  </span>
+                  <Select
+                    options={[
+                      { value: "activate", label: "✓ Activate" },
+                      { value: "deactivate", label: "✗ Deactivate" },
+                      { value: "verify", label: "★ Verify" },
+                      { value: "feature", label: "✨ Feature" },
+                    ]}
+                    value=""
+                    onChange={(e) => handleBulkAction(e.target.value)}
+                    placeholder="Bulk Actions"
+                    className="w-40"
+                  />
+                </>
+              )}
+            </div>
           </div>
 
-          {selectedStudios.length > 0 && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700">
-                {selectedStudios.length} selected
-              </span>
-              <div className="flex gap-2">
-                <select
-                  onChange={(e) => handleBulkAction(e.target.value)}
-                  className="px-3 py-1.5 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
-                >
-                  <option value="">Bulk Actions</option>
-                  <option value="activate">Activate</option>
-                  <option value="deactivate">Deactivate</option>
-                  <option value="verify">Mark Verified</option>
-                  <option value="feature">Mark Featured</option>
-                </select>
-                <button
-                  onClick={() => setSelectedStudios([])}
-                  className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800"
-                >
-                  Clear
-                </button>
+          {/* Advanced Filters */}
+          {showFilters && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex flex-wrap gap-3">
+                <div className="w-48">
+                  <Select
+                    options={statusOptions}
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    placeholder="Filter by status"
+                  />
+                </div>
+                <div className="w-40">
+                  <Select
+                    options={perPageOptions}
+                    value={itemsPerPage.toString()}
+                    onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                    placeholder="Items per page"
+                  />
+                </div>
               </div>
             </div>
           )}
         </div>
-      </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border overflow-hidden">
+        {/* Table - Fixed text colors */}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1000px]">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-gray-100">
               <tr>
                 <th className="px-6 py-4 text-left w-12">
                   <input
                     type="checkbox"
                     onChange={handleSelectAll}
                     checked={
-                      selectedStudios.length === filteredStudios.length &&
-                      filteredStudios.length > 0
+                      selectedStudios.length === paginatedStudios.length &&
+                      paginatedStudios.length > 0
                     }
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-gray-400 text-blue-600 focus:ring-blue-500"
                   />
                 </th>
                 <SortableHeader sortKey="name">Studio</SortableHeader>
@@ -250,27 +371,24 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredStudios.map((studio) => (
+              {paginatedStudios.map((studio) => (
                 <tr
                   key={studio._id}
                   className="hover:bg-gray-50 transition-colors group cursor-pointer"
-                  onClick={() => onStudioClick && onStudioClick(studio)}
+                  onClick={() => onStudioClick(studio)}
                 >
-                  <td
-                    className="px-6 py-4"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       checked={selectedStudios.includes(studio._id)}
                       onChange={() => handleSelectStudio(studio._id)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-400 text-blue-600 focus:ring-blue-500"
                       onClick={(e) => e.stopPropagation()}
                     />
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center flex-shrink-0">
                         {studio.photos?.[0]?.url ? (
                           <Image
                             src={studio.photos[0].url}
@@ -285,24 +403,24 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <div className="font-medium text-gray-900 truncate">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-gray-900 truncate">
                             {studio.name}
-                          </div>
+                          </span>
                           <div className="flex gap-1">
                             {studio.isFeatured && (
-                              <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full whitespace-nowrap">
+                              <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-full border border-purple-200">
                                 Featured
                               </span>
                             )}
                             {studio.isVerified && (
-                              <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full whitespace-nowrap">
+                              <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full border border-yellow-200">
                                 Verified
                               </span>
                             )}
                           </div>
                         </div>
-                        <p className="text-sm text-gray-500 truncate">
+                        <p className="text-sm text-gray-600 truncate">
                           {studio.user?.email}
                         </p>
                       </div>
@@ -313,7 +431,7 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
                       <div className="font-medium text-gray-900">
                         {studio.city}
                       </div>
-                      <div className="text-gray-500">{studio.state}</div>
+                      <div className="text-gray-600 text-xs">{studio.state}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -321,18 +439,18 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
                       {studio.services?.slice(0, 2).map((service, idx) => (
                         <span
                           key={idx}
-                          className="px-2 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded whitespace-nowrap"
+                          className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded border border-blue-200"
                         >
                           {service.service}
                         </span>
                       ))}
                       {studio.services?.length > 2 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded whitespace-nowrap">
-                          +{studio.services.length - 2} more
+                        <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded border border-gray-200">
+                          +{studio.services.length - 2}
                         </span>
                       )}
                       {(!studio.services || studio.services.length === 0) && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded">
+                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded border border-gray-200">
                           No services
                         </span>
                       )}
@@ -341,17 +459,16 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <div
-                        className={`w-3 h-3 rounded-full ${
-                          studio.isActive ? "bg-green-500" : "bg-red-500"
-                        }`}
-                      ></div>
-                      <span className="text-sm font-medium">
+                        className={`w-2 h-2 rounded-full ${studio.isActive ? "bg-green-500" : "bg-red-400"
+                          }`}
+                      />
+                      <span className="text-sm font-medium text-gray-700">
                         {studio.isActive ? "Active" : "Inactive"}
                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-600">
                       {new Date(studio.createdAt).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric",
@@ -361,24 +478,23 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
                   </td>
                   <td className="px-6 py-4">
                     <div
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-1"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Link
+                      {/* <Link
                         href={`/studios/${studio._id}`}
                         target="_blank"
-                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         title="View Public Profile"
-                        onClick={(e) => e.stopPropagation()}
                       >
                         <Eye className="h-4 w-4" />
-                      </Link>
+                      </Link> */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          onStudioClick && onStudioClick(studio);
+                          onStudioClick(studio);
                         }}
-                        className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                         title="Edit Studio"
                       >
                         <Edit className="h-4 w-4" />
@@ -386,9 +502,9 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          onDelete(studio._id);
+                          handleDeleteClick(studio._id, studio.name);
                         }}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title="Delete Studio"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -402,9 +518,11 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
 
           {filteredStudios.length === 0 && (
             <div className="text-center py-16">
-              <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg mb-2">No studios found</p>
-              <p className="text-gray-400 text-sm">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="h-10 w-10 text-gray-400" />
+              </div>
+              <p className="text-gray-900 text-lg font-medium mb-1">No studios found</p>
+              <p className="text-gray-600 text-sm">
                 {searchTerm
                   ? `No results for "${searchTerm}"`
                   : "Try changing your filters"}
@@ -413,26 +531,37 @@ const StudioTable = ({ studios, onStatusChange, onDelete, onStudioClick }) => {
           )}
         </div>
 
-        {/* Pagination/Footer */}
+        {/* Pagination - Fixed text colors */}
         {filteredStudios.length > 0 && (
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-700">
-                Showing{" "}
-                <span className="font-medium">{filteredStudios.length}</span> of{" "}
-                <span className="font-medium">{studios.length}</span> studios
+              <div className="text-sm text-gray-600">
+                Showing <span className="font-medium text-gray-900">
+                  {(currentPage - 1) * itemsPerPage + 1}
+                </span> to{" "}
+                <span className="font-medium text-gray-900">
+                  {Math.min(currentPage * itemsPerPage, filteredStudios.length)}
+                </span>{" "}
+                of <span className="font-medium text-gray-900">{filteredStudios.length}</span> studios
               </div>
-              <div className="text-sm text-gray-500">
-                {selectedStudios.length > 0 && (
-                  <span className="mr-4">
-                    {selectedStudios.length} selected
-                  </span>
-                )}
-                Last updated:{" "}
-                {new Date().toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4 text-gray-700" />
+                </button>
+                <span className="text-sm text-gray-700">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 border border-gray-300 rounded-lg hover:bg-white disabled:opacity-50 disabled:hover:bg-transparent transition-colors"
+                >
+                  <ChevronRight className="h-4 w-4 text-gray-700" />
+                </button>
               </div>
             </div>
           </div>

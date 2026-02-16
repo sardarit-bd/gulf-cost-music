@@ -218,31 +218,26 @@ export default function MarketplacePage() {
             // FIXED: Add photos to delete as JSON string
             if (deletedPhotoUrls.length > 0) {
                 formData.append("photosToDelete", JSON.stringify(deletedPhotoUrls));
-                console.log("📸 Sending photos to delete:", deletedPhotoUrls);
             }
 
             // FIXED: Add video to delete flag
             if (deletedVideoUrl) {
                 formData.append("deleteVideo", "true");
-                console.log("🎥 Sending video to delete:", deletedVideoUrl);
             }
 
             // Add new photos
             listingPhotos.forEach((photo) => {
                 if (photo instanceof File) {
                     formData.append("photos", photo);
-                    console.log("📸 Adding new photo:", photo.name);
                 }
             });
 
             // Add new video
             if (listingVideos.length > 0 && listingVideos[0] instanceof File) {
                 formData.append("video", listingVideos[0]);
-                console.log("🎥 Adding new video:", listingVideos[0].name);
             }
 
             // Log all form data for debugging
-            console.log("📦 FormData contents:");
             for (let pair of formData.entries()) {
                 console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));
             }
@@ -359,7 +354,6 @@ export default function MarketplacePage() {
         // If it's an existing photo (string URL), add to deletedPhotoUrls
         if (typeof photo === "string") {
             setDeletedPhotoUrls(prev => [...prev, photo]);
-            console.log("📸 Marking for deletion:", photo);
         }
 
         // Remove from UI
@@ -373,7 +367,6 @@ export default function MarketplacePage() {
         // If there's an existing video (string URL), set as deleted
         if (listingVideos.length > 0 && typeof listingVideos[0] === "string") {
             setDeletedVideoUrl(listingVideos[0]);
-            console.log("🎥 Marking video for deletion:", listingVideos[0]);
         }
 
         // Remove from UI

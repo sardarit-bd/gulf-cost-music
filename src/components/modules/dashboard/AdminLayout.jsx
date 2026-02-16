@@ -391,20 +391,18 @@ export default function AdminLayout({ children }) {
               toggleExpanded(item.name);
               handleMenuItemClick();
             }}
-            className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-              isItemActive
-                ? "bg-blue-50 text-blue-700 border border-blue-200"
-                : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-            }`}
+            className={`flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isItemActive
+              ? "bg-blue-50 text-blue-700 border border-blue-200"
+              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+              }`}
           >
             <div className="flex items-center">
               <Icon className="mr-3 h-5 w-5" />
               {item.name}
             </div>
             <ChevronRight
-              className={`h-4 w-4 transition-transform lg:hidden ${
-                isExpanded ? "rotate-90" : ""
-              }`}
+              className={`h-4 w-4 transition-transform lg:hidden ${isExpanded ? "rotate-90" : ""
+                }`}
             />
           </button>
 
@@ -419,11 +417,10 @@ export default function AdminLayout({ children }) {
                 <Link
                   key={child.name}
                   href={child.href}
-                  className={`flex items-center px-4 py-2 text-sm rounded-lg transition-colors ${
-                    isChildActive
-                      ? "bg-blue-100 text-blue-700 border border-blue-200"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  }`}
+                  className={`flex items-center px-4 py-2 text-sm rounded-lg transition-colors ${isChildActive
+                    ? "bg-blue-100 text-blue-700 border border-blue-200"
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
                   onClick={handleMenuItemClick} // Use the new function here
                 >
                   <ChildIcon className="mr-3 h-4 w-4" />
@@ -439,11 +436,10 @@ export default function AdminLayout({ children }) {
     return (
       <Link
         href={item.href}
-        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-          isActive(item.href)
-            ? "bg-blue-600 text-white shadow-lg"
-            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-        }`}
+        className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isActive(item.href)
+          ? "bg-blue-600 text-white shadow-lg"
+          : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+          }`}
         onClick={handleMenuItemClick} // Use the new function here
       >
         <Icon className="mr-3 h-5 w-5" />
@@ -456,37 +452,37 @@ export default function AdminLayout({ children }) {
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo Section */}
-          <div className="flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200">
-            <div className="flex items-center">
-              <div className="flex items-center space-x-2">
-                <div className="w-20 h-12 bg-gradient-to-r rounded-lg flex items-center justify-center">
-                  <Link href="/">
-                    <Image src={logo} alt="Logo" width={50} height={40} />
-                  </Link>
-                </div>
-                <div>
-                  <span className="text-lg font-bold text-gray-900">
-                    Gulf Coast
-                  </span>
-                  <span className="block text-xs text-gray-500 -mt-1">
-                    Gulf Coast Admin
-                  </span>
-                </div>
-              </div>
-            </div>
+          <div className="relative flex items-center h-16 px-4 bg-white border-b border-gray-200">
+            {/* Center Logo */}
+            <Link
+              href="/"
+              className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center"
+            >
+              <Image
+                src={logo}
+                alt="Gulf Coast Logo"
+                width={60}
+                height={48}
+                className="object-contain w-14 h-auto sm:w-16 md:w-20"
+                priority
+              />
+            </Link>
+
+            {/* Right Close Button (Mobile Only) */}
             <button
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+              className="ml-auto lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+              aria-label="Close sidebar"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
+
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
@@ -628,21 +624,19 @@ export default function AdminLayout({ children }) {
                             onClick={() =>
                               handleNotificationClick(notification)
                             }
-                            className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
-                              !notification.read
-                                ? "bg-blue-50 border-l-4 border-l-blue-500"
-                                : ""
-                            }`}
+                            className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${!notification.read
+                              ? "bg-blue-50 border-l-4 border-l-blue-500"
+                              : ""
+                              }`}
                           >
                             <div className="flex items-start space-x-3">
                               <div
-                                className={`p-2 rounded-lg ${
-                                  notification.type === "contact"
-                                    ? "bg-blue-100 text-blue-600"
-                                    : notification.type === "user"
-                                      ? "bg-green-100 text-green-600"
-                                      : "bg-gray-100 text-gray-600"
-                                }`}
+                                className={`p-2 rounded-lg ${notification.type === "contact"
+                                  ? "bg-blue-100 text-blue-600"
+                                  : notification.type === "user"
+                                    ? "bg-green-100 text-green-600"
+                                    : "bg-gray-100 text-gray-600"
+                                  }`}
                               >
                                 <Mail className="h-4 w-4" />
                               </div>
@@ -731,19 +725,17 @@ export default function AdminLayout({ children }) {
                   </div>
 
                   <ChevronDown
-                    className={`h-4 w-4 text-gray-500 transition-transform ${
-                      userDropdownOpen ? "rotate-180" : ""
-                    }`}
+                    className={`h-4 w-4 text-gray-500 transition-transform ${userDropdownOpen ? "rotate-180" : ""
+                      }`}
                   />
                 </button>
 
                 {/* Dropdown Menu */}
                 <div
-                  className={`absolute top-full right-0 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 transition-all duration-200 ${
-                    userDropdownOpen
-                      ? "opacity-100 visible"
-                      : "opacity-0 invisible"
-                  }`}
+                  className={`absolute top-full right-0 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50 transition-all duration-200 ${userDropdownOpen
+                    ? "opacity-100 visible"
+                    : "opacity-0 invisible"
+                    }`}
                 >
                   <Link
                     href="/dashboard/admin/profile"
