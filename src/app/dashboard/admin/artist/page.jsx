@@ -94,8 +94,6 @@ const ArtistManagement = () => {
         credentials: "include",
       });
 
-      console.log("Fetched artists:", data);
-
       if (data.success) {
         setArtists(data.data.content);
         setPages(data.data.pagination.pages);
@@ -254,7 +252,6 @@ const ArtistManagement = () => {
         return;
       }
 
-      console.log("Changing plan for artist:", { id, newPlan, notifyUser });
 
       // Correct API endpoint
       const response = await axios.put(
@@ -271,8 +268,6 @@ const ArtistManagement = () => {
           credentials: "include",
         }
       );
-
-      console.log("Plan change response:", response.data);
 
       if (response.data.success) {
         fetchArtists();

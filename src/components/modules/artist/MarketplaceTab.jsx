@@ -254,31 +254,26 @@ export default function ArtistMarketplaceTab({
       // FIXED: Add photos to delete as JSON string
       if (deletedPhotos.length > 0) {
         formData.append("photosToDelete", JSON.stringify(deletedPhotos));
-        console.log("🗑️ Photos to delete:", deletedPhotos);
       }
 
       // FIXED: Add video to delete flag
       if (deletedVideo) {
         formData.append("deleteVideo", "true");
-        console.log("🗑️ Video to delete:", deletedVideo);
       }
 
       // Add new photos
       listingPhotos.forEach((photo) => {
         if (photo instanceof File) {
           formData.append("photos", photo);
-          console.log("📸 Adding new photo:", photo.name);
         }
       });
 
       // Add new video
       if (listingVideos.length > 0 && listingVideos[0] instanceof File) {
         formData.append("video", listingVideos[0]);
-        console.log("🎥 Adding new video:", listingVideos[0].name);
       }
 
       // Log FormData contents for debugging
-      console.log("📦 FormData contents:");
       for (let pair of formData.entries()) {
         console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));
       }
@@ -311,8 +306,8 @@ export default function ArtistMarketplaceTab({
         <div className="flex overflow-x-auto scrollbar-hide">
           <button
             className={`flex items-center gap-3 px-8 py-5 font-medium transition-all whitespace-nowrap ${activeSection === "create"
-                ? "text-blue-600 border-b-2 border-blue-600 bg-gradient-to-t from-blue-50 to-transparent"
-                : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+              ? "text-blue-600 border-b-2 border-blue-600 bg-gradient-to-t from-blue-50 to-transparent"
+              : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
               }`}
             onClick={() => setActiveSection("create")}
           >
@@ -336,8 +331,8 @@ export default function ArtistMarketplaceTab({
           </button>
           <button
             className={`flex items-center gap-3 px-8 py-5 font-medium transition-all whitespace-nowrap ${activeSection === "listings"
-                ? "text-blue-600 border-b-2 border-blue-600 bg-gradient-to-t from-blue-50 to-transparent"
-                : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+              ? "text-blue-600 border-b-2 border-blue-600 bg-gradient-to-t from-blue-50 to-transparent"
+              : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
               }`}
             onClick={() => setActiveSection("listings")}
           >
@@ -538,8 +533,8 @@ export default function ArtistMarketplaceTab({
                 onClick={handleCreateOrUpdate}
                 disabled={submitting}
                 className={`relative px-10 py-4 rounded-xl font-semibold transition-all duration-300 overflow-hidden group ${submitting
-                    ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 hover:shadow-2xl hover:shadow-blue-500/30 text-white"
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 hover:shadow-2xl hover:shadow-blue-500/30 text-white"
                   }`}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>

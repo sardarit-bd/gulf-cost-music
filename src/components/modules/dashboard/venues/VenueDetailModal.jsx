@@ -72,8 +72,8 @@ const VenueDetailModal = ({ venue, onClose, onEdit, onChangePlan, onVerifyVenue 
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${currentPlan === "pro"
-                                            ? "bg-yellow-100 text-yellow-800"
-                                            : "bg-gray-100 text-gray-800"
+                                        ? "bg-yellow-100 text-yellow-800"
+                                        : "bg-gray-100 text-gray-800"
                                         }`}>
                                         {currentPlan === "pro" ? <Crown className="w-3 h-3" /> : <DollarSign className="w-3 h-3" />}
                                         {currentPlan === "pro" ? "Pro Plan" : "Free Plan"}
@@ -326,7 +326,7 @@ const VenueDetailModal = ({ venue, onClose, onEdit, onChangePlan, onVerifyVenue 
                                 onClose();
                                 onEdit(venue);
                             }}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                            className="px-4 py-2 bg-[var(--primary)] text-black rounded-lg bg-primary/80 transition-colors text-sm font-medium"
                         >
                             Edit Venue
                         </button>

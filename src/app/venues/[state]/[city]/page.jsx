@@ -29,23 +29,17 @@ export default function CityVenuesPage() {
   const fetchCityVenues = async () => {
     setLoading(true);
     try {
-      console.log("Fetching venues for:", {
-        state: formattedState,
-        city: formattedCity.toLowerCase()
-      });
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues?state=${encodeURIComponent(formattedState)}&city=${encodeURIComponent(formattedCity.toLowerCase())}`
       );
 
-      console.log("Response status:", res.status);
 
       if (!res.ok) {
         throw new Error(`API Error: ${res.status}`);
       }
 
       const data = await res.json();
-      console.log("API Response:", data);
 
       if (data.success) {
         const fixed = (data.data.venues || []).map((v) => ({

@@ -81,10 +81,6 @@ export default function ManageProfilePage() {
 
                 setAudioPreview(validAudios);
 
-                console.log("✅ Profile loaded:", {
-                    photos: validPhotos.length,
-                    audios: validAudios.length
-                });
             } else {
                 // New profile - empty state
                 setPreviewImages([]);
@@ -109,8 +105,6 @@ export default function ManageProfilePage() {
         try {
             setSaving(true);
 
-            // Log FormData contents for debugging
-            console.log("📦 Sending FormData:");
             for (let pair of formData.entries()) {
                 if (pair[1] instanceof File) {
                     console.log(`  ${pair[0]}: ${pair[1].name} (${(pair[1].size / 1024).toFixed(2)} KB)`);

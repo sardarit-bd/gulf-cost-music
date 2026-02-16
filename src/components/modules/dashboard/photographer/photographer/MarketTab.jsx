@@ -115,7 +115,6 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                 }
 
                 const data = await res.json();
-                console.log("Loaded market item:", data.data);
                 setExistingItem(data.data || null);
 
                 if (data.data) {
@@ -145,13 +144,13 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
     }, [API_BASE, hasMarketplaceAccess]);
 
     // Debug effect
-    useEffect(() => {
-        if (existingItem) {
-            console.log("Existing item videos:", existingItem.videos);
-            console.log("Has existing video:", hasExistingVideo);
-            console.log("Existing video URL:", existingVideoUrl);
-        }
-    }, [existingItem]);
+    // useEffect(() => {
+    //     if (existingItem) {
+    //         console.log("Existing item videos:", existingItem.videos);
+    //         console.log("Has existing video:", hasExistingVideo);
+    //         console.log("Existing video URL:", existingVideoUrl);
+    //     }
+    // }, [existingItem]);
 
     // Handle select changes
     const handleSelectChange = (e) => {
@@ -304,8 +303,6 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
                 toast.dismiss(toastId);
                 throw new Error(data.message || `Save failed (${res.status})`);
             }
-
-            console.log("Save/Update response:", data.data);
 
             // Dismiss loading toast and show success
             toast.dismiss(toastId);

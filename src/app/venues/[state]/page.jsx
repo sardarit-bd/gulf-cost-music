@@ -28,26 +28,22 @@ export default function StateVenuesPage() {
     const fetchStateVenues = async () => {
         setLoading(true);
         try {
-            console.log("Fetching venues for state:", formattedState);
 
             const res = await fetch(
                 `${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/by-state?state=${encodeURIComponent(formattedState)}`
             );
 
-            console.log("Response status:", res.status);
 
             if (!res.ok) {
                 throw new Error(`API Error: ${res.status}`);
             }
 
             const data = await res.json();
-            console.log("API Data:", data);
 
             if (data.success) {
                 setCities(data.data.cities || []);
                 // Flatten all venues from all cities
                 const allVenues = data.data.cities.flatMap(city => city.venues || []);
-                console.log("All venues:", allVenues);
 
                 const fixed = allVenues.map((v) => ({
                     ...v,

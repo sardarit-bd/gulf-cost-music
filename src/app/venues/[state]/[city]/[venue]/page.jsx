@@ -39,11 +39,9 @@ export default function VenueProfile() {
     const fetchVenue = async () => {
       setLoading(true);
       try {
-        console.log("Fetching venue ID:", venueId);
 
         const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/venues/${venueId}`);
 
-        console.log("Venue API response status:", res.status);
 
         if (!res.ok) {
           if (res.status === 404) {
@@ -54,7 +52,6 @@ export default function VenueProfile() {
         }
 
         const data = await res.json();
-        console.log("Venue data:", data);
 
         if (data.success && data.data?.venue) {
           setVenue(data.data.venue);
@@ -77,7 +74,6 @@ export default function VenueProfile() {
 
   // Handle back navigation
   const handleBack = () => {
-    console.log("clicked")
     router.push(`/venues/${state}/${city}`);
   };
 
