@@ -2,7 +2,6 @@
 
 import {
   ArrowLeft,
-  Bookmark,
   Building2,
   Calendar,
   Camera,
@@ -12,13 +11,11 @@ import {
   Download,
   Eye,
   Globe,
-  Heart,
   MapPin,
   Maximize2,
-  Share2,
   Tag,
   User,
-  X,
+  X
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -463,7 +460,7 @@ export default function NewsDetailsPage() {
               <span className="font-medium">Back</span>
             </button>
 
-            <div className="flex gap-2">
+            {/* <div className="flex gap-2">
               <button
                 onClick={handleLike}
                 className={`p-3 rounded-full backdrop-blur-lg border transition-all duration-300 transform hover:scale-110 ${liked
@@ -488,7 +485,7 @@ export default function NewsDetailsPage() {
               >
                 <Share2 className="w-5 h-5" />
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
 
