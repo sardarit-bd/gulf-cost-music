@@ -43,7 +43,7 @@ const UserDetailModal = ({ user, onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-lg flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
                 <div className="p-6">
                     <div className="flex justify-between items-center mb-6">
@@ -88,8 +88,8 @@ const UserDetailModal = ({ user, onClose }) => {
                                 <label className="font-medium text-gray-700">Status:</label>
                                 <span
                                     className={`ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.isVerified
-                                            ? "bg-green-100 text-green-800"
-                                            : "bg-orange-100 text-orange-800"
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-orange-100 text-orange-800"
                                         }`}
                                 >
                                     {user.isVerified ? "Verified" : "Pending"}

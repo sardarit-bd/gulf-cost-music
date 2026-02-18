@@ -3,13 +3,13 @@ import {
     ArrowLeft,
     Camera,
     CheckCircle,
+    ChevronLeft,
+    ChevronRight,
     DollarSign,
     MapPin,
     ShoppingBag,
     Video,
-    X,
-    ChevronLeft,
-    ChevronRight
+    X
 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
@@ -41,7 +41,7 @@ export default function MarketItemPage() {
     const [selectedImage, setSelectedImage] = useState(0);
     const [isFavorite, setIsFavorite] = useState(false);
     const [activeTab, setActiveTab] = useState("details");
-    
+
     // Fullscreen gallery state
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
@@ -81,7 +81,7 @@ export default function MarketItemPage() {
                 ?.split("=")[1];
 
             if (!token) {
-                router.push("/login");
+                router.push("/signin");
                 return;
             }
 
@@ -140,7 +140,7 @@ export default function MarketItemPage() {
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (!isGalleryOpen) return;
-            
+
             switch (e.key) {
                 case 'Escape':
                     closeGallery();
@@ -226,7 +226,7 @@ export default function MarketItemPage() {
                         {/* Item Info */}
                         <div className="flex items-end gap-4 sm:gap-6 text-white w-full">
                             <div className="relative flex-shrink-0">
-                                <div 
+                                <div
                                     className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-xl sm:rounded-2xl overflow-hidden border-3 sm:border-4 border-yellow-400 shadow-2xl cursor-pointer"
                                     onClick={() => openGallery(0)}
                                 >

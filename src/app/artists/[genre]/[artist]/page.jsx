@@ -1,5 +1,5 @@
 "use client";
-import { Download, Headphones, Music, Pause, Play, SkipBack, SkipForward, Volume2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Headphones, Maximize2, Music, Pause, Play, SkipBack, SkipForward, Volume2, X } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -16,6 +16,10 @@ export default function ArtistProfile() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef(null);
+
+  // ✅ Lightbox State
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Fetch artist from backend
   useEffect(() => {
@@ -38,6 +42,44 @@ export default function ArtistProfile() {
 
     if (artistID) fetchArtist();
   }, [artistID]);
+
+  // ✅ Lightbox functions
+  const openLightbox = (index) => {
+    setCurrentImageIndex(index);
+    setLightboxOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    document.body.style.overflow = 'unset';
+  };
+
+  const goToPrevious = () => {
+    setCurrentImageIndex((prev) =>
+      prev === 0 ? artist.photos.length - 1 : prev - 1
+    );
+  };
+
+  const goToNext = () => {
+    setCurrentImageIndex((prev) =>
+      prev === artist.photos.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!lightboxOpen) return;
+
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') goToPrevious();
+      if (e.key === 'ArrowRight') goToNext();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen]);
 
   // Prepare audio tracks from actual mp3Files data
   const audioTracks = artist?.mp3Files?.map((file, index) => ({
@@ -151,6 +193,53 @@ export default function ArtistProfile() {
 
   return (
     <section className="brandBg min-h-screen text-white pt-16">
+      {/* ✅ Lightbox Modal */}
+      {lightboxOpen && artist.photos && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
+          {/* Close button */}
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+          >
+            <X className="w-6 h-6 text-white" />
+          </button>
+
+          {/* Image counter */}
+          <div className="absolute top-4 left-4 z-50 text-white bg-black/50 px-3 py-1 rounded-full text-sm">
+            {currentImageIndex + 1} / {artist.photos.length}
+          </div>
+
+          {/* Navigation buttons */}
+          <button
+            onClick={goToPrevious}
+            className="absolute left-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+          >
+            <ChevronLeft className="w-6 h-6 text-white" />
+          </button>
+
+          <button
+            onClick={goToNext}
+            className="absolute right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+          >
+            <ChevronRight className="w-6 h-6 text-white" />
+          </button>
+
+          {/* Main image */}
+          <div className="relative w-full h-full max-w-7xl max-h-[90vh] mx-auto p-4">
+            <div className="relative w-full h-full">
+              <Image
+                src={artist.photos[currentImageIndex].url}
+                alt={`${artist.name} photo ${currentImageIndex + 1}`}
+                fill
+                sizes="100vw"
+                priority
+                className="object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hidden audio element */}
       {audioTracks.length > 0 && (
         <audio
@@ -220,7 +309,7 @@ export default function ArtistProfile() {
               <p className="text-gray-300 text-xs sm:text-sm mb-2 sm:mb-3 capitalize">
                 {artist.genre} • {artist.city}
               </p>
-              <p className="text-gray-400 text-sm sm:text-base leading-relaxed max-w-2xl">
+              <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
                 {artist.biography || "No biography available."}
               </p>
             </div>
@@ -238,7 +327,7 @@ export default function ArtistProfile() {
             )}
           </div>
 
-          {/* ====== Photos Gallery Section ====== */}
+          {/* ====== Photos Gallery Section - FIXED with Lightbox ====== */}
           {artist.photos?.length > 0 && (
             <div className="mt-8 sm:mt-12">
               <div className="flex items-center gap-2 mb-4 sm:mb-6 flex-wrap">
@@ -253,15 +342,23 @@ export default function ArtistProfile() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {artist.photos.map((p, i) => (
-                  <div key={i} className="group relative w-full h-48 sm:h-56 md:h-64 rounded-xl sm:rounded-2xl overflow-hidden border border-gray-700 hover:border-yellow-500/50 transition-all duration-300">
+                  <div
+                    key={i}
+                    onClick={() => openLightbox(i)}
+                    className="group relative w-full h-48 sm:h-56 md:h-64 rounded-xl sm:rounded-2xl overflow-hidden border border-gray-700 hover:border-yellow-500/50 transition-all duration-300 cursor-pointer"
+                  >
                     <Image
                       src={p.url}
                       alt={`${artist.name} photo ${i + 1}`}
                       fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-3 sm:pb-4">
                       <span className="text-white text-xs sm:text-sm font-medium">Photo {i + 1}</span>
+                    </div>
+                    <div className="absolute top-3 right-3 bg-black/60 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <Maximize2 size={16} />
                     </div>
                   </div>
                 ))}

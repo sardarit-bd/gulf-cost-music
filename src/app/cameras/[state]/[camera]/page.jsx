@@ -2,23 +2,29 @@
 import {
   ArrowLeft,
   Camera,
-  Heart,
+  ChevronLeft,
+  ChevronRight,
   Mail,
   MapPin,
-  Share2,
+  Maximize2,
   Video,
+  X
 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function PhotographerProfile() {
-  const { state, camera: photographerId } = useParams(); // Changed from {city, camera} to {state, camera}
+  const { state, camera: photographerId } = useParams();
   const router = useRouter();
   const [photographer, setPhotographer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("portfolio");
   const [isFavorite, setIsFavorite] = useState(false);
+
+  // ✅ Lightbox State
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // State mapping for display
   const stateMap = {
@@ -41,6 +47,45 @@ export default function PhotographerProfile() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [photographerId]);
+
+  // ✅ Lightbox functions
+  const openLightbox = (index) => {
+    setCurrentImageIndex(index);
+    setLightboxOpen(true);
+    // Prevent body scrolling when lightbox is open
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    document.body.style.overflow = 'unset';
+  };
+
+  const goToPrevious = () => {
+    setCurrentImageIndex((prev) =>
+      prev === 0 ? photographer.photos.length - 1 : prev - 1
+    );
+  };
+
+  const goToNext = () => {
+    setCurrentImageIndex((prev) =>
+      prev === photographer.photos.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!lightboxOpen) return;
+
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') goToPrevious();
+      if (e.key === 'ArrowRight') goToNext();
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen]);
 
   if (loading) {
     return (
@@ -74,6 +119,53 @@ export default function PhotographerProfile() {
 
   return (
     <section className="min-h-screen bg-gradient-to-br from-gray-900 to-black mt-[90px]">
+      {/* ✅ Lightbox Modal */}
+      {lightboxOpen && photographer.photos && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
+          {/* Close button */}
+          <button
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+          >
+            <X className="w-6 h-6 text-white" />
+          </button>
+
+          {/* Image counter */}
+          <div className="absolute top-4 left-4 z-50 text-white bg-black/50 px-3 py-1 rounded-full text-sm">
+            {currentImageIndex + 1} / {photographer.photos.length}
+          </div>
+
+          {/* Navigation buttons */}
+          <button
+            onClick={goToPrevious}
+            className="absolute left-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+          >
+            <ChevronLeft className="w-6 h-6 text-white" />
+          </button>
+
+          <button
+            onClick={goToNext}
+            className="absolute right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+          >
+            <ChevronRight className="w-6 h-6 text-white" />
+          </button>
+
+          {/* Main image */}
+          <div className="relative w-full h-full max-w-7xl max-h-[90vh] mx-auto p-4">
+            <div className="relative w-full h-full">
+              <Image
+                src={photographer.photos[currentImageIndex].url}
+                alt={`Portfolio ${currentImageIndex + 1}`}
+                fill
+                sizes="100vw"
+                priority
+                className="object-contain"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Enhanced Hero Banner */}
       <div className="relative h-80 sm:h-96 md:h-[480px] overflow-hidden">
         <div className="absolute inset-0">
@@ -91,7 +183,7 @@ export default function PhotographerProfile() {
         </div>
 
         <div className="relative container mx-auto h-full flex items-end pb-6 sm:pb-8 px-4 sm:px-6">
-          {/* Navigation - Updated back link to use state */}
+          {/* Navigation */}
           <div className="absolute top-4 sm:top-6 left-4 sm:left-6 right-4 sm:right-6 flex items-center justify-between">
             <button
               onClick={() => router.push(`/cameras/${state}`)}
@@ -101,25 +193,6 @@ export default function PhotographerProfile() {
               <span className="hidden xs:inline">Back to {formattedState}</span>
               <span className="xs:hidden">Back</span>
             </button>
-
-            <div className="flex gap-2 sm:gap-3">
-              <button
-                onClick={() => setIsFavorite(!isFavorite)}
-                className={`p-2 sm:p-3 rounded-lg backdrop-blur-sm border transition-all duration-300 ${isFavorite
-                    ? "bg-red-500/20 border-red-400/30 text-red-400"
-                    : "bg-black/30 border-white/10 text-white/90 hover:border-red-400/30 hover:text-red-400"
-                  }`}
-              >
-                <Heart
-                  size={18}
-                  className="sm:w-5"
-                  fill={isFavorite ? "currentColor" : "none"}
-                />
-              </button>
-              <button className="p-2 sm:p-3 rounded-lg backdrop-blur-sm bg-black/30 border border-white/10 text-white/90 hover:border-yellow-400/30 hover:text-yellow-400 transition-all duration-300">
-                <Share2 size={18} className="sm:w-5" />
-              </button>
-            </div>
           </div>
 
           {/* Profile Info */}
@@ -174,10 +247,10 @@ export default function PhotographerProfile() {
         </div>
       </div>
 
-      {/* Enhanced Main Content */}
+      {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-8">
-          {/* Enhanced Sidebar */}
+          {/* Sidebar */}
           <div className="lg:col-span-1 space-y-4 sm:space-y-6">
             {/* Contact Card */}
             <div className="bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-2xl p-4 sm:p-6 border border-gray-700/50 lg:sticky lg:top-24">
@@ -250,7 +323,7 @@ export default function PhotographerProfile() {
                   </div>
                 </div>
                 <div className="text-center p-3 sm:p-4 bg-gray-700/30 rounded-lg sm:rounded-xl border border-gray-600/30">
-                  <div className="text-xl sm:text-2xl font-bold text-blue-400 capitalize">
+                  <div className="text-xl sm:text-xl font-bold text-blue-400 capitalize">
                     {photographer.state}
                   </div>
                   <div className="text-xs sm:text-sm text-gray-300 mt-1">
@@ -261,9 +334,9 @@ export default function PhotographerProfile() {
             </div>
           </div>
 
-          {/* Enhanced Main Content */}
+          {/* Main Content */}
           <div className="lg:col-span-3">
-            {/* Enhanced Tabs */}
+            {/* Tabs */}
             <div className="bg-gray-800/60 backdrop-blur-lg rounded-xl sm:rounded-2xl shadow-2xl mb-6 sm:mb-8 border border-gray-700/50 overflow-hidden">
               <div className="border-b border-gray-700/50">
                 <div className="flex overflow-x-auto scrollbar-hide">
@@ -286,8 +359,8 @@ export default function PhotographerProfile() {
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 md:px-8 py-3 sm:py-4 font-semibold transition-all duration-300 whitespace-nowrap border-b-2 text-sm sm:text-base ${activeTab === tab.id
-                          ? "text-yellow-400 border-yellow-400 bg-yellow-400/5"
-                          : "text-gray-400 hover:text-white border-transparent hover:bg-white/5"
+                        ? "text-yellow-400 border-yellow-400 bg-yellow-400/5"
+                        : "text-gray-400 hover:text-white border-transparent hover:bg-white/5"
                         }`}
                     >
                       <tab.icon size={18} className="sm:w-5 md:w-6" />
@@ -295,8 +368,8 @@ export default function PhotographerProfile() {
                       {tab.count > 0 && (
                         <span
                           className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold ${activeTab === tab.id
-                              ? "bg-yellow-400 text-black"
-                              : "bg-gray-700 text-gray-300"
+                            ? "bg-yellow-400 text-black"
+                            : "bg-gray-700 text-gray-300"
                             }`}
                         >
                           {tab.count}
@@ -307,13 +380,20 @@ export default function PhotographerProfile() {
                 </div>
               </div>
 
-              {/* Enhanced Tab Content */}
+              {/* Tab Content */}
               <div className="p-4 sm:p-6 md:p-8">
                 {activeTab === "portfolio" && (
                   <div>
-                    <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
-                      Portfolio Gallery
-                    </h3>
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl sm:text-2xl font-bold text-white">
+                        Portfolio Gallery
+                      </h3>
+                      {photographer.photos?.length > 0 && (
+                        <span className="text-sm text-gray-400">
+                          Click any image to view fullscreen
+                        </span>
+                      )}
+                    </div>
                     <p className="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">
                       Explore {photographer.name}'s stunning photography work
                     </p>
@@ -323,12 +403,14 @@ export default function PhotographerProfile() {
                         {photographer.photos.map((photo, index) => (
                           <div
                             key={index}
+                            onClick={() => openLightbox(index)}
                             className="relative aspect-square rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer transform transition-all duration-500 hover:scale-[1.02]"
                           >
                             <Image
                               src={photo.url}
                               alt={`Portfolio ${index + 1}`}
                               fill
+                              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
                               className="object-cover group-hover:scale-110 transition-transform duration-700"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 sm:p-4">
@@ -336,8 +418,8 @@ export default function PhotographerProfile() {
                                 Photo {index + 1}
                               </span>
                             </div>
-                            <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-black/60 text-white px-2 py-1 rounded-lg text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              View
+                            <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-black/60 text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <Maximize2 size={16} />
                             </div>
                           </div>
                         ))}
@@ -372,15 +454,11 @@ export default function PhotographerProfile() {
                       </p>
                     </div>
 
-                    {/* Enhanced Info Cards */}
+                    {/* Info Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-6 sm:mt-8">
                       <div className="bg-gradient-to-br from-gray-700/50 to-gray-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-600/30">
                         <h4 className="font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3 text-sm sm:text-base">
-                          <MapPin
-                            className="text-yellow-400"
-                            size={20}
-                            className="sm:w-6"
-                          />
+                          <MapPin className="text-yellow-400" size={20} />
                           Location & Coverage
                         </h4>
                         <div className="space-y-2 sm:space-y-3">
@@ -407,11 +485,7 @@ export default function PhotographerProfile() {
 
                       <div className="bg-gradient-to-br from-gray-700/50 to-gray-800/50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-600/30">
                         <h4 className="font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2 sm:gap-3 text-sm sm:text-base">
-                          <Camera
-                            className="text-green-400"
-                            size={20}
-                            className="sm:w-6"
-                          />
+                          <Camera className="text-green-400" size={20} />
                           Specialties
                         </h4>
                         <div className="flex flex-wrap gap-2">
@@ -450,12 +524,11 @@ export default function PhotographerProfile() {
                                 src={video.url}
                                 controls
                                 className="w-full h-full object-contain"
-                                poster={`https://res.cloudinary.com/demo/video/upload/w_500,h_300,c_fill/${video.public_id}.jpg`}
                               />
                             </div>
                             <div className="flex items-center justify-between">
                               <h4 className="font-semibold text-white text-base sm:text-lg truncate mr-2">
-                                {video.title}
+                                {video.title || `Video ${index + 1}`}
                               </h4>
                               <span className="text-gray-400 text-xs sm:text-sm whitespace-nowrap">
                                 Video {index + 1}
