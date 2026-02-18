@@ -9,18 +9,18 @@ export default function PhotographersPage() {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedState, setSelectedState] = useState("All");
-    const [selectedCity, setSelectedCity] = useState("All"); // নতুন state
+    const [selectedCity, setSelectedCity] = useState("All");
 
-    // PDF REQUIREMENT: 4 states only
+    // PDF REQUIREMENT: 4 states only - with ACRONYMS
     const states = [
         { value: "All", label: "All States" },
-        { value: "louisiana", label: "Louisiana" },
-        { value: "mississippi", label: "Mississippi" },
-        { value: "alabama", label: "Alabama" },
-        { value: "florida", label: "Florida" }
+        { value: "LA", label: "Louisiana" },
+        { value: "MS", label: "Mississippi" },
+        { value: "AL", label: "Alabama" },
+        { value: "FL", label: "Florida" }
     ];
 
-    // Cities for filtering
+    // Cities for filtering (matching new mapping)
     const cities = [
         { value: "All", label: "All Cities" },
         { value: "new orleans", label: "New Orleans" },
@@ -44,8 +44,8 @@ export default function PhotographersPage() {
         const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             p.biography?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        // STATE-BASED FILTERING (PDF Requirement)
-        const matchesState = selectedState === "All" || p.state === selectedState.toLowerCase();
+        // STATE-BASED FILTERING with acronyms
+        const matchesState = selectedState === "All" || p.state === selectedState;
 
         // CITY FILTERING
         const matchesCity = selectedCity === "All" || p.city === selectedCity.toLowerCase();
@@ -109,7 +109,7 @@ export default function PhotographersPage() {
                         </div>
                     </div>
 
-                    {/* State Filter - PDF REQUIREMENT */}
+                    {/* State Filter - Using acronyms */}
                     <div className="mb-4">
                         <p className="text-gray-300 mb-3 font-medium">Filter by State:</p>
                         <div className="flex gap-2 flex-wrap justify-center">
@@ -122,7 +122,7 @@ export default function PhotographersPage() {
                                         : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                                         }`}
                                 >
-                                    {state.label}
+                                    {state.value !== "All" ? `${state.label} (${state.value})` : state.label}
                                     {state.value !== "All" && (
                                         <span className={`text-xs px-1.5 py-0.5 rounded-full ${selectedState === state.value ? "bg-black/20" : "bg-white/10"}`}>
                                             {stateStats[state.value] || 0}
@@ -226,9 +226,7 @@ function PhotographerCard({ photographer }) {
                     className="object-cover group-hover:scale-110 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-4">
-                    <span className="text-white text-sm font-medium bg-black/50 px-2 py-1 rounded">
-                        {photographer.services?.length || 0} services
-                    </span>
+                    {/* REMOVED: services counter - "services" tracker removed */}
                     <span className="text-white text-sm font-medium bg-black/50 px-2 py-1 rounded capitalize">
                         {photographer.state}
                     </span>
@@ -257,26 +255,7 @@ function PhotographerCard({ photographer }) {
                     </p>
                 )}
 
-                {/* Services Preview */}
-                {photographer.services && photographer.services.length > 0 && (
-                    <div className="mb-4">
-                        <div className="flex flex-wrap gap-1">
-                            {photographer.services.slice(0, 2).map((service, index) => (
-                                <span
-                                    key={index}
-                                    className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium"
-                                >
-                                    {service.service}
-                                </span>
-                            ))}
-                            {photographer.services.length > 2 && (
-                                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                                    +{photographer.services.length - 2} more
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                )}
+                {/* REMOVED: Services Preview - this is also a tracker */}
 
                 <Link
                     href={`/cameras/profile/${photographer._id}`}

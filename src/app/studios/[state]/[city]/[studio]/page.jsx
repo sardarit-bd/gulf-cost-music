@@ -321,7 +321,7 @@ export default function StudioProfile() {
                                             </span>
                                         </div>
 
-                                        <div className="hidden lg:flex items-center gap-6">
+                                        {/* <div className="hidden lg:flex items-center gap-6">
                                             <div className="flex items-center gap-2">
                                                 <Headphones className="text-blue-400" size={20} />
                                                 <span>{studio.services?.length || 0} Services</span>
@@ -338,7 +338,7 @@ export default function StudioProfile() {
                                                     <span className="text-green-400">Audio Sample</span>
                                                 </div>
                                             )}
-                                        </div>
+                                        </div> */}
                                     </div>
 
                                     {/* Quick Stats */}
@@ -352,19 +352,19 @@ export default function StudioProfile() {
                                             </div>
                                         </div>
 
-                                        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                                        {/* <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                                             <div className="text-2xl font-bold text-blue-500">
                                                 {studio.services?.length || 0}
                                             </div>
                                             <div className="text-sm text-gray-300">Services</div>
-                                        </div>
+                                        </div> */}
 
-                                        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                                        {/* <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                                             <div className="text-2xl font-bold text-green-500">
                                                 {studio.photos?.length || 0}
                                             </div>
                                             <div className="text-sm text-gray-300">Portfolio</div>
-                                        </div>
+                                        </div> */}
 
                                         {/* <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                                             <div className="text-2xl font-bold text-purple-500">

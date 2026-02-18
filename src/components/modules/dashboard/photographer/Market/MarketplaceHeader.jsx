@@ -1,4 +1,3 @@
-import { BadgeCheck, Package } from "lucide-react";
 
 export default function MarketplaceHeader({ existingItem, user }) {
     return (
@@ -14,16 +13,6 @@ export default function MarketplaceHeader({ existingItem, user }) {
                             : "List music gear, services, or merchandise for sale"
                         }
                     </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
-                        <BadgeCheck className="w-5 h-5" />
-                        <span className="font-medium">Verified Artist</span>
-                    </div>
-                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                        <Package className="w-6 h-6" />
-                    </div>
                 </div>
             </div>
         </div>

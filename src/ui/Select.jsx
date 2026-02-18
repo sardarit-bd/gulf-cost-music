@@ -61,7 +61,7 @@ export default function Select({
       <button
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        disabled={disabled}
+        disabled={!!disabled}
         className={`
           w-full flex items-center justify-between gap-3 
           bg-white text-gray-900 px-4 py-3 rounded-xl 
@@ -99,10 +99,9 @@ export default function Select({
               disabled={option.disabled}
               className={`
                 w-full px-4 py-3 text-left transition-colors duration-150
-                ${
-                  option.value === value
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-gray-700 hover:bg-gray-50"
+                ${option.value === value
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-gray-700 hover:bg-gray-50"
                 }
                 ${option.disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                 flex items-center justify-between
