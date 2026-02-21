@@ -1,18 +1,11 @@
 // app/dashboard/venues/overview/page.js
 "use client";
 
-import ActionButtons from "@/components/modules/venues/overview/ActionButtons";
-import StatsCards from "@/components/modules/venues/overview/StatsCards";
 import StatusAlerts from "@/components/modules/venues/overview/StatusAlerts";
 import VenueInformation from "@/components/modules/venues/overview/VenueInformation";
 import VenuePhotosGallery from "@/components/modules/venues/overview/VenuePhotosGallery";
-// import ActionButtons from "@/components/venue/ActionButtons";
-// import StatsCards from "@/components/venue/StatsCards";
-// import StatusAlerts from "@/components/venue/StatusAlerts";
-// import VenueInformation from "@/components/venue/VenueInformation";
-// import VenuePhotosGallery from "@/components/venue/VenuePhotosGallery";
 import { getCookie } from "@/utils/cookies";
-import { ArrowLeft, Edit3 } from "lucide-react";
+import { Edit3 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
@@ -110,16 +103,10 @@ export default function OverviewPage() {
         }}
       />
 
-      <div className="max-w-7xl mx-auto">
+      <div className="">
         {/* Header with Back Button */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard/venues"
-              className="p-2 bg-white text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-50 transition shadow-sm"
-            >
-              <ArrowLeft size={20} />
-            </Link>
+          <div className="flex items-center gap-4">=
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 Venue Overview
@@ -130,7 +117,7 @@ export default function OverviewPage() {
             </div>
           </div>
           <Link
-            href="/dashboard/venues/edit-profile"
+            href="/dashboard/venue/edit"
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition shadow-sm"
           >
             <Edit3 size={18} />
@@ -142,7 +129,7 @@ export default function OverviewPage() {
         <StatusAlerts venue={venue} />
 
         {/* Stats Cards */}
-        <StatsCards venue={venue} subscriptionPlan={subscriptionPlan} />
+        {/* <StatsCards venue={venue} subscriptionPlan={subscriptionPlan} /> */}
 
         {/* Main Content */}
         <div className="grid lg:grid-cols-2 gap-6 mb-8">
@@ -154,7 +141,7 @@ export default function OverviewPage() {
         </div>
 
         {/* Action Buttons */}
-        <ActionButtons />
+        {/* <ActionButtons /> */}
       </div>
     </div>
   );

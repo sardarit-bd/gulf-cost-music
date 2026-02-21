@@ -1,8 +1,5 @@
 "use client";
 
-// import ImageGrid from "@/components/studio/ImageGrid";
-// import ImageList from "@/components/studio/ImageList";
-// import Lightbox from "@/components/studio/Lightbox";
 import {
     ArrowLeft,
     Camera,

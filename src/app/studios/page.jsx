@@ -4,6 +4,7 @@ import { Search, MapPin, Filter, Music, Headphones, DollarSign, Star } from "luc
 import Link from "next/link";
 import Image from "next/image";
 import axios from "axios";
+import { formatCityName, formatStateName, formatLocation } from "@/utils/formatters";
 
 const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -42,7 +43,7 @@ export default function StudiosPage() {
                 .sort()
                 .map(city => ({
                     value: city,
-                    label: city.charAt(0).toUpperCase() + city.slice(1)
+                    label: formatCityName(city) // FIXED: Using formatter
                 }));
             setCities(uniqueCities);
             setSelectedCity("All");
@@ -225,7 +226,7 @@ export default function StudiosPage() {
                                             : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-500"
                                             }`}
                                     >
-                                        {city.label}
+                                        {city.label} {/* FIXED: Already formatted */}
                                     </button>
                                 ))}
                             </div>
@@ -240,7 +241,7 @@ export default function StudiosPage() {
                                 <span className="text-gray-300 ml-2">
                                     {filteredStudios.length === 1 ? 'studio' : 'studios'} found
                                     {selectedState !== "All" && ` in ${selectedState}`}
-                                    {selectedCity !== "All" && `, ${selectedCity}`}
+                                    {selectedCity !== "All" && `, ${formatCityName(selectedCity)}`} {/* FIXED */}
                                 </span>
                             </div>
                             {(selectedState !== "All" || selectedCity !== "All" || searchTerm) && (
@@ -326,8 +327,8 @@ export default function StudiosPage() {
 
                                     <div className="flex items-center gap-1 text-gray-600 mb-3">
                                         <MapPin size={16} />
-                                        <span className="text-sm capitalize">
-                                            {studio.city.charAt(0).toUpperCase() + studio.city.slice(1)}, {studio.state}
+                                        <span className="text-sm">
+                                            {formatLocation(studio.city, studio.state)} {/* FIXED */}
                                         </span>
                                     </div>
 
@@ -393,8 +394,8 @@ export default function StudiosPage() {
                         {states.slice(1).map((state) => {
                             const count = studios.filter(s => s.state === state.value).length;
                             const citiesCount = [...new Set(
-                                studios.filter(s => s.state === state.value).map(s => s.city)
-                            )].length;
+                                studios.filter(s => s.state === state.value).map(s => formatCityName(s.city))
+                            )].length; // FIXED: Using formatter
 
                             return (
                                 <div key={state.value} className="text-center p-4 rounded-xl bg-gradient-to-br from-gray-800 to-gray-900">

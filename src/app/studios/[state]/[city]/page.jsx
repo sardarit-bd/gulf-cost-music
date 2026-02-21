@@ -1,18 +1,19 @@
 "use client";
-import { useEffect, useState } from "react";
-import { ArrowLeft, MapPin, Music, Star, Headphones, DollarSign, ChevronRight } from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { formatCityName, formatLocation, formatStateName } from "@/utils/formatters";
 import axios from "axios";
+import { ArrowLeft, ChevronRight, DollarSign, Headphones, MapPin, Music, Star } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
 export default function StudiosByCity() {
     const { state, city } = useParams();
     const router = useRouter();
-    const formattedState = decodeURIComponent(state);
-    const formattedCity = decodeURIComponent(city);
+    const formattedState = formatStateName(decodeURIComponent(state));
+    const formattedCity = formatCityName(decodeURIComponent(city));
     const [studios, setStudios] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -25,7 +26,7 @@ export default function StudiosByCity() {
         try {
             setLoading(true);
             const response = await axios.get(
-                `${API_BASE}/api/studios/location?state=${formattedState}&city=${formattedCity.toLowerCase()}`
+                `${API_BASE}/api/studios/location?state=${formattedState}&city=${decodeURIComponent(city).toLowerCase()}`
             );
             setStudios(response.data.data || []);
         } catch (error) {
@@ -71,7 +72,7 @@ export default function StudiosByCity() {
                         {formattedState}
                     </Link>
                     <ChevronRight size={16} />
-                    <span className="text-yellow-400 capitalize">{formattedCity}</span>
+                    <span className="text-yellow-400">{formattedCity}</span> {/* FIXED */}
                 </div>
 
                 {/* Header */}
@@ -84,7 +85,7 @@ export default function StudiosByCity() {
                             <ArrowLeft size={20} />
                             Back to {formattedState}
                         </button>
-                        <h1 className="text-4xl md:text-5xl font-bold text-white capitalize">
+                        <h1 className="text-4xl md:text-5xl font-bold text-white">
                             Studios in {formattedCity}, {formattedState}
                         </h1>
                         <p className="text-gray-300 mt-2">
@@ -166,7 +167,9 @@ export default function StudiosByCity() {
                                         {/* Location */}
                                         <div className="flex items-center gap-2 text-gray-300 mb-4">
                                             <MapPin size={18} className="text-yellow-500" />
-                                            <span className="capitalize">{studio.city}, {studio.state}</span>
+                                            <span>
+                                                {formatLocation(studio.city, studio.state)} {/* FIXED */}
+                                            </span>
                                         </div>
 
                                         {/* Biography Excerpt */}

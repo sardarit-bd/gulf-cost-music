@@ -40,13 +40,11 @@ const CustomInput = ({
           minLength={minLength}
           maxLength={maxLength}
           disabled={disabled}
-          className={`text-gray-700 w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 ${
-            icon ? "pl-10" : ""
-          } ${
-            error
+          className={`text-gray-700 w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 ${icon ? "pl-10" : ""
+            } ${error
               ? "border-red-500 focus:ring-red-400"
               : "border-gray-300 focus:ring-yellow-500"
-          }`}
+            }`}
         />
       </div>
 
@@ -159,6 +157,7 @@ export default function SignIn() {
           venue: "/dashboard/venue",
           journalist: "/dashboard/journalist",
           photographer: "/dashboard/photographer",
+          studio: "/dashboard/studio",
           fan: "/",
         };
 

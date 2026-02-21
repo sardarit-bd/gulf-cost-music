@@ -52,11 +52,10 @@ export default function SaveProfileSection({
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">Profile Status:</span>
           <span
-            className={`text-xs px-2 py-1 rounded ${
-              isProfileComplete
+            className={`text-xs px-2 py-1 rounded ${isProfileComplete
                 ? "bg-green-100 text-green-800"
                 : "bg-yellow-100 text-yellow-800"
-            }`}
+              }`}
           >
             {isProfileComplete ? "Complete" : "Incomplete"}
           </span>
@@ -64,11 +63,10 @@ export default function SaveProfileSection({
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">Verification:</span>
           <span
-            className={`text-xs px-2 py-1 rounded ${
-              isActive
+            className={`text-xs px-2 py-1 rounded ${isActive
                 ? "bg-green-100 text-green-800"
                 : "bg-yellow-100 text-yellow-800"
-            }`}
+              }`}
           >
             {isActive ? "Verified" : "Pending"}
           </span>

@@ -394,46 +394,6 @@ export default function StudioServices() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Pricing Tips */}
-          {/* <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
-            <h3 className="text-xl font-bold mb-4">Pricing Tips</h3>
-
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-3 h-3" />
-                </div>
-                <span className="text-sm">
-                  Be clear about what's included in each service
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-3 h-3" />
-                </div>
-                <span className="text-sm">
-                  Research competitor pricing in your area
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-3 h-3" />
-                </div>
-                <span className="text-sm">
-                  Offer package deals for multiple services
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-3 h-3" />
-                </div>
-                <span className="text-sm">
-                  Consider hourly vs. project-based pricing
-                </span>
-              </li>
-            </ul>
-          </div> */}
-
           {/* Service Examples */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
@@ -477,11 +437,11 @@ export default function StudioServices() {
                   $
                   {services.length > 0
                     ? (
-                        services.reduce(
-                          (sum, s) => sum + parseFloat(s.price),
-                          0,
-                        ) / services.length
-                      ).toFixed(2)
+                      services.reduce(
+                        (sum, s) => sum + parseFloat(s.price),
+                        0,
+                      ) / services.length
+                    ).toFixed(2)
                     : "0.00"}
                 </span>
               </div>

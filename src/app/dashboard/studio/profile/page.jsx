@@ -187,82 +187,6 @@ export default function StudioProfile() {
           </div>
         </div>
       </div>
-
-      {/* Quick Stats */}
-      {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
-              <Eye className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Profile Views</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats.profileViews}
-              </p>
-            </div>
-          </div>
-          <p className="text-xs text-green-600 flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            +12% this month
-          </p>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center">
-              <Headphones className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Audio Plays</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats.audioPlays}
-              </p>
-            </div>
-          </div>
-          <p className="text-xs text-green-600 flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            +23% this month
-          </p>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center">
-              <Calendar className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Bookings</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {stats.bookings}
-              </p>
-            </div>
-          </div>
-          <p className="text-xs text-green-600 flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            +5% this month
-          </p>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Earnings</p>
-              <p className="text-2xl font-bold text-gray-900">
-                ${stats.earnings}
-              </p>
-            </div>
-          </div>
-          <p className="text-xs text-green-600 flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            +18% this month
-          </p>
-        </div>
-      </div> */}
-
       {/* Profile Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {profileSections.map((section, sectionIndex) => (
@@ -350,66 +274,8 @@ export default function StudioProfile() {
               {services.length} service{services.length !== 1 ? "s" : ""} listed
             </p>
           </Link>
-
-          {/* <Link
-            href="/dashboard/studios/profile/edit"
-            className="p-6 bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200 rounded-2xl hover:from-purple-100 hover:to-purple-200 transition-all group"
-          >
-            <div className="flex items-center gap-4 mb-3">
-              <div className="w-12 h-12 bg-purple-500 text-white rounded-xl flex items-center justify-center group-hover:bg-purple-600 transition-colors">
-                <Edit className="w-6 h-6" />
-              </div>
-              <div>
-                <h4 className="font-bold text-gray-900">Edit Profile</h4>
-                <p className="text-sm text-gray-600">
-                  Update basic information
-                </p>
-              </div>
-            </div>
-            <p className="text-xs text-gray-500">
-              {profileCompletion}% complete
-            </p>
-          </Link> */}
         </div>
       </div>
-
-      {/* Verification Status */}
-      {/* {studioData && (
-        <div className="mt-8">
-          <div
-            className={`p-6 rounded-2xl ${studioData.isVerified ? "bg-green-50 border border-green-200" : "bg-yellow-50 border border-yellow-200"}`}
-          >
-            <div className="flex items-center gap-4">
-              <div
-                className={`w-12 h-12 ${studioData.isVerified ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600"} rounded-xl flex items-center justify-center`}
-              >
-                {studioData.isVerified ? (
-                  <CheckCircle className="w-6 h-6" />
-                ) : (
-                  <AlertCircle className="w-6 h-6" />
-                )}
-              </div>
-              <div className="flex-1">
-                <h4 className="font-bold text-gray-900">
-                  {studioData.isVerified
-                    ? "Verified Studio"
-                    : "Verification Pending"}
-                </h4>
-                <p className="text-sm text-gray-600 mt-1">
-                  {studioData.isVerified
-                    ? "Your studio has been verified and appears as trusted to clients"
-                    : "Complete your profile and contact admin@ulfcoastmusic.com for verification"}
-                </p>
-              </div>
-              {!studioData.isVerified && profileCompletion >= 80 && (
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                  Request Verification
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 }

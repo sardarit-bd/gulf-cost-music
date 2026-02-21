@@ -316,7 +316,7 @@ export default function AddShowPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-16">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <Toaster
         position="top-center"
         reverseOrder={false}
@@ -329,16 +329,16 @@ export default function AddShowPage() {
         }}
       />
 
-      <div className="max-w-4xl mx-auto">
+      <div className="">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
-            <Link
+            {/* <Link
               href="/dashboard/venues"
               className="p-2 bg-white text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-50 transition shadow-sm"
             >
               <ArrowLeft size={20} />
-            </Link>
+            </Link> */}
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 Add New Show
@@ -573,8 +573,8 @@ export default function AddShowPage() {
                 type="submit"
                 disabled={loading || isLimitReached}
                 className={`flex items-center justify-center gap-2 px-8 py-3 rounded-lg font-semibold transition min-w-[200px] ${isLimitReached
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300"
-                    : "bg-blue-600 hover:bg-blue-700 text-white hover:shadow-md"
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-300"
+                  : "bg-blue-600 hover:bg-blue-700 text-white hover:shadow-md"
                   }`}
               >
                 {loading ? (

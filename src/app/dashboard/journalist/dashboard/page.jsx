@@ -1,13 +1,8 @@
 "use client";
 
 import JournalistHeader from "@/components/modules/journalist/JournalistHeader";
-// import JournalistHeader from "@/components/modules/journalist/JournalistHeader";
 import NewsDetailModal from "@/components/modules/journalist/NewsDetailModal";
 import NewsListTab from "@/components/modules/journalist/NewsListTab";
-// import JournalistHeader from "@/components/journalist/JournalistHeader";
-// import NewsDetailModal from "@/components/journalist/NewsDetailModal";
-// import NewsListTab from "@/components/journalist/NewsListTab";
-// import DeleteModal from "@/components/ui/DeleteModal";
 import { useAuth } from "@/context/AuthContext";
 import DeleteModal from "@/ui/DeleteModal";
 import { getCookie } from "@/utils/cookies";
@@ -117,7 +112,7 @@ export default function JournalistPage() {
     <div className="py-8 px-8">
       <Toaster position="top-center" />
 
-      <div className="max-w-7xl mx-auto">
+      <div className="">
         <JournalistHeader />
 
         <NewsDetailModal

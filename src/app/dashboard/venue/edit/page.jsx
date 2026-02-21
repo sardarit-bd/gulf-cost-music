@@ -11,7 +11,6 @@ import { getCookie } from "@/utils/cookies";
 // import VenueLocationInfo from "@/components/VenueLocationInfo";
 // import VenuePhotosUpload from "@/components/VenuePhotosUpload";
 // import { getCookie } from "@/utils/cookies";
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
@@ -251,16 +250,10 @@ export default function EditProfilePage() {
         }}
       />
 
-      <div className="max-w-7xl mx-auto">
+      <div className="">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard/venues"
-              className="p-2 bg-white text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-50 transition shadow-sm"
-            >
-              <ArrowLeft size={20} />
-            </Link>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 Edit Venue Profile
@@ -271,7 +264,7 @@ export default function EditProfilePage() {
             </div>
           </div>
           <Link
-            href="/dashboard/venues/overview"
+            href="/dashboard/venue"
             className="px-4 py-2 bg-white text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 transition shadow-sm"
           >
             View Overview

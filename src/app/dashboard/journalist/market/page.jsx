@@ -1,11 +1,9 @@
-// "use client";
-
 import MarketLayout from "@/components/shared/market/MarketLayout";
 
-export default function ArtistMarketDashboard() {
+export default function JournalistMarketDashboard() {
     return (
         <div>
-            <MarketLayout userType="artist" />
+            <MarketLayout userType="journalist" />
         </div>
     );
 }

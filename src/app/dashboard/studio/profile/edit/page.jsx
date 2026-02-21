@@ -220,7 +220,7 @@ export default function EditStudioProfile() {
 
       // Redirect back after delay
       setTimeout(() => {
-        router.push("/dashboard/studios/profile");
+        router.push("/dashboard/studio/profile");
       }, 1500);
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -569,7 +569,7 @@ export default function EditStudioProfile() {
                   <span className="font-bold">
                     {studioData.city
                       ? cities.find((c) => c.value === studioData.city)
-                          ?.label || studioData.city
+                        ?.label || studioData.city
                       : "Not selected"}
                   </span>
                 </div>

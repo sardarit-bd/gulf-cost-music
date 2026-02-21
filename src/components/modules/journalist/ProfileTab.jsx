@@ -1,8 +1,9 @@
-// components/journalist/ProfileTab.js
 import Select from "@/ui/Select";
 import {
   Camera,
   CheckCircle,
+  Edit2,
+  Eye,
   Mail,
   MapPin,
   Save,
@@ -67,6 +68,8 @@ export default function ProfileTab({
   onJournalistChange,
   onProfileStateChange,
   onSaveProfile,
+  saving,
+  isEditing,
 }) {
   return (
     <div className="grid lg:grid-cols-3 gap-6 px-4">
@@ -85,8 +88,6 @@ export default function ProfileTab({
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src = "/images/placeholder.png";
-                      e.target.className =
-                        "w-full h-full bg-gray-200 flex items-center justify-center";
                     }}
                   />
                 ) : (
@@ -95,15 +96,18 @@ export default function ProfileTab({
                   </div>
                 )}
               </div>
-              <label className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition shadow-sm">
-                <Camera size={16} />
-                <input
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={onAvatarUpload}
-                />
-              </label>
+
+              {isEditing && (
+                <label className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition shadow-sm">
+                  <Camera size={16} />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={onAvatarUpload}
+                  />
+                </label>
+              )}
             </div>
 
             <h2 className="text-xl font-bold text-gray-900 mb-2">
@@ -116,11 +120,10 @@ export default function ProfileTab({
             {/* Verification Badge */}
             <div className="mb-4">
               <span
-                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
-                  journalist.isVerified
-                    ? "bg-green-100 text-green-800"
-                    : "bg-yellow-100 text-yellow-800"
-                }`}
+                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${journalist.isVerified
+                  ? "bg-green-100 text-green-800"
+                  : "bg-yellow-100 text-yellow-800"
+                  }`}
               >
                 {journalist.isVerified ? (
                   <>
@@ -141,15 +144,17 @@ export default function ProfileTab({
               )}
             </div>
 
-            <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm">
-              <Upload size={16} /> Change Photo
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={onAvatarUpload}
-              />
-            </label>
+            {isEditing && (
+              <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm">
+                <Upload size={16} /> Change Photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={onAvatarUpload}
+                />
+              </label>
+            )}
 
             {/* Location Info */}
             {(journalist.state || journalist.city) && (
@@ -167,36 +172,56 @@ export default function ProfileTab({
                 </div>
               </div>
             )}
+
+            {/* View Mode Indicator */}
+            {/* {!isEditing && (
+              <div className="mt-4 text-sm text-gray-500 flex items-center justify-center gap-1">
+                <Eye size={14} />
+                <span>Viewing Profile</span>
+              </div>
+            )} */}
           </div>
         </div>
       </div>
 
-      {/* Edit Form */}
+      {/* Edit/View Form */}
       <div className="lg:col-span-2">
         <div className="bg-white rounded-xl p-6 border border-gray-200">
           <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <User2 size={20} className="text-gray-700" />
-            Profile Information
+            {isEditing ? (
+              <Edit2 size={20} className="text-blue-600" />
+            ) : (
+              <User2 size={20} className="text-gray-700" />
+            )}
+            {isEditing ? "Edit Profile Information" : "Profile Information"}
           </h3>
 
           <div className="space-y-6">
+            {/* Full Name Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name *
+                Full Name {isEditing && "*"}
               </label>
-              <input
-                value={journalist.fullName}
-                onChange={(e) =>
-                  onJournalistChange({
-                    ...journalist,
-                    fullName: e.target.value,
-                  })
-                }
-                placeholder="Enter your full name"
-                className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition"
-              />
+              {isEditing ? (
+                <input
+                  value={journalist.fullName}
+                  onChange={(e) =>
+                    onJournalistChange({
+                      ...journalist,
+                      fullName: e.target.value,
+                    })
+                  }
+                  placeholder="Enter your full name"
+                  className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition"
+                />
+              ) : (
+                <p className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-900">
+                  {journalist.fullName || "Not provided"}
+                </p>
+              )}
             </div>
 
+            {/* Email Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Email
@@ -211,77 +236,110 @@ export default function ProfileTab({
               </p>
             </div>
 
+            {/* State and City Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   State
                 </label>
-                <Select
-                  name="state"
-                  value={journalist.state}
-                  options={stateOptions}
-                  onChange={(e) => onProfileStateChange(e.target.value)}
-                  placeholder="Select State"
-                  className="w-full"
-                />
+                {isEditing ? (
+                  <Select
+                    name="state"
+                    value={journalist.state}
+                    options={stateOptions}
+                    onChange={(e) => onProfileStateChange(e.target.value)}
+                    placeholder="Select State"
+                    className="w-full"
+                  />
+                ) : (
+                  <p className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-900">
+                    {journalist.state || "Not provided"}
+                  </p>
+                )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   City
                 </label>
-                <Select
-                  name="city"
-                  value={journalist.city}
-                  options={
-                    journalist.state && cityByState[journalist.state]
-                      ? [
+                {isEditing ? (
+                  <Select
+                    name="city"
+                    value={journalist.city}
+                    options={
+                      journalist.state && cityByState[journalist.state]
+                        ? [
                           { value: "", label: "Select City" },
                           ...cityByState[journalist.state],
                         ]
-                      : [{ value: "", label: "Select State First" }]
-                  }
-                  onChange={(e) =>
-                    onJournalistChange({
-                      ...journalist,
-                      city: e.target.value,
-                    })
-                  }
-                  disabled={!journalist.state}
-                  placeholder={
-                    journalist.state ? "Select City" : "Select State First"
-                  }
-                  className="w-full"
-                />
+                        : [{ value: "", label: "Select State First" }]
+                    }
+                    onChange={(e) =>
+                      onJournalistChange({
+                        ...journalist,
+                        city: e.target.value,
+                      })
+                    }
+                    disabled={!journalist.state}
+                    placeholder={
+                      journalist.state ? "Select City" : "Select State First"
+                    }
+                    className="w-full"
+                  />
+                ) : (
+                  <p className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-900">
+                    {journalist.city ? formatCityName(journalist.city) : "Not provided"}
+                  </p>
+                )}
               </div>
             </div>
 
+            {/* Biography Field */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Biography
               </label>
-              <textarea
-                rows={4}
-                value={journalist.bio}
-                onChange={(e) =>
-                  onJournalistChange({
-                    ...journalist,
-                    bio: e.target.value,
-                  })
-                }
-                placeholder="Tell us about yourself, your experience, and your focus areas..."
-                className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition resize-vertical"
-              />
+              {isEditing ? (
+                <textarea
+                  rows={4}
+                  value={journalist.bio}
+                  onChange={(e) =>
+                    onJournalistChange({
+                      ...journalist,
+                      bio: e.target.value,
+                    })
+                  }
+                  placeholder="Tell us about yourself, your experience, and your focus areas..."
+                  className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition resize-vertical"
+                />
+              ) : (
+                <p className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 min-h-[120px]">
+                  {journalist.bio || "No biography provided"}
+                </p>
+              )}
             </div>
 
-            <div className="flex justify-end pt-4">
-              <button
-                onClick={onSaveProfile}
-                className="flex items-center gap-2 bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-semibold shadow-sm"
-              >
-                <Save size={18} /> Save Profile
-              </button>
-            </div>
+            {/* Save Button (only in edit mode) */}
+            {isEditing && (
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={onSaveProfile}
+                  disabled={saving}
+                  className="flex items-center gap-2 bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition font-semibold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={18} /> Save Profile
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
