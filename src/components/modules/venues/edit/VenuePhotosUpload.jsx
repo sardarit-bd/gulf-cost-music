@@ -1,4 +1,3 @@
-// components/VenuePhotosUpload.js
 import { ImageIcon, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -10,12 +9,13 @@ export default function VenuePhotosUpload({
   disabled,
 }) {
   const [error, setError] = useState("");
+  const MAX_PHOTOS = 5;
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
 
-    if (previewImages.length + files.length > 10) {
-      setError("Maximum 10 photos allowed.");
+    if (previewImages.length + files.length > MAX_PHOTOS) {
+      setError(`Maximum ${MAX_PHOTOS} photos allowed. You can add ${MAX_PHOTOS - previewImages.length} more.`);
       return;
     }
 
@@ -36,10 +36,10 @@ export default function VenuePhotosUpload({
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
           <ImageIcon size={20} className="text-gray-700" />
-          Venue Photos ({previewImages.length}/10)
+          Venue Photos ({previewImages.length}/{MAX_PHOTOS})
         </h3>
         <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-          All Users
+          Max {MAX_PHOTOS} photos
         </span>
       </div>
 
@@ -50,24 +50,24 @@ export default function VenuePhotosUpload({
         onChange={handleFileChange}
         className="hidden"
         id="photo-upload"
-        disabled={disabled || previewImages.length >= 10}
+        disabled={disabled || previewImages.length >= MAX_PHOTOS}
       />
 
       <label
         htmlFor="photo-upload"
-        className={`flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg transition ${previewImages.length >= 10
+        className={`flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg transition ${previewImages.length >= MAX_PHOTOS
             ? "border-gray-300 bg-gray-50 text-gray-400 cursor-not-allowed"
             : "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer"
           } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <ImageIcon size={32} />
         <span className="text-sm font-medium text-center">
-          {previewImages.length >= 10
-            ? "Maximum 10 Photos Uploaded"
+          {previewImages.length >= MAX_PHOTOS
+            ? `Maximum ${MAX_PHOTOS} Photos Uploaded`
             : "Upload Venue Photos"}
         </span>
         <span className="text-xs text-gray-500 text-center">
-          Maximum 10 photos allowed • JPG, PNG, WebP • Max 5MB each
+          Maximum {MAX_PHOTOS} photos allowed • JPG, PNG, WebP • Max 5MB each
         </span>
       </label>
 
@@ -80,7 +80,7 @@ export default function VenuePhotosUpload({
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm text-gray-600">Uploaded Photos:</p>
             <p className="text-xs text-blue-600">
-              {10 - previewImages.length} photos remaining
+              {MAX_PHOTOS - previewImages.length} photos remaining
             </p>
           </div>
           <div className="grid grid-cols-3 gap-3">
@@ -98,8 +98,6 @@ export default function VenuePhotosUpload({
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = "/images/placeholder.png";
-                    e.target.className =
-                      "w-full h-full bg-gray-100 flex items-center justify-center";
                   }}
                 />
                 <button

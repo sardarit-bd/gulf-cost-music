@@ -188,8 +188,8 @@ export default function EditProfilePage() {
   };
 
   const handleImageUpload = (files) => {
-    if (previewImages.length + files.length > 10) {
-      toast.error("Maximum 10 photos allowed.");
+    if (previewImages.length + files.length > 5) {
+      toast.error(`Maximum 5 photos allowed. You can add ${5 - previewImages.length} more.`);
       return;
     }
 
@@ -202,8 +202,21 @@ export default function EditProfilePage() {
     const urlToRemove = previewImages[index];
 
     if (!urlToRemove.startsWith("blob:")) {
-      const filename = urlToRemove.split("/").pop();
-      setRemovedPhotos((prev) => [...prev, filename]);
+
+      const uploadIndex = urlToRemove.indexOf('/upload/');
+      if (uploadIndex !== -1) {
+        const afterUpload = urlToRemove.substring(uploadIndex + 8);
+
+        const withoutVersion = afterUpload.replace(/^v\d+\//, '');
+
+        const publicId = withoutVersion.split('.')[0];
+
+        console.log("Deleting image with publicId:", publicId);
+        setRemovedPhotos((prev) => [...prev, publicId]);
+      } else {
+        const filename = urlToRemove.split('/').pop().split('.')[0];
+        setRemovedPhotos((prev) => [...prev, filename]);
+      }
     } else {
       URL.revokeObjectURL(urlToRemove);
       const fileIndex = index - (previewImages.length - photoFiles.length);

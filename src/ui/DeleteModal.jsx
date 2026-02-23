@@ -72,21 +72,6 @@ export default function DeleteModal({
                 {/* Content */}
                 <div className="p-6">
                     <div className="space-y-4">
-                        {/* <div className="text-center">
-                            <div className="w-16 h-16 mx-auto mb-4">
-                                <div className={`w-full h-full ${config.bgColor} rounded-full flex items-center justify-center`}>
-                                    <Icon className={`w-8 h-8 ${config.iconColor}`} />
-                                </div>
-                            </div>
-
-                            <p className="text-gray-700 mb-3">{description}</p>
-
-                            {itemName && (
-                                <div className="inline-block px-4 py-2 bg-gray-100 rounded-lg">
-                                    <p className="font-medium text-gray-900">{itemName}</p>
-                                </div>
-                            )}
-                        </div> */}
 
                         {/* Warning Note */}
                         <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
