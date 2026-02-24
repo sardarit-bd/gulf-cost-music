@@ -17,6 +17,9 @@ const sellerTypes = [
     { id: "artist", label: "Artists", icon: Users },
     { id: "photographer", label: "Photographers", icon: Camera },
     { id: "venue", label: "Venues", icon: Building },
+    { id: "studio", label: "Studios", icon: Building },
+    { id: "journalist", label: "Journalists", icon: Users },
+    { id: "fan", label: "Fans", icon: Users },
 ];
 
 export default function MarketPage() {
@@ -221,102 +224,7 @@ export default function MarketPage() {
                     <>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                             {items.map((item) => (
-                                <div
-                                    key={item._id}
-                                    className="bg-[var(--card)] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group"
-                                >
-                                    {/* Item Photo */}
-                                    <div className="relative w-full h-64 overflow-hidden">
-                                        {item.photos?.[0] ? (
-                                            <Image
-                                                src={item.photos[0]}
-                                                alt={item.title}
-                                                fill
-                                                className="object-cover group-hover:scale-110 transition-transform duration-500"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-                                                <ShoppingBag size={48} className="text-gray-400" />
-                                            </div>
-                                        )}
-
-                                        {/* Badges */}
-                                        <div className="absolute top-4 left-4 flex gap-2">
-                                            <span className="px-3 py-1 bg-black/70 text-white text-xs font-medium rounded-full capitalize">
-                                                {item.sellerType}
-                                            </span>
-                                            <span className={`px-3 py-1 text-xs font-medium rounded-full ${item.status === "active" ? "bg-green-500/20 text-green-400" :
-                                                item.status === "sold" ? "bg-red-500/20 text-red-400" :
-                                                    "bg-gray-500/20 text-gray-400"
-                                                }`}>
-                                                {item.status}
-                                            </span>
-                                        </div>
-
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-4">
-                                            <span className="text-white text-sm font-medium">
-                                                {item.photos?.length || 0} photos
-                                            </span>
-                                            <span className="text-white text-sm font-medium">
-                                                ${item.price}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Item Info */}
-                                    <div className="p-6">
-                                        <div className="flex items-start justify-between mb-3">
-                                            <h3 className="text-xl font-bold text-white line-clamp-1">{item.title}</h3>
-                                        </div>
-
-                                        {/* Seller Info */}
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                                                {item.seller?.name?.charAt(0) || "S"}
-                                            </div>
-                                            <div>
-                                                <p className="font-medium text-text-white text-sm">{item.seller?.name}</p>
-                                                {item.seller?.isVerified && (
-                                                    <span className="text-xs text-green-600">✓ Verified</span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Location */}
-                                        {item.location && (
-                                            <div className="flex items-center gap-1 text-text-white mb-3">
-                                                <MapPin size={16} />
-                                                <span className="text-sm truncate">{item.location}</span>
-                                            </div>
-                                        )}
-
-                                        {/* Description Preview */}
-                                        <p className="text-white text-sm line-clamp-2 mb-4">
-                                            {item.description}
-                                        </p>
-
-                                        {/* Fee Info (Client Requirement) */}
-                                        {item.feeInfo && (
-                                            <div className="mb-4 p-3 bg-gray-800 border border-gray-700 rounded-lg">
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-white">Fee ({item.feeInfo.percentage}%):</span>
-                                                    <span className="font-semibold">${item.feeInfo.amount.toFixed(2)}</span>
-                                                </div>
-                                                <div className="flex justify-between text-sm mt-1">
-                                                    <span className="text-text-white">Total:</span>
-                                                    <span className="font-bold">${item.feeInfo.total.toFixed(2)}</span>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <Link
-                                            href={`/markets/${item.location.toLowerCase() || 'all'}/${item._id}`}
-                                            className="w-full bg-yellow-500 text-black text-center py-3 rounded-lg font-semibold hover:bg-yellow-400 transition block"
-                                        >
-                                            View Details
-                                        </Link>
-                                    </div>
-                                </div>
+                                <MarketItemCard key={item._id} item={item} />
                             ))}
                         </div>
 
@@ -359,5 +267,123 @@ export default function MarketPage() {
                 )}
             </div>
         </section>
+    );
+}
+
+// Market Item Card Component
+function MarketItemCard({ item }) {
+    const router = useRouter();
+
+    // Calculate total with fee (buyer pays full price)
+    const totalWithFee = item.feeInfo
+        ? item.price + (item.feeInfo?.shippingCost || 0)
+        : item.price;
+
+    return (
+        <div className="bg-[var(--card)] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group">
+            {/* Item Photo */}
+            <div className="relative w-full h-64 overflow-hidden">
+                {item.photos?.[0] ? (
+                    <Image
+                        src={item.photos[0]}
+                        alt={item.title}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                        <ShoppingBag size={48} className="text-gray-400" />
+                    </div>
+                )}
+
+                {/* Badges */}
+                <div className="absolute top-4 left-4 flex gap-2">
+                    <span className="px-3 py-1 bg-black/70 text-white text-xs font-medium rounded-full capitalize">
+                        {item.sellerType}
+                    </span>
+                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${item.status === "active"
+                            ? "bg-green-500/20 text-green-400"
+                            : "bg-gray-500/20 text-gray-400"
+                        }`}>
+                        {item.status}
+                    </span>
+                </div>
+
+                {/* Price Tag */}
+                <div className="absolute bottom-4 left-4">
+                    <div className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full shadow-lg">
+                        <span className="font-bold text-black text-sm">${item.price}</span>
+                    </div>
+                </div>
+
+                {/* Photo Count */}
+                {item.photos?.length > 1 && (
+                    <div className="absolute bottom-4 right-4">
+                        <div className="px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-full border border-white/20">
+                            <span className="text-white text-xs font-medium">
+                                +{item.photos.length - 1} more
+                            </span>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Item Info */}
+            <div className="p-6">
+                <h3 className="text-xl font-bold text-white mb-3 line-clamp-1">
+                    {item.title}
+                </h3>
+
+                {/* Seller Info */}
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                        {item.seller?.name?.charAt(0) || "S"}
+                    </div>
+                    <div>
+                        <p className="font-medium text-text-white text-sm">{item.seller?.name}</p>
+                        {item.seller?.isVerified && (
+                            <span className="text-xs text-green-400">✓ Verified</span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Location */}
+                {item.location && (
+                    <div className="flex items-center gap-1 text-text-white mb-3">
+                        <MapPin size={16} className="text-yellow-400" />
+                        <span className="text-sm truncate">{item.location}</span>
+                    </div>
+                )}
+
+                {/* Description Preview */}
+                <p className="text-white text-sm line-clamp-2 mb-4">
+                    {item.description}
+                </p>
+
+                {/* ✅ Fee Info - Updated to show correctly */}
+                {item.feeInfo && (
+                    <div className="mb-4 p-3 bg-gray-800 border border-gray-700 rounded-lg">
+                        <div className="flex justify-between text-sm">
+                            <span className="text-yellow-400">Platform Fee ({item.feeInfo.percentage}%):</span>
+                            <span className="font-semibold text-white">${item.feeInfo.amount.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm mt-1 pt-1 border-t border-gray-700">
+                            <span className="text-gray-400">You Pay:</span>
+                            <span className="font-bold text-green-400">${item.price.toFixed(2)}</span>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                            *Seller receives ${(item.price - item.feeInfo.amount).toFixed(2)}
+                        </div>
+                    </div>
+                )}
+
+                <Link
+                    href={`/markets/${item.location?.toLowerCase() || 'all'}/${item._id}`}
+                    className="w-full bg-yellow-500 text-black text-center py-3 rounded-lg font-semibold hover:bg-yellow-400 transition block"
+                >
+                    View Details
+                </Link>
+            </div>
+        </div>
     );
 }

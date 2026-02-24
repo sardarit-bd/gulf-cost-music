@@ -1,14 +1,14 @@
-// components/market/CreateListingModal.jsx
 "use client";
 
-// import { api } from "@/lib/api";
-import { AlertCircle, Camera, DollarSign, Loader2, MapPin, Video, X } from "lucide-react";
+import { useSession } from "@/lib/auth";
+import { AlertCircle, Camera, Crown, DollarSign, Info, Loader2, MapPin, Video, X } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { api } from "./api";
 
 export default function CreateListingModal({ isOpen, onClose, userType, onSuccess }) {
+    const { user } = useSession();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -25,6 +25,12 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
 
     const fileInputRef = useRef(null);
     const videoInputRef = useRef(null);
+
+    // ✅ Calculate fee based on user's subscription
+    const feePercentage = user?.subscriptionPlan === "pro" ? 0 : 10;
+    const price = parseFloat(formData.price) || 0;
+    const feeAmount = (price * feePercentage) / 100;
+    const totalWithFee = price + feeAmount;
 
     const locationOptions = [
         { value: "", label: "Select location (optional)" },
@@ -118,7 +124,7 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
         }
         if (!formData.price) {
             newErrors.price = "Price is required";
-        } else if (isNaN(formData.price) || formData.price <= 0) {
+        } else if (isNaN(formData.price) || parseFloat(formData.price) <= 0) {
             newErrors.price = "Please enter a valid price";
         }
         setErrors(newErrors);
@@ -151,17 +157,20 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                 formDataToSend.append('video', formData.video);
             }
 
-            const response = await api.upload('/api/market/me', formDataToSend);
+            const response = await api.upload('/api/market/me', formDataToSend, 'POST');
 
             toast.success('Item listed successfully!');
             onSuccess();
+            onClose();
 
         } catch (error) {
             console.error('Error creating listing:', error);
             if (error.status === 400) {
-                toast.error(error.data.message || 'Validation failed');
+                toast.error(error.data?.message || 'Validation failed');
             } else if (error.status === 403) {
                 toast.error('You must be verified to list items');
+            } else if (error.status === 401) {
+                toast.error('Please login to continue');
             } else {
                 toast.error('Failed to create listing');
             }
@@ -196,8 +205,8 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                 {/* Progress Bar */}
                 <div className="px-6 pt-4">
                     <div className="flex gap-2">
-                        <div className={`h-2 flex-1 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-gray-200'}`} />
-                        <div className={`h-2 flex-1 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'}`} />
+                        <div className={`h-2 flex-1 rounded-full ${step >= 1 ? 'bg-yellow-500' : 'bg-gray-200'}`} />
+                        <div className={`h-2 flex-1 rounded-full ${step >= 2 ? 'bg-yellow-500' : 'bg-gray-200'}`} />
                     </div>
                 </div>
 
@@ -214,7 +223,7 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                                 value={formData.title}
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                 placeholder="e.g., Studio Recording Session, Custom Beat, etc."
-                                className={`text-gray-900 w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.title ? 'border-red-300' : 'border-gray-300'
+                                className={`text-gray-900 w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 ${errors.title ? 'border-red-300' : 'border-gray-300'
                                     }`}
                                 maxLength={120}
                             />
@@ -241,7 +250,7 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 placeholder="Describe your item in detail..."
                                 rows="5"
-                                className={`text-gray-900 w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.description ? 'border-red-300' : 'border-gray-300'
+                                className={`text-gray-900 w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 ${errors.description ? 'border-red-300' : 'border-gray-300'
                                     }`}
                                 maxLength={2000}
                             />
@@ -273,7 +282,7 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                                         placeholder="99.99"
                                         min="0"
                                         step="0.01"
-                                        className={`text-gray-900 w-full pl-10 pr-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.price ? 'border-red-300' : 'border-gray-300'
+                                        className={`text-gray-900 w-full pl-10 pr-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 ${errors.price ? 'border-red-300' : 'border-gray-300'
                                             }`}
                                     />
                                 </div>
@@ -294,7 +303,7 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                                     <select
                                         value={formData.location}
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                        className="text-gray-900 w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                                        className="text-gray-900 w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 appearance-none"
                                     >
                                         {locationOptions.map(opt => (
                                             <option key={opt.value} value={opt.value}>
@@ -306,15 +315,59 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                             </div>
                         </div>
 
-                        {/* Fee Info */}
-                        <div className="bg-blue-50 p-4 rounded-xl">
-                            <h4 className="font-medium text-blue-800 mb-2">Fee Structure</h4>
-                            <p className="text-sm text-blue-700">
-                                Pro accounts pay 5% fee • Free accounts pay 10% fee
-                            </p>
-                            <p className="text-sm text-blue-600 mt-1">
-                                Shipping and tax will be calculated at checkout based on buyer's location
-                            </p>
+                        {/* ✅ Fee Info - Updated */}
+                        <div className={`p-4 rounded-xl ${feePercentage === 0 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                            <div className="flex items-center gap-2 mb-3">
+                                {feePercentage === 0 ? (
+                                    <Crown className="w-5 h-5 text-green-600" />
+                                ) : (
+                                    <Info className="w-5 h-5 text-yellow-600" />
+                                )}
+                                <h4 className={`font-medium ${feePercentage === 0 ? 'text-green-800' : 'text-yellow-800'}`}>
+                                    Fee Structure
+                                </h4>
+                            </div>
+
+                            {feePercentage === 0 ? (
+                                <div>
+                                    <p className="text-sm text-green-700 font-medium mb-1">
+                                        ✨ Pro Plan Benefit: 0% Platform Fee
+                                    </p>
+                                    <p className="text-sm text-green-600">
+                                        You pay no fees on marketplace sales!
+                                    </p>
+                                </div>
+                            ) : (
+                                <div>
+                                    <p className="text-sm text-yellow-700 mb-2">
+                                        Free Plan: 10% platform fee applies
+                                    </p>
+                                    {price > 0 && (
+                                        <div className="bg-white/50 p-3 rounded-lg">
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-yellow-700">Item Price:</span>
+                                                <span className="font-semibold text-gray-900">${price.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm mt-1">
+                                                <span className="text-yellow-700">Platform Fee (10%):</span>
+                                                <span className="font-semibold text-gray-900">${feeAmount.toFixed(2)}</span>
+                                            </div>
+                                            <div className="border-t border-yellow-200 my-2 pt-2">
+                                                <div className="flex justify-between">
+                                                    <span className="text-yellow-800 font-medium">Total Buyer Pays:</span>
+                                                    <span className="font-bold text-yellow-800">${totalWithFee.toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                            <p className="text-xs text-yellow-600 mt-1">
+                                                *You receive ${price.toFixed(2)} after sale
+                                            </p>
+                                        </div>
+                                    )}
+                                    <p className="text-xs text-yellow-600 mt-2">
+                                        💡 Upgrade to Pro for 0% fees!
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -330,15 +383,12 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                             <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mb-4">
                                 {photoPreviews.map((preview, index) => (
                                     <div key={index} className="relative aspect-square group">
-                                        <div className="absolute inset-0 bg-gray-100 rounded-lg overflow-hidden">
-                                            <Image
-                                                src={preview}
-                                                alt={`Preview ${index + 1}`}
-                                                fill
-                                                className="object-cover"
-                                                sizes="(max-width: 768px) 100px, 150px"
-                                            />
-                                        </div>
+                                        <Image
+                                            src={preview}
+                                            alt={`Preview ${index + 1}`}
+                                            fill
+                                            className="object-cover rounded-lg"
+                                        />
                                         <button
                                             onClick={() => removePhoto(index)}
                                             className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 z-10 shadow-lg"
@@ -351,7 +401,7 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                                 {photoPreviews.length < 5 && (
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-blue-500 hover:bg-blue-50 transition-colors bg-gray-50"
+                                        className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-yellow-500 hover:bg-yellow-50 transition-colors bg-gray-50"
                                     >
                                         <Camera className="w-6 h-6 text-gray-400" />
                                         <span className="text-xs text-gray-500">Add Photo</span>
@@ -393,7 +443,7 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                             ) : (
                                 <button
                                     onClick={() => videoInputRef.current?.click()}
-                                    className="w-full aspect-video border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-blue-500 hover:bg-blue-50 transition-colors bg-gray-50"
+                                    className="w-full aspect-video border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-yellow-500 hover:bg-yellow-50 transition-colors bg-gray-50"
                                 >
                                     <Video className="w-8 h-8 text-gray-400" />
                                     <span className="text-gray-600">Click to upload video</span>
@@ -416,7 +466,11 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                                 <span className="text-gray-600">Title:</span>
                                 <span className="text-gray-900 font-medium">{formData.title}</span>
                                 <span className="text-gray-600">Price:</span>
-                                <span className="text-gray-900 font-medium">${formData.price}</span>
+                                <span className="text-gray-900 font-medium">${parseFloat(formData.price || 0).toFixed(2)}</span>
+                                <span className="text-gray-600">Fee:</span>
+                                <span className="text-gray-900 font-medium">{feePercentage}% (${feeAmount.toFixed(2)})</span>
+                                <span className="text-gray-600">You Receive:</span>
+                                <span className="text-green-600 font-medium">${price.toFixed(2)}</span>
                                 <span className="text-gray-600">Photos:</span>
                                 <span className="text-gray-900 font-medium">{formData.photos.length}/5</span>
                                 <span className="text-gray-600">Video:</span>
@@ -438,7 +492,7 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                     <button
                         onClick={() => step === 1 ? setStep(2) : handleSubmit()}
                         disabled={loading}
-                        className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg flex items-center gap-2 disabled:opacity-50"
+                        className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all shadow-lg flex items-center gap-2 disabled:opacity-50"
                     >
                         {loading ? (
                             <>

@@ -29,7 +29,6 @@ export default function MarketItemPage() {
     const router = useRouter();
     const stateInfo = stateConfig[state?.toLowerCase()];
 
-    // Redirect if state not valid
     useEffect(() => {
         if (!stateInfo) {
             router.push('/markets');
@@ -293,14 +292,14 @@ export default function MarketItemPage() {
                                             </div>
                                         )}
 
-                                        {/* Fee Info (Client Requirement) */}
-                                        {item.feeInfo && (
+                                        {/* Fee Info */}
+                                        {/* {item.feeInfo && (
                                             <div className="flex items-center gap-1 sm:gap-2 bg-yellow-500/10 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full">
                                                 <span className="text-xs sm:text-sm text-yellow-400">
-                                                    Fee: {item.feeInfo.percentage}% (${item.feeInfo.amount.toFixed(2)})
+                                                    Fee: {item.feeInfo.percentage}%
                                                 </span>
                                             </div>
-                                        )}
+                                        )} */}
                                     </div>
                                 </div>
                             </div>
@@ -344,18 +343,27 @@ export default function MarketItemPage() {
                                             Price
                                         </div>
                                     </div>
-
-                                    {/* Total with Fee */}
-                                    {item.feeInfo && (
-                                        <div className="text-center p-3 sm:p-4 bg-gray-700/30 rounded-lg sm:rounded-xl border border-gray-600/30">
-                                            <div className="text-xl sm:text-2xl font-bold text-green-400">
-                                                ${item.feeInfo.total.toFixed(2)}
+                                    {/* {item.feeInfo && (
+                                        <>
+                                            <div className="text-center p-3 sm:p-4 bg-yellow-500/10 rounded-lg sm:rounded-xl border border-yellow-500/30">
+                                                <div className="text-sm sm:text-base text-gray-300 mb-2">Breakdown</div>
+                                                <div className="flex justify-between text-xs sm:text-sm mb-1">
+                                                    <span className="text-gray-400">Platform Fee ({item.feeInfo.percentage}%):</span>
+                                                    <span className="text-yellow-400 font-semibold">${item.feeInfo.amount.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-xs sm:text-sm mb-1">
+                                                    <span className="text-gray-400">You Pay:</span>
+                                                    <span className="text-white font-bold">${item.price.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-xs sm:text-sm pt-1 mt-1 border-t border-yellow-500/20">
+                                                    <span className="text-gray-400">Seller Gets:</span>
+                                                    <span className="text-green-400 font-semibold">
+                                                        ${(item.price - item.feeInfo.amount).toFixed(2)}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="text-xs sm:text-sm text-gray-300 mt-1">
-                                                Total (incl. {item.feeInfo.percentage}% fee)
-                                            </div>
-                                        </div>
-                                    )}
+                                        </>
+                                    )} */}
 
                                     <button
                                         onClick={handleBuyNow}
@@ -363,7 +371,6 @@ export default function MarketItemPage() {
                                     >
                                         Buy Now
                                     </button>
-
                                 </div>
                             </div>
                         </div>
@@ -493,7 +500,6 @@ export default function MarketItemPage() {
                                                     </p>
                                                 </div>
                                             )}
-
                                         </div>
                                     )}
                                 </div>

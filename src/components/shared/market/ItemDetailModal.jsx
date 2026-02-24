@@ -305,26 +305,49 @@ export default function ItemDetailModal({ isOpen, onClose, itemId, onItemUpdate 
 
                                     {/* Price and Fees */}
                                     {(() => {
-                                        const feePercentage = item.seller?.subscriptionPlan === "pro" ? 5 : 10;
+                                        const feePercentage = item.seller?.subscriptionPlan === "pro" ? 0 : 10;
                                         const feeAmount = (item.price * feePercentage) / 100;
-                                        const totalWithFee = item.price + feeAmount;
+                                        const sellerReceives = item.price - feeAmount;
 
                                         return (
-                                            <div className={`rounded-xl p-6 ${item.status === 'active' ? 'bg-gradient-to-r from-blue-50 to-indigo-50' : 'bg-gray-50'}`}>
+                                            <div className={`rounded-xl p-6 ${feePercentage === 0 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
                                                 <div className="flex items-center justify-between mb-3">
                                                     <span className="text-gray-700">Item Price:</span>
                                                     <span className="text-2xl font-bold text-gray-900">${item.price.toFixed(2)}</span>
                                                 </div>
-                                                <div className="flex items-center justify-between mb-3 text-sm">
-                                                    <span className="text-gray-600">Platform Fee ({feePercentage}%):</span>
-                                                    <span className="text-gray-800">+ ${feeAmount.toFixed(2)}</span>
-                                                </div>
-                                                <div className="border-t border-blue-200 my-3 pt-3">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="font-semibold text-gray-900">Total:</span>
-                                                        <span className="text-2xl font-bold text-blue-600">${totalWithFee.toFixed(2)}</span>
+
+                                                {feePercentage > 0 ? (
+                                                    <>
+                                                        <div className="flex items-center justify-between mb-3 text-sm">
+                                                            <span className="text-gray-600">Platform Fee ({feePercentage}%):</span>
+                                                            <span className="text-gray-800">${feeAmount.toFixed(2)}</span>
+                                                        </div>
+                                                        <div className="border-t border-yellow-200 my-3 pt-3">
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="font-semibold text-gray-900">Total You Pay:</span>
+                                                                <span className="text-2xl font-bold text-yellow-600">${item.price.toFixed(2)}</span>
+                                                            </div>
+                                                            <p className="text-xs text-gray-500 mt-1">
+                                                                *Seller receives ${sellerReceives.toFixed(2)} after fees
+                                                            </p>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <div className="mt-3 pt-3 border-t border-green-200">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <Crown className="w-5 h-5 text-green-600" />
+                                                            <span className="text-green-700 font-medium">Pro Plan Benefit</span>
+                                                        </div>
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="font-semibold text-gray-900">Total You Pay:</span>
+                                                            <span className="text-2xl font-bold text-green-600">${item.price.toFixed(2)}</span>
+                                                        </div>
+                                                        <p className="text-xs text-green-600 mt-1">
+                                                            ✨ 0% platform fee • Seller receives full amount
+                                                        </p>
                                                     </div>
-                                                </div>
+                                                )}
+
                                                 <p className="text-xs text-gray-500 mt-2">
                                                     *Shipping and tax will be calculated at checkout
                                                 </p>

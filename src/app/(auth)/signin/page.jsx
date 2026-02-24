@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { Lock, Mail, User } from "lucide-react";
+import { Crown, Lock, Mail, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -106,7 +106,7 @@ export default function SignIn() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
-        },
+        }
       );
 
       const data = await res.json();
@@ -118,7 +118,7 @@ export default function SignIn() {
           duration: 2000,
         });
 
-        // Store token and user data in cookies
+        // Store token and user data
         const user = data.data.user;
         const token = data.data.token;
 
@@ -129,28 +129,21 @@ export default function SignIn() {
         document.cookie = `token=${token}; ${cookieSettings}`;
         document.cookie = `role=${user.userType}; ${cookieSettings}`;
         document.cookie = `user=${encodeURIComponent(
-          JSON.stringify(user),
+          JSON.stringify(user)
         )}; ${cookieSettings}`;
 
-        // Store in localStorage for immediate access
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
         login(user);
+
+        // ✅ Show plan info in toast
+        if (user.subscriptionPlan === "pro") {
+          toast.success("✨ Pro Plan Active - 0% marketplace fees!", {
+            duration: 3000,
+          });
+        }
+
         // Redirect based on user type
-        // setTimeout(() => {
-        //   const redirectMap = {
-        //     admin: "/dashboard/admin",
-        //     artist: "/dashboard/artist",
-        //     venue: "/dashboard/venue",
-        //     journalist: "/dashboard/journalist",
-        //     photographer: "/dashboard/photographer",
-        //     fan: "/",
-        //   };
-
-        //   const redirectTo = redirectMap[user.userType] || "/";
-        //   router.push(redirectTo);
-        // }, 1000);
-
         const redirectMap = {
           admin: "/dashboard/admin",
           artist: "/dashboard/artist",
@@ -162,8 +155,7 @@ export default function SignIn() {
         };
 
         const redirectTo = redirectMap[user.userType] || "/";
-
-        toast.dismiss(toastId); // 🔥 toast clear
+        toast.dismiss(toastId);
         router.push(redirectTo);
 
         return;
@@ -172,29 +164,14 @@ export default function SignIn() {
       // Handle errors
       let newFieldErrors = { email: "", password: "" };
 
-      // Case 1: details.details array (your backend format)
-      if (
-        data.errors?.details?.details &&
-        Array.isArray(data.errors.details.details)
-      ) {
-        data.errors.details.details.forEach((err) => {
-          const field = err.field?.toLowerCase();
-          const message = err.message;
-          if (field === "email") newFieldErrors.email = message;
-          if (field === "password") newFieldErrors.password = message;
-        });
-      }
-      // Case 2: simple details array
-      else if (data.errors?.details && Array.isArray(data.errors.details)) {
+      if (data.errors?.details && Array.isArray(data.errors.details)) {
         data.errors.details.forEach((err) => {
           const field = err.field?.toLowerCase();
           const message = err.message;
           if (field === "email") newFieldErrors.email = message;
           if (field === "password") newFieldErrors.password = message;
         });
-      }
-      // Case 3: simple errors array
-      else if (data.errors && Array.isArray(data.errors)) {
+      } else if (data.errors && Array.isArray(data.errors)) {
         data.errors.forEach((err) => {
           const field = err.field?.toLowerCase();
           const message = err.message;
@@ -206,7 +183,6 @@ export default function SignIn() {
       toast.dismiss(toastId);
       setFieldErrors(newFieldErrors);
 
-      // Show toast error
       if (newFieldErrors.email && newFieldErrors.password) {
         toast.error("Please check your email and password");
       } else if (newFieldErrors.email) {
@@ -226,7 +202,6 @@ export default function SignIn() {
 
   return (
     <>
-      {/* Main Content */}
       <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-gray-50 via-white to-yellow-50 mt-20 py-8 md:py-12 px-4 sm:px-6 lg:px-8">
         <Toaster />
 
@@ -320,6 +295,10 @@ export default function SignIn() {
                     Sign Up
                   </Link>
                 </p>
+                <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500">
+                  <Crown className="h-4 w-4 text-yellow-600" />
+                  <span>Pro Plan: $10/month - 0% marketplace fees</span>
+                </div>
               </div>
             </div>
           </div>

@@ -10,7 +10,6 @@ const sellerTypes = [
     { id: "artist", label: "Artists", icon: Users, color: "from-purple-500 to-pink-500" },
     { id: "photographer", label: "Photographers", icon: Camera, color: "from-blue-500 to-cyan-500" },
     { id: "venue", label: "Venues", icon: Building, color: "from-green-500 to-emerald-500" },
-    // Client requirement অনুযায়ী সব types
     { id: "studio", label: "Studios", icon: Building, color: "from-indigo-500 to-purple-500" },
     { id: "journalist", label: "Journalists", icon: Users, color: "from-pink-500 to-rose-500" },
     { id: "fan", label: "Fans", icon: Users, color: "from-gray-500 to-gray-700" },
@@ -29,7 +28,6 @@ export default function StateMarketPage() {
     const router = useRouter();
     const stateInfo = stateConfig[state?.toLowerCase()];
 
-    // If state not in allowed list, redirect to main marketplace
     useEffect(() => {
         if (!stateInfo) {
             router.push('/markets');
@@ -72,20 +70,18 @@ export default function StateMarketPage() {
             const params = new URLSearchParams({
                 page: pagination.page.toString(),
                 limit: pagination.limit.toString(),
-                location: stateInfo.name,
                 ...(selectedType !== "all" && { sellerType: selectedType }),
                 ...(debouncedSearch && { search: debouncedSearch }),
             });
 
-            // Use state-specific API endpoint
             const res = await fetch(
                 `${process.env.NEXT_PUBLIC_BASE_URL}/api/market/state/${stateInfo.name}?${params}`
             );
-            
+
             if (!res.ok) {
                 throw new Error(`HTTP error! status: ${res.status}`);
             }
-            
+
             const data = await res.json();
 
             if (data.success) {
@@ -127,7 +123,7 @@ export default function StateMarketPage() {
     };
 
     if (!stateInfo) {
-        return null; // Will redirect in useEffect
+        return null;
     }
 
     if (loading && items.length === 0) {
@@ -314,9 +310,9 @@ export default function StateMarketPage() {
                         {/* Items Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                             {items.map((item) => (
-                                <MarketItemCard 
-                                    key={item._id} 
-                                    item={item} 
+                                <StateMarketItemCard
+                                    key={item._id}
+                                    item={item}
                                     state={state}
                                     stateInfo={stateInfo}
                                 />
@@ -382,8 +378,8 @@ export default function StateMarketPage() {
     );
 }
 
-// Separate component for Market Item Card with fullscreen image
-function MarketItemCard({ item, state, stateInfo }) {
+// State Market Item Card Component
+function StateMarketItemCard({ item, state, stateInfo }) {
     const [isImageOpen, setIsImageOpen] = useState(false);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
@@ -507,19 +503,22 @@ function MarketItemCard({ item, state, stateInfo }) {
                         {item.description}
                     </p>
 
-                    {/* Fee Info */}
+                    {/* ✅ Fee Info - Updated to show correctly */}
                     {item.feeInfo && (
                         <div className="mb-4 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-                            <div className="flex justify-between text-sm">
+                            {/* <div className="flex justify-between text-sm">
                                 <span className="text-yellow-300">Platform Fee:</span>
                                 <span className="text-yellow-400 font-semibold">
                                     {item.feeInfo.percentage}% (${item.feeInfo.amount.toFixed(2)})
                                 </span>
+                            </div> */}
+                            <div className="flex justify-between text-sm mt-1 pt-1 ">
+                                <span className="text-gray-300">You Pay:</span>
+                                <span className="text-white font-bold">${item.price.toFixed(2)}</span>
                             </div>
-                            <div className="flex justify-between text-sm mt-1">
-                                <span className="text-gray-300">Total Price:</span>
-                                <span className="text-white font-bold">${item.feeInfo.total.toFixed(2)}</span>
-                            </div>
+                            {/* <div className="text-xs text-gray-500 mt-1">
+                                *Seller receives ${(item.price - item.feeInfo.amount).toFixed(2)}
+                            </div> */}
                         </div>
                     )}
 

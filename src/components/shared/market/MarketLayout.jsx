@@ -1,10 +1,10 @@
 // components/market/MarketLayout.jsx
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { useSession } from "@/lib/auth";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { api } from "./api";
 import MarketFilters from "./MarketFilters";
 import MarketGrid from "./MarketGrid";
@@ -51,28 +51,22 @@ export default function MarketLayout({ userType = "all" }) {
     const fetchItems = async () => {
         setLoading(true);
         try {
-            const queryParams = new URLSearchParams({
-                page: pagination.page,
-                limit: pagination.limit,
-                ...(filters.sellerType && { sellerType: filters.sellerType }),
-                ...(filters.location && { location: filters.location }),
-                ...(filters.search && { search: filters.search }),
-                ...(filters.sort && { sort: filters.sort }),
-                ...(filters.minPrice && { minPrice: filters.minPrice }),
-                ...(filters.maxPrice && { maxPrice: filters.maxPrice })
-            });
+            const response = await api.get("/api/market/me");
 
-            const response = await api.get(`/api/market?${queryParams}`);
-            setItems(response.data || []);
-            setPagination(response.pagination || {
-                page: 1,
-                limit: 12,
-                total: 0,
-                pages: 0
-            });
+            // backend response: { success:true, data: itemWithFee OR null }
+            const myItem = response?.data ?? null;
+
+            if (myItem) {
+                setItems([myItem]);      // ✅ always array
+                setPagination({ page: 1, limit: 12, total: 1, pages: 1 });
+            } else {
+                setItems([]);            // ✅ always array
+                setPagination({ page: 1, limit: 12, total: 0, pages: 0 });
+            }
         } catch (error) {
             console.error("Error fetching market items:", error);
             setItems([]);
+            setPagination({ page: 1, limit: 12, total: 0, pages: 0 });
         } finally {
             setLoading(false);
         }

@@ -35,11 +35,17 @@ class ApiClient {
         try {
             const response = await fetch(url, config);
 
+            // Handle 401 Unauthorized
             if (response.status === 401) {
                 if (typeof document !== 'undefined') {
                     document.cookie = 'token=; path=/; max-age=0';
+                    document.cookie = 'role=; path=/; max-age=0';
+                    document.cookie = 'user=; path=/; max-age=0';
                 }
-                throw new Error("Session expired");
+                // Don't throw immediately, let the calling code handle it
+                const error = new Error("Session expired");
+                error.status = 401;
+                throw error;
             }
 
             const data = await response.json();
@@ -99,19 +105,39 @@ class ApiClient {
             config.headers.Authorization = `Bearer ${token}`;
         }
 
+        // Remove Content-Type header so browser sets it with boundary
         delete config.headers['Content-Type'];
 
-        const response = await fetch(url, config);
-        const data = await response.json();
+        try {
+            const response = await fetch(url, config);
+            const data = await response.json();
 
-        if (!response.ok) {
-            const error = new Error(data.message || `HTTP ${response.status}`);
-            error.status = response.status;
-            error.data = data;
+            if (!response.ok) {
+                const error = new Error(data.message || `HTTP ${response.status}`);
+                error.status = response.status;
+                error.data = data;
+                throw error;
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Upload Error:', error);
             throw error;
         }
+    }
 
-        return data;
+    // Helper to check if user is authenticated
+    isAuthenticated() {
+        return !!this.getTokenFromCookie();
+    }
+
+    // Helper to logout
+    logout() {
+        if (typeof document !== 'undefined') {
+            document.cookie = 'token=; path=/; max-age=0';
+            document.cookie = 'role=; path=/; max-age=0';
+            document.cookie = 'user=; path=/; max-age=0';
+        }
     }
 }
 

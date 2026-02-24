@@ -243,8 +243,8 @@ export default function MerchCard({ limit = null }) {
                     </span>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${item.stock > 0
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
                         }`}
                     >
                       {item.stock > 0
@@ -256,7 +256,7 @@ export default function MerchCard({ limit = null }) {
                   <div className="flex gap-3">
                     <button
                       onClick={() => handleViewDetails(item)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="flex-1 flex items-center justify-center cursor-pointer gap-2 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                     >
                       <Eye className="w-4 h-4" />
                       Details
@@ -265,7 +265,7 @@ export default function MerchCard({ limit = null }) {
                     <button
                       onClick={() => handleOrderClick(item)}
                       disabled={item.stock <= 0}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[var(--primary)] text-gray-700 rounded-lg hover:bg-[var(--primary)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                      className="flex-1 flex items-center justify-center cursor-pointer gap-2 px-4 py-3 bg-[var(--primary)] text-gray-700 rounded-lg hover:bg-[var(--primary)]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                     >
                       <ShoppingCart className="w-4 h-4" />
                       Buy Now
@@ -293,10 +293,10 @@ export default function MerchCard({ limit = null }) {
                 </h2>
                 <button
                   onClick={() => setShowModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                 >
                   <svg
-                    className="w-6 h-6"
+                    className="w-6 h-6 text-red-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -341,8 +341,8 @@ export default function MerchCard({ limit = null }) {
                       <p className="text-sm text-gray-500">Stock</p>
                       <p
                         className={`text-lg font-semibold ${selectedItem.stock > 0
-                            ? "text-green-600"
-                            : "text-red-600"
+                          ? "text-green-600"
+                          : "text-red-600"
                           }`}
                       >
                         {selectedItem.stock > 0

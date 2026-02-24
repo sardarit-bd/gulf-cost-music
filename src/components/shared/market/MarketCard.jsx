@@ -1,4 +1,3 @@
-// components/market/MarketCard.jsx
 "use client";
 
 import {
@@ -6,13 +5,16 @@ import {
     Building2,
     Camera,
     Clock,
-    Heart, MapPin,
+    Crown,
+    Heart,
+    MapPin,
     Mic,
     Music,
     Store,
     User,
     Users,
-    Video
+    Video,
+    Sparkles
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -47,10 +49,12 @@ export default function MarketCard({ item, userType = "all", currentUser, isOwnL
     const mainPhoto = item.photos?.[0] || "/images/placeholder.jpg";
     const hasVideo = item.videos?.length > 0;
 
-    // Fee calculation
-    const feePercentage = item.seller?.subscriptionPlan === "pro" ? 5 : 10;
+    // ✅ FIXED: Fee calculation based on seller's subscription
+    // Pro plan → 0% fee, Free plan → 10% fee
+    const feePercentage = item.seller?.subscriptionPlan === "pro" ? 0 : 10;
     const feeAmount = (item.price * feePercentage) / 100;
-    const totalWithFee = item.price + feeAmount;
+    const totalWithFee = item.price + feeAmount; // Buyer pays this total
+    const sellerReceives = item.price - feeAmount; // Seller gets this after fee
 
     const formatPrice = (price) => {
         return new Intl.NumberFormat('en-US', {
@@ -111,6 +115,14 @@ export default function MarketCard({ item, userType = "all", currentUser, isOwnL
                                     Pending
                                 </div>
                             )}
+
+                            {/* Pro Plan Badge */}
+                            {item.seller?.subscriptionPlan === "pro" && (
+                                <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1 shadow-lg">
+                                    <Crown className="w-3 h-3" />
+                                    Pro
+                                </div>
+                            )}
                         </div>
 
                         {/* Content */}
@@ -163,19 +175,41 @@ export default function MarketCard({ item, userType = "all", currentUser, isOwnL
                                 )}
                             </div>
 
+                            {/* ✅ FIXED: Price Display */}
                             <div className="flex items-center justify-between flex-wrap gap-4">
                                 <div>
                                     <div className="flex items-baseline gap-2">
                                         <p className="text-2xl font-bold text-gray-900">
                                             ${formatPrice(item.price)}
                                         </p>
-                                        <span className="text-xs text-gray-500">
-                                            + ${formatPrice(feeAmount)} fee
-                                        </span>
+                                        {feePercentage > 0 ? (
+                                            <span className="text-xs text-gray-500">
+                                                + ${formatPrice(feeAmount)} fee
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full">
+                                                0% fee
+                                            </span>
+                                        )}
                                     </div>
-                                    <p className="text-xs text-gray-500">
-                                        Total: ${formatPrice(totalWithFee)} (incl. {feePercentage}% fee)
-                                    </p>
+
+                                    {feePercentage > 0 ? (
+                                        <>
+                                            <p className="text-xs text-gray-500">
+                                                Total: ${formatPrice(totalWithFee)} (incl. {feePercentage}% fee)
+                                            </p>
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                Seller receives: ${formatPrice(sellerReceives)}
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <div className="flex items-center gap-1 mt-1">
+                                            <Sparkles className="w-3 h-3 text-green-600" />
+                                            <p className="text-xs text-green-600 font-medium">
+                                                Pro Plan: 0% platform fee
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <span className="text-sm text-gray-500">
@@ -249,9 +283,17 @@ export default function MarketCard({ item, userType = "all", currentUser, isOwnL
                         )}
                     </div>
 
+                    {/* Pro Plan Badge */}
+                    {item.seller?.subscriptionPlan === "pro" && (
+                        <div className="absolute top-3 right-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1 shadow-lg">
+                            <Crown className="w-3 h-3" />
+                            Pro
+                        </div>
+                    )}
+
                     {/* Video Indicator */}
                     {hasVideo && (
-                        <div className="absolute top-3 right-3 bg-black/70 text-white p-2 rounded-lg">
+                        <div className="absolute bottom-3 right-3 bg-black/70 text-white p-2 rounded-lg">
                             <Video className="w-4 h-4" />
                         </div>
                     )}
@@ -263,7 +305,7 @@ export default function MarketCard({ item, userType = "all", currentUser, isOwnL
                                 e.stopPropagation();
                                 setIsLiked(!isLiked);
                             }}
-                            className="absolute bottom-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
+                            className="absolute bottom-3 left-3 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
                         >
                             <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
                         </button>
@@ -295,18 +337,37 @@ export default function MarketCard({ item, userType = "all", currentUser, isOwnL
                         </div>
                     )}
 
+                    {/* ✅ FIXED: Price Display in Grid View */}
                     <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                         <div>
                             <p className="text-lg font-bold text-gray-900">
                                 ${formatPrice(item.price)}
                             </p>
-                            <p className="text-xs text-gray-500">
-                                +${formatPrice(feeAmount)} fee
-                            </p>
+                            {feePercentage > 0 ? (
+                                <div className="flex items-center gap-1">
+                                    <p className="text-xs text-gray-500">
+                                        +${formatPrice(feeAmount)} fee
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-1 mt-0.5">
+                                    <Crown className="w-3 h-3 text-green-600" />
+                                    <p className="text-xs text-green-600 font-medium">
+                                        0% fee
+                                    </p>
+                                </div>
+                            )}
                         </div>
-                        <span className="text-xs text-gray-500">
-                            {item.photos?.length || 0} 📸
-                        </span>
+                        <div className="text-right">
+                            <span className="text-xs text-gray-500 block">
+                                {item.photos?.length || 0} 📸
+                            </span>
+                            {feePercentage > 0 && (
+                                <span className="text-xs text-gray-400 mt-1 block">
+                                    Seller: ${formatPrice(sellerReceives)}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

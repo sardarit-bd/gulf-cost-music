@@ -185,7 +185,7 @@ export default function MarketHeader({
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                            <span>5% fee for Pro, 10% for Free accounts</span>
+                            <span>Free Plan: 10% marketplace fee • Pro Plan ($10/month): 0% fee</span>
                         </div>
                     </div>
                 </div>
