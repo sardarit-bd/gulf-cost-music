@@ -1,4 +1,5 @@
 "use client";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { Camera, MapPin, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -71,10 +72,9 @@ export default function PhotographersPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center text-yellow-400">
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
                 <div className="text-center">
-                    <Camera size={48} className="mx-auto mb-4 animate-pulse" />
-                    <p>Loading photographers...</p>
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
                 </div>
             </div>
         );

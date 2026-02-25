@@ -1,4 +1,5 @@
 "use client";
+import CustomLoader from "@/components/shared/loader/Loader";
 import {
     ArrowLeft,
     Camera,
@@ -163,10 +164,9 @@ export default function MarketItemPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-500 mx-auto mb-4"></div>
-                    <p className="text-yellow-400 text-lg">Loading item details...</p>
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
                 </div>
             </div>
         );

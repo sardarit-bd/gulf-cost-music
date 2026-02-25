@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatCityName, formatStateName, formatLocation } from "@/utils/formatters";
+import CustomLoader from "@/components/shared/loader/Loader";
 
 const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -78,8 +79,8 @@ export default function StudiosByState() {
     selectedCity === "All"
       ? studios
       : studios.filter(
-          (studio) => studio.city.toLowerCase() === selectedCity.toLowerCase(),
-        );
+        (studio) => studio.city.toLowerCase() === selectedCity.toLowerCase(),
+      );
 
   const getStartingPrice = (services) => {
     if (!services || services.length === 0) return "Contact for price";
@@ -95,12 +96,9 @@ export default function StudiosByState() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-500 mx-auto mb-4"></div>
-          <p className="text-yellow-400 text-lg">
-            Loading studios in {formattedState}...
-          </p>
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
         </div>
       </div>
     );
@@ -142,11 +140,10 @@ export default function StudiosByState() {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => setSelectedCity("All")}
-                className={`px-4 py-2 rounded-lg border-2 ${
-                  selectedCity === "All"
+                className={`px-4 py-2 rounded-lg border-2 ${selectedCity === "All"
                     ? "bg-yellow-500 text-black border-yellow-500"
                     : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-500"
-                }`}
+                  }`}
               >
                 All Cities
               </button>
@@ -154,11 +151,10 @@ export default function StudiosByState() {
                 <button
                   key={city.value}
                   onClick={() => setSelectedCity(city.value)}
-                  className={`px-4 py-2 rounded-lg border-2 ${
-                    selectedCity === city.value
+                  className={`px-4 py-2 rounded-lg border-2 ${selectedCity === city.value
                       ? "bg-yellow-500 text-black border-yellow-500"
                       : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-500"
-                  }`}
+                    }`}
                 >
                   {city.label} {/* FIXED: Already formatted */}
                 </button>

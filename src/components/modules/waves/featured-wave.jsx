@@ -1,16 +1,22 @@
 "use client";
-import YouTubePlayer from "@/components/modules/Casts/youtube-player";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import YouTubePlayer from "../Casts/youtube-player";
 
-export default function FeaturedWave({ wave, sectionText }) {
+export default function FeaturedWave({ wave, sectionText, setPlayingWaveId }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showThumbnail, setShowThumbnail] = useState(true);
 
+  // Reset playing state when wave changes
+  useEffect(() => {
+    setIsPlaying(false);
+    setShowThumbnail(true);
+  }, [wave?._id]);
+
   if (!wave) {
     return (
-      <div className="text-center text-gray-500">
-        No featured wave available.
+      <div className="text-center text-gray-500 py-20 bg-gray-50 rounded-xl">
+        <p>No featured wave available.</p>
       </div>
     );
   }
@@ -28,6 +34,9 @@ export default function FeaturedWave({ wave, sectionText }) {
   const handlePlayClick = () => {
     setIsPlaying(true);
     setShowThumbnail(false);
+    if (setPlayingWaveId) {
+      setPlayingWaveId(wave._id);
+    }
   };
 
   return (
@@ -45,10 +54,10 @@ export default function FeaturedWave({ wave, sectionText }) {
       <div className="relative rounded-xl overflow-hidden shadow-lg bg-black group">
         {/* Media Container */}
         <div className="relative h-[550px] w-full">
-          {/* CASE 1: YouTube video available */}
+          {/* YouTube Video */}
           {videoId ? (
             <>
-              {/* Thumbnail with Custom Play Button (visible when not playing) */}
+              {/* Thumbnail with Custom Play Button */}
               {showThumbnail && (
                 <div
                   className="absolute inset-0 cursor-pointer z-20"
@@ -60,6 +69,9 @@ export default function FeaturedWave({ wave, sectionText }) {
                     fill
                     className="object-cover"
                     priority
+                    onError={(e) => {
+                      e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+                    }}
                   />
 
                   {/* Custom Play Button */}
@@ -83,31 +95,15 @@ export default function FeaturedWave({ wave, sectionText }) {
                 </div>
               )}
 
-              {/* YouTube Player (visible only when playing) */}
+              {/* YouTube Player */}
               <div
                 className={`w-full h-full transition-opacity duration-500 ${isPlaying ? "opacity-100" : "opacity-0"}`}
               >
-                <YouTubePlayer videoId={videoId} autoPlay={isPlaying} />
+                {isPlaying && <YouTubePlayer videoId={videoId} autoPlay={true} />}
               </div>
             </>
-          ) : wave.audioUrl ? (
-            /* CASE 2: Audio URL available */
-            <div className="relative w-full h-full">
-              <Image
-                src={wave.thumbnail || "/placeholder.svg"}
-                alt={wave.title}
-                fill
-                className="object-cover"
-              />
-
-              <audio
-                src={wave.audioUrl}
-                controls
-                className="absolute bottom-0 left-0 right-0 w-full h-[80px] bg-black/80 text-white z-10"
-              />
-            </div>
           ) : (
-            /* CASE 3: Thumbnail fallback */
+            /* Fallback - Just Thumbnail */
             <div className="relative h-[550px] w-full">
               <Image
                 src={wave.thumbnail || "/placeholder.svg"}
@@ -123,16 +119,18 @@ export default function FeaturedWave({ wave, sectionText }) {
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-30">
           <h3 className="text-xl font-bold text-white mb-2">{wave.title}</h3>
 
+          {wave.description && (
+            <p className="text-gray-200 text-sm mb-2 line-clamp-2">{wave.description}</p>
+          )}
+
           <div className="flex items-center gap-2 text-cyan-400 text-sm font-semibold">
             <span>🌊</span>
             <span>
               {isPlaying
                 ? "NOW PLAYING"
                 : videoId
-                  ? "VIDEO WAVE"
-                  : wave.audioUrl
-                    ? "AUDIO WAVE"
-                    : "NO MEDIA"}
+                  ? "CLICK TO PLAY"
+                  : "WAVE"}
             </span>
           </div>
         </div>

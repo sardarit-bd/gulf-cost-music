@@ -11,41 +11,47 @@ export default function WavesSection() {
     sectionSubtitle: "Explore the freshest waves and top audio experiences.",
     yourWavesTitle: "Your Waves"
   });
-  const [loadingText, setLoadingText] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSectionText = async () => {
+    const fetchData = async () => {
       try {
         const API_BASE = process.env.NEXT_PUBLIC_BASE_URL || "";
 
-        const res = await fetch(`${API_BASE}/api/waves/section-text`, {
-          cache: "no-store",
-          headers: {
-            'Content-Type': 'application/json'
+        // Fetch both waves and section text
+        const [wavesRes, settingsRes] = await Promise.all([
+          fetch(`${API_BASE}/api/waves`),
+          fetch(`${API_BASE}/api/wave-settings`) // Correct endpoint for settings
+        ]);
+
+        // Process waves data
+        const wavesData = await wavesRes.json();
+        if (wavesData.success && Array.isArray(wavesData.data?.waves)) {
+          if (wavesData.data.waves.length > 0 && !selectedWave) {
+            setSelectedWave(wavesData.data.waves[0]);
           }
-        });
+        }
 
-        const data = await res.json();
-
-        if (data.success && data.data) {
-          setSectionText(data.data);
-        } else {
-          console.warn("Failed to fetch section text:", data.message);
-          // Keep default values
+        // Process settings data
+        const settingsData = await settingsRes.json();
+        if (settingsData.success && settingsData.data) {
+          setSectionText({
+            sectionTitle: settingsData.data.sectionTitle || "Waves",
+            sectionSubtitle: settingsData.data.sectionSubtitle || "Explore the freshest waves and top audio experiences.",
+            yourWavesTitle: settingsData.data.yourWavesTitle || "Your Waves"
+          });
         }
       } catch (error) {
-        console.error("Failed to fetch section text:", error);
-        // Keep default values if API fails
+        console.error("Failed to fetch data:", error);
       } finally {
-        setLoadingText(false);
+        setLoading(false);
       }
     };
 
-    fetchSectionText();
-  }, []);
+    fetchData();
+  }, []); // Empty dependency array
 
-  // Loading state
-  if (loadingText) {
+  if (loading) {
     return (
       <div
         style={{
@@ -86,6 +92,7 @@ export default function WavesSection() {
           <FeaturedWave
             wave={selectedWave}
             sectionText={sectionText}
+            setPlayingWaveId={setPlayingWaveId}
           />
         </div>
       </div>

@@ -4,6 +4,7 @@
 import StatusAlerts from "@/components/modules/venues/overview/StatusAlerts";
 import VenueInformation from "@/components/modules/venues/overview/VenueInformation";
 import VenuePhotosGallery from "@/components/modules/venues/overview/VenuePhotosGallery";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { getCookie } from "@/utils/cookies";
 import { Edit3 } from "lucide-react";
 import Link from "next/link";
@@ -81,10 +82,9 @@ export default function OverviewPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading venue overview...</p>
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
         </div>
       </div>
     );

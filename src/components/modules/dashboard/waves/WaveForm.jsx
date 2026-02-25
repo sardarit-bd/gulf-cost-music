@@ -16,7 +16,7 @@ const WaveForm = ({
         <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-4 sm:p-6 mb-4 sm:mb-6">
             <div className="flex justify-between items-center mb-4 sm:mb-6">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-                    {editingItem ? "Edit Open Mic Session" : "Add New Session"}
+                    {editingItem ? "Edit Wave" : "Add New Wave"}
                 </h2>
                 <button
                     onClick={onClose}
@@ -31,14 +31,14 @@ const WaveForm = ({
                     {/* Title */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Session Title *
+                            Wave Title *
                         </label>
                         <input
                             type="text"
                             value={formData.title}
                             onChange={(e) => onInputChange("title", e.target.value)}
                             className="text-gray-500 w-full px-3 py-2 outline-none border border-gray-300 rounded-lg focus:ring-1 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm sm:text-base"
-                            placeholder="Enter open mic session title"
+                            placeholder="Enter wave title"
                             required
                         />
                     </div>
@@ -68,7 +68,7 @@ const WaveForm = ({
                             onChange={(e) => onInputChange("description", e.target.value)}
                             rows={4}
                             className="text-gray-500 w-full px-3 py-2 outline-none border border-gray-300 rounded-lg focus:ring-1 focus:ring-[var(--primary)] focus:border-[var(--primary)] transition-colors text-sm sm:text-base resize-none"
-                            placeholder="Write session details (optional)"
+                            placeholder="Write wave description (optional)"
                         />
                     </div>
                 </div>
@@ -84,7 +84,7 @@ const WaveForm = ({
                     <button
                         type="submit"
                         disabled={saveLoading}
-                        className="px-4 sm:px-6 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 font-medium transition-colors disabled:opacity-50 flex items-center justify-center space-x-2 text-sm sm:text-base order-1 sm:order-2"
+                        className="px-4 sm:px-6 py-2 bg-[var(--primary)] text-black rounded-lg hover:bg-primary/80 font-medium transition-colors disabled:opacity-50 flex items-center justify-center space-x-2 text-sm sm:text-base order-1 sm:order-2"
                     >
                         {saveLoading ? (
                             <>
@@ -94,7 +94,7 @@ const WaveForm = ({
                         ) : (
                             <>
                                 <Save className="w-4 h-4" />
-                                <span>{editingItem ? "Update Session" : "Add Session"}</span>
+                                <span>{editingItem ? "Update Wave" : "Add Wave"}</span>
                             </>
                         )}
                     </button>

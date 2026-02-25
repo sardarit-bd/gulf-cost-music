@@ -6,6 +6,7 @@ import StatCard from "@/components/modules/dashboard/venues/StatCard";
 import VenueDetailModal from "@/components/modules/dashboard/venues/VenueDetailModal";
 import VenueEditModal from "@/components/modules/dashboard/venues/VenueEditModal"; // ✅ NEW IMPORT
 import VenueTable from "@/components/modules/dashboard/venues/VenueTable";
+import CustomLoader from "@/components/shared/loader/Loader";
 import axios from "axios";
 import {
   Building2,
@@ -372,6 +373,19 @@ const VenueManagement = () => {
   const cities = [
     ...new Set(venues.map((venue) => venue.city).filter(Boolean)),
   ].sort();
+
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+          <div className="text-center">
+            <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>

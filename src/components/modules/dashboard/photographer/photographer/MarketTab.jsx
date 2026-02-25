@@ -25,6 +25,7 @@ import {
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { ConfirmModal } from "./ConfirmModal";
+import CustomLoader from "@/components/shared/loader/Loader";
 
 // Use a consistent token retrieval method
 const getToken = () => {
@@ -582,11 +583,9 @@ export default function MarketTab({ API_BASE, subscriptionPlan, user }) {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 space-y-4">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
                 <div className="text-center">
-                    <p className="text-white font-medium">Loading Marketplace</p>
-                    <p className="text-gray-400 text-sm">Fetching your listing information...</p>
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
                 </div>
             </div>
         );

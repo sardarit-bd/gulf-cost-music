@@ -1,4 +1,5 @@
 "use client";
+import CustomLoader from "@/components/shared/loader/Loader";
 import {
     Building2,
     Calendar,
@@ -72,8 +73,10 @@ const UserTable = ({
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+                <div className="text-center">
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
+                </div>
             </div>
         );
     }
@@ -399,8 +402,8 @@ const Pagination = ({ page, pages, onPageChange }) => {
                                 key={pageNumber}
                                 onClick={() => onPageChange(pageNumber)}
                                 className={`px-3 py-1 rounded-lg text-sm font-medium ${page === pageNumber
-                                        ? "bg-blue-600 text-white"
-                                        : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                                    ? "bg-blue-600 text-white"
+                                    : "border border-gray-300 text-gray-700 hover:bg-gray-50"
                                     }`}
                             >
                                 {pageNumber}

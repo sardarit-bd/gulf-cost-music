@@ -270,35 +270,8 @@ export default function ContactSection() {
                   {/* Button shine effect */}
                   <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-1000"></div>
                 </motion.button>
-
-                {/* Note */}
-                {/* <div className="text-center pt-4">
-                  <p className="text-sm text-gray-500">
-                    We typically respond within 24 hours. For urgent matters, please call us directly.
-                  </p>
-                </div> */}
               </form>
             </div>
-
-            {/* Footer Decoration */}
-            {/* <div className="bg-gradient-to-r from-amber-50 to-yellow-50 px-8 py-6 border-t border-gray-100">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                    <FiMail className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-700">Email Support</p>
-                    <p className="text-sm text-gray-600">support@example.com</p>
-                  </div>
-                </div>
-                <div className="text-center md:text-right">
-                  <p className="text-xs text-gray-500">
-                    © {new Date().getFullYear()} Your Company. All rights reserved.
-                  </p>
-                </div>
-              </div>
-            </div> */}
           </motion.div>
         </motion.div>
       </div>

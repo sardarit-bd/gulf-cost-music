@@ -1,4 +1,5 @@
 "use client";
+import CustomLoader from "@/components/shared/loader/Loader";
 import {
     Calendar,
     Edit,
@@ -20,16 +21,16 @@ const WaveTable = ({
 }) => {
     // Extract YouTube video ID
     const getYouTubeId = (url) => {
+        if (!url) return null;
         const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
         return match ? match[1] : null;
     };
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center py-12">
+            <div className="flex justify-center items-center min-h-[400px] bg-white rounded-xl border border-gray-300">
                 <div className="text-center">
-                    <div className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-4 border-2 border-indigo-600 border-t-transparent rounded-full"></div>
-                    <p className="text-gray-600">Loading open mic sessions...</p>
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
                 </div>
             </div>
         );
@@ -37,11 +38,11 @@ const WaveTable = ({
 
     if (waves.length === 0) {
         return (
-            <div className="text-center py-12 px-4">
+            <div className="bg-white rounded-xl border border-gray-300 p-8 text-center">
                 <Music className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-lg font-medium text-gray-900 mb-2">No sessions found</p>
+                <p className="text-lg font-medium text-gray-900 mb-2">No waves found</p>
                 <p className="text-gray-600 text-sm sm:text-base">
-                    Get started by adding your first open mic session
+                    Get started by adding your first wave
                 </p>
             </div>
         );
@@ -51,10 +52,10 @@ const WaveTable = ({
         <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
             <div className="px-4 sm:px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <h3 className="text-lg font-semibold text-gray-900">
-                    Open Mic Sessions ({waves.length})
+                    Waves ({waves.length})
                 </h3>
                 <div className="text-sm text-gray-500">
-                    {waves.length} sessions found
+                    {waves.length} {waves.length === 1 ? 'wave' : 'waves'} found
                 </div>
             </div>
 
@@ -63,10 +64,10 @@ const WaveTable = ({
                     <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
                             <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Session
+                                Wave
                             </th>
                             <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                                YouTube Video
+                                YouTube URL
                             </th>
                             <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                                 Thumbnail
@@ -119,6 +120,11 @@ const WaveRow = ({
                         <h4 className="text-sm font-semibold text-gray-900 group-hover:text-indigo-700 line-clamp-2">
                             {wave.title}
                         </h4>
+                        {wave.description && (
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-1">
+                                {wave.description}
+                            </p>
+                        )}
                         <div className="flex items-center text-xs text-gray-500 mt-1">
                             <Calendar className="w-3 h-3 mr-1" />
                             {wave.createdAt ? new Date(wave.createdAt).toLocaleDateString() : 'N/A'}
@@ -159,6 +165,9 @@ const WaveRow = ({
                             src={wave.thumbnail}
                             alt={wave.title}
                             className="w-12 h-9 sm:w-16 sm:h-12 object-cover rounded border"
+                            onError={(e) => {
+                                e.currentTarget.src = `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+                            }}
                         />
                     ) : youtubeId ? (
                         <img
@@ -181,7 +190,7 @@ const WaveRow = ({
                     <button
                         onClick={() => onEdit(wave)}
                         className="p-1 sm:p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
-                        title="Edit Session"
+                        title="Edit Wave"
                     >
                         <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
@@ -210,14 +219,14 @@ const WaveRow = ({
                                     className="flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
                                 >
                                     <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                                    Edit Session
+                                    Edit Wave
                                 </button>
                                 <button
                                     onClick={() => onDelete(wave._id, wave.title)}
                                     className="flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm text-red-600 hover:bg-red-50 w-full text-left"
                                 >
                                     <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                                    Delete Session
+                                    Delete Wave
                                 </button>
                             </div>
                         )}

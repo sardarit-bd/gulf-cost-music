@@ -1,4 +1,5 @@
 "use client";
+import CustomLoader from "@/components/shared/loader/Loader";
 import {
     Calendar,
     Crown,
@@ -43,9 +44,9 @@ const DeactivatedUsers = ({
 
     if (loading) {
         return (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-8">
-                <div className="flex justify-center items-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+                <div className="text-center">
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
                 </div>
             </div>
         );
@@ -210,8 +211,8 @@ const DeactivatedArtistRow = ({
             <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex flex-col gap-2">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${currentPlan === "pro"
-                            ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
-                            : "bg-blue-100 text-blue-800 border border-blue-200"
+                        ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                        : "bg-blue-100 text-blue-800 border border-blue-200"
                         }`}>
                         {currentPlan === "pro" ? (
                             <>

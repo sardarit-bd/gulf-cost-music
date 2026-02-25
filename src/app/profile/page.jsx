@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Footer from "../footer/page";
+import CustomLoader from "@/components/shared/loader/Loader";
 
 // Utility to get cookie safely
 const getCookie = (name) => {
@@ -707,10 +708,9 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your profile...</p>
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
         </div>
       </div>
     );
@@ -769,17 +769,15 @@ export default function ProfilePage() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`flex-1 px-6 py-4 text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-                      activeTab === tab
-                        ? `border-b-2 ${
-                            role === "artist"
-                              ? "border-purple-500 text-purple-600"
-                              : role === "venue"
-                              ? "border-blue-500 text-blue-600"
-                              : "border-green-500 text-green-600"
-                          }`
+                    className={`flex-1 px-6 py-4 text-sm font-medium transition-all duration-200 whitespace-nowrap ${activeTab === tab
+                        ? `border-b-2 ${role === "artist"
+                          ? "border-purple-500 text-purple-600"
+                          : role === "venue"
+                            ? "border-blue-500 text-blue-600"
+                            : "border-green-500 text-green-600"
+                        }`
                         : "text-gray-500 hover:text-gray-700 border-b-2 border-transparent"
-                    }`}
+                      }`}
                   >
                     {tab.charAt(0).toUpperCase() + tab.slice(1)}
                   </button>

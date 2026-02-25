@@ -6,6 +6,7 @@ import PromoteModal from "@/components/modules/dashboard/users/PromoteModal";
 import StatCard from "@/components/modules/dashboard/users/StatCard";
 import UserDetailModal from "@/components/modules/dashboard/users/UserDetailModal";
 import UserTable from "@/components/modules/dashboard/users/UserTable";
+import CustomLoader from "@/components/shared/loader/Loader";
 import axios from "axios";
 import {
   Building2,
@@ -386,6 +387,18 @@ const UserManagement = () => {
 
   const hasActiveFilters = search || userType !== "all" || verified !== "";
 
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+          <div className="text-center">
+            <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50 p-6">

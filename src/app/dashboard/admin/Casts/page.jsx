@@ -74,7 +74,7 @@ export default function PodcastPage() {
 
       const { data } = await axios.get(`${API_BASE}/api/casts`, {
         headers: { Authorization: `Bearer ${token}` },
-        credentials: "include",
+        withCredentials: true,
       });
 
       if (data.success) {
@@ -97,12 +97,7 @@ export default function PodcastPage() {
   // Fetch section text
   const fetchSectionText = async () => {
     try {
-      const token = getCookie("token");
-      if (!token) return;
-
-      const { data } = await axios.get(`${API_BASE}/api/casts/section/text`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axios.get(`${API_BASE}/api/cast-settings`);
 
       if (data.success) {
         setSectionText({
@@ -154,7 +149,7 @@ export default function PodcastPage() {
         };
         await axios.delete(`${API_BASE}/api/casts/${podcastId}`, {
           headers,
-          credentials: "include",
+          withCredentials: true,
         });
         resolve();
       } catch (error) {
@@ -215,7 +210,7 @@ export default function PodcastPage() {
         <div className="">
           {/* Section Text Editor Modal */}
           {showSectionTextEditor && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 <CastSectionTextEditor
                   onClose={() => setShowSectionTextEditor(false)}

@@ -7,6 +7,7 @@ import DeactivatedUsers from "@/components/modules/dashboard/artists/Deactivated
 import DeactivateModal from "@/components/modules/dashboard/artists/DeactivateModal";
 import Filters from "@/components/modules/dashboard/artists/Filters";
 import StatCard from "@/components/modules/dashboard/artists/StatCard";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import { Crown, Music, Pause, Play, TrendingUp, User, Users } from "lucide-react";
@@ -501,6 +502,18 @@ const ArtistManagement = () => {
     inactive: deactivatedArtists.length,
     thisMonth: Math.floor(artists.length * 0.15),
   };
+
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+          <div className="text-center">
+            <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>

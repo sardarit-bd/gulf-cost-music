@@ -1,4 +1,5 @@
 "use client";
+import CustomLoader from "@/components/shared/loader/Loader";
 import {
   ArrowLeft,
   Briefcase,
@@ -105,12 +106,9 @@ export default function PhotographerProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-500 mx-auto mb-4"></div>
-          <p className="text-yellow-400 text-lg">
-            Loading photographer profile...
-          </p>
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
         </div>
       </div>
     );
@@ -371,16 +369,16 @@ export default function PhotographerProfile() {
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
                       className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 md:px-8 py-3 sm:py-4 font-semibold transition-all duration-300 whitespace-nowrap border-b-2 text-sm sm:text-base ${activeTab === tab.id
-                          ? "text-yellow-400 border-yellow-400 bg-yellow-400/5"
-                          : "text-gray-400 hover:text-white border-transparent hover:bg-white/5"
+                        ? "text-yellow-400 border-yellow-400 bg-yellow-400/5"
+                        : "text-gray-400 hover:text-white border-transparent hover:bg-white/5"
                         }`}
                     >
                       <tab.icon size={18} className="sm:w-5" />
                       {tab.label}
                       {tab.count > 0 && (
                         <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${activeTab === tab.id
-                            ? "bg-yellow-400 text-black"
-                            : "bg-gray-700 text-gray-300"
+                          ? "bg-yellow-400 text-black"
+                          : "bg-gray-700 text-gray-300"
                           }`}>
                           {tab.count}
                         </span>

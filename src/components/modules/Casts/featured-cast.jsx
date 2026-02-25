@@ -1,11 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import YouTubePlayer from "./youtube-player";
 
 export default function FeaturedCast({ cast, sectionText }) {
   const [isPlaying, setIsPlaying] = useState(false);
+
+  // Reset playing state when cast changes
+  useEffect(() => {
+    setIsPlaying(false);
+  }, [cast?._id]);
 
   // Extract YouTube Video ID from URL
   const getYouTubeVideoId = (url) => {
@@ -16,15 +21,26 @@ export default function FeaturedCast({ cast, sectionText }) {
     return match ? match[1] : null;
   };
 
+  const handlePlayClick = () => {
+    if (cast?.videoType === "youtube") {
+      setIsPlaying(true);
+    } else if (cast?.videoType === "upload" && cast?.video) {
+      // For uploaded videos, you might want to open in a new tab or use a video player
+      window.open(cast.video, '_blank');
+    }
+  };
+
   if (!cast) {
     return (
-      <div className="text-center text-gray-500">
-        No featured podcast available.
+      <div className="text-center text-gray-500 py-20 bg-gray-50 rounded-xl">
+        <p>No featured podcast available.</p>
       </div>
     );
   }
 
   const videoId = getYouTubeVideoId(cast.youtubeUrl);
+  const isYouTubeVideo = cast.videoType === "youtube" && videoId;
+  const isUploadedVideo = cast.videoType === "upload" && cast.video;
 
   return (
     <div className="space-y-9">
@@ -43,7 +59,7 @@ export default function FeaturedCast({ cast, sectionText }) {
         {!isPlaying && cast.thumbnail ? (
           <div
             className="relative h-[550px] w-full cursor-pointer"
-            onClick={() => setIsPlaying(true)}
+            onClick={handlePlayClick}
           >
             <Image
               src={cast.thumbnail}
@@ -52,31 +68,33 @@ export default function FeaturedCast({ cast, sectionText }) {
               className="object-cover transition-transform duration-700 group-hover:scale-105"
               priority
               onError={(e) => {
-                e.currentTarget.src = cast.thumbnail.replace(
-                  "maxresdefault",
-                  "hqdefault",
-                );
+                // Fallback for thumbnail errors
+                if (cast.videoType === "youtube" && videoId) {
+                  e.currentTarget.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                }
               }}
             />
 
-            {/* Improved Play Button */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative">
-                {/* Ripple Effect Background */}
-                <div className="absolute inset-0 bg-cyan-500/30 rounded-full animate-ping"></div>
+            {/* Improved Play Button - Only show for playable content */}
+            {(isYouTubeVideo || isUploadedVideo) && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative">
+                  {/* Ripple Effect Background */}
+                  <div className="absolute inset-0 bg-cyan-500/30 rounded-full animate-ping"></div>
 
-                {/* Main Play Button */}
-                <div className="relative bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full p-8 text-white shadow-2xl transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-cyan-500/50">
-                  <svg
-                    className="w-8 h-8 ml-1"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
+                  {/* Main Play Button */}
+                  <div className="relative bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full p-8 text-white shadow-2xl transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-cyan-500/50">
+                    <svg
+                      className="w-8 h-8 ml-1"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Overlay Info */}
             <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
@@ -85,28 +103,50 @@ export default function FeaturedCast({ cast, sectionText }) {
               </h3>
               <div className="flex items-center gap-2 text-cyan-400 text-sm font-semibold">
                 <span>🎙️</span>
-                <span>CLICK TO PLAY</span>
+                <span>{isPlaying ? "NOW PLAYING" : "CLICK TO PLAY"}</span>
+              </div>
+              {cast.description && (
+                <p className="text-gray-200 text-sm mt-2 line-clamp-2">
+                  {cast.description}
+                </p>
+              )}
+            </div>
+          </div>
+        ) : isYouTubeVideo ? (
+          <>
+            <YouTubePlayer videoId={videoId} autoPlay />
+
+            {/* Now Playing Overlay */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+              <h3 className="text-xl font-bold text-white mb-2">
+                {cast.title}
+              </h3>
+              <div className="flex items-center gap-2 text-cyan-400 text-sm font-semibold">
+                <span>🎙️</span>
+                <span>NOW PLAYING</span>
+              </div>
+            </div>
+          </>
+        ) : isUploadedVideo ? (
+          // For uploaded videos, show video player or message
+          <div className="relative h-[550px] w-full bg-black flex items-center justify-center">
+            <video
+              src={cast.video}
+              controls
+              autoPlay
+              className="w-full h-full object-contain"
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+              <h3 className="text-xl font-bold text-white mb-2">
+                {cast.title}
+              </h3>
+              <div className="flex items-center gap-2 text-cyan-400 text-sm font-semibold">
+                <span>🎙️</span>
+                <span>NOW PLAYING</span>
               </div>
             </div>
           </div>
-        ) : (
-          videoId && (
-            <>
-              <YouTubePlayer videoId={videoId} autoPlay />
-
-              {/* Now Playing Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
-                <h3 className="text-xl font-bold text-white mb-2">
-                  {cast.title}
-                </h3>
-                <div className="flex items-center gap-2 text-cyan-400 text-sm font-semibold">
-                  <span>🎙️</span>
-                  <span>NOW PLAYING</span>
-                </div>
-              </div>
-            </>
-          )
-        )}
+        ) : null}
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { api } from "../../lib/api";
+import CustomLoader from "@/components/shared/loader/Loader";
 
 export default function StudioServices() {
   const router = useRouter();
@@ -131,8 +132,10 @@ export default function StudioServices() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+        <div className="text-center">
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
+        </div>
       </div>
     );
   }

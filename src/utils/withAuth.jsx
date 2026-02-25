@@ -1,6 +1,6 @@
 "use client";
 
-import LoadingState from "@/components/modules/artist/LoadingState";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -24,7 +24,7 @@ export default function withAuth(WrappedComponent, allowedRoles = []) {
     }, [user, loading, router]);
 
     if (loading) {
-      return <LoadingState />;
+      return <CustomLoader />;
     }
 
     if (!user) return null;

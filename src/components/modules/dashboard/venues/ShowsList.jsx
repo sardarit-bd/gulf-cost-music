@@ -1,6 +1,7 @@
 // components/venue/ShowsList.js
 "use client";
 
+import CustomLoader from "@/components/shared/loader/Loader";
 import { AlertCircle, Calendar, Clock, Edit2, Music, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -42,8 +43,10 @@ export default function ShowsList({ shows, onEdit, onDelete, loading }) {
 
     if (loading) {
         return (
-            <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+                <div className="text-center">
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
+                </div>
             </div>
         );
     }
@@ -67,8 +70,8 @@ export default function ShowsList({ shows, onEdit, onDelete, loading }) {
                     <div
                         key={show._id || index}
                         className={`bg-white border rounded-xl p-4 transition-shadow ${pastShow
-                                ? 'border-gray-200 opacity-75 hover:shadow-md'
-                                : 'border-gray-200 hover:shadow-md'
+                            ? 'border-gray-200 opacity-75 hover:shadow-md'
+                            : 'border-gray-200 hover:shadow-md'
                             }`}
                     >
                         <div className="flex gap-4">

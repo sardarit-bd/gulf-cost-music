@@ -1,5 +1,6 @@
 "use client";
 
+import CustomLoader from "@/components/shared/loader/Loader";
 import { useSession } from "@/lib/auth";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -49,10 +50,9 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-20">
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
         <div className="text-center">
-          <Loader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
-          <p className="text-gray-400">Checking your session…</p>
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
         </div>
       </div>
     );

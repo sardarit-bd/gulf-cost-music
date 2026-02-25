@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import LoginRequiredModal from "./LoginRequiredModal";
 import OrderModal from "./OrderModal";
+import CustomLoader from "@/components/shared/loader/Loader";
 
 export default function RecentMerchSection() {
   const [merchItems, setMerchItems] = useState([]);
@@ -132,11 +133,11 @@ export default function RecentMerchSection() {
 
   if (loading) {
     return (
-      <section className="py-16 px-6 md:px-16 bg-white">
-        <div className="container mx-auto text-center text-gray-600">
-          Loading merchandise...
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+        <div className="text-center">
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
         </div>
-      </section>
+      </div>
     );
   }
 

@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { api } from "../../lib/api";
+import CustomLoader from "@/components/shared/loader/Loader";
 
 export default function UploadMediaPage() {
   const router = useRouter();
@@ -184,10 +185,9 @@ export default function UploadMediaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading studio data...</p>
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
         </div>
       </div>
     );
@@ -221,22 +221,20 @@ export default function UploadMediaPage() {
 
           <div className="flex items-center gap-4">
             <div
-              className={`px-4 py-2 rounded-xl ${
-                photoCount === maxPhotos
+              className={`px-4 py-2 rounded-xl ${photoCount === maxPhotos
                   ? "bg-red-100 text-red-700"
                   : "bg-gray-100 text-gray-900"
-              }`}
+                }`}
             >
               <span className="text-sm font-medium">
                 {photoCount}/{maxPhotos} Photos
               </span>
             </div>
             <div
-              className={`px-4 py-2 rounded-xl ${
-                audioFile
+              className={`px-4 py-2 rounded-xl ${audioFile
                   ? "bg-green-100 text-green-700"
                   : "bg-gray-100 text-gray-900"
-              }`}
+                }`}
             >
               <span className="text-sm font-medium">
                 Audio: {audioFile ? "✓" : "✗"}
@@ -259,13 +257,12 @@ export default function UploadMediaPage() {
           </div>
           <div className="w-full bg-gray-200 rounded-full h-3">
             <div
-              className={`h-3 rounded-full transition-all duration-500 ${
-                photoCount === maxPhotos
+              className={`h-3 rounded-full transition-all duration-500 ${photoCount === maxPhotos
                   ? "bg-gradient-to-r from-red-500 to-red-600"
                   : photoCount >= 3
                     ? "bg-gradient-to-r from-yellow-500 to-yellow-600"
                     : "bg-gradient-to-r from-blue-500 to-blue-600"
-              }`}
+                }`}
               style={{ width: `${(photoCount / maxPhotos) * 100}%` }}
             ></div>
           </div>
@@ -302,11 +299,10 @@ export default function UploadMediaPage() {
                 setSelectedFiles([]);
                 setError("");
               }}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl whitespace-nowrap transition-all ${
-                activeTab === "photos"
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl whitespace-nowrap transition-all ${activeTab === "photos"
                   ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
                   : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              }`}
+                }`}
             >
               <Camera className="w-4 h-4" />
               Upload Photos
@@ -318,13 +314,12 @@ export default function UploadMediaPage() {
                 setError("");
               }}
               disabled={!!audioFile}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl whitespace-nowrap transition-all ${
-                activeTab === "audio"
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl whitespace-nowrap transition-all ${activeTab === "audio"
                   ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md"
                   : audioFile
                     ? "text-gray-400 bg-gray-100 cursor-not-allowed"
                     : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              }`}
+                }`}
             >
               <Headphones className="w-4 h-4" />
               Upload Audio {audioFile && "(Already added)"}
@@ -385,14 +380,13 @@ export default function UploadMediaPage() {
               (activeTab === "photos" && photoCount >= maxPhotos) ||
               (activeTab === "audio" && audioFile)
             }
-            className={`w-full py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-3 ${
-              selectedFiles.length === 0 ||
-              uploading ||
-              (activeTab === "photos" && photoCount >= maxPhotos) ||
-              (activeTab === "audio" && audioFile)
+            className={`w-full py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-3 ${selectedFiles.length === 0 ||
+                uploading ||
+                (activeTab === "photos" && photoCount >= maxPhotos) ||
+                (activeTab === "audio" && audioFile)
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            }`}
+              }`}
           >
             {uploading ? (
               <>
@@ -560,11 +554,10 @@ export default function UploadMediaPage() {
                   <span>Audio Sample</span>
                 </div>
                 <span
-                  className={`font-bold px-3 py-1 rounded-full text-sm ${
-                    audioFile
+                  className={`font-bold px-3 py-1 rounded-full text-sm ${audioFile
                       ? "bg-green-500 text-white"
                       : "bg-white/20 text-white"
-                  }`}
+                    }`}
                 >
                   {audioFile ? "✓ Added" : "Not added"}
                 </span>

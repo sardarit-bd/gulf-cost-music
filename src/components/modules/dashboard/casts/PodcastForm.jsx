@@ -110,7 +110,7 @@ const PodcastForm = ({
             }
 
             if (formData.videoType === "upload") {
-                payload.videoUrl = formData.videoUrl;
+                payload.video = formData.videoUrl;
                 payload.videoPublicId = formData.videoPublicId;
             }
 
@@ -160,20 +160,18 @@ const PodcastForm = ({
                     onClearThumbnail={clearThumbnail}
                 />
 
-
-
                 <div className="md:col-span-2 flex justify-end gap-3 pt-4 border-t border-gray-300">
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                        className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition cursor-pointer"
                     >
                         Cancel
                     </button>
                     <button
                         type="submit"
                         disabled={submitting}
-                        className="px-6 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 transition flex items-center gap-2 disabled:opacity-50"
+                        className="px-6 py-2 bg-[var(--primary)] text-black rounded-lg hover:bg-primary/80 transition flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                     >
                         {editingItem ? (
                             <>

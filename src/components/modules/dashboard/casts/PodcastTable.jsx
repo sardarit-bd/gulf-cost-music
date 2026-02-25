@@ -1,12 +1,12 @@
+import CustomLoader from "@/components/shared/loader/Loader";
 import { Edit, Loader2, Trash2, Upload, Video, Youtube } from "lucide-react";
 
 const PodcastTable = ({ podcasts, loading, onEdit, onDelete, onAddNew }) => {
     if (loading) {
         return (
-            <div className="bg-white rounded-xl border border-gray-300 shadow-sm overflow-hidden">
-                <div className="flex justify-center items-center py-20">
-                    <Loader2 className="w-8 h-8 animate-spin text-purple-600 mr-3" />
-                    <span className="text-gray-600">Loading podcasts...</span>
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+                <div className="text-center">
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
                 </div>
             </div>
         );

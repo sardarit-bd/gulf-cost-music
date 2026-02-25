@@ -1,6 +1,7 @@
 "use client";
 
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { useSession } from "@/lib/auth";
 import {
   AlertCircle,
@@ -8,11 +9,10 @@ import {
   Calendar,
   CheckCircle,
   Clock,
-  Loader,
   Mail,
   MapPin,
   Music,
-  Users,
+  Users
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -84,12 +84,12 @@ export default function AdminDashboard() {
     }
   };
 
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen py-20">
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
         <div className="text-center">
-          <Loader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
-          <p className="text-gray-400">Loading information...</p>
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
         </div>
       </div>
     );
@@ -303,12 +303,12 @@ const RecentUsersTable = ({ users }) => {
               <td className="py-3">
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${user.userType === "admin"
-                      ? "bg-red-100 text-red-800"
-                      : user.userType === "artist"
-                        ? "bg-purple-100 text-purple-800"
-                        : user.userType === "venue"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-blue-100 text-blue-800"
+                    ? "bg-red-100 text-red-800"
+                    : user.userType === "artist"
+                      ? "bg-purple-100 text-purple-800"
+                      : user.userType === "venue"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-blue-100 text-blue-800"
                     }`}
                 >
                   {user.userType}
