@@ -155,7 +155,7 @@ export default function MediaGallery({
         {/* Close Button */}
         <button
           onClick={closeViewer}
-          className="absolute top-6 right-6 z-10 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all hover:scale-110"
+          className="absolute top-6 right-6 z-10 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all hover:scale-110 cursor-pointer"
         >
           <X className="w-6 h-6" />
         </button>
@@ -180,14 +180,14 @@ export default function MediaGallery({
           <>
             <button
               onClick={prevImage}
-              className="absolute left-6 z-10 p-4 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="absolute left-6 z-10 p-4 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               disabled={currentIndex === 0}
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <button
               onClick={nextImage}
-              className="absolute right-6 z-10 p-4 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="absolute right-6 z-10 p-4 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               disabled={currentIndex === photos.length - 1}
             >
               <ChevronRight className="w-6 h-6" />
@@ -199,7 +199,7 @@ export default function MediaGallery({
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10 flex items-center gap-3 bg-black/50 backdrop-blur-sm rounded-full px-4 py-2">
           <button
             onClick={downloadImage}
-            className="p-3 hover:bg-white/10 text-white rounded-full transition-all hover:scale-110"
+            className="p-3 hover:bg-white/10 text-white rounded-full transition-all hover:scale-110 cursor-pointer"
             title="Download"
           >
             <DownloadIcon className="w-5 h-5" />
@@ -207,7 +207,7 @@ export default function MediaGallery({
 
           <button
             onClick={toggleFullscreen}
-            className="p-3 hover:bg-white/10 text-white rounded-full transition-all hover:scale-110"
+            className="p-3 hover:bg-white/10 text-white rounded-full transition-all hover:scale-110 cursor-pointer"
             title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
           >
             {isFullscreen ? (
@@ -224,7 +224,7 @@ export default function MediaGallery({
               onDelete?.(currentPhoto._id);
               if (photos.length === 1) closeViewer();
             }}
-            className="p-3 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-all hover:scale-110"
+            className="p-3 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-all hover:scale-110 cursor-pointer"
             title="Delete"
           >
             <Trash2 className="w-5 h-5" />
@@ -278,9 +278,8 @@ export default function MediaGallery({
             <img
               src={currentPhoto.url}
               alt={`Studio photo ${currentIndex + 1}`}
-              className={`w-full h-full object-contain transition-opacity duration-300 ${
-                loading ? "opacity-0" : "opacity-100"
-              }`}
+              className={`w-full h-full object-contain transition-opacity duration-300 ${loading ? "opacity-0" : "opacity-100"
+                }`}
               onLoad={() => setLoading(false)}
               onError={() => {
                 setLoading(false);
@@ -328,11 +327,10 @@ export default function MediaGallery({
 
               {/* Selection Overlay */}
               <div
-                className={`absolute inset-0 transition-colors ${
-                  selectedPhotos.has(photo._id)
-                    ? "bg-blue-600/30"
-                    : "bg-black/0 group-hover:bg-black/20"
-                }`}
+                className={`absolute inset-0 transition-colors ${selectedPhotos.has(photo._id)
+                  ? "bg-blue-600/30"
+                  : "bg-black/0 group-hover:bg-black/20"
+                  }`}
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Selection Checkbox */}
@@ -341,11 +339,10 @@ export default function MediaGallery({
                     e.stopPropagation();
                     onSelect?.(photo._id);
                   }}
-                  className={`absolute top-3 left-3 w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${
-                    selectedPhotos.has(photo._id)
-                      ? "bg-blue-600 border-blue-600 text-white"
-                      : "bg-white/90 border-white/90 text-transparent hover:bg-blue-100 hover:border-blue-300"
-                  }`}
+                  className={`absolute top-3 left-3 w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${selectedPhotos.has(photo._id)
+                    ? "bg-blue-600 border-blue-600 text-white"
+                    : "bg-white/90 border-white/90 text-transparent hover:bg-blue-100 hover:border-blue-300"
+                    }`}
                 >
                   <Check className="w-4 h-4" />
                 </button>
@@ -362,7 +359,7 @@ export default function MediaGallery({
                       e.stopPropagation();
                       openViewer(index);
                     }}
-                    className="p-3 bg-white/90 text-gray-900 rounded-lg hover:bg-white transition-colors hover:scale-110"
+                    className="p-3 bg-white/90 text-gray-900 rounded-lg hover:bg-white transition-colors hover:scale-110 cursor-pointer"
                     title="View Full Screen"
                   >
                     <ZoomIn className="w-5 h-5" />
@@ -372,7 +369,7 @@ export default function MediaGallery({
                       e.stopPropagation();
                       onDelete?.(photo._id);
                     }}
-                    className="p-3 bg-white/90 text-red-600 rounded-lg hover:bg-white transition-colors hover:scale-110"
+                    className="p-3 bg-white/90 text-red-600 rounded-lg hover:bg-white transition-colors hover:scale-110 cursor-pointer"
                     title="Delete"
                   >
                     <Trash2 className="w-5 h-5" />
@@ -381,7 +378,7 @@ export default function MediaGallery({
               )}
 
               {/* Photo Info */}
-              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent text-white">
+              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent text-white ">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Photo {index + 1}</span>
                   <span className="text-xs opacity-75">
@@ -434,11 +431,10 @@ export default function MediaGallery({
                 e.stopPropagation();
                 onSelect?.(photo._id);
               }}
-              className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                selectedPhotos.has(photo._id)
-                  ? "bg-blue-600 border-blue-600 text-white"
-                  : "bg-white border-gray-300 text-transparent hover:border-blue-400"
-              }`}
+              className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${selectedPhotos.has(photo._id)
+                ? "bg-blue-600 border-blue-600 text-white"
+                : "bg-white border-gray-300 text-transparent hover:border-blue-400"
+                }`}
             >
               <Check className="w-3 h-3" />
             </button>

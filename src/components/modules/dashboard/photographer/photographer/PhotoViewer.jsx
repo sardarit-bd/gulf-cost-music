@@ -156,7 +156,7 @@ export default function PhotoViewer({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 z-10 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all hover:scale-110"
+          className="absolute top-6 right-6 z-10 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all hover:scale-110 cursor-pointer"
         >
           <X className="w-6 h-6" />
         </button>
@@ -183,7 +183,7 @@ export default function PhotoViewer({
             <button
               onClick={onPrev}
               disabled={currentIndex === 0}
-              className="absolute left-6 z-10 p-4 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all hover:scale-110 disabled:opacity-50"
+              className="absolute left-6 z-10 p-4 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all hover:scale-110 disabled:opacity-50 cursor-pointer"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
@@ -191,7 +191,7 @@ export default function PhotoViewer({
             <button
               onClick={onNext}
               disabled={currentIndex === photos.length - 1}
-              className="absolute right-6 z-10 p-4 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all hover:scale-110 disabled:opacity-50"
+              className="absolute right-6 z-10 p-4 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all hover:scale-110 disabled:opacity-50 cursor-pointer"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
@@ -266,9 +266,8 @@ export default function PhotoViewer({
               src={currentPhoto.url}
               alt={currentPhoto.caption || `Photo ${currentIndex + 1}`}
               fill
-              className={`object-contain transition-opacity duration-300 ${
-                loading ? "opacity-0" : "opacity-100"
-              }`}
+              className={`object-contain transition-opacity duration-300 ${loading ? "opacity-0" : "opacity-100"
+                }`}
               onLoadingComplete={() => setLoading(false)}
               priority
               sizes="100vw"

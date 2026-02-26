@@ -139,7 +139,7 @@ export default function PhotographerProfile() {
           {/* Close button */}
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+            className="absolute top-4 right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
           >
             <X className="w-6 h-6 text-white" />
           </button>
@@ -152,14 +152,14 @@ export default function PhotographerProfile() {
           {/* Navigation buttons */}
           <button
             onClick={goToPrevious}
-            className="absolute left-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+            className="absolute left-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
           >
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
 
           <button
             onClick={goToNext}
-            className="absolute right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+            className="absolute right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
           >
             <ChevronRight className="w-6 h-6 text-white" />
           </button>
@@ -320,7 +320,7 @@ export default function PhotographerProfile() {
               </h3>
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="text-center p-3 bg-gray-700/30 rounded-lg border border-gray-600/30">
-                  <div className="text-lg font-bold text-yellow-400">
+                  <div className="text-lg font-bold text-yellow-400 capitalize">
                     {photographer.state}
                   </div>
                   <div className="text-xs text-gray-300 mt-1">

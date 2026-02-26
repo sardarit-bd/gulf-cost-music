@@ -199,7 +199,7 @@ export default function ArtistProfile() {
           {/* Close button */}
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+            className="absolute top-4 right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
           >
             <X className="w-6 h-6 text-white" />
           </button>
@@ -212,14 +212,14 @@ export default function ArtistProfile() {
           {/* Navigation buttons */}
           <button
             onClick={goToPrevious}
-            className="absolute left-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+            className="absolute left-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
           >
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
 
           <button
             onClick={goToNext}
-            className="absolute right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+            className="absolute right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
           >
             <ChevronRight className="w-6 h-6 text-white" />
           </button>

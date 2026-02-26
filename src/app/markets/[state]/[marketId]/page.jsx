@@ -275,7 +275,7 @@ export default function MarketItemPage() {
                                     {item.location && (
                                         <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full w-fit">
                                             <MapPin size={16} className="sm:w-4 text-yellow-400" />
-                                            <span className="font-medium">{item.location}, {stateInfo.name}</span>
+                                            <span className="font-medium">{item.location}</span>
                                         </div>
                                     )}
 
@@ -367,7 +367,7 @@ export default function MarketItemPage() {
 
                                     <button
                                         onClick={handleBuyNow}
-                                        className="w-full flex items-center justify-center gap-2 py-3 bg-yellow-500 text-black rounded-lg font-semibold hover:bg-yellow-400 transition"
+                                        className="w-full flex items-center justify-center gap-2 py-3 bg-yellow-500 text-black rounded-lg font-semibold hover:bg-yellow-400 transition cursor-pointer"
                                     >
                                         Buy Now
                                     </button>
@@ -515,7 +515,7 @@ export default function MarketItemPage() {
                     {/* Close Button */}
                     <button
                         onClick={closeGallery}
-                        className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70"
+                        className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70 cursor-pointer"
                         aria-label="Close gallery"
                     >
                         <X size={24} />
@@ -526,7 +526,7 @@ export default function MarketItemPage() {
                         <>
                             <button
                                 onClick={prevImage}
-                                className="absolute left-4 sm:left-6 top-1/2 transform -translate-y-1/2 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70"
+                                className="absolute left-4 sm:left-6 top-1/2 transform -translate-y-1/2 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70 cursor-pointer"
                                 aria-label="Previous image"
                             >
                                 <ChevronLeft size={24} />
@@ -534,7 +534,7 @@ export default function MarketItemPage() {
 
                             <button
                                 onClick={nextImage}
-                                className="absolute right-4 sm:right-6 top-1/2 transform -translate-y-1/2 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70"
+                                className="absolute right-4 sm:right-6 top-1/2 transform -translate-y-1/2 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70 cursor-pointer"
                                 aria-label="Next image"
                             >
                                 <ChevronRight size={24} />

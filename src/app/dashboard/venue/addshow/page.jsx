@@ -1,16 +1,13 @@
-// app/dashboard/venues/add-show/page.js
 "use client";
 
 import AddShowForm from "@/components/modules/dashboard/venues/AddShowForm";
 import ShowsList from "@/components/modules/dashboard/venues/ShowsList";
 import CustomLoader from "@/components/shared/loader/Loader";
+import DeleteModal from "@/ui/DeleteModal";
 import {
-  AlertCircle,
-  ArrowLeft,
   MapPin,
-  Plus,
+  Plus
 } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -32,8 +29,12 @@ export default function AddShowPage() {
   const [editingShow, setEditingShow] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
 
-  const MAX_SHOWS_PER_MONTH = subscriptionPlan === "free" ? 1 : 50;
-  const isLimitReached = showsThisMonth >= MAX_SHOWS_PER_MONTH;
+  // Delete Modal State
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    show: null,
+    loading: false
+  });
 
   useEffect(() => {
     fetchVenueData();
@@ -72,7 +73,6 @@ export default function AddShowPage() {
           isActive: v.isActive || false,
         });
 
-        // Fetch shows separately from the new API endpoint
         await fetchShows(token);
       }
 
@@ -87,7 +87,6 @@ export default function AddShowPage() {
     }
   };
 
-  // New function to fetch shows from the correct endpoint
   const fetchShows = async (token) => {
     try {
       const res = await fetch(`${API_BASE}/api/venues/shows`, {
@@ -111,6 +110,7 @@ export default function AddShowPage() {
       setFormLoading(true);
       const token = getCookie("token");
 
+      // formData is a plain JavaScript object from AddShowForm
       const submitData = new FormData();
       submitData.append("artist", formData.artist);
       submitData.append("date", formData.date);
@@ -132,7 +132,7 @@ export default function AddShowPage() {
 
       toast.success("🎤 Show added successfully!");
       setShowForm(false);
-      fetchVenueData(); // Refresh data
+      fetchVenueData();
     } catch (error) {
       console.error("Add show error:", error);
       toast.error(error.message || "Error adding show.");
@@ -146,6 +146,7 @@ export default function AddShowPage() {
       setFormLoading(true);
       const token = getCookie("token");
 
+      // formData is a plain JavaScript object from AddShowForm
       const submitData = new FormData();
       submitData.append("artist", formData.artist);
       submitData.append("date", formData.date);
@@ -153,7 +154,6 @@ export default function AddShowPage() {
       if (formData.image) submitData.append("image", formData.image);
       if (formData.description) submitData.append("description", formData.description);
 
-      // Fixed: Use correct endpoint with showId
       const res = await fetch(
         `${API_BASE}/api/venues/shows/${editingShow._id}`,
         {
@@ -181,15 +181,26 @@ export default function AddShowPage() {
     }
   };
 
-  const handleDeleteShow = async (show) => {
-    if (!confirm("Are you sure you want to delete this show?")) return;
+  // Open delete modal
+  const handleDeleteClick = (show) => {
+    setDeleteModal({
+      isOpen: true,
+      show: show,
+      loading: false
+    });
+  };
+
+  // Confirm delete
+  const handleConfirmDelete = async () => {
+    if (!deleteModal.show) return;
 
     try {
+      setDeleteModal(prev => ({ ...prev, loading: true }));
+
       const token = getCookie("token");
 
-      // Fixed: Use correct endpoint with showId (not delete-show)
       const res = await fetch(
-        `${API_BASE}/api/venues/shows/${show._id}`,
+        `${API_BASE}/api/venues/shows/${deleteModal.show._id}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
@@ -204,14 +215,22 @@ export default function AddShowPage() {
 
       toast.success("Show deleted successfully!");
 
-      // Refresh shows after deletion
+      // Close modal and refresh
+      setDeleteModal({ isOpen: false, show: null, loading: false });
+
       if (token) {
         await fetchShows(token);
       }
     } catch (error) {
       console.error("Delete show error:", error);
       toast.error(error.message || "Error deleting show.");
+      setDeleteModal(prev => ({ ...prev, loading: false }));
     }
+  };
+
+  // Cancel delete
+  const handleCancelDelete = () => {
+    setDeleteModal({ isOpen: false, show: null, loading: false });
   };
 
   const handleEditClick = (show) => {
@@ -238,16 +257,10 @@ export default function AddShowPage() {
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <Toaster position="top-center" />
 
-      <div className="max-w-4xl mx-auto">
+      <div className="">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard/venues"
-              className="p-2 bg-white text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-50 transition shadow-sm"
-            >
-              <ArrowLeft size={20} />
-            </Link>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 Manage Shows
@@ -258,7 +271,7 @@ export default function AddShowPage() {
             </div>
           </div>
 
-          {!showForm && !isLimitReached && (
+          {!showForm && (
             <button
               onClick={() => setShowForm(true)}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition shadow-sm"
@@ -268,26 +281,6 @@ export default function AddShowPage() {
             </button>
           )}
         </div>
-
-        {/* Limit Reached Alert */}
-        {isLimitReached && !showForm && (
-          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="text-yellow-600 mt-0.5" size={20} />
-              <div>
-                <h4 className="text-yellow-800 font-semibold">
-                  Monthly Show Limit Reached
-                </h4>
-                <p className="text-yellow-700 text-sm">
-                  You've scheduled {showsThisMonth} shows this month.{" "}
-                  {subscriptionPlan === "free"
-                    ? "Free plan allows only 1 show per month. Upgrade to Pro for unlimited shows."
-                    : "You've reached the maximum shows for this month."}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Venue Info */}
         <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm mb-6">
@@ -325,7 +318,7 @@ export default function AddShowPage() {
           <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">
-                Your Shows ({shows.length}/{MAX_SHOWS_PER_MONTH})
+                Your Shows ({shows.length})
               </h2>
               <span className="text-sm text-gray-500">
                 {shows.length} show{shows.length !== 1 ? 's' : ''} scheduled
@@ -335,12 +328,26 @@ export default function AddShowPage() {
             <ShowsList
               shows={shows}
               onEdit={handleEditClick}
-              onDelete={handleDeleteShow}
+              onDelete={handleDeleteClick}
               loading={loading}
             />
           </div>
         )}
       </div>
+
+      {/* Delete Modal */}
+      <DeleteModal
+        isOpen={deleteModal.isOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        loading={deleteModal.loading}
+        title="Delete Show"
+        description={`Are you sure you want to delete "${deleteModal.show?.artistBandName || deleteModal.show?.artist || "this show"}"?`}
+        confirmText="Delete Show"
+        cancelText="Cancel"
+        type="danger"
+        itemName={deleteModal.show?.artistBandName || deleteModal.show?.artist || "this show"}
+      />
     </div>
   );
 }

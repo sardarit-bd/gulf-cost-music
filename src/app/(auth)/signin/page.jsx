@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { Crown, Lock, Mail, User } from "lucide-react";
+import { Crown, Lock, Mail, User, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -75,6 +75,7 @@ export default function SignIn() {
 
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" });
+  const [accountError, setAccountError] = useState(""); // নতুন স্টেট
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -90,12 +91,18 @@ export default function SignIn() {
         [name]: "",
       }));
     }
+
+    // Clear account error when user starts typing
+    if (accountError) {
+      setAccountError("");
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setFieldErrors({ email: "", password: "" });
+    setAccountError("");
 
     const toastId = toast.loading("Signing you in...");
 
@@ -163,6 +170,18 @@ export default function SignIn() {
 
       // Handle errors
       let newFieldErrors = { email: "", password: "" };
+      let accountErrorMessage = "";
+
+      // ✅ Check for account deactivation message
+      if (data.message && data.message.includes("deactivated")) {
+        accountErrorMessage = data.message;
+
+        // Extract email if present in the message
+        const emailMatch = data.message.match(/[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}/);
+        const adminEmail = emailMatch ? emailMatch[0] : "thegulfcoastmusic@gmail.com";
+
+        accountErrorMessage = `⚠️ Your account has been deactivated. Please contact ${adminEmail} to reactivate your account.`;
+      }
 
       if (data.errors?.details && Array.isArray(data.errors.details)) {
         data.errors.details.forEach((err) => {
@@ -182,8 +201,11 @@ export default function SignIn() {
 
       toast.dismiss(toastId);
       setFieldErrors(newFieldErrors);
+      setAccountError(accountErrorMessage);
 
-      if (newFieldErrors.email && newFieldErrors.password) {
+      if (accountErrorMessage) {
+        // Account deactivated message already set, no need for additional toast
+      } else if (newFieldErrors.email && newFieldErrors.password) {
         toast.error("Please check your email and password");
       } else if (newFieldErrors.email) {
         toast.error(newFieldErrors.email);
@@ -219,6 +241,34 @@ export default function SignIn() {
                   Sign in to your account to continue
                 </p>
               </div>
+
+              {/* ✅ Account Deactivated Message */}
+              {accountError && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="text-red-800 font-semibold text-sm mb-1">
+                        Account Deactivated
+                      </h3>
+                      <p className="text-red-700 text-sm">
+                        {accountError}
+                      </p>
+                      <div className="mt-3 pt-2 border-t border-red-200">
+                        <p className="text-xs text-red-600">
+                          📧 Contact:{" "}
+                          <a
+                            href="mailto:thegulfcoastmusic@gmail.com"
+                            className="font-medium underline hover:text-red-800"
+                          >
+                            thegulfcoastmusic@gmail.com
+                          </a>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Email */}

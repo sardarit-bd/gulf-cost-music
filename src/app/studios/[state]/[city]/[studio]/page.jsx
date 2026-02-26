@@ -394,7 +394,7 @@ export default function StudioProfile() {
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
-                                        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition flex-1 justify-center ${activeTab === tab.id
+                                        className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition flex-1 justify-center cursor-pointer ${activeTab === tab.id
                                             ? "text-yellow-400 border-yellow-400 bg-yellow-400/5"
                                             : "text-gray-400 hover:text-white border-transparent hover:bg-white/5"
                                             }`}
@@ -471,7 +471,7 @@ export default function StudioProfile() {
                             <h3 className="text-lg font-semibold text-white">Audio Sample</h3>
                             <button
                                 onClick={() => setShowAudioPlayer(false)}
-                                className="text-gray-400 hover:text-white"
+                                className="text-gray-400 hover:text-white cursor-pointer transition "
                             >
                                 <X size={20} />
                             </button>
@@ -489,7 +489,7 @@ export default function StudioProfile() {
 
                         <button
                             onClick={() => setShowAudioPlayer(false)}
-                            className="w-full py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition text-sm"
+                            className="w-full py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition text-sm cursor-pointer"
                         >
                             Close
                         </button>

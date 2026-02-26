@@ -110,6 +110,7 @@ export default function CalendarBoard() {
       }
 
       const data = await response.json();
+      console.log("Calender Data:", data)
 
       if (data.success) {
         // Transform backend events to frontend format
@@ -786,6 +787,7 @@ export default function CalendarBoard() {
       </div>
 
       {/* Event Detail Modal */}
+      {/* Event Detail Modal */}
       {showEventModal && selectedEvent && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-lg flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -801,13 +803,33 @@ export default function CalendarBoard() {
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <div
-                    className="w-full h-2 rounded-full mb-2"
-                    style={{ backgroundColor: selectedEvent.color }}
-                  />
-                  <h4 className="text-lg font-semibold text-gray-900">{selectedEvent.title}</h4>
-                </div>
+                {/* Event Image - নতুন অংশ */}
+                {selectedEvent.image && (selectedEvent.image.url || selectedEvent.image) && (
+                  <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-200 mb-2">
+                    <img
+                      src={selectedEvent.image.url || selectedEvent.image}
+                      alt={selectedEvent.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://via.placeholder.com/400x200?text=No+Image";
+                      }}
+                    />
+                    {/* Venue color indicator */}
+                    <div
+                      className="absolute bottom-2 right-2 w-8 h-8 rounded-full border-2 border-white shadow-lg"
+                      style={{ backgroundColor: selectedEvent.color }}
+                    />
+                  </div>
+                )}
+
+                {/* Color bar */}
+                <div
+                  className="w-full h-2 rounded-full mb-2"
+                  style={{ backgroundColor: selectedEvent.color }}
+                />
+
+                <h4 className="text-lg font-semibold text-gray-900">{selectedEvent.title}</h4>
 
                 {selectedEvent.description && (
                   <div className="text-gray-600">
@@ -841,11 +863,6 @@ export default function CalendarBoard() {
                     </span>
                   )}
                 </div>
-
-                {/* <div className="flex items-center gap-2 text-gray-600">
-                  <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: selectedEvent.color }} />
-                  <span>Venue Color: {selectedEvent.color}</span>
-                </div> */}
 
                 <div className="pt-4 border-t">
                   <p className="text-sm text-gray-500">

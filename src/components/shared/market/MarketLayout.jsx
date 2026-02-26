@@ -1,4 +1,3 @@
-// components/market/MarketLayout.jsx
 "use client";
 
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -6,7 +5,6 @@ import { useSession } from "@/lib/auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import MarketFilters from "./MarketFilters";
 import MarketGrid from "./MarketGrid";
 import MarketHeader from "./MarketHeader";
 import MarketPagination from "./MarketPagination";
@@ -57,6 +55,7 @@ export default function MarketLayout({ userType = "all" }) {
             const myItem = response?.data ?? null;
 
             if (myItem) {
+                console.log("Market:", myItem)
                 setItems([myItem]);      // ✅ always array
                 setPagination({ page: 1, limit: 12, total: 1, pages: 1 });
             } else {
@@ -113,12 +112,12 @@ export default function MarketLayout({ userType = "all" }) {
                 onListingUpdate={fetchUserListing}
             />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <MarketFilters
+            <div className="px-4 sm:px-8 lg:px-8 py-5">
+                {/* <MarketFilters
                     filters={filters}
                     onFilterChange={updateFilters}
                     userType={userType}
-                />
+                /> */}
 
                 {loading ? (
                     <LoadingSpinner message={`Loading ${userType === "all" ? "marketplace" : `${userType} marketplace`}...`} />

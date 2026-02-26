@@ -83,9 +83,9 @@ export default function ServicesTab({ studio, formatPrice }) {
                         <span>High-quality output</span>
                       </div>
 
-                      <button className="w-full mt-3 py-2 bg-yellow-500 text-black rounded-lg font-medium hover:bg-yellow-600 transition text-sm">
+                      {/* <button className="w-full mt-3 py-2 bg-yellow-500 text-black rounded-lg font-medium hover:bg-yellow-600 transition text-sm">
                         Contact for Booking
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 )}

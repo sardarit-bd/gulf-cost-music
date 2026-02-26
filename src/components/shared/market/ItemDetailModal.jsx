@@ -5,6 +5,7 @@ import { useSession } from "@/lib/auth";
 import {
     AlertCircle,
     CheckCircle,
+    Crown,
     Edit,
     Heart,
     Loader2,
@@ -45,8 +46,6 @@ export default function ItemDetailModal({ isOpen, onClose, itemId, onItemUpdate 
         try {
             const response = await api.get(`/api/market/${itemId}`);
             setItem(response.data);
-            console.log("Fetched item:", response.data); // ডিবাগ করার জন্য
-            console.log("Current user:", user); // ডিবাগ করার জন্য
         } catch (error) {
             console.error("Error fetching item:", error);
             toast.error("Failed to load item details");

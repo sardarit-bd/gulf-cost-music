@@ -62,7 +62,7 @@ export default function DeleteModal({
                         <button
                             onClick={onClose}
                             disabled={loading}
-                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg disabled:opacity-50"
+                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg disabled:opacity-50 cursor-pointer"
                         >
                             <X className="w-5 h-5" />
                         </button>
@@ -92,14 +92,14 @@ export default function DeleteModal({
                         <button
                             onClick={onClose}
                             disabled={loading}
-                            className="flex-1 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            className="flex-1 px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
                         >
                             {cancelText}
                         </button>
                         <button
                             onClick={handleConfirm}
                             disabled={loading}
-                            className={`flex-1 px-4 py-3 ${config.buttonColor} text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                            className={`flex-1 px-4 py-3 ${config.buttonColor} text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer`}
                         >
                             {loading ? (
                                 <>
@@ -143,14 +143,14 @@ export function SimpleDeleteModal({ isOpen, onClose, onConfirm, loading, title, 
                     <button
                         onClick={onClose}
                         disabled={loading}
-                        className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                        className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors cursor-pointer"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={onConfirm}
                         disabled={loading}
-                        className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-2 cursor-pointer"
                     >
                         {loading ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -179,14 +179,14 @@ export function MiniDeleteConfirm({ onConfirm, onCancel, loading, itemName }) {
                 <div className="flex gap-2">
                     <button
                         onClick={onCancel}
-                        className="flex-1 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                        className="flex-1 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={onConfirm}
                         disabled={loading}
-                        className="flex-1 px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center gap-1"
+                        className="flex-1 px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center justify-center gap-1 cursor-pointer"
                     >
                         {loading ? (
                             <Loader2 className="w-3 h-3 animate-spin" />

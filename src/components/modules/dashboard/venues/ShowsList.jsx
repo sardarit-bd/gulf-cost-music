@@ -1,4 +1,3 @@
-// components/venue/ShowsList.js
 "use client";
 
 import CustomLoader from "@/components/shared/loader/Loader";
@@ -43,10 +42,8 @@ export default function ShowsList({ shows, onEdit, onDelete, loading }) {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
-                <div className="text-center">
-                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
-                </div>
+            <div className="flex justify-center items-center py-10">
+                <CustomLoader className="w-8 h-8 animate-spin text-yellow-500" />
             </div>
         );
     }
@@ -65,13 +62,14 @@ export default function ShowsList({ shows, onEdit, onDelete, loading }) {
         <div className="space-y-4">
             {shows.map((show, index) => {
                 const pastShow = isPastShow(show.date);
+                const showTitle = show.artistBandName || show.artist;
 
                 return (
                     <div
                         key={show._id || index}
                         className={`bg-white border rounded-xl p-4 transition-shadow ${pastShow
-                            ? 'border-gray-200 opacity-75 hover:shadow-md'
-                            : 'border-gray-200 hover:shadow-md'
+                                ? 'border-gray-200 opacity-75 hover:shadow-md'
+                                : 'border-gray-200 hover:shadow-md'
                             }`}
                     >
                         <div className="flex gap-4">
@@ -80,7 +78,7 @@ export default function ShowsList({ shows, onEdit, onDelete, loading }) {
                                 <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                                     <Image
                                         src={show.image.url || show.image}
-                                        alt={show.artistBandName || show.artist}
+                                        alt={showTitle}
                                         fill
                                         className="object-cover"
                                     />
@@ -91,7 +89,7 @@ export default function ShowsList({ shows, onEdit, onDelete, loading }) {
                             <div className="flex-1">
                                 <div className="flex items-center gap-2">
                                     <h3 className="font-semibold text-gray-900 text-lg">
-                                        {show.artistBandName || show.artist}
+                                        {showTitle}
                                     </h3>
                                     {pastShow && (
                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs">

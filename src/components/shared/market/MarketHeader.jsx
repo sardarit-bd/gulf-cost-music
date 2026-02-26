@@ -2,8 +2,14 @@
 "use client";
 
 import {
-    Building2, Camera, Edit, Eye, Grid, Mic, Music, Plus,
-    Store, Users, AlertCircle, CheckCircle, XCircle, Loader2
+    AlertCircle,
+    Building2, Camera,
+    CheckCircle,
+    Edit, Eye, Grid,
+    Loader2,
+    Mic, Music, Plus,
+    Store, Users,
+    XCircle
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -108,8 +114,8 @@ export default function MarketHeader({
 
     return (
         <>
-            <div className={`bg-gradient-to-r ${config.color} text-white`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="pl-4 sm:pl-6 lg:pl-8 py-4">
+                <div className={`bg-gradient-to-r ${config.color} text-white rounded-2xl py-12 px-6`}>
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div className="flex items-center gap-6">
                             <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
@@ -193,7 +199,7 @@ export default function MarketHeader({
 
             {/* Show Stripe Connect Prompt if user has pending listing */}
             {userListing && userListing.status === "pending" && (
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-4">
+                <div className=" px-4 sm:px-6 lg:px-8 py-4 mb-4">
                     <StripeConnectPrompt userType={userType} />
                 </div>
             )}

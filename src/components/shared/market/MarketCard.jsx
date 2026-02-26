@@ -13,8 +13,7 @@ import {
     Store,
     User,
     Users,
-    Video,
-    Sparkles
+    Video
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -165,7 +164,7 @@ export default function MarketCard({ item, userType = "all", currentUser, isOwnL
                             <div className="flex items-center gap-4 text-sm text-gray-500 mb-4 flex-wrap">
                                 <div className="flex items-center gap-1">
                                     <SellerIcon className="w-4 h-4" />
-                                    <span>{item.seller?.name || 'Unknown'}</span>
+                                    <span>{item.seller?.username || 'Unknown'}</span>
                                 </div>
                                 {item.location && (
                                     <div className="flex items-center gap-1">
@@ -182,7 +181,7 @@ export default function MarketCard({ item, userType = "all", currentUser, isOwnL
                                         <p className="text-2xl font-bold text-gray-900">
                                             ${formatPrice(item.price)}
                                         </p>
-                                        {feePercentage > 0 ? (
+                                        {/* {feePercentage > 0 ? (
                                             <span className="text-xs text-gray-500">
                                                 + ${formatPrice(feeAmount)} fee
                                             </span>
@@ -190,10 +189,10 @@ export default function MarketCard({ item, userType = "all", currentUser, isOwnL
                                             <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full">
                                                 0% fee
                                             </span>
-                                        )}
+                                        )} */}
                                     </div>
 
-                                    {feePercentage > 0 ? (
+                                    {/* {feePercentage > 0 ? (
                                         <>
                                             <p className="text-xs text-gray-500">
                                                 Total: ${formatPrice(totalWithFee)} (incl. {feePercentage}% fee)
@@ -209,7 +208,7 @@ export default function MarketCard({ item, userType = "all", currentUser, isOwnL
                                                 Pro Plan: 0% platform fee
                                             </p>
                                         </div>
-                                    )}
+                                    )} */}
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <span className="text-sm text-gray-500">
@@ -326,7 +325,7 @@ export default function MarketCard({ item, userType = "all", currentUser, isOwnL
                     <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
                         <div className="flex items-center gap-1">
                             <SellerIcon className="w-3 h-3" />
-                            <span className="truncate max-w-[100px]">{item.seller?.name || 'Unknown'}</span>
+                            <span className="truncate max-w-[100px]">{item.seller?.username || 'Unknown'}</span>
                         </div>
                     </div>
 
@@ -343,7 +342,7 @@ export default function MarketCard({ item, userType = "all", currentUser, isOwnL
                             <p className="text-lg font-bold text-gray-900">
                                 ${formatPrice(item.price)}
                             </p>
-                            {feePercentage > 0 ? (
+                            {/* {feePercentage > 0 ? (
                                 <div className="flex items-center gap-1">
                                     <p className="text-xs text-gray-500">
                                         +${formatPrice(feeAmount)} fee
@@ -356,17 +355,17 @@ export default function MarketCard({ item, userType = "all", currentUser, isOwnL
                                         0% fee
                                     </p>
                                 </div>
-                            )}
+                            )} */}
                         </div>
                         <div className="text-right">
                             <span className="text-xs text-gray-500 block">
                                 {item.photos?.length || 0} 📸
                             </span>
-                            {feePercentage > 0 && (
+                            {/* {feePercentage > 0 && (
                                 <span className="text-xs text-gray-400 mt-1 block">
                                     Seller: ${formatPrice(sellerReceives)}
                                 </span>
-                            )}
+                            )} */}
                         </div>
                     </div>
                 </div>

@@ -115,7 +115,7 @@ export default function StudioServices() {
       setHasChanges(false);
 
       setTimeout(() => {
-        router.push("/dashboard/studios/profile");
+        router.push("/dashboard/studio/");
       }, 1500);
     } catch (error) {
       console.error("Error saving services:", error);

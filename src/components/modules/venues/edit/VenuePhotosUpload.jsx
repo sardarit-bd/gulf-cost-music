@@ -20,9 +20,9 @@ export default function VenuePhotosUpload({
     }
 
     // Validate file size (5MB max)
-    const oversizedFiles = files.filter((file) => file.size > 5 * 1024 * 1024);
+    const oversizedFiles = files.filter((file) => file.size > 20 * 1024 * 1024);
     if (oversizedFiles.length > 0) {
-      setError("Some files exceed 5MB limit.");
+      setError("Some files exceed 20MB limit.");
       return;
     }
 
@@ -56,8 +56,8 @@ export default function VenuePhotosUpload({
       <label
         htmlFor="photo-upload"
         className={`flex flex-col items-center justify-center gap-2 p-6 border-2 border-dashed rounded-lg transition ${previewImages.length >= MAX_PHOTOS
-            ? "border-gray-300 bg-gray-50 text-gray-400 cursor-not-allowed"
-            : "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer"
+          ? "border-gray-300 bg-gray-50 text-gray-400 cursor-not-allowed"
+          : "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 cursor-pointer"
           } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <ImageIcon size={32} />
