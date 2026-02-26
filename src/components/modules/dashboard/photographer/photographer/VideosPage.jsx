@@ -1,5 +1,6 @@
 "use client";
 
+import CustomLoader from "@/components/shared/loader/Loader";
 import {
   AlertCircle,
   CheckCircle2,
@@ -18,7 +19,6 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { EditVideoModal } from "./EditVideoModal";
 import { VideoUploadForm } from "./VideoUploadForm";
-import CustomLoader from "@/components/shared/loader/Loader";
 
 // Utility to get cookie safely
 const getCookie = (name) => {
@@ -1028,4 +1028,3 @@ return (
     )}
   </>
 );
-}
