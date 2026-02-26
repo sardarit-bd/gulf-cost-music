@@ -12,7 +12,7 @@ export const getCookie = (name) => {
 // Fetch hero data
 export const fetchHeroData = async () => {
     try {
-        const response = await fetch(`${API_BASE}/api/hero-video`);
+        const response = await fetch(`${API_BASE}/api/hero`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -37,7 +37,7 @@ export const saveHeroData = async (heroData) => {
         throw new Error("Authentication token not found. Please login again.");
     }
 
-    const response = await fetch(`${API_BASE}/api/hero-video/update`, {
+    const response = await fetch(`${API_BASE}/api/hero/update`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",

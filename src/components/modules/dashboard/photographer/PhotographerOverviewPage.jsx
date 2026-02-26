@@ -441,16 +441,16 @@ export default function PhotographerDashboard() {
                 ))}
                 {(!photographer.services ||
                   photographer.services.length === 0) && (
-                  <div className="text-center py-4">
-                    <p className="text-gray-600">No services added yet</p>
-                    <button
-                      onClick={handleEditProfile}
-                      className="mt-2 text-yellow-600 hover:text-yellow-700 text-sm font-medium"
-                    >
-                      Add Your First Service
-                    </button>
-                  </div>
-                )}
+                    <div className="text-center py-4">
+                      <p className="text-gray-600">No services added yet</p>
+                      <button
+                        onClick={handleEditProfile}
+                        className="mt-2 text-yellow-600 hover:text-yellow-700 text-sm font-medium"
+                      >
+                        Add Your First Service
+                      </button>
+                    </div>
+                  )}
               </div>
             </div>
           </div>
@@ -538,7 +538,7 @@ export default function PhotographerDashboard() {
           {/* Close Button */}
           <button
             onClick={closeGallery}
-            className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70"
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70 cursor-pointer"
             aria-label="Close gallery"
           >
             <X size={24} />
@@ -549,7 +549,7 @@ export default function PhotographerDashboard() {
             <>
               <button
                 onClick={prevImage}
-                className="absolute left-4 sm:left-6 top-1/2 transform -translate-y-1/2 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70"
+                className="absolute left-4 sm:left-6 top-1/2 transform -translate-y-1/2 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70 cursor-pointer"
                 aria-label="Previous image"
               >
                 <ChevronLeft size={24} />
@@ -557,7 +557,7 @@ export default function PhotographerDashboard() {
 
               <button
                 onClick={nextImage}
-                className="absolute right-4 sm:right-6 top-1/2 transform -translate-y-1/2 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70"
+                className="absolute right-4 sm:right-6 top-1/2 transform -translate-y-1/2 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70 cursor-pointer"
                 aria-label="Next image"
               >
                 <ChevronRight size={24} />
@@ -605,11 +605,10 @@ export default function PhotographerDashboard() {
                       setCurrentGalleryIndex(index);
                       setSelectedImage(photo);
                     }}
-                    className={`w-16 h-16 rounded overflow-hidden border-2 transition-all ${
-                      currentGalleryIndex === index
-                        ? "border-yellow-400 scale-110"
-                        : "border-transparent hover:border-white/50"
-                    }`}
+                    className={`w-16 h-16 rounded overflow-hidden border-2 transition-all ${currentGalleryIndex === index
+                      ? "border-yellow-400 scale-110"
+                      : "border-transparent hover:border-white/50"
+                      }`}
                   >
                     <Image
                       src={photo.url}

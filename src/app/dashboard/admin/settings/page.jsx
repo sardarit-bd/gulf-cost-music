@@ -92,18 +92,31 @@ const SystemSettingsPage = () => {
     { id: "system", name: "System", icon: Server },
   ];
 
+  // if (loading) {
+  //   return (
+  //     <AdminLayout>
+  //       <div className="flex justify-center items-center min-h-[60vh]">
+  //         <div className="text-center">
+  //           <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+  //           <p className="text-gray-600">Loading system settings...</p>
+  //         </div>
+  //       </div>
+  //     </AdminLayout>
+  //   );
+  // }
+
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="flex justify-center items-center min-h-screen py-20 bg-white">
           <div className="text-center">
-            <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading system settings...</p>
+            <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
           </div>
         </div>
       </AdminLayout>
     );
   }
+
 
   if (!settings) {
     return (

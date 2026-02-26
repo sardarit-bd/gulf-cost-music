@@ -1,10 +1,11 @@
 "use client";
 
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import CustomLoader from "@/components/shared/loader/Loader";
+import { Camera, FileText, Loader2, Mail, Phone, Save, Upload, User } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { User, Mail, Phone, FileText, Upload, Save, Loader2, Camera } from "lucide-react";
 
 const getCookie = (name) => {
     if (typeof document === "undefined") return null;
@@ -112,13 +113,27 @@ export default function AdminProfilePage() {
     };
 
 
+    // if (loading) {
+    //     return (
+    //         <AdminLayout>
+    //             <div className="flex items-center justify-center min-h-[60vh]">
+    //                 <div className="text-center">
+    //                     <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+    //                     <p className="text-gray-500">Loading profile...</p>
+    //                 </div>
+    //             </div>
+    //         </AdminLayout>
+    //     );
+    // }
+
+
+
     if (loading) {
         return (
             <AdminLayout>
-                <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="flex justify-center items-center min-h-screen py-20 bg-white">
                     <div className="text-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-                        <p className="text-gray-500">Loading profile...</p>
+                        <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
                     </div>
                 </div>
             </AdminLayout>

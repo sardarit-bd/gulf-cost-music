@@ -1,4 +1,5 @@
 "use client";
+import CustomLoader from "@/components/shared/loader/Loader";
 import {
     ArrowLeft,
     Camera,
@@ -29,7 +30,6 @@ export default function MarketItemPage() {
     const router = useRouter();
     const stateInfo = stateConfig[state?.toLowerCase()];
 
-    // Redirect if state not valid
     useEffect(() => {
         if (!stateInfo) {
             router.push('/markets');
@@ -164,10 +164,9 @@ export default function MarketItemPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-500 mx-auto mb-4"></div>
-                    <p className="text-yellow-400 text-lg">Loading item details...</p>
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
                 </div>
             </div>
         );
@@ -276,7 +275,7 @@ export default function MarketItemPage() {
                                     {item.location && (
                                         <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full w-fit">
                                             <MapPin size={16} className="sm:w-4 text-yellow-400" />
-                                            <span className="font-medium">{item.location}, {stateInfo.name}</span>
+                                            <span className="font-medium">{item.location}</span>
                                         </div>
                                     )}
 
@@ -293,14 +292,14 @@ export default function MarketItemPage() {
                                             </div>
                                         )}
 
-                                        {/* Fee Info (Client Requirement) */}
-                                        {item.feeInfo && (
+                                        {/* Fee Info */}
+                                        {/* {item.feeInfo && (
                                             <div className="flex items-center gap-1 sm:gap-2 bg-yellow-500/10 backdrop-blur-sm px-2 sm:px-3 py-1 rounded-full">
                                                 <span className="text-xs sm:text-sm text-yellow-400">
-                                                    Fee: {item.feeInfo.percentage}% (${item.feeInfo.amount.toFixed(2)})
+                                                    Fee: {item.feeInfo.percentage}%
                                                 </span>
                                             </div>
-                                        )}
+                                        )} */}
                                     </div>
                                 </div>
                             </div>
@@ -344,26 +343,34 @@ export default function MarketItemPage() {
                                             Price
                                         </div>
                                     </div>
-
-                                    {/* Total with Fee */}
-                                    {item.feeInfo && (
-                                        <div className="text-center p-3 sm:p-4 bg-gray-700/30 rounded-lg sm:rounded-xl border border-gray-600/30">
-                                            <div className="text-xl sm:text-2xl font-bold text-green-400">
-                                                ${item.feeInfo.total.toFixed(2)}
+                                    {/* {item.feeInfo && (
+                                        <>
+                                            <div className="text-center p-3 sm:p-4 bg-yellow-500/10 rounded-lg sm:rounded-xl border border-yellow-500/30">
+                                                <div className="text-sm sm:text-base text-gray-300 mb-2">Breakdown</div>
+                                                <div className="flex justify-between text-xs sm:text-sm mb-1">
+                                                    <span className="text-gray-400">Platform Fee ({item.feeInfo.percentage}%):</span>
+                                                    <span className="text-yellow-400 font-semibold">${item.feeInfo.amount.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-xs sm:text-sm mb-1">
+                                                    <span className="text-gray-400">You Pay:</span>
+                                                    <span className="text-white font-bold">${item.price.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-xs sm:text-sm pt-1 mt-1 border-t border-yellow-500/20">
+                                                    <span className="text-gray-400">Seller Gets:</span>
+                                                    <span className="text-green-400 font-semibold">
+                                                        ${(item.price - item.feeInfo.amount).toFixed(2)}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="text-xs sm:text-sm text-gray-300 mt-1">
-                                                Total (incl. {item.feeInfo.percentage}% fee)
-                                            </div>
-                                        </div>
-                                    )}
+                                        </>
+                                    )} */}
 
                                     <button
                                         onClick={handleBuyNow}
-                                        className="w-full flex items-center justify-center gap-2 py-3 bg-yellow-500 text-black rounded-lg font-semibold hover:bg-yellow-400 transition"
+                                        className="w-full flex items-center justify-center gap-2 py-3 bg-yellow-500 text-black rounded-lg font-semibold hover:bg-yellow-400 transition cursor-pointer"
                                     >
                                         Buy Now
                                     </button>
-
                                 </div>
                             </div>
                         </div>
@@ -493,7 +500,6 @@ export default function MarketItemPage() {
                                                     </p>
                                                 </div>
                                             )}
-
                                         </div>
                                     )}
                                 </div>
@@ -509,7 +515,7 @@ export default function MarketItemPage() {
                     {/* Close Button */}
                     <button
                         onClick={closeGallery}
-                        className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70"
+                        className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70 cursor-pointer"
                         aria-label="Close gallery"
                     >
                         <X size={24} />
@@ -520,7 +526,7 @@ export default function MarketItemPage() {
                         <>
                             <button
                                 onClick={prevImage}
-                                className="absolute left-4 sm:left-6 top-1/2 transform -translate-y-1/2 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70"
+                                className="absolute left-4 sm:left-6 top-1/2 transform -translate-y-1/2 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70 cursor-pointer"
                                 aria-label="Previous image"
                             >
                                 <ChevronLeft size={24} />
@@ -528,7 +534,7 @@ export default function MarketItemPage() {
 
                             <button
                                 onClick={nextImage}
-                                className="absolute right-4 sm:right-6 top-1/2 transform -translate-y-1/2 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70"
+                                className="absolute right-4 sm:right-6 top-1/2 transform -translate-y-1/2 text-white hover:text-yellow-400 transition-colors z-10 p-3 bg-black/50 rounded-full hover:bg-black/70 cursor-pointer"
                                 aria-label="Next image"
                             >
                                 <ChevronRight size={24} />

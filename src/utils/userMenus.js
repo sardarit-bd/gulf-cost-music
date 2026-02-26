@@ -2,7 +2,7 @@ export const ROLE_MENUS = {
   artist: [
     { label: "Dashboard", href: "/dashboard/artist" },
     { label: "Manage Profile", href: "/dashboard/artist/manageProfile" },
-    { label: "Marketplace", href: "/dashboard/artist/marketplace" },
+    { label: "Market", href: "/dashboard/artist/marketplace" },
     // { label: "Billing", href: "/dashboard/artist/billing" },
     { label: "Orders", href: "/dashboard/artist/orders" },
   ],
@@ -17,16 +17,17 @@ export const ROLE_MENUS = {
   ],
   venue: [
     { label: "Overview", href: "/dashboard/venue" },
-    { label: "Edit Profile", href: "/dashboard/venue/edit" },
+    // { label: "Edit Profile", href: "/dashboard/venue/edit" },
     { label: "Add Show", href: "/dashboard/venue/addshow" },
     { label: "Market", href: "/dashboard/venue/marketplace" },
     { label: "Orders", href: "/dashboard/venue/orders" },
     // { label: "Billing", href: "/dashboard/venue/billing" },
   ],
   journalist: [
-    { label: "Overview", href: "/dashboard/journalist/dashboard" },
+    { label: "Overview", href: "/dashboard/journalist" },
     { label: "My Profile", href: "/dashboard/journalist/profile" },
     { label: "Create Post", href: "/dashboard/journalist/create-news" },
+    { label: "Market", href: "/dashboard/journalist/market" },
     // { label: "Edit Post", href: "/dashboard/journalist/edit-news" },
     // { label: "Billing", href: "/dashboard/journalist/billing" },
   ],
@@ -36,6 +37,7 @@ export const ROLE_MENUS = {
     { label: "Edit Profile", href: "/dashboard/studio/profile" },
     { label: "Media", href: "/dashboard/studio/media" },
     { label: "Services", href: "/dashboard/studio/profile/services" },
+    { label: "Market", href: "/dashboard/studio/market" },
     // { label: "Billing", href: "/dashboard/studio/billing" },
   ],
 };

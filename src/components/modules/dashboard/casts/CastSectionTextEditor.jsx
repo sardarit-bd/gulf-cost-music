@@ -1,4 +1,5 @@
 "use client";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { handleApiError } from "@/utils/errorHandler";
 import axios from "axios";
 import { Eye, Loader2, Save, X } from "lucide-react";
@@ -23,7 +24,7 @@ const CastSectionTextEditor = ({ onClose, onUpdate, token, API_BASE }) => {
     const fetchSectionText = async () => {
         try {
             setLoading(true);
-            const { data } = await axios.get(`${API_BASE}/api/casts/section/text`);
+            const { data } = await axios.get(`${API_BASE}/api/cast-settings`);
 
             if (data.success) {
                 setFormData({
@@ -71,7 +72,7 @@ const CastSectionTextEditor = ({ onClose, onUpdate, token, API_BASE }) => {
             if (formData.yourCastsTitle !== undefined) payload.yourCastsTitle = formData.yourCastsTitle.trim();
 
             const { data } = await axios.put(
-                `${API_BASE}/api/casts/section/text/update`,
+                `${API_BASE}/api/cast-settings`,
                 payload,
                 { headers }
             );
@@ -99,12 +100,9 @@ const CastSectionTextEditor = ({ onClose, onUpdate, token, API_BASE }) => {
 
     if (loading) {
         return (
-            <div className="p-6">
-                <div className="flex items-center justify-center h-64">
-                    <div className="text-center">
-                        <div className="w-8 h-8 animate-spin text-indigo-600 mx-auto mb-4 border-2 border-indigo-600 border-t-transparent rounded-full"></div>
-                        <p className="text-gray-600">Loading section text...</p>
-                    </div>
+            <div className="flex justify-center items-center min-h-[400px] bg-white">
+                <div className="text-center">
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
                 </div>
             </div>
         );
@@ -124,7 +122,7 @@ const CastSectionTextEditor = ({ onClose, onUpdate, token, API_BASE }) => {
                 </div>
                 <button
                     onClick={onClose}
-                    className="text-gray-400 hover:text-gray-600 transition-colors p-2"
+                    className="text-gray-400 hover:text-red-400 transition-colors p-2 cursor-pointer"
                 >
                     <X className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>

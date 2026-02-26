@@ -13,14 +13,7 @@ import { useState } from "react";
 export default function ServicesPreview({ services = [] }) {
     const [showAll, setShowAll] = useState(false);
 
-    // Mock popular services if none provided
-    const defaultServices = [
-        { _id: 1, service: "Mixing & Mastering", price: "$149", rating: 4.9, bookings: 24 },
-        { _id: 2, service: "Vocal Recording", price: "$99/hr", rating: 4.8, bookings: 18 },
-        { _id: 3, service: "Beat Production", price: "$199", rating: 4.7, bookings: 12 },
-    ];
-
-    const displayServices = services.length > 0 ? services : defaultServices;
+    const displayServices = services;
     const visibleServices = showAll ? displayServices : displayServices.slice(0, 3);
 
     const getServiceColor = (index) => {
@@ -45,18 +38,20 @@ export default function ServicesPreview({ services = [] }) {
                     </div>
                     <div className="flex items-center gap-3">
                         <Link
-                            href="/dashboard/studios/profile/services"
+                            href="/dashboard/studio/profile/services"
                             className="px-4 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
                         >
                             <Plus className="w-4 h-4" />
                             Add Service
                         </Link>
-                        <button
-                            onClick={() => setShowAll(!showAll)}
-                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
-                        >
-                            {showAll ? "Show Less" : "View All"}
-                        </button>
+                        {displayServices.length > 3 && (
+                            <button
+                                onClick={() => setShowAll(!showAll)}
+                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                            >
+                                {showAll ? "Show Less" : "View All"}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -80,21 +75,16 @@ export default function ServicesPreview({ services = [] }) {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                        <span>{displayServices.length} services active</span>
+            {displayServices.length > 0 && (
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                            <span>{displayServices.length} service{displayServices.length !== 1 ? 's' : ''} active</span>
+                        </div>
                     </div>
-                    {/* <Link
-                        href="/dashboard/studios/profile/services"
-                        className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-2"
-                    >
-                        Manage All Services
-                        <Zap className="w-4 h-4" />
-                    </Link> */}
                 </div>
-            </div>
+            )}
         </div>
     );
 }
@@ -111,10 +101,6 @@ function ServiceCard({ service, color, index }) {
                     <div className={`w-12 h-12 ${color} rounded-lg flex items-center justify-center shadow`}>
                         <Package className="w-6 h-6 text-white" />
                     </div>
-                    {/* <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                        <span className="text-sm font-medium text-gray-900">{service.rating || "4.8"}</span>
-                    </div> */}
                 </div>
 
                 {/* Service Info */}
@@ -131,26 +117,13 @@ function ServiceCard({ service, color, index }) {
                             <Clock className="w-4 h-4" />
                             <span>24h turnaround</span>
                         </div>
-                        <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs">
-                            {service.bookings || 0} bookings
-                        </span>
+                        {service.bookings > 0 && (
+                            <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs">
+                                {service.bookings} booking{service.bookings !== 1 ? 's' : ''}
+                            </span>
+                        )}
                     </div>
                 </div>
-
-                {/* Actions */}
-                {/* <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-                    <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                        View Details
-                    </button>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
-                            <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg">
-                            <Trash2 className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div> */}
             </div>
         </div>
     );
@@ -167,7 +140,7 @@ function EmptyServicesState() {
                 Add your first service to start attracting clients. Showcase what makes your studio unique!
             </p>
             <Link
-                href="/dashboard/studios/profile/services"
+                href="/dashboard/studio/profile/services"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
             >
                 <Plus className="w-5 h-5" />

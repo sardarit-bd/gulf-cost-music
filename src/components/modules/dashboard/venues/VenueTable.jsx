@@ -1,5 +1,6 @@
 "use client";
 
+import CustomLoader from "@/components/shared/loader/Loader";
 import {
     Building2,
     Calendar,
@@ -51,8 +52,8 @@ const VenueTable = ({
     const PlanBadge = ({ plan }) => (
         <span
             className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${plan === "pro"
-                    ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
-                    : "bg-gray-100 text-gray-800 border border-gray-200"
+                ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                : "bg-gray-100 text-gray-800 border border-gray-200"
                 }`}
         >
             {plan === "pro" ? (
@@ -71,8 +72,10 @@ const VenueTable = ({
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+                <div className="text-center">
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
+                </div>
             </div>
         );
     }

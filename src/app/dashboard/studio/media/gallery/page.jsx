@@ -1,8 +1,5 @@
 "use client";
 
-// import ImageGrid from "@/components/studio/ImageGrid";
-// import ImageList from "@/components/studio/ImageList";
-// import Lightbox from "@/components/studio/Lightbox";
 import {
     ArrowLeft,
     Camera,
@@ -22,6 +19,7 @@ import { useEffect, useState } from "react";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 // import EmptyState from "@/components/ui/EmptyState";
 import { api } from "../../lib/api";
+import CustomLoader from "@/components/shared/loader/Loader";
 
 export default function GalleryPage() {
     const router = useRouter();
@@ -122,7 +120,13 @@ export default function GalleryPage() {
         });
 
     if (loading) {
-        return <LoadingSpinner message="Loading gallery..." />;
+        return (
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+                <div className="text-center">
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
+                </div>
+            </div>
+        );
     }
 
     const photos = studioData?.photos || [];

@@ -1,18 +1,31 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import HeroEditor from "./HeroEditor";
 import HeroPreview from "./HeroPreview";
 import { fetchHeroData } from "./heroUtils";
+import CustomLoader from "@/components/shared/loader/Loader";
 
 export default function HeroManagerDashboard() {
     const [heroData, setHeroData] = useState({
         title: "",
-        subtitle: "",
+        subtitlePrefix: "",
+        flashWords: ["Artists", "Venues", "Photographers", "Studios", "Journalists"],
         buttonText: "",
         videoUrl: "",
+        videoPublicId: "",
+        bottomText: {
+            artistName: "",
+            songName: "",
+            separator: "-",
+            isVisible: true
+        },
+        animationSettings: {
+            interval: 1500,
+            textColor: "#FBBF24",
+            isEnabled: true
+        }
     });
     const [loading, setLoading] = useState(true);
 
@@ -20,7 +33,27 @@ export default function HeroManagerDashboard() {
         const loadHeroData = async () => {
             try {
                 const data = await fetchHeroData();
-                setHeroData(data);
+                setHeroData({
+                    title: data.title || "",
+                    subtitlePrefix: data.subtitlePrefix || "Experience the best with stunning",
+                    flashWords: data.flashWords || ["Artists", "Venues", "Photographers", "Studios", "Journalists"],
+                    buttonText: data.buttonText || "Get Started",
+                    videoUrl: data.videoUrl || "",
+                    videoPublicId: data.videoPublicId || "",
+                    bottomText: {
+                        artistName: data.bottomText?.artistName || "Anna E. Westcoat",
+                        songName: data.bottomText?.songName || "Gulf County",
+                        separator: data.bottomText?.separator || "-",
+                        isVisible: data.bottomText?.isVisible !== undefined ? data.bottomText.isVisible : true
+                    },
+                    animationSettings: {
+                        interval: data.animationSettings?.interval || 1500,
+                        textColor: data.animationSettings?.textColor || "#FBBF24",
+                        isEnabled: data.animationSettings?.isEnabled !== undefined ? data.animationSettings.isEnabled : true
+                    }
+                });
+            } catch (error) {
+                console.error("Error loading hero data:", error);
             } finally {
                 setLoading(false);
             }
@@ -32,17 +65,29 @@ export default function HeroManagerDashboard() {
         setHeroData(prev => ({ ...prev, [field]: value }));
     };
 
+    const handleNestedChange = (parent, field, value) => {
+        setHeroData(prev => ({
+            ...prev,
+            [parent]: {
+                ...prev[parent],
+                [field]: value
+            }
+        }));
+    };
+
     const refreshData = async () => {
         const data = await fetchHeroData();
-        setHeroData(data);
+        setHeroData(prev => ({
+            ...prev,
+            ...data
+        }));
     };
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
                 <div className="text-center">
-                    <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
-                    <p className="text-gray-600">Loading hero section...</p>
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
                 </div>
             </div>
         );
@@ -57,7 +102,7 @@ export default function HeroManagerDashboard() {
                         Hero Section Manager
                     </h1>
                     <p className="text-gray-600 mt-1">
-                        Manage your website's hero section content and video
+                        Manage your website's hero section content, flash text, and video
                     </p>
                 </div>
 
@@ -66,6 +111,7 @@ export default function HeroManagerDashboard() {
                     <HeroEditor
                         heroData={heroData}
                         onChange={handleChange}
+                        onNestedChange={handleNestedChange}
                         onSave={refreshData}
                     />
 

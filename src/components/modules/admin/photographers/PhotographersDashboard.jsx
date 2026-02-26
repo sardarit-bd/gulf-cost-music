@@ -6,6 +6,7 @@ import PhotographerFilters from "./PhotographerFilters";
 import PhotographerStats from "./PhotographerStats";
 import PhotographerTable from "./PhotographerTable";
 import { fetchPhotographersForAdmin } from "./photographer.api";
+import CustomLoader from "@/components/shared/loader/Loader";
 
 export default function PhotographerManagement() {
     const [loading, setLoading] = useState(true);
@@ -61,20 +62,11 @@ export default function PhotographerManagement() {
         setFilters((prev) => ({ ...prev, page }));
     };
 
-    if (loading && photographers.length === 0) {
+    if (loading) {
         return (
-            <div className="p-6 space-y-6">
-                <div className="animate-pulse">
-                    <div className="h-8 bg-gray-200 rounded w-1/4 mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    {[...Array(5)].map((_, i) => (
-                        <div key={i} className="bg-white p-4 rounded-xl border animate-pulse">
-                            <div className="h-10 bg-gray-200 rounded w-full mb-2"></div>
-                            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                        </div>
-                    ))}
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+                <div className="text-center">
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
                 </div>
             </div>
         );

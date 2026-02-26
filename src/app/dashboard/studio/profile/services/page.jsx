@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { api } from "../../lib/api";
+import CustomLoader from "@/components/shared/loader/Loader";
 
 export default function StudioServices() {
   const router = useRouter();
@@ -114,7 +115,7 @@ export default function StudioServices() {
       setHasChanges(false);
 
       setTimeout(() => {
-        router.push("/dashboard/studios/profile");
+        router.push("/dashboard/studio/");
       }, 1500);
     } catch (error) {
       console.error("Error saving services:", error);
@@ -131,8 +132,10 @@ export default function StudioServices() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+        <div className="text-center">
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
+        </div>
       </div>
     );
   }
@@ -394,46 +397,6 @@ export default function StudioServices() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Pricing Tips */}
-          {/* <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
-            <h3 className="text-xl font-bold mb-4">Pricing Tips</h3>
-
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-3 h-3" />
-                </div>
-                <span className="text-sm">
-                  Be clear about what's included in each service
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-3 h-3" />
-                </div>
-                <span className="text-sm">
-                  Research competitor pricing in your area
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-3 h-3" />
-                </div>
-                <span className="text-sm">
-                  Offer package deals for multiple services
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-3 h-3" />
-                </div>
-                <span className="text-sm">
-                  Consider hourly vs. project-based pricing
-                </span>
-              </li>
-            </ul>
-          </div> */}
-
           {/* Service Examples */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
@@ -477,11 +440,11 @@ export default function StudioServices() {
                   $
                   {services.length > 0
                     ? (
-                        services.reduce(
-                          (sum, s) => sum + parseFloat(s.price),
-                          0,
-                        ) / services.length
-                      ).toFixed(2)
+                      services.reduce(
+                        (sum, s) => sum + parseFloat(s.price),
+                        0,
+                      ) / services.length
+                    ).toFixed(2)
                     : "0.00"}
                 </span>
               </div>

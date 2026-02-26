@@ -1,10 +1,7 @@
 "use client";
 
-import JournalistHeader from "@/components/modules/journalist/JournalistHeader";
-// import JournalistHeader from "@/components/journalist/JournalistHeader";
-// import ProfileTab from "@/components/journalist/ProfileTab";
-// import JournalistHeader from "@/components/modules/journalist/JournalistHeader";
 import ProfileTab from "@/components/modules/journalist/ProfileTab";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { useAuth } from "@/context/AuthContext";
 import { getCookie } from "@/utils/cookies";
 import { useEffect, useState } from "react";
@@ -66,6 +63,7 @@ export default function JournalistProfilePage() {
   const [selectedCoverageAreas, setSelectedCoverageAreas] = useState([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -148,8 +146,10 @@ export default function JournalistProfilePage() {
       );
 
       const data = await res.json();
-      if (res.ok) toast.success("Profile photo updated!");
-      else toast.error(data.message || "Failed to upload profile photo");
+      if (res.ok) {
+        toast.success("Profile photo updated!");
+        setIsEditing(false);
+      } else toast.error(data.message || "Failed to upload profile photo");
     } catch (err) {
       console.error("Avatar upload error:", err);
       toast.error("Error uploading avatar");
@@ -180,6 +180,7 @@ export default function JournalistProfilePage() {
       const data = await res.json();
       if (res.ok) {
         toast.success("Profile updated!");
+        setIsEditing(false);
       } else {
         toast.error(data.message || "Failed to save");
       }
@@ -190,10 +191,17 @@ export default function JournalistProfilePage() {
     }
   };
 
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    window.location.reload();
+  };
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+        <div className="text-center">
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
+        </div>
       </div>
     );
   }
@@ -202,8 +210,32 @@ export default function JournalistProfilePage() {
     <div className="py-8 px-4">
       <Toaster position="top-center" />
 
-      <div className="max-w-7xl mx-auto">
-        <JournalistHeader />
+      <div className="">
+        {/* <JournalistHeader /> */}
+
+        {/* Edit Button */}
+        <div className="flex justify-end mb-4 px-4">
+          {!isEditing ? (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-medium shadow-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+              </svg>
+              Edit Profile
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={handleCancelEdit}
+                className="flex items-center gap-2 bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600 transition font-medium shadow-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
 
         <ProfileTab
           journalist={journalist}
@@ -216,6 +248,7 @@ export default function JournalistProfilePage() {
           }}
           onSaveProfile={handleSaveProfile}
           saving={saving}
+          isEditing={isEditing}
         />
       </div>
     </div>

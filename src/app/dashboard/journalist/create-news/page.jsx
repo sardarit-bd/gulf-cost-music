@@ -188,7 +188,7 @@ export default function CreateNewsPage() {
     <div className="py-8 px-4">
       <Toaster position="top-center" />
 
-      <div className="max-w-7xl mx-auto">
+      <div className="">
         {/* <JournalistHeader /> */}
 
         <CreateEditNewsTab

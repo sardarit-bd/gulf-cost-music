@@ -1,12 +1,8 @@
-// app/dashboard/photographer/services/page.jsx (অথবা আপনার ফাইল পাথ)
 "use client";
 
-// import ServiceCard from "@/components/modules/dashboard/photographer/ServiceCard";
-// import ServiceForm from "@/components/modules/dashboard/photographer/ServiceForm";
-// import ServiceStats from "@/components/modules/dashboard/photographer/ServiceStats";
 import { useAuth } from "@/context/AuthContext";
 import DeleteModal from "@/ui/DeleteModal";
-import { Briefcase, CheckCircle } from "lucide-react";
+import { Briefcase, CheckCircle, ChevronDown, ChevronUp, PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import ServiceCard from "../Service/ServiceCard";
@@ -29,12 +25,19 @@ export default function ServicesPage() {
   const [deletingId, setDeletingId] = useState(null);
   const [editingId, setEditingId] = useState(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [servicesPerPage] = useState(8);
+  const [showAll, setShowAll] = useState(false);
+
+  // Modal state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+
   // Form state
   const [formData, setFormData] = useState({
     service: "",
     price: "",
-    description: "",
-    duration: "",
     category: "photography",
     contact: {
       email: "",
@@ -62,19 +65,6 @@ export default function ServicesPage() {
     { value: "workshop", label: "Workshop" },
     { value: "equipment", label: "Equipment" },
     { value: "other", label: "Other" },
-  ];
-
-  const durationOptions = [
-    { value: "", label: "Select Duration", disabled: true },
-    { value: "30min", label: "30 minutes" },
-    { value: "1hour", label: "1 hour" },
-    { value: "2hours", label: "2 hours" },
-    { value: "3hours", label: "3 hours" },
-    { value: "4hours", label: "4 hours" },
-    { value: "6hours", label: "6 hours" },
-    { value: "8hours", label: "8 hours" },
-    { value: "fullday", label: "Full day" },
-    { value: "custom", label: "Custom" },
   ];
 
   // Fetch services
@@ -150,8 +140,6 @@ export default function ServicesPage() {
     setFormData({
       service: "",
       price: "",
-      description: "",
-      duration: "",
       category: "photography",
       contact: {
         email: user?.email || "",
@@ -207,8 +195,6 @@ export default function ServicesPage() {
       const serviceData = {
         service: formData.service.trim(),
         price: formData.price.trim(),
-        description: formData.description.trim() || "",
-        duration: formData.duration || "",
         category: formData.category,
         contact: formData.contact,
       };
@@ -228,6 +214,7 @@ export default function ServicesPage() {
 
       setServices((prev) => [...prev, data.data.service]);
       resetForm();
+      setShowAddModal(false);
 
       toast.dismiss(toastId);
       toast.success(
@@ -245,7 +232,9 @@ export default function ServicesPage() {
     }
   };
 
-  const handleUpdateService = async (serviceId) => {
+  const handleUpdateService = async (e) => {
+    e.preventDefault();
+
     if (!validateForm()) {
       toast.error("Please fix the form errors");
       return;
@@ -263,7 +252,7 @@ export default function ServicesPage() {
       setSaving(true);
 
       const res = await fetch(
-        `${API_BASE}/api/photographers/services/${serviceId}`,
+        `${API_BASE}/api/photographers/services/${editingId}`,
         {
           method: "PUT",
           headers: {
@@ -280,11 +269,13 @@ export default function ServicesPage() {
 
       setServices((prev) =>
         prev.map((service) =>
-          service._id === serviceId ? data.data.service : service,
+          service._id === editingId ? data.data.service : service,
         ),
       );
 
       resetForm();
+      setShowEditModal(false);
+      setEditingId(null);
 
       toast.dismiss(toastId);
       toast.success("Service updated successfully!");
@@ -342,13 +333,16 @@ export default function ServicesPage() {
     }
   };
 
-  const startEditing = (service) => {
+  const openAddModal = () => {
+    resetForm();
+    setShowAddModal(true);
+  };
+
+  const openEditModal = (service) => {
     setEditingId(service._id);
     setFormData({
       service: service.service,
       price: service.price,
-      // description: service.description || "",
-      duration: service.duration || "",
       category: service.category || "photography",
       contact: service.contact || {
         email: user?.email || "",
@@ -357,12 +351,23 @@ export default function ServicesPage() {
         showPhonePublicly: false,
       },
     });
+    setShowEditModal(true);
   };
 
   const openDeleteModal = (service) => {
     setServiceToDelete(service);
     setDeleteModalOpen(true);
   };
+
+  // Pagination logic
+  const indexOfLastService = currentPage * servicesPerPage;
+  const indexOfFirstService = indexOfLastService - servicesPerPage;
+  const currentServices = showAll
+    ? services
+    : services.slice(indexOfFirstService, indexOfLastService);
+  const totalPages = Math.ceil(services.length / servicesPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   if (authLoading || loading) {
     return (
@@ -379,127 +384,195 @@ export default function ServicesPage() {
     <div className="min-h-screen bg-gray-50 py-8 px-4 md:px-8">
       <div className="">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-white rounded-xl border border-gray-200">
-              <Briefcase className="w-6 h-6 text-gray-700" />
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-white rounded-xl border border-gray-200">
+                <Briefcase className="w-5 h-5 text-gray-700" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Services</h1>
+                <p className="text-gray-600 text-sm mt-0.5">
+                  Manage your services and pricing
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Services</h1>
-              <p className="text-gray-600 mt-1">
-                Manage your photography services and pricing
-              </p>
-            </div>
+
+            {/* Add New Service Button */}
+            <button
+              onClick={openAddModal}
+              className="flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Add Service</span>
+            </button>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Services List */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
+              <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">
+                    <h2 className="text-lg font-bold text-gray-900">
                       Your Services
                     </h2>
-                    <p className="text-gray-600 text-sm mt-1">
-                      {services.length}{" "}
-                      {services.length === 1 ? "service" : "services"} available
+                    <p className="text-gray-600 text-xs mt-0.5">
+                      {services.length} {services.length === 1 ? "service" : "services"} available
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                      {
-                        services.filter((s) => s.category === "photography")
-                          .length
-                      }{" "}
-                      Photography
-                    </div>
-                    <div className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                      {
-                        services.filter((s) => s.category === "videography")
-                          .length
-                      }{" "}
-                      Videography
-                    </div>
-                  </div>
+
+                  {/* Show All/Hide button */}
+                  {services.length > servicesPerPage && (
+                    <button
+                      onClick={() => setShowAll(!showAll)}
+                      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+                    >
+                      {showAll ? (
+                        <>
+                          <ChevronUp className="w-3.5 h-3.5" />
+                          <span>Show less</span>
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="w-3.5 h-3.5" />
+                          <span>Show all ({services.length})</span>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div className="p-6">
+              <div className="p-4">
                 {services.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-6">
-                      <Briefcase className="w-8 h-8 text-gray-400" />
+                  <div className="text-center py-8">
+                    <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-100 rounded-full mb-4">
+                      <Briefcase className="w-5 h-5 text-gray-400" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                    <h3 className="text-base font-semibold text-gray-900 mb-2">
                       No Services Yet
                     </h3>
-                    <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                      Start by adding your first photography service. Show
-                      clients what you offer.
+                    <p className="text-gray-600 text-sm mb-4 max-w-sm mx-auto">
+                      Add your first service to showcase what you offer.
                     </p>
+                    <button
+                      onClick={openAddModal}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition"
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                      Add First Service
+                    </button>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {services.map((service) => (
-                      <ServiceCard
-                        key={service._id}
-                        service={service}
-                        onEdit={startEditing}
-                        onDelete={openDeleteModal}
-                        isDeleting={deletingId}
-                        durationOptions={durationOptions}
-                        categoryOptions={categoryOptions}
-                      />
-                    ))}
-                  </div>
+                  <>
+                    {/* Services Grid - 2 columns for compact view */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
+                      {currentServices.map((service) => (
+                        <ServiceCard
+                          key={service._id}
+                          service={service}
+                          onEdit={() => openEditModal(service)}
+                          onDelete={openDeleteModal}
+                          isDeleting={deletingId}
+                          categoryOptions={categoryOptions}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Pagination */}
+                    {!showAll && totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-1 mt-4 pt-3 border-t">
+                        <button
+                          onClick={() => paginate(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="px-2 py-1 text-xs border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        >
+                          Prev
+                        </button>
+
+                        {[...Array(totalPages)].map((_, i) => (
+                          <button
+                            key={i + 1}
+                            onClick={() => paginate(i + 1)}
+                            className={`px-2 py-1 text-xs rounded ${currentPage === i + 1
+                              ? "bg-blue-600 text-white"
+                              : "border hover:bg-gray-50"
+                              }`}
+                          >
+                            {i + 1}
+                          </button>
+                        ))}
+
+                        <button
+                          onClick={() => paginate(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className="px-2 py-1 text-xs border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Sidebar - Form and Stats */}
-          <div className="space-y-6">
-            {editingId ? (
-              <ServiceForm
-                formData={formData}
-                onChange={handleChange}
-                onContactChange={handleContactChange}
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleUpdateService(editingId);
-                }}
-                onCancel={resetForm}
-                isEditing={true}
-                saving={saving}
-                errors={errors}
-                categoryOptions={categoryOptions}
-                durationOptions={durationOptions}
-                userEmail={user?.email}
-              />
-            ) : (
-              <ServiceForm
-                formData={formData}
-                onChange={handleChange}
-                onContactChange={handleContactChange}
-                onSubmit={handleAddService}
-                isEditing={false}
-                saving={saving}
-                errors={errors}
-                categoryOptions={categoryOptions}
-                durationOptions={durationOptions}
-                userEmail={user?.email}
-              />
-            )}
-
+          {/* Sidebar - Stats */}
+          <div className="space-y-4">
             <ServiceStats services={services} />
           </div>
         </div>
       </div>
 
-      {/* Delete Modal */}
+      {/* Modals */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <ServiceForm
+              formData={formData}
+              onChange={handleChange}
+              onContactChange={handleContactChange}
+              onSubmit={handleAddService}
+              onCancel={() => {
+                setShowAddModal(false);
+                resetForm();
+              }}
+              isEditing={false}
+              saving={saving}
+              errors={errors}
+              categoryOptions={categoryOptions}
+              userEmail={user?.email}
+            />
+          </div>
+        </div>
+      )}
+
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <ServiceForm
+              formData={formData}
+              onChange={handleChange}
+              onContactChange={handleContactChange}
+              onSubmit={handleUpdateService}
+              onCancel={() => {
+                setShowEditModal(false);
+                resetForm();
+              }}
+              isEditing={true}
+              saving={saving}
+              errors={errors}
+              categoryOptions={categoryOptions}
+              userEmail={user?.email}
+            />
+          </div>
+        </div>
+      )}
+
       <DeleteModal
         isOpen={deleteModalOpen}
         onClose={() => {
@@ -508,13 +581,30 @@ export default function ServicesPage() {
         }}
         onConfirm={handleDeleteService}
         title="Delete Service"
-        description={`Are you sure you want to delete "${serviceToDelete?.service}"?`}
-        confirmText="Delete Service"
+        description={`Delete "${serviceToDelete?.service}"?`}
+        confirmText="Delete"
         cancelText="Cancel"
         loading={deletingId === serviceToDelete?._id}
         type="danger"
         itemName={serviceToDelete?.service}
       />
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,23 +1,13 @@
+// components/modules/dashboard/photographer/ManageProfile.jsx
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import Input from "@/ui/Input";
-import Select from "@/ui/Select";
-import Textarea from "@/ui/Textarea";
-import {
-  Briefcase,
-  Camera,
-  Edit3,
-  Globe,
-  ImageIcon,
-  Loader2,
-  MapPin,
-  Save,
-  User,
-  Video,
-} from "lucide-react";
+import { Camera } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import EditButton from "./EditButton";
+import ProfileForm from "./ProfileForm";
+import ProfileView from "./ProfileView";
 
 const getCookie = (name) => {
   if (typeof document === "undefined") return null;
@@ -29,6 +19,7 @@ const getCookie = (name) => {
 
 export default function ManageProfile() {
   const { user, loading: authLoading } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
   const [photographer, setPhotographer] = useState({
     name: "",
     state: "",
@@ -43,18 +34,18 @@ export default function ManageProfile() {
   const [errors, setErrors] = useState({});
 
   const STATE_CITY_MAPPING = {
-    louisiana: ["new orleans"],
-    mississippi: ["biloxi"],
-    alabama: ["mobile"],
-    florida: ["pensacola"],
+    LA: ["mobile"],
+    MS: ["biloxi"],
+    AL: ["mobile"],
+    FL: ["pensacola"],
   };
 
   const stateOptions = [
     { value: "", label: "Select State", disabled: true },
-    { value: "louisiana", label: "Louisiana" },
-    { value: "mississippi", label: "Mississippi" },
-    { value: "alabama", label: "Alabama" },
-    { value: "florida", label: "Florida" },
+    { value: "LA", label: "Louisiana (LA)" },
+    { value: "MS", label: "Mississippi (MS)" },
+    { value: "AL", label: "Alabama (AL)" },
+    { value: "FL", label: "Florida (FL)" },
   ];
 
   const [cityOptions, setCityOptions] = useState([
@@ -131,15 +122,11 @@ export default function ManageProfile() {
   }, [photographer?.state]);
 
   const handleChange = (e) => {
-    if (!e || !e.target) {
-      console.warn("Invalid event received:", e);
-      return;
-    }
+    if (!e || !e.target) return;
 
     const { name, value } = e.target;
     setPhotographer((prev) => ({ ...prev, [name]: value }));
 
-    // Clear error for this field
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
@@ -161,6 +148,10 @@ export default function ManageProfile() {
         }
       }
     }
+  };
+
+  const isCityDisabled = () => {
+    return photographer.name !== "" && photographer.state !== "";
   };
 
   const validateForm = () => {
@@ -202,7 +193,7 @@ export default function ManageProfile() {
 
       const profileData = {
         name: photographer.name.trim(),
-        state: photographer.state.toLowerCase(),
+        state: photographer.state,
         city: photographer.city.toLowerCase(),
         biography: photographer.biography || "",
       };
@@ -246,6 +237,8 @@ export default function ManageProfile() {
       } else {
         toast.success("Profile updated successfully!");
       }
+
+      setIsEditing(false);
     } catch (error) {
       console.error("Save error:", error);
       toast.error(error.message || "Failed to save profile");
@@ -262,6 +255,16 @@ export default function ManageProfile() {
       .join(" ");
   };
 
+  const getFullStateName = (acronym) => {
+    const stateMap = {
+      LA: "Louisiana",
+      MS: "Mississippi",
+      AL: "Alabama",
+      FL: "Florida",
+    };
+    return stateMap[acronym] || acronym;
+  };
+
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
@@ -276,175 +279,55 @@ export default function ManageProfile() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 md:px-8">
       <div className="">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
+        {/* Header with Edit Button */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-4">
             <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg">
               <Camera className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Edit Profile</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {isEditing ? "Edit Profile" : "My Profile"}
+              </h1>
               <p className="text-gray-600 mt-1">
-                Update your photographer information
+                {isEditing
+                  ? "Update your photographer information"
+                  : "View and manage your photographer profile"}
               </p>
             </div>
           </div>
+
+          <EditButton
+            onClick={() => setIsEditing(!isEditing)}
+            isEditing={isEditing}
+          />
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Form */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <Edit3 className="w-5 h-5 text-gray-600" />
-                Profile Information
-              </h2>
-
-              <div className="space-y-6">
-                <Input
-                  label="Full Name"
-                  name="name"
-                  value={photographer.name}
-                  onChange={handleChange}
-                  icon={<User className="w-4 h-4" />}
-                  placeholder="Enter your full name"
-                  required
-                  error={errors.name}
-                />
-
-                <div className="grid md:grid-cols-2 gap-6">
-                  <Select
-                    label="State"
-                    name="state"
-                    value={photographer.state}
-                    options={stateOptions}
-                    onChange={handleStateChange}
-                    icon={<Globe className="w-4 h-4" />}
-                    required
-                    error={errors.state}
-                  />
-
-                  <Select
-                    label="City"
-                    name="city"
-                    value={photographer.city}
-                    options={cityOptions}
-                    onChange={handleChange}
-                    icon={<MapPin className="w-4 h-4" />}
-                    required
-                    disabled={!photographer.state}
-                    error={errors.city}
-                  />
-                </div>
-
-                {photographer.state && (
-                  <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                    <p className="text-sm text-blue-700 flex items-center gap-2">
-                      <span className="font-semibold">Service Area:</span>
-                      {photographer.state.charAt(0).toUpperCase() +
-                        photographer.state.slice(1)}
-                      {photographer.city && (
-                        <>
-                          <span>•</span>
-                          {formatCityName(photographer.city)}
-                        </>
-                      )}
-                    </p>
-                  </div>
-                )}
-
-                <Textarea
-                  label="Biography"
-                  name="biography"
-                  value={photographer.biography}
-                  onChange={handleChange}
-                  placeholder="Tell clients about your photography style, experience, specialties..."
-                  rows={6}
-                  icon={<Edit3 className="w-4 h-4" />}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Save Card */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Save Changes
-              </h3>
-              <button
-                onClick={handleSave}
-                disabled={
-                  saving ||
-                  !photographer.name ||
-                  !photographer.state ||
-                  !photographer.city
-                }
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-5 h-5" />
-                    Save Profile
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Profile Stats */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Profile Stats
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4 text-blue-600" />
-                    <span className="text-gray-700">Photos</span>
-                  </div>
-                  <span className="font-semibold text-blue-600">
-                    {photographer.photos?.length || 0}/5
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="w-4 h-4 text-green-600" />
-                    <span className="text-gray-700">Services</span>
-                  </div>
-                  <span className="font-semibold text-green-600">
-                    {photographer.services?.length || 0}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <Video className="w-4 h-4 text-purple-600" />
-                    <span className="text-gray-700">Videos</span>
-                  </div>
-                  <span className="font-semibold text-purple-600">
-                    {photographer.videos?.length || 0}/1
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-yellow-600" />
-                    <span className="text-gray-700">Location</span>
-                  </div>
-                  <span className="font-semibold text-yellow-600 capitalize">
-                    {photographer.city
-                      ? formatCityName(photographer.city)
-                      : "Not set"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Content - Toggle between View and Edit modes */}
+        {isEditing ? (
+          <ProfileForm
+            photographer={photographer}
+            setPhotographer={setPhotographer}
+            stateOptions={stateOptions}
+            cityOptions={cityOptions}
+            handleChange={handleChange}
+            handleStateChange={handleStateChange}
+            isCityDisabled={isCityDisabled}
+            handleSave={handleSave}
+            onCancel={() => setIsEditing(false)}
+            saving={saving}
+            errors={errors}
+            getFullStateName={getFullStateName}
+            formatCityName={formatCityName}
+          />
+        ) : (
+          <ProfileView
+            photographer={photographer}
+            user={user}
+            formatCityName={formatCityName}
+            getFullStateName={getFullStateName}
+          />
+        )}
       </div>
     </div>
   );

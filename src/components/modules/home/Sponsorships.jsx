@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import Marquee from "react-fast-marquee";
@@ -22,7 +21,7 @@ export default function Sponsorships() {
                 // Fetch sponsors and section text concurrently
                 const [sponsorsRes, sectionTextRes] = await Promise.all([
                     fetch(`${API_BASE}/api/sponsors`),
-                    fetch(`${API_BASE}/api/sponsors/section`) // Updated endpoint
+                    fetch(`${API_BASE}/api/sponsors/section`)
                 ]);
 
                 const sponsorsData = await sponsorsRes.json();
@@ -53,35 +52,12 @@ export default function Sponsorships() {
         fetchData();
     }, []);
 
-    // Animation variants
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                duration: 0.6,
-                ease: "easeOut"
-            }
-        }
-    };
-
     if (loading) {
         return (
             <section className="py-20 bg-gradient-to-b from-white to-gray-50">
                 <div className="container mx-auto px-6">
                     <div className="text-center">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-6 animate-pulse">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-6">
                             <FiUsers className="w-8 h-8 text-white" />
                         </div>
                         <div className="h-8 bg-gray-200 rounded w-48 mx-auto mb-4"></div>
@@ -108,31 +84,18 @@ export default function Sponsorships() {
             <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-100 rounded-full translate-x-1/3 translate-y-1/3 opacity-30 blur-3xl"></div>
 
             <div className="container relative mx-auto px-4 md:px-6">
-                {/* Section Header */}
-                <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, amount: 0.3 }}
-                    variants={containerVariants}
-                    className="text-center mb-16"
-                >
-                    <motion.div variants={itemVariants} className="inline-flex flex-col items-center mb-8">
-
-                        <motion.h2
-                            variants={itemVariants}
-                            className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[var(--primary)] to-[var(--accent)]"
-                        >
+                {/* Section Header - Animation removed */}
+                <div className="text-center mb-16">
+                    <div className="inline-flex flex-col items-center mb-8">
+                        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-[var(--primary)] to-[var(--accent)]">
                             {sectionText.sectionTitle}
-                        </motion.h2>
+                        </h2>
 
-                        <motion.p
-                            variants={itemVariants}
-                            className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed"
-                        >
+                        <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                             {sectionText.sectionSubtitle}
-                        </motion.p>
-                    </motion.div>
-                </motion.div>
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {/* Carousel Container with react-fast-marquee */}

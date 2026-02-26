@@ -225,7 +225,7 @@ export default function VenueProfile() {
           {/* Close Button */}
           <button
             onClick={closeGallery}
-            className="absolute top-4 right-4 z-50 p-2 bg-black/50 rounded-full text-white hover:bg-black/70 transition"
+            className="absolute top-4 right-4 z-50 p-2 bg-black/50 rounded-full text-white hover:bg-black/70 transition cursor-pointer"
           >
             <X size={24} />
           </button>
@@ -233,14 +233,14 @@ export default function VenueProfile() {
           {/* Navigation Buttons */}
           <button
             onClick={prevImage}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 p-3 bg-black/50 rounded-full text-white hover:bg-black/70 transition z-50"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 p-3 bg-black/50 rounded-full text-white hover:bg-black/70 transition z-50 cursor-pointer"
           >
             <ChevronLeft size={24} />
           </button>
 
           <button
             onClick={nextImage}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 p-3 bg-black/50 rounded-full text-white hover:bg-black/70 transition z-50"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 p-3 bg-black/50 rounded-full text-white hover:bg-black/70 transition z-50 cursor-pointer"
           >
             <ChevronRightIcon size={24} />
           </button>
@@ -468,7 +468,7 @@ export default function VenueProfile() {
                 </div>
               )}
 
-              {venue.website && (
+              {/* {venue.website && (
                 <div className="flex items-start gap-3 p-3 sm:p-4 bg-white/5 rounded-lg sm:rounded-xl border border-white/10 hover:bg-white/10 transition">
                   <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
                   <div>
@@ -483,10 +483,10 @@ export default function VenueProfile() {
                     </a>
                   </div>
                 </div>
-              )}
+              )} */}
 
               {/* Color Code Display */}
-              {venue.colorCode && (
+              {/* {venue.colorCode && (
                 <div className="flex items-start gap-3 p-3 sm:p-4 bg-white/5 rounded-lg sm:rounded-xl border border-white/10 hover:bg-white/10 transition">
                   <div
                     className="w-5 h-5 rounded-full flex-shrink-0 mt-0.5 border border-white/30"
@@ -497,7 +497,7 @@ export default function VenueProfile() {
                     <p className="text-white font-medium text-sm sm:text-base">{venue.colorCode}</p>
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
 
             {/* Enhanced Gallery Section */}

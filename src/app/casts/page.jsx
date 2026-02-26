@@ -1,6 +1,7 @@
 "use client"
 import FavoritesList from "@/components/modules/Casts/favorites-list";
 import FeaturedCast from "@/components/modules/Casts/featured-cast";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { useEffect, useState } from "react";
 
 export default function CastsSection() {
@@ -17,27 +18,28 @@ export default function CastsSection() {
     const fetchData = async () => {
       const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
       try {
+        // Fix: Use correct endpoint for section text
         const [castsRes, sectionTextRes] = await Promise.all([
-          fetch(`${API_BASE}/api/casts`, { cache: "no-store" }),
-          fetch(`${API_BASE}/api/casts/section/text`, { cache: "no-store" })
+          fetch(`${API_BASE}/api/casts`),
+          fetch(`${API_BASE}/api/cast-settings`) // Fixed endpoint
         ]);
 
         // Casts data
         const castsData = await castsRes.json();
-        if (castsRes.ok && castsData.success && Array.isArray(castsData.data.casts)) {
+        if (castsRes.ok && castsData.success && Array.isArray(castsData.data?.casts)) {
           setAllCasts(castsData.data.casts);
           if (castsData.data.casts.length > 0 && !cast) {
             setCast(castsData.data.casts[0]);
           }
         }
 
-        // Section text data
+        // Section text data - Fixed: Use correct response structure
         const sectionTextData = await sectionTextRes.json();
         if (sectionTextRes.ok && sectionTextData.success) {
           setSectionText({
-            sectionTitle: sectionTextData.data.sectionTitle || "Cast",
-            sectionSubtitle: sectionTextData.data.sectionSubtitle || "Tune into engaging podcast episodes featuring your favorite personalities",
-            yourCastsTitle: sectionTextData.data.yourCastsTitle || "Your Favorites"
+            sectionTitle: sectionTextData.data?.sectionTitle || "Cast",
+            sectionSubtitle: sectionTextData.data?.sectionSubtitle || "Tune into engaging podcast episodes featuring your favorite personalities",
+            yourCastsTitle: sectionTextData.data?.yourCastsTitle || "Your Favorites"
           });
         }
       } catch (error) {
@@ -48,32 +50,13 @@ export default function CastsSection() {
     };
 
     fetchData();
-  }, []);
+  }, []); // Removed cast dependency to prevent infinite loop
 
   if (loading) {
     return (
-      <div
-        className="py-16 px-6 md:px-16 mt-20"
-        style={{
-          background: "linear-gradient(to bottom, #F9FAFB 0%, #ffffff 100%)",
-        }}
-      >
-        <div className="container mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-24 bg-gray-200 rounded"></div>
-              ))}
-            </div>
-          </div>
-          <div className="lg:col-span-2">
-            <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-              <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-              <div className="h-[400px] bg-gray-200 rounded"></div>
-            </div>
-          </div>
+      <div className="flex justify-center items-center min-h-[500px] bg-white">
+        <div className="text-center">
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
         </div>
       </div>
     );

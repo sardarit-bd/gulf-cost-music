@@ -1,4 +1,5 @@
 "use client";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { ArrowLeft, Camera, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,12 +10,12 @@ export default function PhotographersByState() {
     const { state } = useParams();
     const router = useRouter();
 
-    // State mapping for display
+    // State mapping for display (acronym to full name)
     const stateMap = {
-        louisiana: "Louisiana",
-        mississippi: "Mississippi",
-        alabama: "Alabama",
-        florida: "Florida"
+        LA: "Louisiana",
+        MS: "Mississippi",
+        AL: "Alabama",
+        FL: "Florida"
     };
 
     const formattedState = stateMap[state] || state;
@@ -27,6 +28,7 @@ export default function PhotographersByState() {
             return;
         }
 
+        // Use state acronym directly
         fetch(
             `${process.env.NEXT_PUBLIC_BASE_URL}/api/photographers?state=${state}`
         )
@@ -40,10 +42,9 @@ export default function PhotographersByState() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center text-yellow-400">
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
                 <div className="text-center">
-                    <Camera size={48} className="mx-auto mb-4 animate-pulse" />
-                    <p>Loading {formattedState} photographers...</p>
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
                 </div>
             </div>
         );
@@ -112,9 +113,7 @@ export default function PhotographersByState() {
                                         fill
                                         className="object-cover group-hover:scale-110 transition-transform duration-500"
                                     />
-                                    <div className="absolute top-4 right-4 bg-black/70 text-white px-2 py-1 rounded-full text-sm">
-                                        {p.services?.length || 0} services
-                                    </div>
+                                    {/* REMOVED: services counter */}
                                 </div>
 
                                 <div className="p-6">
@@ -137,12 +136,10 @@ export default function PhotographersByState() {
                                     )}
 
                                     <div className="flex items-center justify-between">
-                                        <div className="text-sm text-gray-500">
-                                            {p.photos?.length || 0} portfolio photos
-                                        </div>
-                                        {/* CRITICAL FIX: p._id ব্যবহার করুন */}
+                                        {/* REMOVED: photos counter - "portfolio photos" tracker removed */}
+                                        <div></div>
                                         <Link
-                                            href={`/cameras/${state}/${p._id}`} // এখানে p._id
+                                            href={`/cameras/${state}/${p._id}`}
                                             className="px-4 py-2 bg-yellow-500 text-black rounded-lg font-semibold hover:bg-yellow-400 transition"
                                         >
                                             View Profile

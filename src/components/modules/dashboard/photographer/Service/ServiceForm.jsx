@@ -1,17 +1,17 @@
-// components/modules/dashboard/photographer/ServiceForm.jsx
 "use client";
 
 import Input from "@/ui/Input";
-import Select from "@/ui/Select"; // আপনার দেওয়া Select কম্পোনেন্ট
+import Select from "@/ui/Select";
 import {
-  Clock,
   DollarSign,
+  Edit,
   Loader2,
   Mail,
   Phone,
   Plus,
   Tag,
   User,
+  X
 } from "lucide-react";
 
 export default function ServiceForm({
@@ -24,15 +24,19 @@ export default function ServiceForm({
   saving = false,
   errors = {},
   categoryOptions,
-  durationOptions,
   userEmail,
 }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 sticky top-8">
-      <div className="p-6 border-b border-gray-200">
+    <div className="bg-white rounded-xl">
+      {/* Modal Header */}
+      <div className="flex items-center justify-between p-6 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-            <Plus className="w-5 h-5 text-gray-700" />
+          <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+            {isEditing ? (
+              <Edit className="w-5 h-5 text-white" />
+            ) : (
+              <Plus className="w-5 h-5 text-white" />
+            )}
           </div>
           <div>
             <h3 className="text-lg font-bold text-gray-900">
@@ -45,8 +49,15 @@ export default function ServiceForm({
             </p>
           </div>
         </div>
+        <button
+          onClick={onCancel}
+          className="p-2 hover:bg-gray-100 rounded-lg transition"
+        >
+          <X className="w-5 h-5 text-gray-600" />
+        </button>
       </div>
 
+      {/* Modal Body */}
       <form onSubmit={onSubmit} className="p-6 space-y-4">
         <Input
           label="Service Name *"
@@ -69,7 +80,6 @@ export default function ServiceForm({
           icon={<DollarSign className="w-4 h-4" />}
         />
 
-        {/* Category Select */}
         <Select
           label="Category"
           name="category"
@@ -77,16 +87,6 @@ export default function ServiceForm({
           options={categoryOptions}
           onChange={onChange}
           icon={<Tag className="w-4 h-4" />}
-        />
-
-        {/* Duration Select */}
-        <Select
-          label="Duration"
-          name="duration"
-          value={formData.duration}
-          options={durationOptions}
-          onChange={onChange}
-          icon={<Clock className="w-4 h-4" />}
         />
 
         <div className="border-t pt-4">
@@ -110,7 +110,6 @@ export default function ServiceForm({
               icon={<Phone className="w-4 h-4" />}
             />
 
-            {/* Preferred Contact Select */}
             <Select
               label="Preferred Contact"
               name="preferredContact"
@@ -136,31 +135,19 @@ export default function ServiceForm({
           </div>
         </div>
 
-        {/* <Textarea
-          label="Description (Optional)"
-          name="description"
-          value={formData.description}
-          onChange={onChange}
-          rows={3}
-          placeholder="Describe this service..."
-        /> */}
-
-        <div className="flex gap-3 pt-2">
-          {isEditing && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex-1 px-5 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium"
-            >
-              Cancel
-            </button>
-          )}
+        {/* Modal Footer */}
+        <div className="flex gap-3 pt-4 border-t">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 px-5 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium"
+          >
+            Cancel
+          </button>
           <button
             type="submit"
             disabled={saving || !formData.service || !formData.price}
-            className={`flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-md hover:shadow-lg ${
-              isEditing ? "" : "w-full"
-            }`}
+            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-md hover:shadow-lg"
           >
             {saving ? (
               <>

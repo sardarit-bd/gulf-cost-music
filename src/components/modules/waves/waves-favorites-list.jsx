@@ -15,12 +15,14 @@ export default function WavesFavoritesList({
   useEffect(() => {
     const fetchWaves = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/waves`, { cache: "no-store" });
+        const res = await fetch(`${API_BASE}/api/waves`);
         const data = await res.json();
-        if (res.ok && data.success && Array.isArray(data.data.waves)) {
+
+        if (res.ok && data.success && Array.isArray(data.data?.waves)) {
           setWaves(data.data.waves);
+          // Only set first wave if no wave is selected
           if (data.data.waves.length > 0) {
-            setWave(data.data.waves[0]);
+            setWave(prev => prev || data.data.waves[0]);
           }
         } else {
           setWaves([]);
@@ -34,21 +36,40 @@ export default function WavesFavoritesList({
     };
 
     fetchWaves();
-  }, [API_BASE]);
+  }, [API_BASE, setWave]);
 
-  const handlePlayClick = (waveId) => {
-    setPlayingWaveId(waveId);
-    const selected = waves.find(w => w._id === waveId);
-    if (selected) {
-      setWave(selected);
-    }
+  const handleWaveClick = (wave) => {
+    setWave(wave);
+    setPlayingWaveId(wave._id);
   };
 
-  if (loading)
-    return <p className="text-gray-600 animate-pulse">Loading waves...</p>;
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold text-black">
+          {sectionText?.yourWavesTitle || "Your Waves"}
+        </h2>
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-24 bg-gray-200 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-  if (!waves.length)
-    return <p className="text-gray-500">No waves available.</p>;
+  if (!waves.length) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold text-black">
+          {sectionText?.yourWavesTitle || "Your Waves"}
+        </h2>
+        <p className="text-gray-500 py-8 text-center bg-gray-50 rounded-lg">
+          No waves available.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -56,14 +77,19 @@ export default function WavesFavoritesList({
         {sectionText?.yourWavesTitle || "Your Waves"}
       </h2>
 
-      <div className="space-y-3 max-h-[600px] overflow-y-auto p-4">
+      <div className="space-y-3 max-h-[600px] overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         {waves.map((wave) => (
-          <WaveItem
+          <div
             key={wave._id}
-            wave={wave}
-            isPlaying={playingWaveId === wave._id}
-            onPlayClick={handlePlayClick}
-          />
+            onClick={() => handleWaveClick(wave)}
+            className="cursor-pointer"
+          >
+            <WaveItem
+              wave={wave}
+              isPlaying={playingWaveId === wave._id}
+              onPlayClick={() => handleWaveClick(wave)}
+            />
+          </div>
         ))}
       </div>
     </div>

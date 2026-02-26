@@ -23,6 +23,7 @@ import {
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { api } from "../lib/api";
+import CustomLoader from "@/components/shared/loader/Loader";
 
 export default function StudioMediaPage() {
   const [activeTab, setActiveTab] = useState("photos");
@@ -170,7 +171,13 @@ export default function StudioMediaPage() {
   };
 
   if (loading) {
-    return <LoadingSpinner message="Loading media..." />;
+    return (
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+        <div className="text-center">
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
+        </div>
+      </div>
+    );
   }
 
   const photos = studioData?.photos || [];
@@ -306,21 +313,19 @@ export default function StudioMediaPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl whitespace-nowrap transition-all ${
-                  activeTab === tab.id
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl whitespace-nowrap transition-all ${activeTab === tab.id
                     ? "bg-blue-50 text-blue-600"
                     : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 <tab.icon className="w-4 h-4" />
                 {tab.label}
                 {tab.count !== undefined && (
                   <span
-                    className={`px-2 py-1 text-xs rounded-full ${
-                      activeTab === tab.id
+                    className={`px-2 py-1 text-xs rounded-full ${activeTab === tab.id
                         ? "bg-blue-600 text-white"
                         : "bg-gray-200 text-gray-700"
-                    }`}
+                      }`}
                   >
                     {tab.count}
                   </span>

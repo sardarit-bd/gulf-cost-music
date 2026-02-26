@@ -5,13 +5,13 @@ import EditVenueDetails from "@/components/modules/venues/edit/EditVenueDetails"
 import SaveProfileSection from "@/components/modules/venues/edit/SaveProfileSection";
 import VenueLocationInfo from "@/components/modules/venues/edit/VenueLocationInfo";
 import VenuePhotosUpload from "@/components/modules/venues/edit/VenuePhotosUpload";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { getCookie } from "@/utils/cookies";
 // import EditVenueDetails from "@/components/EditVenueDetails";
 // import SaveProfileSection from "@/components/SaveProfileSection";
 // import VenueLocationInfo from "@/components/VenueLocationInfo";
 // import VenuePhotosUpload from "@/components/VenuePhotosUpload";
 // import { getCookie } from "@/utils/cookies";
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
@@ -189,8 +189,8 @@ export default function EditProfilePage() {
   };
 
   const handleImageUpload = (files) => {
-    if (previewImages.length + files.length > 10) {
-      toast.error("Maximum 10 photos allowed.");
+    if (previewImages.length + files.length > 5) {
+      toast.error(`Maximum 5 photos allowed. You can add ${5 - previewImages.length} more.`);
       return;
     }
 
@@ -203,8 +203,21 @@ export default function EditProfilePage() {
     const urlToRemove = previewImages[index];
 
     if (!urlToRemove.startsWith("blob:")) {
-      const filename = urlToRemove.split("/").pop();
-      setRemovedPhotos((prev) => [...prev, filename]);
+
+      const uploadIndex = urlToRemove.indexOf('/upload/');
+      if (uploadIndex !== -1) {
+        const afterUpload = urlToRemove.substring(uploadIndex + 8);
+
+        const withoutVersion = afterUpload.replace(/^v\d+\//, '');
+
+        const publicId = withoutVersion.split('.')[0];
+
+        console.log("Deleting image with publicId:", publicId);
+        setRemovedPhotos((prev) => [...prev, publicId]);
+      } else {
+        const filename = urlToRemove.split('/').pop().split('.')[0];
+        setRemovedPhotos((prev) => [...prev, filename]);
+      }
     } else {
       URL.revokeObjectURL(urlToRemove);
       const fileIndex = index - (previewImages.length - photoFiles.length);
@@ -229,10 +242,9 @@ export default function EditProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading venue profile...</p>
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
         </div>
       </div>
     );
@@ -251,16 +263,10 @@ export default function EditProfilePage() {
         }}
       />
 
-      <div className="max-w-7xl mx-auto">
+      <div className="">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard/venues"
-              className="p-2 bg-white text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-50 transition shadow-sm"
-            >
-              <ArrowLeft size={20} />
-            </Link>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 Edit Venue Profile
@@ -271,7 +277,7 @@ export default function EditProfilePage() {
             </div>
           </div>
           <Link
-            href="/dashboard/venues/overview"
+            href="/dashboard/venue"
             className="px-4 py-2 bg-white text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-50 transition shadow-sm"
           >
             View Overview

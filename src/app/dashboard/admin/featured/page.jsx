@@ -1,6 +1,7 @@
 "use client";
 
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import CustomLoader from "@/components/shared/loader/Loader";
 import {
   Calendar,
   Edit3,
@@ -310,15 +311,27 @@ export default function AdminFeaturedSection() {
     window.open("/", "_blank");
   };
 
+  // if (loading) {
+  //   return (
+
+  //       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  //         <div className="text-center">
+  //           <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+  //           <p className="text-gray-600 text-lg">
+  //             Loading featured section data...
+  //           </p>
+  //         </div>
+  //       </div>
+
+  //   );
+  // }
+
   if (loading) {
     return (
       <AdminLayout>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex justify-center items-center min-h-screen py-20 bg-white">
           <div className="text-center">
-            <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
-            <p className="text-gray-600 text-lg">
-              Loading featured section data...
-            </p>
+            <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
           </div>
         </div>
       </AdminLayout>

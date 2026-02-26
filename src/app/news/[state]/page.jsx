@@ -318,7 +318,7 @@ export default function StateNewsPage() {
                       ></div>
 
                       <div className="absolute top-3 left-3 flex flex-col gap-1">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-800">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-800 capitalize">
                           <MapPin className="w-3 h-3 mr-1" />
                           {item.location || "Unknown"}
                         </span>

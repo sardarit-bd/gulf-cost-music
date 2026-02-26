@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { Lock, Mail, User } from "lucide-react";
+import { Crown, Lock, Mail, User, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -40,13 +40,11 @@ const CustomInput = ({
           minLength={minLength}
           maxLength={maxLength}
           disabled={disabled}
-          className={`text-gray-700 w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 ${
-            icon ? "pl-10" : ""
-          } ${
-            error
+          className={`text-gray-700 w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 ${icon ? "pl-10" : ""
+            } ${error
               ? "border-red-500 focus:ring-red-400"
               : "border-gray-300 focus:ring-yellow-500"
-          }`}
+            }`}
         />
       </div>
 
@@ -77,6 +75,7 @@ export default function SignIn() {
 
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" });
+  const [accountError, setAccountError] = useState(""); // নতুন স্টেট
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -92,12 +91,18 @@ export default function SignIn() {
         [name]: "",
       }));
     }
+
+    // Clear account error when user starts typing
+    if (accountError) {
+      setAccountError("");
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setFieldErrors({ email: "", password: "" });
+    setAccountError("");
 
     const toastId = toast.loading("Signing you in...");
 
@@ -108,7 +113,7 @@ export default function SignIn() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
-        },
+        }
       );
 
       const data = await res.json();
@@ -120,7 +125,7 @@ export default function SignIn() {
           duration: 2000,
         });
 
-        // Store token and user data in cookies
+        // Store token and user data
         const user = data.data.user;
         const token = data.data.token;
 
@@ -131,40 +136,33 @@ export default function SignIn() {
         document.cookie = `token=${token}; ${cookieSettings}`;
         document.cookie = `role=${user.userType}; ${cookieSettings}`;
         document.cookie = `user=${encodeURIComponent(
-          JSON.stringify(user),
+          JSON.stringify(user)
         )}; ${cookieSettings}`;
 
-        // Store in localStorage for immediate access
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
         login(user);
+
+        // ✅ Show plan info in toast
+        if (user.subscriptionPlan === "pro") {
+          toast.success("✨ Pro Plan Active - 0% marketplace fees!", {
+            duration: 3000,
+          });
+        }
+
         // Redirect based on user type
-        // setTimeout(() => {
-        //   const redirectMap = {
-        //     admin: "/dashboard/admin",
-        //     artist: "/dashboard/artist",
-        //     venue: "/dashboard/venue",
-        //     journalist: "/dashboard/journalist",
-        //     photographer: "/dashboard/photographer",
-        //     fan: "/",
-        //   };
-
-        //   const redirectTo = redirectMap[user.userType] || "/";
-        //   router.push(redirectTo);
-        // }, 1000);
-
         const redirectMap = {
           admin: "/dashboard/admin",
           artist: "/dashboard/artist",
           venue: "/dashboard/venue",
           journalist: "/dashboard/journalist",
           photographer: "/dashboard/photographer",
+          studio: "/dashboard/studio",
           fan: "/",
         };
 
         const redirectTo = redirectMap[user.userType] || "/";
-
-        toast.dismiss(toastId); // 🔥 toast clear
+        toast.dismiss(toastId);
         router.push(redirectTo);
 
         return;
@@ -172,30 +170,27 @@ export default function SignIn() {
 
       // Handle errors
       let newFieldErrors = { email: "", password: "" };
+      let accountErrorMessage = "";
 
-      // Case 1: details.details array (your backend format)
-      if (
-        data.errors?.details?.details &&
-        Array.isArray(data.errors.details.details)
-      ) {
-        data.errors.details.details.forEach((err) => {
-          const field = err.field?.toLowerCase();
-          const message = err.message;
-          if (field === "email") newFieldErrors.email = message;
-          if (field === "password") newFieldErrors.password = message;
-        });
+      // ✅ Check for account deactivation message
+      if (data.message && data.message.includes("deactivated")) {
+        accountErrorMessage = data.message;
+
+        // Extract email if present in the message
+        const emailMatch = data.message.match(/[\w._%+-]+@[\w.-]+\.[A-Za-z]{2,}/);
+        const adminEmail = emailMatch ? emailMatch[0] : "thegulfcoastmusic@gmail.com";
+
+        accountErrorMessage = `⚠️ Your account has been deactivated. Please contact ${adminEmail} to reactivate your account.`;
       }
-      // Case 2: simple details array
-      else if (data.errors?.details && Array.isArray(data.errors.details)) {
+
+      if (data.errors?.details && Array.isArray(data.errors.details)) {
         data.errors.details.forEach((err) => {
           const field = err.field?.toLowerCase();
           const message = err.message;
           if (field === "email") newFieldErrors.email = message;
           if (field === "password") newFieldErrors.password = message;
         });
-      }
-      // Case 3: simple errors array
-      else if (data.errors && Array.isArray(data.errors)) {
+      } else if (data.errors && Array.isArray(data.errors)) {
         data.errors.forEach((err) => {
           const field = err.field?.toLowerCase();
           const message = err.message;
@@ -206,9 +201,11 @@ export default function SignIn() {
 
       toast.dismiss(toastId);
       setFieldErrors(newFieldErrors);
+      setAccountError(accountErrorMessage);
 
-      // Show toast error
-      if (newFieldErrors.email && newFieldErrors.password) {
+      if (accountErrorMessage) {
+        // Account deactivated message already set, no need for additional toast
+      } else if (newFieldErrors.email && newFieldErrors.password) {
         toast.error("Please check your email and password");
       } else if (newFieldErrors.email) {
         toast.error(newFieldErrors.email);
@@ -227,7 +224,6 @@ export default function SignIn() {
 
   return (
     <>
-      {/* Main Content */}
       <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-gray-50 via-white to-yellow-50 mt-20 py-8 md:py-12 px-4 sm:px-6 lg:px-8">
         <Toaster />
 
@@ -245,6 +241,34 @@ export default function SignIn() {
                   Sign in to your account to continue
                 </p>
               </div>
+
+              {/* ✅ Account Deactivated Message */}
+              {accountError && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="text-red-800 font-semibold text-sm mb-1">
+                        Account Deactivated
+                      </h3>
+                      <p className="text-red-700 text-sm">
+                        {accountError}
+                      </p>
+                      <div className="mt-3 pt-2 border-t border-red-200">
+                        <p className="text-xs text-red-600">
+                          📧 Contact:{" "}
+                          <a
+                            href="mailto:thegulfcoastmusic@gmail.com"
+                            className="font-medium underline hover:text-red-800"
+                          >
+                            thegulfcoastmusic@gmail.com
+                          </a>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Email */}
@@ -321,6 +345,10 @@ export default function SignIn() {
                     Sign Up
                   </Link>
                 </p>
+                <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500">
+                  <Crown className="h-4 w-4 text-yellow-600" />
+                  <span>Pro Plan: $10/month - 0% marketplace fees</span>
+                </div>
               </div>
             </div>
           </div>

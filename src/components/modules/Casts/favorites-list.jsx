@@ -10,11 +10,12 @@ export default function FavoritesList({ setCast, activeCast, sectionText }) {
   useEffect(() => {
     const fetchFavorites = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/casts`, { cache: "no-store" });
+        const res = await fetch(`${API_BASE}/api/casts`);
         const data = await res.json();
 
-        if (res.ok && data.success && Array.isArray(data.data.casts)) {
+        if (res.ok && data.success && Array.isArray(data.data?.casts)) {
           setFavorites(data.data.casts);
+          // Only set first cast if no activeCast is selected
           if (data.data.casts.length > 0 && !activeCast) {
             setCast(data.data.casts[0]);
           }
@@ -31,7 +32,7 @@ export default function FavoritesList({ setCast, activeCast, sectionText }) {
     };
 
     fetchFavorites();
-  }, [API_BASE, setCast, activeCast]);
+  }, [API_BASE, setCast]); // Removed activeCast dependency to prevent infinite loop
 
   if (loading)
     return <p className="text-gray-600 animate-pulse">Loading podcasts...</p>;
@@ -45,7 +46,7 @@ export default function FavoritesList({ setCast, activeCast, sectionText }) {
         {sectionText?.yourCastsTitle || "Your Favorites"}
       </h2>
 
-      <div className="space-y-3 max-h-[600px] overflow-y-auto p-4">
+      <div className="space-y-3 max-h-[600px] overflow-y-auto overflow-x-visible p-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         {favorites.map((favorite) => (
           <div
             key={favorite._id}

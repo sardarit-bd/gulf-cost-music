@@ -7,6 +7,7 @@ import {
 import { NewsGrid } from "./NewsGrid";
 import { NewsRow } from "./NewsRow";
 import Pagination from "./Pagination";
+import CustomLoader from "@/components/shared/loader/Loader";
 
 const NewsTable = ({
     newsList,
@@ -50,13 +51,9 @@ const NewsTable = ({
 
     if (loading) {
         return (
-            <div className="bg-white rounded-2xl border border-gray-200 p-12">
-                <div className="flex flex-col items-center justify-center">
-                    <div className="relative">
-                        <div className="w-16 h-16 border-4 border-gray-200 rounded-full"></div>
-                        <div className="absolute top-0 left-0 w-16 h-16 border-4 border-orange-500 rounded-full border-t-transparent animate-spin"></div>
-                    </div>
-                    <p className="mt-4 text-gray-500 font-medium">Loading news articles...</p>
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+                <div className="text-center">
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
                 </div>
             </div>
         );

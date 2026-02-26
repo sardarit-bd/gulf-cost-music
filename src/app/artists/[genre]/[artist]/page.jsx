@@ -1,4 +1,5 @@
 "use client";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { ChevronLeft, ChevronRight, Download, Headphones, Maximize2, Music, Pause, Play, SkipBack, SkipForward, Volume2, X } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
@@ -168,10 +169,9 @@ export default function ArtistProfile() {
 
   if (loading) {
     return (
-      <div className="brandBg text-white min-h-screen flex justify-center items-center pt-16">
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-500 mx-auto mb-4"></div>
-          <p className="text-lg text-yellow-400">Loading artist details...</p>
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
         </div>
       </div>
     );
@@ -199,7 +199,7 @@ export default function ArtistProfile() {
           {/* Close button */}
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+            className="absolute top-4 right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
           >
             <X className="w-6 h-6 text-white" />
           </button>
@@ -212,14 +212,14 @@ export default function ArtistProfile() {
           {/* Navigation buttons */}
           <button
             onClick={goToPrevious}
-            className="absolute left-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+            className="absolute left-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
           >
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
 
           <button
             onClick={goToNext}
-            className="absolute right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+            className="absolute right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
           >
             <ChevronRight className="w-6 h-6 text-white" />
           </button>

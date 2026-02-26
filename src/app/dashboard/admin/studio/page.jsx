@@ -4,6 +4,7 @@
 import StudioDetail from "@/components/modules/admin/studio/StudioDetail";
 import StudioTable from "@/components/modules/admin/studio/StudioTable";
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { Building2, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -163,16 +164,12 @@ export default function StudiosPage() {
     return () => clearInterval(interval);
   }, []);
 
-  if (loading && studios.length === 0) {
+  if (loading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center min-h-[600px]">
+        <div className="flex justify-center items-center min-h-screen py-20 bg-white">
           <div className="text-center">
-            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <RefreshCw className="h-10 w-10 animate-spin text-blue-600" />
-            </div>
-            <p className="text-lg font-medium text-gray-900">Loading studios...</p>
-            <p className="text-gray-600 mt-2">Please wait while we fetch your studio data</p>
+            <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
           </div>
         </div>
       </AdminLayout>

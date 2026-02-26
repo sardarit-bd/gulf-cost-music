@@ -1,5 +1,6 @@
 "use client";
 
+import CustomLoader from "@/components/shared/loader/Loader";
 import { AlertCircle, CheckCircle, CreditCard, Crown, Loader, RefreshCcw, XCircle, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -223,10 +224,9 @@ export default function BillingTab() {
     =============================== */
     if (loading) {
         return (
-            <div className="flex justify-center items-center py-20">
+            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
                 <div className="text-center">
-                    <Loader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
-                    <p className="text-gray-400">Loading billing information...</p>
+                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
                 </div>
             </div>
         );

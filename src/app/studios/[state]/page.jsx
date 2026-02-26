@@ -12,30 +12,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { formatCityName, formatStateName, formatLocation } from "@/utils/formatters";
+import CustomLoader from "@/components/shared/loader/Loader";
 
 const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
-
-// State mapping function
-const capitalizeState = (state) => {
-  if (!state || state === "All") return state;
-  const stateMap = {
-    louisiana: "Louisiana",
-    mississippi: "Mississippi",
-    alabama: "Alabama",
-    florida: "Florida",
-  };
-  return (
-    stateMap[state.toLowerCase()] ||
-    state.charAt(0).toUpperCase() + state.slice(1).toLowerCase()
-  );
-};
 
 export default function StudiosByState() {
   const { state } = useParams();
   const router = useRouter();
 
   // Format state name
-  const formattedState = capitalizeState(decodeURIComponent(state));
+  const formattedState = formatStateName(decodeURIComponent(state));
 
   const [studios, setStudios] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,7 +43,7 @@ export default function StudiosByState() {
         .sort()
         .map((city) => ({
           value: city,
-          label: city.charAt(0).toUpperCase() + city.slice(1),
+          label: formatCityName(city), // FIXED: Using formatter
         }));
       setCities(uniqueCities);
     }
@@ -109,12 +96,9 @@ export default function StudiosByState() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-500 mx-auto mb-4"></div>
-          <p className="text-yellow-400 text-lg">
-            Loading studios in {formattedState}...
-          </p>
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
         </div>
       </div>
     );
@@ -157,8 +141,8 @@ export default function StudiosByState() {
               <button
                 onClick={() => setSelectedCity("All")}
                 className={`px-4 py-2 rounded-lg border-2 ${selectedCity === "All"
-                  ? "bg-yellow-500 text-black border-yellow-500"
-                  : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-500"
+                    ? "bg-yellow-500 text-black border-yellow-500"
+                    : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-500"
                   }`}
               >
                 All Cities
@@ -168,18 +152,18 @@ export default function StudiosByState() {
                   key={city.value}
                   onClick={() => setSelectedCity(city.value)}
                   className={`px-4 py-2 rounded-lg border-2 ${selectedCity === city.value
-                    ? "bg-yellow-500 text-black border-yellow-500"
-                    : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-500"
+                      ? "bg-yellow-500 text-black border-yellow-500"
+                      : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-500"
                     }`}
                 >
-                  {city.label}
+                  {city.label} {/* FIXED: Already formatted */}
                 </button>
               ))}
             </div>
             <div className="mt-4 text-gray-300">
               Showing {filteredStudios.length}{" "}
               {filteredStudios.length === 1 ? "studio" : "studios"}
-              {selectedCity !== "All" && ` in ${selectedCity}`}
+              {selectedCity !== "All" && ` in ${formatCityName(selectedCity)}`} {/* FIXED */}
             </div>
           </div>
         )}
@@ -230,8 +214,8 @@ export default function StudiosByState() {
                     )}
                   </div>
                   <div className="absolute bottom-4 left-4">
-                    <span className="px-2 py-1 bg-black/70 text-white text-xs rounded-full capitalize">
-                      {studio.city}
+                    <span className="px-2 py-1 bg-black/70 text-white text-xs rounded-full">
+                      {formatCityName(studio.city)} {/* FIXED */}
                     </span>
                   </div>
                 </div>
@@ -244,7 +228,9 @@ export default function StudiosByState() {
 
                   <div className="flex items-center gap-1 text-white mb-3">
                     <MapPin size={16} />
-                    <span className="text-sm capitalize">{studio.city}</span>
+                    <span className="text-sm">
+                      {formatLocation(studio.city, studio.state)} {/* FIXED */}
+                    </span>
                   </div>
 
                   {/* Biography Excerpt */}

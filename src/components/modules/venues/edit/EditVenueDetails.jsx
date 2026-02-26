@@ -56,7 +56,7 @@ export default function EditVenueDetails({
   };
 
   const formatCityDisplay = (city) => {
-    if (!city) return "";
+    if (!city || typeof city !== "string") return "";
     return city
       .split(" ")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -75,7 +75,7 @@ export default function EditVenueDetails({
         <Select
           label="State *"
           value={venueData.state}
-          onChange={(value) => onInputChange("state", value)}
+          onChange={(e) => onInputChange("state", e?.target?.value ?? e)}
           options={stateOptions}
           placeholder="Select a state"
           required={true}
@@ -89,7 +89,7 @@ export default function EditVenueDetails({
         <Select
           label="City *"
           value={venueData.city}
-          onChange={(value) => onInputChange("city", value)}
+          onChange={(e) => onInputChange("city", e?.target?.value ?? e)}
           options={getCityOptions()}
           placeholder={venueData.state ? "Select a city" : "Select state first"}
           required={true}
@@ -150,7 +150,7 @@ export default function EditVenueDetails({
         </div>
 
         {/* Phone */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Phone Number
           </label>
@@ -167,10 +167,10 @@ export default function EditVenueDetails({
               disabled={disabled}
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Website */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Website
           </label>
@@ -187,7 +187,7 @@ export default function EditVenueDetails({
               disabled={disabled}
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Seating Capacity */}
         <div>

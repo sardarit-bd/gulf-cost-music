@@ -536,7 +536,7 @@ export default function NewsDetailsPage() {
               </div>
 
               <div className={`px-4 py-2 rounded-full border ${currentColor.border} ${currentColor.badge}`}>
-                <span className="flex items-center gap-2 font-medium">
+                <span className="flex items-center gap-2 font-medium capitalize">
                   <MapPin className="w-4 h-4" />
                   {decodedCity}, {decodedState}
                 </span>
