@@ -1,4 +1,4 @@
-// "use client";
+"use client";
 
 import MarketLayout from "@/components/shared/market/MarketLayout";
 
