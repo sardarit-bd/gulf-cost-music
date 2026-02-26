@@ -353,7 +353,7 @@ export default function OverviewTab({
               </div>
 
               {/* Verification */}
-              <div>
+              {/* <div>
                 <label className="text-sm text-gray-500 mb-2 block">
                   Verification Status
                 </label>
@@ -377,7 +377,7 @@ export default function OverviewTab({
                       : "Pending Verification"}
                   </span>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 
