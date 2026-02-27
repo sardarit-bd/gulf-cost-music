@@ -84,7 +84,6 @@ export default function EditProfileTab({
 
   // Initialize display state from props
   useEffect(() => {
-
     // Format images for display
     const formattedImages = previewImages.map((img, index) => ({
       id: img.id || `img-${Date.now()}-${index}`,
@@ -116,7 +115,7 @@ export default function EditProfileTab({
     } else if (artist?.city) {
       // Try to detect state from city
       for (const [state, cities] of Object.entries(CITY_OPTIONS)) {
-        const cityValues = cities.map(c => c.value);
+        const cityValues = cities.map((c) => c.value);
         if (cityValues.includes(artist.city.toLowerCase())) {
           setSelectedState(state);
           setFilteredCities(CITY_OPTIONS[state] || []);
@@ -161,7 +160,7 @@ export default function EditProfileTab({
     if (files.length === 0) return;
 
     onImageUpload(files);
-    e.target.value = ''; // Reset input
+    e.target.value = ""; // Reset input
   };
 
   // Handle image removal
@@ -170,7 +169,7 @@ export default function EditProfileTab({
 
     // If it's an existing image, mark it for deletion
     if (imageToRemove.isExisting && imageToRemove.url) {
-      setPhotosToDelete(prev => [...prev, imageToRemove.url]);
+      setPhotosToDelete((prev) => [...prev, imageToRemove.url]);
     }
 
     // Remove from display
@@ -188,7 +187,7 @@ export default function EditProfileTab({
     if (files.length === 0) return;
 
     onAudioUpload(files);
-    e.target.value = ''; // Reset input
+    e.target.value = ""; // Reset input
   };
 
   // Handle audio removal
@@ -197,7 +196,7 @@ export default function EditProfileTab({
 
     // If it's an existing audio, mark it for deletion
     if (audioToRemove.isExisting && audioToRemove.url) {
-      setAudiosToDelete(prev => [...prev, audioToRemove.url]);
+      setAudiosToDelete((prev) => [...prev, audioToRemove.url]);
     }
 
     // Remove from display
@@ -259,23 +258,29 @@ export default function EditProfileTab({
     }
 
     // Add new photos - FIX: Use correct field name 'photos'
-    const newPhotos = displayImages.filter(img => !img.isExisting && img.file);
+    const newPhotos = displayImages.filter(
+      (img) => !img.isExisting && img.file,
+    );
 
-    newPhotos.forEach(img => {
+    newPhotos.forEach((img) => {
       formData.append("photos", img.file);
     });
 
     // Add new audios - FIX: Use correct field name 'mp3Files'
-    const newAudios = displayAudios.filter(audio => !audio.isExisting && audio.file);
+    const newAudios = displayAudios.filter(
+      (audio) => !audio.isExisting && audio.file,
+    );
 
-    newAudios.forEach(audio => {
+    newAudios.forEach((audio) => {
       formData.append("mp3Files", audio.file);
     });
 
     // Log FormData contents for debugging
     for (let pair of formData.entries()) {
       if (pair[1] instanceof File) {
-        console.log(`  ${pair[0]}: ${pair[1].name} (${(pair[1].size / 1024).toFixed(2)} KB)`);
+        console.log(
+          `  ${pair[0]}: ${pair[1].name} (${(pair[1].size / 1024).toFixed(2)} KB)`,
+        );
       } else {
         console.log(`  ${pair[0]}: ${pair[1]}`);
       }
@@ -402,7 +407,9 @@ export default function EditProfileTab({
           <div className="space-y-4">
             {/* Upload Area */}
             <label className="block cursor-pointer">
-              <div className={`border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 hover:bg-blue-50/20 transition-all duration-300 ${displayImages.length >= uploadLimits.photos ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              <div
+                className={`border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 hover:bg-blue-50/20 transition-all duration-300 ${displayImages.length >= uploadLimits.photos ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Camera className="w-6 h-6 text-blue-600" />
                 </div>
@@ -431,7 +438,7 @@ export default function EditProfileTab({
               <div className="grid grid-cols-3 gap-3">
                 {displayImages.map((img, idx) => (
                   <div key={img.id || idx} className="relative group">
-                    <div className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                    <div className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-100 cursor-pointer">
                       {img.url ? (
                         <Image
                           src={img.url}
@@ -450,7 +457,7 @@ export default function EditProfileTab({
 
                     <button
                       onClick={() => handleRemoveImage(idx)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition opacity-0 group-hover:opacity-100"
+                      className="absolute -top-2 -right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition opacity-0 group-hover:opacity-100 cursor-pointer"
                       type="button"
                     >
                       <X className="w-3 h-3" />
@@ -488,7 +495,9 @@ export default function EditProfileTab({
           <div className="space-y-4">
             {/* Upload Area */}
             <label className="block cursor-pointer">
-              <div className={`border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-400 hover:bg-purple-50/20 transition-all duration-300 ${displayAudios.length >= uploadLimits.audios ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              <div
+                className={`border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-purple-400 hover:bg-purple-50/20 transition-all duration-300 ${displayAudios.length >= uploadLimits.audios ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
                 <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Music className="w-6 h-6 text-purple-600" />
                 </div>
@@ -516,7 +525,10 @@ export default function EditProfileTab({
             {displayAudios.length > 0 && (
               <div className="space-y-2">
                 {displayAudios.map((audio, idx) => (
-                  <div key={audio.id || idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 group">
+                  <div
+                    key={audio.id || idx}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 group"
+                  >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                         <Music className="w-5 h-5 text-purple-600" />
@@ -536,14 +548,15 @@ export default function EditProfileTab({
                           New
                         </span>
                       )}
-                      {audio.isExisting && audiosToDelete.includes(audio.url) && (
-                        <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">
-                          Will Delete
-                        </span>
-                      )}
+                      {audio.isExisting &&
+                        audiosToDelete.includes(audio.url) && (
+                          <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">
+                            Will Delete
+                          </span>
+                        )}
                       <button
                         onClick={() => handleRemoveAudio(idx)}
-                        className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+                        className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition cursor-pointer"
                         type="button"
                       >
                         <X className="w-4 h-4" />
@@ -562,7 +575,7 @@ export default function EditProfileTab({
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           type="button"
         >
           {saving ? (
