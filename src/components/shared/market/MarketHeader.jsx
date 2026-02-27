@@ -145,32 +145,34 @@ export default function MarketHeader({
                                         <Loader2 className="w-5 h-5 animate-spin" />
                                         Loading...
                                     </div>
-                                ) : userListing ? (
-                                    <>
-                                        <Link
-                                            href={`/market/${userType}/edit/${userListing._id}`}
-                                            className="px-6 py-3 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2"
-                                        >
-                                            <Edit className="w-5 h-5" />
-                                            Edit Listing
-                                        </Link>
-                                        <Link
-                                            href={`/market/item/${userListing._id}`}
-                                            className="px-6 py-3 bg-white/20 text-white rounded-xl font-semibold hover:bg-white/30 transition-colors flex items-center gap-2 backdrop-blur-sm"
-                                        >
-                                            <Eye className="w-5 h-5" />
-                                            View Item
-                                        </Link>
-                                    </>
-                                ) : (
-                                    <button
-                                        onClick={() => setShowCreateModal(true)}
-                                        className="px-6 py-3 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2"
-                                    >
-                                        <Plus className="w-5 h-5" />
-                                        {config.sellText}
-                                    </button>
-                                )}
+                                ) :
+                                    userListing ? (
+                                        <>
+                                            <Link
+                                                href={`/market/${userType}/edit/${userListing._id}`}
+                                                className="px-6 py-3 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2"
+                                            >
+                                                <Edit className="w-5 h-5" />
+                                                Edit Listing
+                                            </Link>
+                                            <Link
+                                                href={`/market/item/${userListing._id}`}
+                                                className="px-6 py-3 bg-white/20 text-white rounded-xl font-semibold hover:bg-white/30 transition-colors flex items-center gap-2 backdrop-blur-sm"
+                                            >
+                                                <Eye className="w-5 h-5" />
+                                                View Item
+                                            </Link>
+                                        </>
+                                    ) :
+                                        (
+                                            <button
+                                                onClick={() => setShowCreateModal(true)}
+                                                className="px-6 py-3 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2 cursor-pointer"
+                                            >
+                                                <Plus className="w-5 h-5" />
+                                                {config.sellText}
+                                            </button>
+                                        )}
                             </div>
                         )}
                     </div>

@@ -1,9 +1,6 @@
 "use client";
 
 import CreateEditNewsTab from "@/components/modules/journalist/CreateEditNewsTab";
-// import CreateEditNewsTab from "@/components/modules/journalist/CreateEditNewsTab";
-// import CreateEditNewsTab from "@/components/journalist/CreateEditNewsTab";
-// import JournalistHeader from "@/components/journalist/JournalistHeader";
 import { useAuth } from "@/context/AuthContext";
 import { getCookie } from "@/utils/cookies";
 import { useRouter } from "next/navigation";
@@ -136,8 +133,13 @@ export default function CreateNewsPage() {
       return;
     }
 
-    if (!form.description.trim()) {
-      toast.error("Please enter a description");
+    if (form.description.trim().length < 50) {
+      toast.error("Description must be at least 50 characters");
+      return;
+    }
+
+    if (!form.credit.trim()) {
+      toast.error("Please enter credit/byline");
       return;
     }
 
@@ -169,7 +171,15 @@ export default function CreateNewsPage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to publish");
+      // if (!res.ok) throw new Error(data.message || "Failed to publish");
+      if (!res.ok) {
+        if (data?.details?.length) {
+          toast.error(data.details[0].msg);
+        } else {
+          toast.error(data.message || "Failed to publish");
+        }
+        return;
+      }
 
       toast.success("News published successfully!");
       router.push("/dashboard/journalist/dashboard");

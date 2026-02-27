@@ -73,7 +73,7 @@ export default function SignUp() {
     }))
     : [];
 
-  const canSubscribeToPro = ["artist", "venue", "photographer", "studio"].includes(formData.userType);
+  const canSubscribeToPro = ["artist", "venue", "journalist", "photographer", "studio"].includes(formData.userType);
 
   // Plan features
   const freePlanFeatures = [

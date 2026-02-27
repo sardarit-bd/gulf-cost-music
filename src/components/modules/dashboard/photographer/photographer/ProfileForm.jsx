@@ -1,12 +1,11 @@
-// components/modules/dashboard/photographer/ProfileForm.jsx
 "use client";
 
 import Input from "@/ui/Input";
-import Select from "@/ui/Select";
 import Textarea from "@/ui/Textarea";
 import {
     Edit3,
     Globe,
+    Info,
     Loader2,
     MapPin,
     Save,
@@ -16,19 +15,20 @@ import {
 
 export default function ProfileForm({
     photographer,
-    setPhotographer,
-    stateOptions,
-    cityOptions,
     handleChange,
-    handleStateChange,
-    isCityDisabled,
     handleSave,
     onCancel,
     saving,
     errors,
     getFullStateName,
-    formatCityName
+    formatCityName,
+    originalCity,
+    originalState
 }) {
+    // City এবং State উভয়ই অপরিবর্তনীয়
+    const isCityImmutable = originalCity && originalCity.length > 0;
+    const isStateImmutable = originalState && originalState.length > 0;
+
     return (
         <div className="space-y-6">
             {/* Form Header */}
@@ -63,50 +63,61 @@ export default function ProfileForm({
                     />
 
                     <div className="grid md:grid-cols-2 gap-6">
-                        <Select
-                            label="State"
-                            name="state"
-                            value={photographer.state}
-                            options={stateOptions}
-                            onChange={handleStateChange}
-                            icon={<Globe className="w-4 h-4" />}
-                            required
-                            error={errors.state}
-                            disabled={isCityDisabled}
-                            placeholder="LA, MS, AL, or FL"
-                        />
+                        {/* State - সম্পূর্ণ Disabled */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                State <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                                    <Globe className="w-4 h-4" />
+                                </div>
+                                <input
+                                    type="text"
+                                    value={getFullStateName(photographer.state) + ` (${photographer.state})`}
+                                    disabled
+                                    className="w-full bg-gray-100 text-gray-700 px-10 py-3 rounded-xl border border-gray-300 cursor-not-allowed opacity-75"
+                                />
+                            </div>
+                            {errors.state && <p className="mt-1 text-xs text-red-500">{errors.state}</p>}
+                        </div>
 
-                        <Select
-                            label="City"
-                            name="city"
-                            value={photographer.city}
-                            options={cityOptions}
-                            onChange={handleChange}
-                            icon={<MapPin className="w-4 h-4" />}
-                            required
-                            disabled={!photographer.state || isCityDisabled()}
-                            error={errors.city}
-                        />
+                        {/* City - সম্পূর্ণ Disabled */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                City <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
+                                    <MapPin className="w-4 h-4" />
+                                </div>
+                                <input
+                                    type="text"
+                                    value={formatCityName(photographer.city)}
+                                    disabled
+                                    className="w-full bg-gray-100 text-gray-700 px-10 py-3 rounded-xl border border-gray-300 cursor-not-allowed opacity-75"
+                                />
+                            </div>
+                            {errors.city && <p className="mt-1 text-xs text-red-500">{errors.city}</p>}
+                        </div>
                     </div>
 
-                    {/* City Immutable Notice */}
-                    {photographer.state && isCityDisabled() && (
-                        <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-3">
-                            <p className="text-sm text-yellow-700">
-                                <span className="font-semibold">Note:</span> City cannot be changed after profile creation.
+                    {/* Location Immutable Notice */}
+                    {(isStateImmutable || isCityImmutable) && (
+                        <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4">
+                            <p className="text-sm text-yellow-800 ">
+                                <span className="flex items-center gap-2 font-semibold "><Info /> Location cannot be changed</span>
+                                State and City are fixed after profile creation.
                             </p>
                         </div>
                     )}
 
                     {/* Service Area Display */}
-                    {photographer.state && (
-                        <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                            <p className="text-sm text-blue-700">
-                                <span className="font-semibold">Service Area:</span>{' '}
-                                {getFullStateName(photographer.state)} ({photographer.state})
-                                {photographer.city && (
-                                    <> • {formatCityName(photographer.city)}</>
-                                )}
+                    {photographer.state && photographer.city && (
+                        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                            <p className="text-sm text-blue-800">
+                                <span className="font-semibold">Service Area:</span><br />
+                                {getFullStateName(photographer.state)} ({photographer.state}) • {formatCityName(photographer.city)}
                             </p>
                         </div>
                     )}
@@ -125,7 +136,7 @@ export default function ProfileForm({
                     <div className="flex justify-end pt-4">
                         <button
                             onClick={handleSave}
-                            disabled={saving || !photographer.name || !photographer.state || !photographer.city}
+                            disabled={saving || !photographer.name}
                             className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {saving ? (

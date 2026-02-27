@@ -204,14 +204,24 @@ export default function EditNewsPage() {
   };
 
   const handleSaveNews = async () => {
-    // Validation
+    // ===== FRONTEND VALIDATION =====
     if (!form.title.trim()) {
       toast.error("Please enter a title");
       return;
     }
 
+    if (form.title.trim().length < 5) {
+      toast.error("Title must be at least 5 characters");
+      return;
+    }
+
     if (!form.description.trim()) {
       toast.error("Please enter a description");
+      return;
+    }
+
+    if (form.description.trim().length < 50) {
+      toast.error("Description must be at least 50 characters");
       return;
     }
 
@@ -225,35 +235,58 @@ export default function EditNewsPage() {
       return;
     }
 
+    if (!form.credit.trim()) {
+      toast.error("Please enter credit/byline");
+      return;
+    }
+
     setSaving(true);
     const token = getCookie("token");
 
     try {
       const formData = new FormData();
-      formData.append("title", form.title);
-      formData.append("description", form.description);
-      formData.append("credit", form.credit || "");
-      formData.append("location", form.city);
 
-      // Add removed photo URLs
-      formData.append("removedPhotoUrls", JSON.stringify(removedPhotoUrls));
+      formData.append("title", form.title.trim());
+      formData.append("description", form.description.trim());
+      formData.append("credit", form.credit.trim());
+      formData.append("location", form.city.toLowerCase());
+
+      // ✅ FIXED: backend expects "deletedPhotos"
+      if (removedPhotoUrls && removedPhotoUrls.length > 0) {
+        formData.append(
+          "deletedPhotos",
+          JSON.stringify(removedPhotoUrls)
+        );
+      }
 
       // Add new photos
-      form.newPhotos.forEach((photo) => {
-        formData.append("photos", photo);
-      });
+      if (form.newPhotos && form.newPhotos.length > 0) {
+        form.newPhotos.forEach((photo) => {
+          formData.append("photos", photo);
+        });
+      }
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/news/${newsId}`,
         {
           method: "PUT",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           body: formData,
-        },
+        }
       );
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to update");
+
+      if (!res.ok) {
+        if (data?.details?.length) {
+          toast.error(data.details[0].msg);
+        } else {
+          toast.error(data.message || "Failed to update news");
+        }
+        return;
+      }
 
       // Cleanup blob URLs
       previewImages.forEach((url) => {
@@ -264,9 +297,10 @@ export default function EditNewsPage() {
 
       toast.success("News updated successfully!");
       router.push("/dashboard/journalist/dashboard");
+
     } catch (err) {
-      console.error("Error saving news:", err);
-      toast.error(err.message || "Error updating news");
+      console.error("Error updating news:", err);
+      toast.error("Something went wrong while updating news");
     } finally {
       setSaving(false);
     }

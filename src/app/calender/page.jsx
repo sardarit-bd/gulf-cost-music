@@ -865,7 +865,7 @@ export default function CalendarBoard() {
                 </div>
 
                 <div className="pt-4 border-t">
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 capitalize">
                     <span className="font-medium">Location:</span> {selectedEvent.city}, {selectedEvent.state}
                   </p>
                 </div>

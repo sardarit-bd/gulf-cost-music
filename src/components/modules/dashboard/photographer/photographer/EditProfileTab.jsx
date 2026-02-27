@@ -1,4 +1,3 @@
-// components/modules/dashboard/photographer/ManageProfile.jsx
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
@@ -20,6 +19,8 @@ const getCookie = (name) => {
 export default function ManageProfile() {
   const { user, loading: authLoading } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [originalCity, setOriginalCity] = useState("");
+  const [originalState, setOriginalState] = useState("");
   const [photographer, setPhotographer] = useState({
     name: "",
     state: "",
@@ -40,21 +41,10 @@ export default function ManageProfile() {
     FL: ["pensacola"],
   };
 
-  const stateOptions = [
-    { value: "", label: "Select State", disabled: true },
-    { value: "LA", label: "Louisiana (LA)" },
-    { value: "MS", label: "Mississippi (MS)" },
-    { value: "AL", label: "Alabama (AL)" },
-    { value: "FL", label: "Florida (FL)" },
-  ];
-
-  const [cityOptions, setCityOptions] = useState([
-    { value: "", label: "Select State First", disabled: true },
-  ]);
-
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
   // Fetch profile data
+
   useEffect(() => {
     const fetchPhotographer = async () => {
       if (authLoading) return;
@@ -79,16 +69,33 @@ export default function ManageProfile() {
         const data = await res.json();
 
         if (data.data?.photographer) {
-          const p = data.data.photographer;
+          let p = data.data.photographer;
+          console.log("Fetched photographer data:", p);
+
+          // FIX: Normalize state to acronym if it's full name
+          const stateMapping = {
+            "louisiana": "LA",
+            "mississippi": "MS",
+            "alabama": "AL",
+            "florida": "FL"
+          };
+
+          let normalizedState = p.state || "";
+          if (normalizedState && normalizedState.toLowerCase() in stateMapping) {
+            normalizedState = stateMapping[normalizedState.toLowerCase()];
+          }
+
           setPhotographer({
             name: p.name || "",
-            state: p.state || "",
+            state: normalizedState,
             city: p.city || "",
             biography: p.biography || "",
             photos: p.photos || [],
             services: p.services || [],
             videos: p.videos || [],
           });
+          setOriginalCity(p.city || "");
+          setOriginalState(normalizedState);
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -103,55 +110,28 @@ export default function ManageProfile() {
     }
   }, [authLoading, API_BASE]);
 
-  // Update city options when state changes
-  useEffect(() => {
-    if (photographer?.state && STATE_CITY_MAPPING[photographer.state]) {
-      const citiesForState = STATE_CITY_MAPPING[photographer.state];
-      const formattedCityOptions = citiesForState.map((city) => ({
-        value: city,
-        label:
-          city.charAt(0).toUpperCase() +
-          city.slice(1).replace(/\b\w/g, (char) => char.toUpperCase()),
-      }));
-      setCityOptions(formattedCityOptions);
-    } else {
-      setCityOptions([
-        { value: "", label: "Select State First", disabled: true },
-      ]);
-    }
-  }, [photographer?.state]);
-
   const handleChange = (e) => {
     if (!e || !e.target) return;
 
     const { name, value } = e.target;
-    setPhotographer((prev) => ({ ...prev, [name]: value }));
 
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+    if (name === "name" || name === "biography") {
+      setPhotographer((prev) => ({ ...prev, [name]: value }));
+
+      if (errors[name]) {
+        setErrors((prev) => ({ ...prev, [name]: "" }));
+      }
+    }
+
+    if (name === "state" || name === "city") {
+      toast.error(`${name === "state" ? "State" : "City"} cannot be changed after profile creation`);
+      return;
     }
   };
 
   const handleStateChange = (e) => {
-    handleChange(e);
-    if (e.target.name === "state" && e.target.value) {
-      const stateValue = e.target.value;
-      if (stateValue && STATE_CITY_MAPPING[stateValue]) {
-        const cities = STATE_CITY_MAPPING[stateValue];
-        if (cities.length === 1) {
-          setTimeout(() => {
-            setPhotographer((prev) => ({
-              ...prev,
-              city: cities[0],
-            }));
-          }, 100);
-        }
-      }
-    }
-  };
-
-  const isCityDisabled = () => {
-    return photographer.name !== "" && photographer.state !== "";
+    toast.error("State cannot be changed after profile creation");
+    return;
   };
 
   const validateForm = () => {
@@ -164,11 +144,11 @@ export default function ManageProfile() {
     }
 
     if (!photographer.state) {
-      newErrors.state = "Please select a state";
+      newErrors.state = "State is required";
     }
 
     if (!photographer.city) {
-      newErrors.city = "Please select a city";
+      newErrors.city = "City is required";
     }
 
     setErrors(newErrors);
@@ -176,6 +156,7 @@ export default function ManageProfile() {
   };
 
   const handleSave = async () => {
+    // Form validation
     if (!validateForm()) {
       toast.error("Please fix the errors in the form");
       return;
@@ -193,12 +174,12 @@ export default function ManageProfile() {
 
       const profileData = {
         name: photographer.name.trim(),
-        state: photographer.state,
-        city: photographer.city.toLowerCase(),
         biography: photographer.biography || "",
       };
 
-      let res = await fetch(`${API_BASE}/api/photographers/profile`, {
+      console.log("Sending profile data:", profileData);
+
+      const res = await fetch(`${API_BASE}/api/photographers/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -207,11 +188,18 @@ export default function ManageProfile() {
         body: JSON.stringify(profileData),
       });
 
-      let data = await res.json();
+      const data = await res.json();
       toast.dismiss(toastId);
 
       if (!res.ok) {
         if (res.status === 404) {
+          const createData = {
+            name: photographer.name.trim(),
+            state: originalState || photographer.state,
+            city: originalCity || photographer.city,
+            biography: photographer.biography || "",
+          };
+
           const createRes = await fetch(
             `${API_BASE}/api/photographers/profile`,
             {
@@ -220,28 +208,55 @@ export default function ManageProfile() {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
               },
-              body: JSON.stringify(profileData),
-            },
+              body: JSON.stringify(createData),
+            }
           );
 
-          const createData = await createRes.json();
+          const createResponse = await createRes.json();
 
           if (!createRes.ok) {
-            throw new Error(createData.message || "Failed to create profile.");
+            throw new Error(createResponse.message || "Failed to create profile.");
           }
 
           toast.success("Profile created successfully!");
         } else {
-          throw new Error(data.message || "Failed to save profile.");
+          if (data.message) {
+            throw new Error(data.message);
+          } else {
+            throw new Error("Failed to save profile.");
+          }
         }
       } else {
         toast.success("Profile updated successfully!");
+
+        if (data.data?.photographer) {
+          const p = data.data.photographer;
+          setPhotographer({
+            name: p.name || "",
+            state: p.state || photographer.state,
+            city: p.city || photographer.city,
+            biography: p.biography || "",
+            photos: p.photos || [],
+            services: p.services || [],
+            videos: p.videos || [],
+          });
+        }
       }
 
       setIsEditing(false);
+
     } catch (error) {
       console.error("Save error:", error);
-      toast.error(error.message || "Failed to save profile");
+
+      if (error.message.includes("locationTags") || error.message.includes("State must be one of")) {
+        toast.error("Location information cannot be changed. Please refresh the page.");
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        toast.error(error.message || "Failed to save profile");
+      }
     } finally {
       setSaving(false);
     }
@@ -307,18 +322,15 @@ export default function ManageProfile() {
         {isEditing ? (
           <ProfileForm
             photographer={photographer}
-            setPhotographer={setPhotographer}
-            stateOptions={stateOptions}
-            cityOptions={cityOptions}
             handleChange={handleChange}
-            handleStateChange={handleStateChange}
-            isCityDisabled={isCityDisabled}
             handleSave={handleSave}
             onCancel={() => setIsEditing(false)}
             saving={saving}
             errors={errors}
             getFullStateName={getFullStateName}
             formatCityName={formatCityName}
+            originalCity={originalCity}
+            originalState={originalState}
           />
         ) : (
           <ProfileView
