@@ -3,12 +3,18 @@
 
 import {
     AlertCircle,
-    Building2, Camera,
+    Building2,
+    Camera,
     CheckCircle,
-    Edit, Eye, Grid,
+    Edit,
+    Eye,
+    Grid,
     Loader2,
-    Mic, Music, Plus,
-    Store, Users,
+    Mic,
+    Music,
+    Plus,
+    Store,
+    Users,
     XCircle
 } from "lucide-react";
 import Link from "next/link";
@@ -22,50 +28,50 @@ const userTypeConfig = {
         description: "Discover amazing items from our community",
         icon: Store,
         color: "from-blue-600 to-purple-600",
-        sellText: "Sell Item"
+        sellText: "Sell Item",
     },
     artist: {
         title: "Artist Marketplace",
         description: "Music, merchandise, and exclusive content from artists",
         icon: Mic,
         color: "from-purple-600 to-pink-600",
-        sellText: "Sell Music/Merch"
+        sellText: "Sell Music/Merch",
     },
     venue: {
         title: "Venue Marketplace",
         description: "Book venues, sell tickets, and promote events",
         icon: Building2,
         color: "from-green-600 to-teal-600",
-        sellText: "List Venue"
+        sellText: "List Venue",
     },
     photographer: {
         title: "Photographer Marketplace",
         description: "Professional photos, prints, and photography services",
         icon: Camera,
         color: "from-orange-600 to-red-600",
-        sellText: "Sell Photos"
+        sellText: "Sell Photos",
     },
     studio: {
         title: "Studio Marketplace",
         description: "Recording sessions, mixing, mastering, and studio services",
         icon: Music,
         color: "from-indigo-600 to-blue-600",
-        sellText: "List Studio Services"
+        sellText: "List Studio Services",
     },
     journalist: {
         title: "Journalist Marketplace",
         description: "Articles, interviews, and media content",
         icon: Users,
         color: "from-yellow-600 to-orange-600",
-        sellText: "Sell Content"
+        sellText: "Sell Content",
     },
     fan: {
         title: "Fan Marketplace",
         description: "Connect with artists and discover exclusive content",
         icon: Grid,
         color: "from-pink-600 to-purple-600",
-        sellText: "Sell Items"
-    }
+        sellText: "Sell Items",
+    },
 };
 
 export default function MarketHeader({
@@ -73,13 +79,17 @@ export default function MarketHeader({
     totalItems = 0,
     userListing,
     userListingLoading = false,
-    onListingUpdate
+    onListingUpdate,
 }) {
     const config = userTypeConfig[userType] || userTypeConfig.all;
     const Icon = config.icon;
     const [showCreateModal, setShowCreateModal] = useState(false);
 
-    const canSell = userType !== "all" && ["artist", "venue", "photographer", "studio", "journalist", "fan"].includes(userType);
+    const canSell =
+        userType !== "all" &&
+        ["artist", "venue", "photographer", "studio", "journalist", "fan"].includes(
+            userType,
+        );
 
     // Get listing status badge
     const getListingStatusBadge = () => {
@@ -115,7 +125,9 @@ export default function MarketHeader({
     return (
         <>
             <div className="pl-4 sm:pl-6 lg:pl-8 py-4">
-                <div className={`bg-gradient-to-r ${config.color} text-white rounded-2xl py-12 px-6`}>
+                <div
+                    className={`bg-gradient-to-r ${config.color} text-white rounded-2xl py-12 px-6`}
+                >
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div className="flex items-center gap-6">
                             <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
@@ -126,7 +138,7 @@ export default function MarketHeader({
                                 <p className="text-white/90 text-lg">{config.description}</p>
                                 <div className="flex items-center gap-4 mt-2 flex-wrap">
                                     <p className="text-white/70">
-                                        {totalItems} item{totalItems !== 1 ? 's' : ''} available
+                                        {totalItems} item{totalItems !== 1 ? "s" : ""} available
                                     </p>
                                     {userListing && (
                                         <div className="flex items-center gap-2">
@@ -165,7 +177,7 @@ export default function MarketHeader({
                                 ) : (
                                     <button
                                         onClick={() => setShowCreateModal(true)}
-                                        className="px-6 py-3 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2"
+                                        className="px-6 py-3 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2 cursor-pointer"
                                     >
                                         <Plus className="w-5 h-5" />
                                         {config.sellText}
@@ -199,7 +211,7 @@ export default function MarketHeader({
 
             {/* Show Stripe Connect Prompt if user has pending listing */}
             {userListing && userListing.status === "pending" && (
-                <div className=" px-4 sm:px-6 lg:px-8 py-4 mb-4">
+                <div className="px-4 sm:px-6 lg:px-8 py-4 mb-4">
                     <StripeConnectPrompt userType={userType} />
                 </div>
             )}

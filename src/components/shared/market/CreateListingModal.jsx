@@ -1,6 +1,7 @@
 "use client";
 
 import { useSession } from "@/lib/auth";
+import Select from "@/ui/Select";
 import { AlertCircle, Camera, Crown, DollarSign, Info, Loader2, MapPin, Video, X } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
@@ -196,7 +197,7 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-gray-100 rounded-full"
+                        className="p-2 hover:bg-gray-100 rounded-full text-red-500 transition-colors cursor-pointer"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -296,21 +297,19 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Location (Optional)
+                                    Location <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                                    <select
+                                    {/* <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none z-10" /> */}
+                                    <Select
+                                        name="location"
                                         value={formData.location}
+                                        options={locationOptions}
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                        className="text-gray-900 w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yellow-500 appearance-none"
-                                    >
-                                        {locationOptions.map(opt => (
-                                            <option key={opt.value} value={opt.value}>
-                                                {opt.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        icon={<MapPin className="w-5 h-5" />}
+                                        placeholder="Select location (optional)"
+                                        className="w-full"
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -346,21 +345,26 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                                         <div className="bg-white/50 p-3 rounded-lg">
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-yellow-700">Item Price:</span>
-                                                <span className="font-semibold text-gray-900">${price.toFixed(2)}</span>
+                                                <span className="font-semibold text-gray-900">
+                                                    ${price.toFixed(2)}
+                                                </span>
                                             </div>
-                                            <div className="flex justify-between text-sm mt-1">
-                                                <span className="text-yellow-700">Platform Fee (10%):</span>
-                                                <span className="font-semibold text-gray-900">${feeAmount.toFixed(2)}</span>
-                                            </div>
+
                                             <div className="border-t border-yellow-200 my-2 pt-2">
                                                 <div className="flex justify-between">
-                                                    <span className="text-yellow-800 font-medium">Total Buyer Pays:</span>
-                                                    <span className="font-bold text-yellow-800">${totalWithFee.toFixed(2)}</span>
+                                                    <span className="text-yellow-800 font-medium">
+                                                        Buyer Pays:
+                                                    </span>
+                                                    <span className="font-bold text-yellow-800">
+                                                        ${price.toFixed(2)}
+                                                    </span>
                                                 </div>
                                             </div>
-                                            <p className="text-xs text-yellow-600 mt-1">
-                                                *You receive ${price.toFixed(2)} after sale
-                                            </p>
+
+                                            <div className="mt-2 text-xs text-gray-600">
+                                                <p>• Seller receives: ${(price * 0.9).toFixed(2)}</p>
+                                                <p>• Platform commission (10%): ${(price * 0.1).toFixed(2)}</p>
+                                            </div>
                                         </div>
                                     )}
                                     <p className="text-xs text-yellow-600 mt-2">
@@ -475,6 +479,8 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                                 <span className="text-gray-900 font-medium">{formData.photos.length}/5</span>
                                 <span className="text-gray-600">Video:</span>
                                 <span className="text-gray-900 font-medium">{formData.video ? 'Yes' : 'No'}</span>
+                                <span className="text-gray-600">Location:</span>
+                                <span className="text-gray-900 font-medium">{formData.location || 'Not specified'}</span>
                             </div>
                         </div>
                     </div>
@@ -492,7 +498,7 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                     <button
                         onClick={() => step === 1 ? setStep(2) : handleSubmit()}
                         disabled={loading}
-                        className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all shadow-lg flex items-center gap-2 disabled:opacity-50"
+                        className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                     >
                         {loading ? (
                             <>

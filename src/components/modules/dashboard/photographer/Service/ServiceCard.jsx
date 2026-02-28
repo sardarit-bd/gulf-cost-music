@@ -68,7 +68,7 @@ export default function ServiceCard({
           <button
             onClick={() => onDelete(service)}
             disabled={isDeleting === service._id}
-            className="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50"
+            className="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50 cursor-pointer"
             title="Delete service"
           >
             {isDeleting === service._id ? (

@@ -13,7 +13,7 @@ export default function FavoriteItem({ favorite, isActive = false }) {
 
     if (favorite.videoType === "youtube" && favorite.youtubeUrl) {
       const videoId = favorite.youtubeUrl.match(
-        /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/
+        /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/,
       )?.[1];
 
       if (videoId) {
@@ -32,10 +32,11 @@ export default function FavoriteItem({ favorite, isActive = false }) {
 
   return (
     <div
-      className={`shadow flex items-center gap-3 p-3 rounded-lg transition cursor-pointer group relative ${isActive
+      className={`shadow flex items-center gap-3 p-3 rounded-lg transition cursor-pointer group relative ${
+        isActive
           ? "bg-blue-50 border-2 border-blue-300"
           : "bg-[#F9FAFB] hover:shadow-md hover:bg-blue-50"
-        }`}
+      }`}
     >
       <div className="relative shrink-0">
         <Image
@@ -51,10 +52,11 @@ export default function FavoriteItem({ favorite, isActive = false }) {
           onError={() => setImageError(true)}
         />
         <div
-          className={`absolute inset-0 flex items-center justify-center rounded-md ${isActive
+          className={`absolute inset-0 flex items-center justify-center rounded-md ${
+            isActive
               ? "bg-blue-600/70 opacity-100"
               : "bg-black/40 opacity-0 group-hover:opacity-100"
-            } transition-opacity`}
+          } transition-opacity`}
         >
           {isActive ? (
             <FiMusic className="text-white w-6 h-6 animate-pulse" />
@@ -82,10 +84,11 @@ export default function FavoriteItem({ favorite, isActive = false }) {
 
         <div className="mt-1">
           <span
-            className={`text-xs px-2 py-0.5 rounded-full ${favorite.videoType === "youtube"
+            className={`text-xs px-2 py-0.5 rounded-full ${
+              favorite.videoType === "youtube"
                 ? "bg-red-100 text-red-600"
                 : "bg-green-100 text-green-600"
-              }`}
+            }`}
           >
             {favorite.videoType === "youtube" ? "YouTube" : "Uploaded"}
           </span>
