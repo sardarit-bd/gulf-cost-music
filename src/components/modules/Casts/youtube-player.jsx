@@ -1,4 +1,5 @@
 "use client";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { useEffect, useRef, useState } from "react";
 
 export default function YouTubePlayer({ videoId, autoPlay = false }) {
@@ -148,16 +149,17 @@ export default function YouTubePlayer({ videoId, autoPlay = false }) {
   }
 
   return (
-    <div ref={containerRef} className="relative h-[550px] w-full bg-black rounded-xl overflow-hidden">
+    <div
+      ref={containerRef}
+      className="relative h-[550px] w-full bg-black rounded-xl overflow-hidden"
+    >
       <div id={playerId} className="w-full h-full" />
+
       {!isReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mx-auto mb-4"></div>
-            <p className="text-white">Loading video...</p>
-          </div>
+        <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
+          <CustomLoader />
         </div>
       )}
     </div>
-  );
-}
+  )
+};

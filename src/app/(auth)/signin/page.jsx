@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { Crown, Lock, Mail, User, AlertCircle } from "lucide-react";
+import { AlertCircle, Crown, Lock, Mail, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -144,11 +144,9 @@ export default function SignIn() {
         login(user);
 
         // ✅ Show plan info in toast
-        if (user.subscriptionPlan === "pro") {
-          toast.success("✨ Pro Plan Active - 0% marketplace fees!", {
-            duration: 3000,
-          });
-        }
+        // if (user.subscriptionPlan === "pro") {
+        //   toast.success("✨ Pro Plan Active - 0% marketplace fees!",);
+        // }
 
         // Redirect based on user type
         const redirectMap = {
