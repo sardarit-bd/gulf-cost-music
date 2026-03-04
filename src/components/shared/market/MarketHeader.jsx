@@ -150,7 +150,7 @@ export default function MarketHeader({
                         </div>
 
                         {/* Seller Actions */}
-                        {canSell && (
+                        {/* {canSell && (
                             <div className="flex gap-3">
                                 {userListingLoading ? (
                                     <div className="px-6 py-3 bg-white/20 rounded-xl flex items-center gap-2">
@@ -184,6 +184,15 @@ export default function MarketHeader({
                                     </button>
                                 )}
                             </div>
+                        )} */}
+                        {canSell && !userListing && (
+                            <button
+                                onClick={() => setShowCreateModal(true)}
+                                className="px-6 py-3 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-100 transition-colors flex items-center gap-2 cursor-pointer"
+                            >
+                                <Plus className="w-5 h-5" />
+                                {config.sellText}
+                            </button>
                         )}
                     </div>
 

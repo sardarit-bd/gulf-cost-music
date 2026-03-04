@@ -10,14 +10,15 @@ import {
     Music,
     Play,
     Plus,
-    Trash2
+    Trash2,
+    X
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 export default function MediaGalleryPreview({ photos = [], audioFile = null }) {
     const [viewMode, setViewMode] = useState("grid");
-    const [selectedMedia, setSelectedMedia] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
 
     // Mock audio file if none provided
@@ -35,154 +36,156 @@ export default function MediaGalleryPreview({ photos = [], audioFile = null }) {
 
     const handlePlayAudio = () => {
         setIsPlaying(!isPlaying);
-        // In real app, implement actual audio player
+    };
+
+    const openFullscreen = (photo) => {
+        setSelectedImage(photo);
+    };
+
+    const closeFullscreen = () => {
+        setSelectedImage(null);
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            {/* Header */}
-            <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h2 className="text-xl font-bold text-gray-900">Media Gallery</h2>
-                        <p className="text-sm text-gray-600 mt-1">Showcase your studio & work</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        {/* View Toggle */}
-                        <div className="flex bg-gray-100 rounded-lg p-1">
-                            <button
-                                onClick={() => setViewMode("grid")}
-                                className={`p-2 rounded ${viewMode === "grid" ? "bg-white shadow" : "text-gray-600"}`}
-                            >
-                                <Grid className="w-4 h-4" />
-                            </button>
-                            <button
-                                onClick={() => setViewMode("list")}
-                                className={`p-2 rounded ${viewMode === "list" ? "bg-white shadow" : "text-gray-600"}`}
-                            >
-                                <List className="w-4 h-4" />
-                            </button>
+        <>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                {/* Header */}
+                <div className="p-6 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-900">Media Gallery</h2>
+                            <p className="text-sm text-gray-600 mt-1">Showcase your studio & work</p>
                         </div>
-                        {/* 
-                        <Link
-                            href="/dashboard/studio/media/upload"
-                            className="px-4 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
-                        >
-                            <Upload className="w-4 h-4" />
-                            Upload
-                        </Link> */}
+                        <div className="flex items-center gap-3">
+                            {/* View Toggle */}
+                            <div className="flex bg-gray-100 rounded-lg p-1">
+                                <button
+                                    onClick={() => setViewMode("grid")}
+                                    className={`p-2 rounded ${viewMode === "grid" ? "bg-white shadow" : "text-gray-600"}`}
+                                >
+                                    <Grid className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode("list")}
+                                    className={`p-2 rounded ${viewMode === "list" ? "bg-white shadow" : "text-gray-600"}`}
+                                >
+                                    <List className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Content */}
-            <div className="p-6">
-                {/* Photo Gallery Section */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
-                                <Camera className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900">Studio Photos</h3>
-                                <p className="text-sm text-gray-600">
-                                    {photoCount}/{maxPhotos} uploaded • {remainingPhotos} remaining
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* {photoCount > 0 && (
-                            <Link
-                                href="/dashboard/studio/media/gallery"
-                                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                            >
-                                View All →
-                            </Link>
-                        )} */}
-                    </div>
-
-                    {photoCount === 0 ? (
-                        <EmptyPhotosState />
-                    ) : (
-                        <PhotoGallery
-                            photos={photos}
-                            viewMode={viewMode}
-                            maxDisplay={viewMode === "grid" ? 4 : 3}
-                        />
-                    )}
-                </div>
-
-                {/* Audio Section */}
-                <div>
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center">
-                                <Music className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900">Audio Sample</h3>
-                                <p className="text-sm text-gray-600">
-                                    Showcase your production quality
-                                </p>
+                {/* Content */}
+                <div className="p-6">
+                    {/* Photo Gallery Section */}
+                    <div className="mb-8">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
+                                    <Camera className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-900">Studio Photos</h3>
+                                    <p className="text-sm text-gray-600">
+                                        {photoCount}/{maxPhotos} uploaded • {remainingPhotos} remaining
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
-                        {displayAudio.url && (
-                            <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                                Replace Audio →
-                            </button>
+                        {photoCount === 0 ? (
+                            <EmptyPhotosState />
+                        ) : (
+                            <PhotoGallery
+                                photos={photos}
+                                viewMode={viewMode}
+                                maxDisplay={viewMode === "grid" ? 4 : 3}
+                                onImageClick={openFullscreen}
+                            />
                         )}
                     </div>
 
-                    {!displayAudio.url ? (
-                        <EmptyAudioState />
-                    ) : (
-                        <AudioPlayer
-                            audio={displayAudio}
-                            isPlaying={isPlaying}
-                            onPlay={handlePlayAudio}
-                        />
-                    )}
+                    {/* Audio Section */}
+                    <div>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center">
+                                    <Music className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-gray-900">Audio Sample</h3>
+                                    <p className="text-sm text-gray-600">
+                                        Showcase your production quality
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {!displayAudio.url ? (
+                            <EmptyAudioState />
+                        ) : (
+                            <AudioPlayer
+                                audio={displayAudio}
+                                isPlaying={isPlaying}
+                                onPlay={handlePlayAudio}
+                            />
+                        )}
+                    </div>
+                </div>
+
+                {/* Footer Stats */}
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-gray-900">{photoCount}</p>
+                            <p className="text-xs text-gray-600">Photos</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-gray-900">{displayAudio.url ? 1 : 0}</p>
+                            <p className="text-xs text-gray-600">Audio Samples</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-gray-900">{displayAudio.plays || 0}</p>
+                            <p className="text-xs text-gray-600">Total Plays</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* Footer Stats */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center">
-                        <p className="text-2xl font-bold text-gray-900">{photoCount}</p>
-                        <p className="text-xs text-gray-600">Photos</p>
-                    </div>
-                    <div className="text-center">
-                        <p className="text-2xl font-bold text-gray-900">{displayAudio.url ? 1 : 0}</p>
-                        <p className="text-xs text-gray-600">Audio Samples</p>
-                    </div>
-                    <div className="text-center">
-                        <p className="text-2xl font-bold text-gray-900">{displayAudio.plays || 0}</p>
-                        <p className="text-xs text-gray-600">Total Plays</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+            {/* Fullscreen Image Modal */}
+            {selectedImage && (
+                <FullscreenImage
+                    image={selectedImage}
+                    onClose={closeFullscreen}
+                />
+            )}
+        </>
     );
 }
 
-function PhotoGallery({ photos, viewMode, maxDisplay }) {
+function PhotoGallery({ photos, viewMode, maxDisplay, onImageClick }) {
     const displayedPhotos = photos.slice(0, maxDisplay);
 
     if (viewMode === "grid") {
         return (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {displayedPhotos.map((photo, index) => (
-                    <div key={index} className="relative aspect-square rounded-xl overflow-hidden group">
+                    <div key={index} className="relative aspect-square rounded-xl overflow-hidden group cursor-pointer">
                         <img
                             src={photo.url || "/placeholder.jpg"}
                             alt={`Studio photo ${index + 1}`}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onClick={() => onImageClick(photo)}
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"></div>
-                        <button className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                            className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onImageClick(photo);
+                            }}
+                        >
                             <Eye className="w-4 h-4" />
                         </button>
                     </div>
@@ -207,11 +210,14 @@ function PhotoGallery({ photos, viewMode, maxDisplay }) {
         <div className="space-y-3">
             {displayedPhotos.map((photo, index) => (
                 <div key={index} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                    <div
+                        className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer"
+                        onClick={() => onImageClick(photo)}
+                    >
                         <img
                             src={photo.url || "/placeholder.jpg"}
                             alt={`Studio photo ${index + 1}`}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover hover:scale-110 transition-transform"
                         />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -219,7 +225,10 @@ function PhotoGallery({ photos, viewMode, maxDisplay }) {
                         <p className="text-sm text-gray-600">Uploaded 2 days ago</p>
                     </div>
                     <div className="flex gap-2">
-                        <button className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
+                        <button
+                            className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                            onClick={() => onImageClick(photo)}
+                        >
                             <Eye className="w-4 h-4" />
                         </button>
                         <button className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg">
@@ -242,7 +251,7 @@ function AudioPlayer({ audio, isPlaying, onPlay }) {
                         className="w-14 h-14 bg-purple-600 text-white rounded-full flex items-center justify-center hover:bg-purple-700 transition-colors shadow-lg"
                     >
                         {isPlaying ? (
-                            <div className="w-5 h-5 bg-white"></div>
+                            <div className="w-5 h-5 bg-white rounded-sm"></div>
                         ) : (
                             <Play className="w-6 h-6 ml-1" />
                         )}
@@ -282,6 +291,36 @@ function AudioPlayer({ audio, isPlaying, onPlay }) {
                         style={{ width: isPlaying ? "45%" : "0%" }}
                     ></div>
                 </div>
+            </div>
+        </div>
+    );
+}
+
+function FullscreenImage({ image, onClose }) {
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90"
+            onClick={onClose}
+        >
+            {/* Close Button */}
+            <button
+                className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition z-10"
+                onClick={onClose}
+            >
+                <X className="w-6 h-6" />
+            </button>
+
+            {/* Image */}
+            <img
+                src={image.url || "/placeholder.jpg"}
+                alt="Fullscreen view"
+                className="max-w-full max-h-full object-contain"
+                onClick={(e) => e.stopPropagation()}
+            />
+
+            {/* Image Info */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full text-sm">
+                Click anywhere to close
             </div>
         </div>
     );

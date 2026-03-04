@@ -1,6 +1,6 @@
 "use client";
 
-import { useSession } from "@/lib/auth";
+import { useAuth } from "@/context/AuthContext";
 import { ROLE_MENUS } from "@/utils/userMenus";
 import {
   BarChart3,
@@ -32,7 +32,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 export default function RoleSidebarLayout({ role, children }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useSession();
+  const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -193,11 +193,10 @@ export default function RoleSidebarLayout({ role, children }) {
                 href={item.href}
                 onClick={handleMenuItemClick}
                 className={`relative w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-200 font-medium
-                    ${
-                      active
-                        ? "bg-white text-blue-600 shadow-lg"
-                        : "text-white hover:bg-white/10"
-                    }
+                    ${active
+                    ? "bg-white text-blue-600 shadow-lg"
+                    : "text-white hover:bg-white/10"
+                  }
                 `}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
@@ -219,7 +218,7 @@ export default function RoleSidebarLayout({ role, children }) {
               {getUserInitials()}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{getUserName()}</p>
+              <p className="text-sm font-semibold truncate capitalize">{getUserName()}</p>
               <p className="text-xs text-blue-200 truncate">{getUserEmail()}</p>
             </div>
           </div>
@@ -228,7 +227,7 @@ export default function RoleSidebarLayout({ role, children }) {
         <div className="mt-6 pt-6 border-t border-white/20">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all duration-200 font-medium"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all duration-200 font-medium cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             Logout
@@ -238,9 +237,8 @@ export default function RoleSidebarLayout({ role, children }) {
 
       {/* Mobile Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-72 bg-gradient-to-b from-blue-600 to-blue-700 text-white transform transition-transform duration-300 ease-in-out lg:hidden ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-40 w-72 bg-gradient-to-b from-blue-600 to-blue-700 text-white transform transition-transform duration-300 ease-in-out lg:hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <div className="flex flex-col h-full p-5">
           {/* Mobile Header */}
@@ -268,11 +266,10 @@ export default function RoleSidebarLayout({ role, children }) {
                   key={item.href}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 font-medium ${
-                    active
-                      ? "bg-white text-blue-600 shadow-lg"
-                      : "text-white hover:bg-white/10"
-                  }`}
+                  className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 font-medium ${active
+                    ? "bg-white text-blue-600 shadow-lg"
+                    : "text-white hover:bg-white/10"
+                    }`}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <span className="truncate">{item.label}</span>
@@ -310,7 +307,7 @@ export default function RoleSidebarLayout({ role, children }) {
                 handleLogout();
                 setSidebarOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all duration-200 font-medium"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition-all duration-200 font-medium cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               Logout

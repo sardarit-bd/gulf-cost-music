@@ -72,7 +72,7 @@ export default function NewsListTab({
             <div>
               <button
                 onClick={onCreateNews}
-                className="text-blue-600 hover:text-blue-800 font-semibold text-lg"
+                className="text-blue-600 hover:text-blue-800 font-semibold text-lg cursor-pointer"
               >
                 Create News
               </button>
@@ -147,7 +147,7 @@ export default function NewsListTab({
                       <div className="flex gap-2 ml-4 flex-shrink-0">
                         <button
                           onClick={() => onViewDetails(item)}
-                          className="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                          className="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition cursor-pointer"
                           title="View Details"
                         >
                           <Eye size={16} />
@@ -156,7 +156,7 @@ export default function NewsListTab({
                         {/* Dynamic Edit Button */}
                         <button
                           onClick={() => handleEditClick(item)}
-                          className="p-2 rounded-lg bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition"
+                          className="p-2 rounded-lg bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition cursor-pointer"
                           title="Edit"
                         >
                           <Pencil size={16} />
@@ -164,7 +164,7 @@ export default function NewsListTab({
 
                         <button
                           onClick={() => onDeleteNews(item)}
-                          className="p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
+                          className="p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition cursor-pointer"
                           title="Delete"
                         >
                           <Trash2 size={16} />

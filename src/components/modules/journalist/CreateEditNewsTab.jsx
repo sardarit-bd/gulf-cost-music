@@ -156,11 +156,10 @@ export default function CreateEditNewsTab({
             </h3>
 
             <label
-              className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg transition ${
-                previewImages.length >= 5
-                  ? "border-gray-300 bg-gray-50 text-gray-400 cursor-not-allowed"
-                  : "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100"
-              }`}
+              className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg transition ${previewImages.length >= 5
+                ? "border-gray-300 bg-gray-50 text-gray-400 cursor-not-allowed"
+                : "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                }`}
             >
               <Upload size={24} />
               <span className="text-sm font-medium">

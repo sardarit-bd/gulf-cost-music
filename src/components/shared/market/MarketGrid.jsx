@@ -6,7 +6,7 @@ import { useState } from "react";
 import MarketCard from "./MarketCard";
 
 export default function MarketGrid({ items = [], userType = "all", currentUser, userListing, onListingUpdate, pagination }) {
-    const [viewMode, setViewMode] = useState("grid");
+    const [viewMode, setViewMode] = useState("list");
 
     if (items.length === 0) {
         return (
