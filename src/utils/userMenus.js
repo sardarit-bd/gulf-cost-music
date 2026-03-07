@@ -42,8 +42,9 @@ export const ROLE_MENUS = {
     { label: "Orders", href: "/dashboard/orders" },
   ],
   fan: [
+    { label: "Overview", href: "/dashboard/fan" },
     { label: "Market", href: "/dashboard/fan/market" },
     { label: "Billing", href: "/dashboard/billing" },
-    { label: "Orders", href: "/dashboard/orders" },
+    { label: "Orders", href: "/dashboard/fan/orders" },
   ],
 };
