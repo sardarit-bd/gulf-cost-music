@@ -629,8 +629,6 @@ function StateMarketItemCard({ item, state, stateInfo }) {
           <p className="text-gray-400 text-sm line-clamp-2 mb-6 capitalize">
             {item.description}
           </p>
-
-          {/* ✅ Fee Info - Updated to show correctly */}
           {item.feeInfo && (
             <div className="mb-4 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
               {/* <div className="flex justify-between text-sm">
