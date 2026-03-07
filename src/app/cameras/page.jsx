@@ -117,7 +117,7 @@ export default function PhotographersPage() {
                                 <button
                                     key={state.value}
                                     onClick={() => setSelectedState(state.value)}
-                                    className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${selectedState === state.value
+                                    className={`cursor-pointer px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${selectedState === state.value
                                         ? "bg-yellow-500 text-black"
                                         : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                                         }`}
@@ -134,7 +134,7 @@ export default function PhotographersPage() {
                     </div>
 
                     {/* City Filter */}
-                    <div>
+                    {/* <div>
                         <p className="text-gray-300 mb-3 font-medium">Filter by City:</p>
                         <div className="flex gap-2 flex-wrap justify-center">
                             {cities.map((city) => (
@@ -155,7 +155,7 @@ export default function PhotographersPage() {
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Stats and Breadcrumbs */}

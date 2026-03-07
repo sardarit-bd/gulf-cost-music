@@ -484,7 +484,7 @@ export default function MediaGallery({
                   e.stopPropagation();
                   openViewer(index);
                 }}
-                className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all hover:scale-110"
+                className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all hover:scale-110 cursor-pointer"
                 title="View Full Screen"
               >
                 <ZoomIn className="w-4 h-4" />
@@ -494,7 +494,7 @@ export default function MediaGallery({
                   e.stopPropagation();
                   downloadImage();
                 }}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all hover:scale-110"
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all hover:scale-110 cursor-pointer"
                 title="Download"
               >
                 <Download className="w-4 h-4" />
@@ -504,7 +504,7 @@ export default function MediaGallery({
                   e.stopPropagation();
                   onDelete?.(photo._id);
                 }}
-                className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all hover:scale-110"
+                className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all hover:scale-110 cursor-pointer"
                 title="Delete"
               >
                 <Trash2 className="w-4 h-4" />

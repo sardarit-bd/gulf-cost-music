@@ -156,7 +156,7 @@ export default function SignIn() {
           journalist: "/dashboard/journalist",
           photographer: "/dashboard/photographer",
           studio: "/dashboard/studio",
-          fan: "/",
+          fan: "/dashboard/fan",
         };
 
         const redirectTo = redirectMap[user.userType] || "/";

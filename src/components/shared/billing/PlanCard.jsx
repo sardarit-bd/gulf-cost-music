@@ -1,4 +1,3 @@
-// components/billing/PlanCard.jsx
 import { AlertCircle, Calendar, CheckCircle, Clock, CreditCard } from 'lucide-react';
 import SubscriptionStatus from './SubscriptionStatus';
 
@@ -82,9 +81,11 @@ const BillingPlanCard = ({ subscription, userType }) => {
                             <Calendar className="w-4 h-4 text-blue-600" />
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-gray-500">Current Period End</p>
+                            <p className="text-sm font-medium text-gray-500">
+                                {isPro ? "Current Period End" : "Plan Type"}
+                            </p>
                             <p className="text-base font-semibold text-gray-900">
-                                {isPro ? formatDate(currentPeriodEnd) : 'N/A'}
+                                {isPro ? formatDate(currentPeriodEnd) : 'Free Plan'}
                             </p>
                         </div>
                     </div>
@@ -141,7 +142,7 @@ const BillingPlanCard = ({ subscription, userType }) => {
                     <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl">
                         <p className="text-sm text-gray-700">
                             <span className="font-semibold">Upgrade to Pro</span> to unlock 0% marketplace fees
-                            and premium visibility for your {getUserTypeLabel(userType).toLowerCase()} profile.
+                            and premium visibility for your {(getUserTypeLabel(userType) || "user").toLowerCase()} profile.
                         </p>
                     </div>
                 )}

@@ -106,7 +106,7 @@ const BillingActions = ({ subscription }) => {
                 <button
                     onClick={handleUpgrade}
                     disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all disabled:opacity-50 cursor-pointer"
                 >
                     {loading && actionType === "upgrade" ? (
                         <>
@@ -135,20 +135,6 @@ const BillingActions = ({ subscription }) => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Manage Subscription
                 </h3>
-
-                {/* Subscription Info */}
-                {/* <div className="mb-4 text-sm text-gray-600 space-y-1">
-                    <p>
-                        <strong>Subscription Started:</strong>{" "}
-                        {formatDate(currentPeriodStart)}
-                    </p>
-
-                    <p>
-                        <strong>Next Billing Date:</strong>{" "}
-                        {formatDate(currentPeriodEnd)}
-                    </p>
-                </div> */}
-
                 <button
                     onClick={handleManageBilling}
                     disabled={loading}

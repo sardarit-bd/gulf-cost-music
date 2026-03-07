@@ -1,8 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function GenrePage() {
   const { genre } = useParams();
@@ -39,6 +39,14 @@ export default function GenrePage() {
         Loading {genre} artists...
       </div>
     );
+
+  const formatGenre = (genre) => {
+    if (!genre) return "";
+    if (genre === "rnb_soul") return "RnB/Soul";
+    return genre
+      .replace("_", " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
+  };
 
   return (
     <section className="py-14 px-6 mt-20">
@@ -81,11 +89,11 @@ export default function GenrePage() {
                 </div>
 
                 <div className="p-5 text-left">
-                  <h2 className="text-lg font-bold text-black brandColor mb-1">
+                  <h2 className="text-lg font-bold text-black brandColor mb-1 capitalize">
                     {artist.name}
                   </h2>
-                  <p className="text-sm text-gray-600 mb-2 capitalize">
-                    {artist.genre}
+                  <p className="text-sm text-gray-600 mb-2">
+                    {formatGenre(artist.genre)}
                   </p>
 
                   <div className="flex items-center justify-between">

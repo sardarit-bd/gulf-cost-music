@@ -12,8 +12,8 @@ const BillingPage = ({ userType }) => {
     const [subscription, setSubscription] = useState(null);
     const [error, setError] = useState(null);
 
-    // Supported user types
-    const supportedUserTypes = ['artist', 'venue', 'photographer', 'studio', 'journalist'];
+    // Supported user types1
+    const supportedUserTypes = ['artist', 'venue', 'photographer', 'studio', 'journalist', 'fan'];
 
     useEffect(() => {
         if (!supportedUserTypes.includes(userType)) {

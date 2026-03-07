@@ -281,7 +281,7 @@ export default function ItemDetailModal({ isOpen, onClose, itemId, onItemUpdate 
                                         </div>
                                         <div>
                                             <p className="font-medium text-gray-900">{item.seller?.name}</p>
-                                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                            <div className="flex items-center gap-2 text-sm text-gray-600 capitalize">
                                                 <span>{item.seller?.userType}</span>
                                                 {item.location && (
                                                     <>

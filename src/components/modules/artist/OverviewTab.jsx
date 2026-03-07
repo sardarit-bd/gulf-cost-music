@@ -21,6 +21,26 @@ export default function OverviewTab({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
+  const formatGenre = (genre) => {
+    if (!genre) return "Not set";
+
+    const genreMap = {
+      rnb_soul: "RnB/Soul",
+      edm: "EDM",
+      hip_hop: "Hip-Hop",
+    };
+
+    if (genreMap[genre.toLowerCase()]) {
+      return genreMap[genre.toLowerCase()];
+    }
+
+    return genre
+      .replace(/_/g, " ")
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   // Image click handler
   const handleImageClick = (index) => {
     setSelectedImageIndex(index);
@@ -178,8 +198,8 @@ export default function OverviewTab({
                 <div className="flex flex-wrap gap-3">
                   <div className="flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full">
                     <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"></div>
-                    <span className="font-medium capitalize">
-                      {artist?.genre || "No genre"}
+                    <span className="font-semibold text-gray-900">
+                      {formatGenre(artist?.genre)}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 px-4 py-2 rounded-full">
@@ -346,38 +366,11 @@ export default function OverviewTab({
                 </label>
                 <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-purple-50 px-4 py-2 rounded-full">
                   <div className="w-3 h-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
-                  <span className="font-semibold text-gray-900 capitalize">
-                    {artist?.genre || "Not set"}
+                  <span className="font-semibold text-gray-900">
+                    {formatGenre(artist?.genre)}
                   </span>
                 </div>
               </div>
-
-              {/* Verification */}
-              {/* <div>
-                <label className="text-sm text-gray-500 mb-2 block">
-                  Verification Status
-                </label>
-                <div
-                  className={`inline-flex items-center gap-3 px-4 py-2 rounded-lg ${
-                    artist?.isVerified
-                      ? "bg-gradient-to-r from-green-50 to-emerald-50 text-green-700"
-                      : "bg-gradient-to-r from-yellow-50 to-amber-50 text-yellow-700"
-                  }`}
-                >
-                  <div
-                    className={`w-3 h-3 rounded-full ${
-                      artist?.isVerified
-                        ? "bg-gradient-to-r from-green-500 to-emerald-500"
-                        : "bg-gradient-to-r from-yellow-500 to-amber-500"
-                    }`}
-                  ></div>
-                  <span className="font-semibold">
-                    {artist?.isVerified
-                      ? "Verified Artist"
-                      : "Pending Verification"}
-                  </span>
-                </div>
-              </div> */}
             </div>
           </div>
 

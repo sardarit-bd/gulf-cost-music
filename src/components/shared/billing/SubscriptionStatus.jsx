@@ -1,4 +1,3 @@
-// components/billing/SubscriptionStatus.jsx
 import React from 'react';
 import { CheckCircle, AlertCircle, XCircle, Clock } from 'lucide-react';
 

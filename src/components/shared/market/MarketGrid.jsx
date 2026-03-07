@@ -31,16 +31,20 @@ export default function MarketGrid({ items = [], userType = "all", currentUser, 
                 <p className="text-sm text-gray-600">
                     Showing {items.length} of {pagination?.total || items.length} items
                 </p>
+
                 <div className="flex bg-gray-100 rounded-lg p-1">
                     <button
                         onClick={() => setViewMode("grid")}
-                        className={`p-2 rounded ${viewMode === "grid" ? "bg-white shadow" : "text-gray-600"}`}
+                        className={`p-2 rounded cursor-pointer ${viewMode === "grid" ? "bg-white shadow" : "text-gray-600"
+                            }`}
                     >
                         <Grid className="w-4 h-4 text-yellow-400" />
                     </button>
+
                     <button
                         onClick={() => setViewMode("list")}
-                        className={`p-2 rounded ${viewMode === "list" ? "bg-white shadow" : "text-gray-600"}`}
+                        className={`p-2 rounded cursor-pointer ${viewMode === "list" ? "bg-white shadow" : "text-gray-600"
+                            }`}
                     >
                         <List className="w-4 h-4 text-yellow-400" />
                     </button>

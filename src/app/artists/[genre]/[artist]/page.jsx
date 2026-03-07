@@ -191,6 +191,15 @@ export default function ArtistProfile() {
     );
   }
 
+
+  const formatGenre = (genre) => {
+    if (!genre) return "";
+    if (genre === "rnb_soul") return "RnB/Soul";
+    return genre
+      .replace("_", " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
+  };
+
   return (
     <section className="brandBg min-h-screen text-white pt-16">
       {/* ✅ Lightbox Modal */}
@@ -277,10 +286,10 @@ export default function ArtistProfile() {
               />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 sm:mb-3 brandColor break-words">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 sm:mb-3 brandColor break-words capitalize">
                 {artist.name}
               </h1>
-              <p className="text-sm sm:text-base md:text-lg text-gray-200 capitalize">{artist.genre} Artist</p>
+              <p className="text-sm sm:text-base md:text-lg text-gray-200 capitalize">{formatGenre(artist.genre)} Artist</p>
 
               {/* Audio Stats */}
               {audioTracks.length > 0 && (
@@ -305,9 +314,9 @@ export default function ArtistProfile() {
         <div className="bg-white/10 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 lg:p-12 border border-white/10">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
             <div className="flex-1">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2">{artist.name}</h2>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 capitalize">{artist.name}</h2>
               <p className="text-gray-300 text-xs sm:text-sm mb-2 sm:mb-3 capitalize">
-                {artist.genre} • {artist.city}
+                {formatGenre(artist.genre)} • {artist.city}
               </p>
               <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
                 {artist.biography || "No biography available."}
@@ -540,9 +549,9 @@ export default function ArtistProfile() {
           <div className="pt-6 sm:pt-8 md:pt-10 text-center">
             <button
               onClick={() => router.back()}
-              className="px-4 sm:px-6 py-2 sm:py-3 bg-yellow-400 text-black rounded-full font-semibold hover:bg-yellow-500 hover:scale-105 transition transform text-sm sm:text-base"
+              className="px-4 sm:px-6 py-2 sm:py-3 bg-yellow-400 text-black rounded-full font-semibold hover:bg-yellow-500 hover:scale-105 transition transform text-sm sm:text-base cursor-pointer"
             >
-              ← Back to {genre} Artists
+              ← Back to {formatGenre(genre)} Artists
             </button>
           </div>
         </div>

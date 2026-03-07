@@ -229,7 +229,7 @@ export default function StudioMediaPage() {
             {/* Upload Button */}
             <button
               onClick={() => setUploadModalOpen(true)}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg flex items-center gap-2"
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg flex items-center gap-2 cursor-pointer"
             >
               <Upload className="w-5 h-5" />
               Upload Media
@@ -314,8 +314,8 @@ export default function StudioMediaPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-6 py-3 rounded-xl whitespace-nowrap transition-all ${activeTab === tab.id
-                    ? "bg-blue-50 text-blue-600"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   }`}
               >
                 <tab.icon className="w-4 h-4" />
@@ -323,8 +323,8 @@ export default function StudioMediaPage() {
                 {tab.count !== undefined && (
                   <span
                     className={`px-2 py-1 text-xs rounded-full ${activeTab === tab.id
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 text-gray-700"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-200 text-gray-700"
                       }`}
                   >
                     {tab.count}
@@ -342,13 +342,13 @@ export default function StudioMediaPage() {
           <div className="bg-white rounded-lg p-1 border border-gray-200">
             <button
               onClick={() => setViewMode("grid")}
-              className={`p-2 rounded ${viewMode === "grid" ? "bg-blue-100 text-blue-600" : "text-gray-600"}`}
+              className={`p-2 rounded cursor-pointer ${viewMode === "grid" ? "bg-blue-100 text-blue-600" : "text-gray-600"}`}
             >
               <Grid className="w-4 h-4" />
             </button>
             <button
               onClick={() => setViewMode("list")}
-              className={`p-2 rounded ${viewMode === "list" ? "bg-blue-100 text-blue-600" : "text-gray-600"}`}
+              className={`p-2 rounded cursor-pointer ${viewMode === "list" ? "bg-blue-100 text-blue-600" : "text-gray-600"}`}
             >
               <List className="w-4 h-4" />
             </button>
@@ -470,7 +470,7 @@ export default function StudioMediaPage() {
 
             <button
               onClick={() => setUploadModalOpen(true)}
-              className="w-full mt-6 bg-white text-blue-600 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+              className="w-full mt-6 bg-white text-blue-600 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 cursor-pointer"
               disabled={photoCount >= maxPhotos}
             >
               <Plus className="w-5 h-5" />

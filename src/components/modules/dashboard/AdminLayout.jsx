@@ -24,8 +24,7 @@ import {
   TvMinimalPlay,
   User,
   Users,
-  Waves,
-  X,
+  X
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -100,7 +99,7 @@ export default function AdminLayout({ children }) {
         { name: "News", href: "/dashboard/admin/news", icon: Newspaper },
         { name: "Merch", href: "/dashboard/admin/merch", icon: ShoppingBag },
         { name: "Casts", href: "/dashboard/admin/Casts", icon: Mic2 },
-        { name: "Waves", href: "/dashboard/admin/waves", icon: Waves },
+        // { name: "Waves", href: "/dashboard/admin/waves", icon: Waves },
         {
           name: "Homesection",
           href: "/dashboard/admin/herosection",

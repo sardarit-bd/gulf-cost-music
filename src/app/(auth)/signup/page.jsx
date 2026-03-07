@@ -35,6 +35,7 @@ export default function SignUp() {
   };
 
   // Genre options
+  // Genre options
   const genreOptions = [
     { value: "rap", label: "Rap", icon: <Mic2 className="h-4 w-4" /> },
     { value: "country", label: "Country", icon: <Mic2 className="h-4 w-4" /> },
@@ -44,6 +45,10 @@ export default function SignUp() {
     { value: "reggae", label: "Reggae", icon: <Mic2 className="h-4 w-4" /> },
     { value: "edm", label: "EDM", icon: <Mic2 className="h-4 w-4" /> },
     { value: "classical", label: "Classical", icon: <Mic2 className="h-4 w-4" /> },
+
+    { value: "rnb_soul", label: "RnB/Soul", icon: <Mic2 className="h-4 w-4" /> },
+    { value: "metal", label: "Metal", icon: <Mic2 className="h-4 w-4" /> },
+
     { value: "other", label: "Other", icon: <Mic2 className="h-4 w-4" /> },
   ];
 
@@ -64,15 +69,21 @@ export default function SignUp() {
     icon: <MapPin className="h-4 w-4" />
   }));
 
+  const capitalizeWords = (text) => {
+    return text
+      .split(" ")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   // City options for selected state
   const cityOptions = formData.state
     ? stateCityMapping[formData.state].map(city => ({
       value: city.toLowerCase(),
-      label: city.charAt(0).toUpperCase() + city.slice(1),
+      label: capitalizeWords(city),
       icon: <MapPin className="h-4 w-4" />
     }))
     : [];
-
   const canSubscribeToPro = ["artist", "venue", "journalist", "photographer", "studio"].includes(formData.userType);
 
   // Plan features
@@ -452,7 +463,7 @@ export default function SignUp() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3.5 rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center"
+                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3.5 rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center cursor-pointer"
                 >
                   {loading ? (
                     <>

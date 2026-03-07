@@ -140,6 +140,10 @@ export default function Header() {
         { name: "Reggae", path: "reggae" },
         { name: "EDM", path: "edm" },
         { name: "Classical", path: "classical" },
+
+        { name: "RnB/Soul", path: "rnb_soul" },
+        { name: "Metal", path: "metal" },
+
         { name: "Other", path: "other" }
       ],
     },
@@ -155,10 +159,10 @@ export default function Header() {
     cameras: {
       title: "Cameras",
       items: [
-        { name: "Louisiana", path: "louisiana" },
-        { name: "Mississippi", path: "mississippi" },
-        { name: "Alabama", path: "alabama" },
-        { name: "Florida", path: "florida" }
+        { name: "Louisiana", path: "LA" },
+        { name: "Mississippi", path: "MS" },
+        { name: "Alabama", path: "AL" },
+        { name: "Florida", path: "FL" }
       ],
     },
     studios: {
@@ -426,7 +430,7 @@ export default function Header() {
                 <div className="hidden md:block relative" ref={profileDropdownRef}>
                   <button
                     onClick={toggleProfileDropdown}
-                    className="flex items-center gap-2 hover:text-yellow-400 transition-colors duration-200"
+                    className="flex items-center gap-2 hover:text-yellow-400 transition-colors duration-200 cursor-pointer"
                   >
                     <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-black font-bold text-sm shadow-md hover:bg-yellow-400 transition-colors">
                       {user?.username?.charAt(0)?.toUpperCase() || "U"}
