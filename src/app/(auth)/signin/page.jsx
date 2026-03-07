@@ -156,7 +156,7 @@ export default function SignIn() {
           journalist: "/dashboard/journalist",
           photographer: "/dashboard/photographer",
           studio: "/dashboard/studio",
-          fan: "/",
+          fan: "/dashboard/fan",
         };
 
         const redirectTo = redirectMap[user.userType] || "/";
@@ -320,7 +320,7 @@ export default function SignIn() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3.5 rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 mt-6 flex items-center justify-center"
+                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3.5 rounded-lg transition-all duration-200 disabled:opacity-50 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 mt-6 flex items-center justify-center cursor-pointer"
                 >
                   {loading ? (
                     <>

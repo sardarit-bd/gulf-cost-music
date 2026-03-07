@@ -226,7 +226,7 @@ export default function StudiosPage() {
                                             : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-500"
                                             }`}
                                     >
-                                        {city.label} {/* FIXED: Already formatted */}
+                                        {city.label}
                                     </button>
                                 ))}
                             </div>

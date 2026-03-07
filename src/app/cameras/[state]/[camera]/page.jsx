@@ -265,7 +265,7 @@ export default function PhotographerProfile() {
                 </div>
                 <button
                   onClick={copyEmailToClipboard}
-                  className="p-1.5 hover:bg-gray-600 rounded-lg transition-colors flex-shrink-0"
+                  className="p-1.5 hover:bg-gray-600 rounded-lg transition-colors flex-shrink-0 cursor-pointer"
                   title="Copy email"
                 >
                   {emailCopied ? (
@@ -368,7 +368,7 @@ export default function PhotographerProfile() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 md:px-8 py-3 sm:py-4 font-semibold transition-all duration-300 whitespace-nowrap border-b-2 text-sm sm:text-base ${activeTab === tab.id
+                      className={`cursor-pointer flex items-center gap-2 sm:gap-3 px-4 sm:px-6 md:px-8 py-3 sm:py-4 font-semibold transition-all duration-300 whitespace-nowrap border-b-2 text-sm sm:text-base ${activeTab === tab.id
                         ? "text-yellow-400 border-yellow-400 bg-yellow-400/5"
                         : "text-gray-400 hover:text-white border-transparent hover:bg-white/5"
                         }`}

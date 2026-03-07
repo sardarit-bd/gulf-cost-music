@@ -159,7 +159,7 @@ export default function ItemDetailModal({ isOpen, onClose, itemId, onItemUpdate 
                                                 <button
                                                     key={index}
                                                     onClick={() => setSelectedImage(index)}
-                                                    className={`aspect-square rounded-lg overflow-hidden border-2 ${selectedImage === index ? 'border-blue-600' : 'border-transparent'
+                                                    className={`cursor-pointer aspect-square rounded-lg overflow-hidden border-2 ${selectedImage === index ? 'border-blue-600' : 'border-transparent'
                                                         }`}
                                                 >
                                                     <div className="relative w-full h-full">
@@ -185,7 +185,7 @@ export default function ItemDetailModal({ isOpen, onClose, itemId, onItemUpdate 
                                             <video
                                                 src={item.videos[0]}
                                                 controls
-                                                className="w-full rounded-2xl border border-gray-200"
+                                                className="w-full rounded-2xl border border-gray-200 cursor-pointer"
                                             />
                                         </div>
                                     )}
@@ -225,7 +225,7 @@ export default function ItemDetailModal({ isOpen, onClose, itemId, onItemUpdate 
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => setShowEditModal(true)}
-                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-full"
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-full cursor-pointer"
                                                     title="Edit listing"
                                                 >
                                                     <Edit className="w-5 h-5" />
@@ -233,7 +233,7 @@ export default function ItemDetailModal({ isOpen, onClose, itemId, onItemUpdate 
                                                 {!showDeleteConfirm ? (
                                                     <button
                                                         onClick={() => setShowDeleteConfirm(true)}
-                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-full"
+                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-full cursor-pointer"
                                                         title="Delete listing"
                                                     >
                                                         <Trash2 className="w-5 h-5" />
@@ -281,7 +281,7 @@ export default function ItemDetailModal({ isOpen, onClose, itemId, onItemUpdate 
                                         </div>
                                         <div>
                                             <p className="font-medium text-gray-900">{item.seller?.name}</p>
-                                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                                            <div className="flex items-center gap-2 text-sm text-gray-600 capitalize">
                                                 <span>{item.seller?.userType}</span>
                                                 {item.location && (
                                                     <>

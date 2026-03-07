@@ -3,7 +3,7 @@ export const ROLE_MENUS = {
     { label: "Dashboard", href: "/dashboard/artist" },
     { label: "Manage Profile", href: "/dashboard/artist/manageProfile" },
     { label: "Market", href: "/dashboard/artist/marketplace" },
-    // { label: "Billing", href: "/dashboard/artist/billing" },
+    { label: "Billing", href: "/dashboard/billing" },
     { label: "Orders", href: "/dashboard/artist/orders" },
   ],
   photographer: [
@@ -13,7 +13,7 @@ export const ROLE_MENUS = {
     { label: "Photos", href: "/dashboard/photographer/photos" },
     { label: "Videos", href: "/dashboard/photographer/videos" },
     { label: "Market", href: "/dashboard/photographer/market" },
-    // { label: "Billing", href: "/dashboard/photographer/billing" },
+    { label: "Billing", href: "/dashboard/billing" },
   ],
   venue: [
     { label: "Overview", href: "/dashboard/venue" },
@@ -21,7 +21,7 @@ export const ROLE_MENUS = {
     { label: "Add Show", href: "/dashboard/venue/addshow" },
     { label: "Market", href: "/dashboard/venue/marketplace" },
     { label: "Orders", href: "/dashboard/venue/orders" },
-    // { label: "Billing", href: "/dashboard/venue/billing" },
+    { label: "Billing", href: "/dashboard/billing" },
   ],
   journalist: [
     { label: "Overview", href: "/dashboard/journalist" },
@@ -29,7 +29,7 @@ export const ROLE_MENUS = {
     { label: "Create Post", href: "/dashboard/journalist/create-news" },
     { label: "Market", href: "/dashboard/journalist/market" },
     // { label: "Edit Post", href: "/dashboard/journalist/edit-news" },
-    // { label: "Billing", href: "/dashboard/journalist/billing" },
+    { label: "Billing", href: "/dashboard/billing" },
   ],
 
   studio: [
@@ -38,6 +38,12 @@ export const ROLE_MENUS = {
     { label: "Media", href: "/dashboard/studio/media" },
     { label: "Services", href: "/dashboard/studio/profile/services" },
     { label: "Market", href: "/dashboard/studio/market" },
-    // { label: "Billing", href: "/dashboard/studio/billing" },
+    { label: "Billing", href: "/dashboard/billing" },
+    { label: "Orders", href: "/dashboard/orders" },
+  ],
+  fan: [
+    { label: "Market", href: "/dashboard/fan/market" },
+    { label: "Billing", href: "/dashboard/billing" },
+    { label: "Orders", href: "/dashboard/orders" },
   ],
 };

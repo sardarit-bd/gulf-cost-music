@@ -1,4 +1,3 @@
-// components/market/MarketFilters.jsx
 "use client";
 
 import { useState } from "react";

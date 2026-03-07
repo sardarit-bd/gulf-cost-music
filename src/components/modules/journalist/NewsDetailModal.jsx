@@ -29,10 +29,10 @@ export default function NewsDetailModal({ news, isOpen, onClose }) {
             <div className="p-6 border-b border-gray-200">
               <div
                 className={`grid gap-4 ${news.photos.length === 1
-                    ? "grid-cols-1"
-                    : news.photos.length === 2
-                      ? "grid-cols-2"
-                      : "grid-cols-1 md:grid-cols-2"
+                  ? "grid-cols-1"
+                  : news.photos.length === 2
+                    ? "grid-cols-2"
+                    : "grid-cols-1 md:grid-cols-2"
                   }`}
               >
                 {news.photos.map((photo, index) => (
@@ -104,7 +104,7 @@ export default function NewsDetailModal({ news, isOpen, onClose }) {
 
             {/* Additional Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-              <div>
+              {/* <div>
                 <h4 className="text-sm font-medium text-gray-600 mb-2">
                   Status
                 </h4>
@@ -116,7 +116,7 @@ export default function NewsDetailModal({ news, isOpen, onClose }) {
                 >
                   {news.published ? "Published" : "Draft"}
                 </span>
-              </div>
+              </div> */}
               <div>
                 <h4 className="text-sm font-medium text-gray-600 mb-2">
                   Last Updated

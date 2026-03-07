@@ -1,4 +1,6 @@
 "use client";
+import CustomLoader from "@/components/shared/loader/Loader";
+import { formatCityName, formatLocation, formatStateName } from "@/utils/formatters";
 import axios from "axios";
 import {
   ArrowLeft,
@@ -12,8 +14,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { formatCityName, formatStateName, formatLocation } from "@/utils/formatters";
-import CustomLoader from "@/components/shared/loader/Loader";
 
 const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -131,7 +131,7 @@ export default function StudiosByState() {
         </div>
 
         {/* City Filter */}
-        {cities.length > 0 && (
+        {/* {cities.length > 0 && (
           <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 mb-8 border border-white/10">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
               <MapPin className="w-5 h-5 mr-2 text-yellow-500" />
@@ -156,17 +156,17 @@ export default function StudiosByState() {
                       : "bg-gray-800 text-gray-300 border-gray-700 hover:border-yellow-500"
                     }`}
                 >
-                  {city.label} {/* FIXED: Already formatted */}
+                  {city.label} 
                 </button>
               ))}
             </div>
             <div className="mt-4 text-gray-300">
               Showing {filteredStudios.length}{" "}
               {filteredStudios.length === 1 ? "studio" : "studios"}
-              {selectedCity !== "All" && ` in ${formatCityName(selectedCity)}`} {/* FIXED */}
+              {selectedCity !== "All" && ` in ${formatCityName(selectedCity)}`}
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Studios Grid */}
         {filteredStudios.length === 0 ? (
@@ -269,7 +269,7 @@ export default function StudiosByState() {
         )}
 
         {/* Cities List */}
-        {cities.length > 0 && (
+        {/* {cities.length > 0 && (
           <div className="mt-12 bg-white/5 rounded-2xl p-8 border border-white/10">
             <h3 className="text-2xl font-bold text-white mb-6">
               Cities in {formattedState}
@@ -302,7 +302,7 @@ export default function StudiosByState() {
               })}
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </section>
   );

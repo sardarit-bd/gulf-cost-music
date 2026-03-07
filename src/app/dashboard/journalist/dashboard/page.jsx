@@ -3,6 +3,7 @@
 import JournalistHeader from "@/components/modules/journalist/JournalistHeader";
 import NewsDetailModal from "@/components/modules/journalist/NewsDetailModal";
 import NewsListTab from "@/components/modules/journalist/NewsListTab";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { useAuth } from "@/context/AuthContext";
 import DeleteModal from "@/ui/DeleteModal";
 import { getCookie } from "@/utils/cookies";
@@ -102,8 +103,10 @@ export default function JournalistPage() {
 
   if (newsLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center min-h-screen py-20 bg-white">
+        <div className="text-center">
+          <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
+        </div>
       </div>
     );
   }
@@ -140,7 +143,7 @@ export default function JournalistPage() {
             <h2 className="text-2xl font-bold">My News Articles</h2>
             <button
               onClick={navigateToCreateNews}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2 cursor-pointer"
             >
               + Create News
             </button>

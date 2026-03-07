@@ -246,7 +246,7 @@ export default function ManageProfilePage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-            <Toaster position="top-right" />
+            <Toaster />
             {/* Main Content */}
             <div className="px-4 sm:px-6 lg:px-8 py-8">
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">

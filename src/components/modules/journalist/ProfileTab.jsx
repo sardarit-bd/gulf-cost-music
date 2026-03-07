@@ -110,7 +110,7 @@ export default function ProfileTab({
               )}
             </div>
 
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
+            <h2 className="text-xl font-bold text-gray-900 mb-2 capitalize">
               {journalist.fullName || "Your Name"}
             </h2>
             <p className="text-gray-600 text-sm mb-2">
@@ -118,7 +118,7 @@ export default function ProfileTab({
             </p>
 
             {/* Verification Badge */}
-            <div className="mb-4">
+            {/* <div className="mb-4">
               <span
                 className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${journalist.isVerified
                   ? "bg-green-100 text-green-800"
@@ -142,7 +142,7 @@ export default function ProfileTab({
                   Email thegulfcoastmusic@gmail.com for verification
                 </p>
               )}
-            </div>
+            </div> */}
 
             {isEditing && (
               <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium shadow-sm">
@@ -215,7 +215,7 @@ export default function ProfileTab({
                   className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition"
                 />
               ) : (
-                <p className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-900">
+                <p className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 capitalize">
                   {journalist.fullName || "Not provided"}
                 </p>
               )}

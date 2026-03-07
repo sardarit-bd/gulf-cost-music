@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function Page() {
@@ -11,15 +11,25 @@ export default function Page() {
 
   const genres = [
     "All", "Rap", "Country", "Pop", "Rock", "Jazz",
-    "Reggae", "EDM", "Classical", "Other",
+    "Reggae", "EDM", "Classical",
+    "RnB/Soul",
+    "Metal",
+    "Other",
   ];
 
 
   useEffect(() => {
     const fetchArtists = async () => {
       try {
+        const genreMap = {
+          "RnB/Soul": "rnb_soul",
+          "Metal": "metal",
+        };
+
         const genreParam =
-          selectedGenre === "All" ? "" : `?genre=${selectedGenre.toLowerCase()}`;
+          selectedGenre === "All"
+            ? ""
+            : `?genre=${genreMap[selectedGenre] || selectedGenre.toLowerCase()}`;
         const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/artists${genreParam}`);
         const data = await res.json();
 
@@ -47,12 +57,25 @@ export default function Page() {
     Reggae: "from-green-400/80 to-lime-600/80",
     EDM: "from-fuchsia-400/80 to-purple-600/80",
     Classical: "from-amber-300/80 to-yellow-500/80",
+
+    "RnB/Soul": "from-blue-500/80 to-purple-600/80",
+    Metal: "from-gray-800/90 to-black",
+
     Other: "from-slate-400/80 to-slate-600/80",
+  };
+
+
+  const formatGenre = (genre) => {
+    if (!genre) return "";
+    if (genre === "rnb_soul") return "RnB/Soul";
+    return genre
+      .replace("_", " ")
+      .replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   return (
     <section className="py-14 mt-20 px-6">
-      <Toaster/>
+      <Toaster />
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold brandColor">Artists Gallery</h1>
@@ -91,8 +114,8 @@ export default function Page() {
                       setDropdownOpen(false);
                     }}
                     className={`block w-full text-left px-4 py-2 text-sm hover:bg-yellow-100 transition ${selectedGenre === g
-                        ? "bg-yellow-50 font-semibold text-gray-800"
-                        : "text-gray-600"
+                      ? "bg-yellow-50 font-semibold text-gray-800"
+                      : "text-gray-600"
                       }`}
                   >
                     {g}
@@ -134,7 +157,8 @@ export default function Page() {
 
               <div className="p-5 text-left">
                 <h2 className="text-lg font-bold text-[var(--primary)] mb-1">{artist.name}</h2>
-                <p className="text-sm text-gray-600 mb-2 capitalize">{artist.genre}</p>
+                <p className="text-sm text-gray-600 mb-2">
+                  {formatGenre(artist.genre)}</p>
 
                 <div className="flex items-center justify-between">
                   <Link

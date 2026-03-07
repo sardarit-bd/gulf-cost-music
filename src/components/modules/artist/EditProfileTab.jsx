@@ -15,6 +15,10 @@ const genreOptions = [
   { value: "reggae", label: "Reggae" },
   { value: "edm", label: "EDM" },
   { value: "classical", label: "Classical" },
+
+  { value: "rnb_soul", label: "RnB/Soul" },
+  { value: "metal", label: "Metal" },
+
   { value: "other", label: "Other" },
 ];
 

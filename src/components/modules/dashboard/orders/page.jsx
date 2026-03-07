@@ -251,8 +251,8 @@ export default function UniversalOrderTracking() {
               {searchTerm || statusFilter !== "all"
                 ? "Try adjusting your search terms or filters"
                 : userRole === "admin"
-                ? "Orders will appear here once customers start placing orders"
-                : "Start shopping to see your orders here"}
+                  ? "Orders will appear here once customers start placing orders"
+                  : "Start shopping to see your orders here"}
             </p>
             {searchTerm || statusFilter !== "all" ? (
               <button
@@ -348,13 +348,12 @@ export default function UniversalOrderTracking() {
 
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                         <span
-                          className={`px-4 py-2 rounded-full text-sm font-medium ${
-                            order.paymentStatus === "paid"
+                          className={`px-4 py-2 rounded-full text-sm font-medium ${order.paymentStatus === "paid"
                               ? "bg-green-100 text-green-800 border border-green-200"
                               : order.paymentStatus === "pending"
-                              ? "bg-amber-100 text-amber-800 border border-amber-200"
-                              : "bg-rose-100 text-rose-800 border border-rose-200"
-                          }`}
+                                ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                : "bg-rose-100 text-rose-800 border border-rose-200"
+                            }`}
                         >
                           Payment:{" "}
                           {order.paymentStatus.charAt(0).toUpperCase() +
@@ -418,20 +417,18 @@ export default function UniversalOrderTracking() {
                               className="flex flex-col items-center w-full text-center relative z-10"
                             >
                               <div
-                                className={`w-10 h-10 flex items-center justify-center rounded-full border-2 transition-all duration-300 ${
-                                  isActive
+                                className={`w-10 h-10 flex items-center justify-center rounded-full border-2 transition-all duration-300 ${isActive
                                     ? isCurrent
                                       ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200"
                                       : "bg-blue-600 text-white border-blue-600"
                                     : "bg-white text-gray-400 border-gray-300"
-                                }`}
+                                  }`}
                               >
                                 <Icon className="w-5 h-5" />
                               </div>
                               <p
-                                className={`text-xs mt-3 font-medium transition-colors ${
-                                  isActive ? "text-gray-900" : "text-gray-400"
-                                }`}
+                                className={`text-xs mt-3 font-medium transition-colors ${isActive ? "text-gray-900" : "text-gray-400"
+                                  }`}
                               >
                                 {item.label}
                               </p>

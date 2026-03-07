@@ -342,9 +342,8 @@ export default function EditListingModal({
                   setFormData({ ...formData, title: e.target.value })
                 }
                 placeholder="e.g., Studio Recording Session, Custom Beat, etc."
-                className={`text-gray-600 w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.title ? "border-red-300" : "border-gray-300"
-                }`}
+                className={`text-gray-600 w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.title ? "border-red-300" : "border-gray-300"
+                  }`}
                 maxLength={120}
               />
               <div className="flex justify-between mt-1">
@@ -372,9 +371,8 @@ export default function EditListingModal({
                 }
                 placeholder="Describe your item in detail..."
                 rows="5"
-                className={`text-gray-600 w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.description ? "border-red-300" : "border-gray-300"
-                }`}
+                className={`text-gray-600 w-full px-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.description ? "border-red-300" : "border-gray-300"
+                  }`}
                 maxLength={2000}
               />
               <div className="flex justify-between mt-1">
@@ -407,9 +405,8 @@ export default function EditListingModal({
                     placeholder="99.99"
                     min="0"
                     step="0.01"
-                    className={`text-gray-600 w-full pl-10 pr-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.price ? "border-red-300" : "border-gray-300"
-                    }`}
+                    className={`text-gray-600 w-full pl-10 pr-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.price ? "border-red-300" : "border-gray-300"
+                      }`}
                   />
                 </div>
                 {errors.price && (
@@ -422,7 +419,7 @@ export default function EditListingModal({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location (Optional)
+                  Location
                 </label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -431,7 +428,7 @@ export default function EditListingModal({
                     onChange={(e) =>
                       setFormData({ ...formData, location: e.target.value })
                     }
-                    className="text-gray-600 w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    className="text-gray-600 w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
                   >
                     {locationOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -535,7 +532,7 @@ export default function EditListingModal({
             {/* Video Upload */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Video (Optional, Max 1)
+                Video (Max 1)
               </label>
 
               {/* Existing Video */}
@@ -623,7 +620,7 @@ export default function EditListingModal({
         <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 flex justify-between">
           <button
             onClick={() => (step === 1 ? onClose() : setStep(1))}
-            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-colors"
+            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-colors cursor-pointer"
           >
             {step === 1 ? "Cancel" : "Back"}
           </button>

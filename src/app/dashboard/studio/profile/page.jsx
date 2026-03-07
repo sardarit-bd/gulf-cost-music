@@ -1,22 +1,20 @@
 "use client";
 
+import CustomLoader from "@/components/shared/loader/Loader";
 import {
-  AlertCircle,
   Building2,
   Camera,
-  CheckCircle,
   DollarSign,
   Edit,
   FileText,
   Headphones,
   MapPin,
-  Package,
+  Package
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
-import CustomLoader from "@/components/shared/loader/Loader";
 
 export default function StudioProfile() {
   const router = useRouter();
@@ -137,7 +135,7 @@ export default function StudioProfile() {
       </div>
 
       {/* Profile Status Banner */}
-      <div className="mb-8">
+      {/* <div className="mb-8">
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -189,7 +187,7 @@ export default function StudioProfile() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
       {/* Profile Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {profileSections.map((section, sectionIndex) => (

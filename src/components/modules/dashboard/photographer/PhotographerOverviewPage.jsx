@@ -336,7 +336,7 @@ export default function PhotographerDashboard() {
                 </div>
 
                 {/* Profile Progress */}
-                <div className="space-y-4">
+                {/* <div className="space-y-4">
                   <h3 className="font-semibold text-gray-900">
                     Profile Completion
                   </h3>
@@ -352,7 +352,7 @@ export default function PhotographerDashboard() {
                     label="Client Reviews"
                     color="purple"
                   />
-                </div>
+                </div> */}
               </div>
             </div>
 
