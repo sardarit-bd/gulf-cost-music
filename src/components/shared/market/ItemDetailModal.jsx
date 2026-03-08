@@ -196,7 +196,7 @@ export default function ItemDetailModal({ isOpen, onClose, itemId, onItemUpdate 
                                     {/* Title and Actions */}
                                     <div className="flex items-start justify-between mb-4">
                                         <div>
-                                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                            <div className="flex items-center gap-2 mb-2 flex-wrap capitalize">
                                                 <span className={`px-3 py-1 rounded-full text-sm font-medium
                                                     ${item.sellerType === 'artist' ? 'bg-purple-100 text-purple-800' :
                                                         item.sellerType === 'venue' ? 'bg-green-100 text-green-800' :
@@ -218,7 +218,7 @@ export default function ItemDetailModal({ isOpen, onClose, itemId, onItemUpdate 
                                                     </span>
                                                 )}
                                             </div>
-                                            <h1 className="text-2xl font-bold text-gray-900">{item.title}</h1>
+                                            <h1 className="text-2xl font-bold text-gray-900 capitalize">{item.title}</h1>
                                         </div>
 
                                         {isOwner && (
@@ -299,7 +299,7 @@ export default function ItemDetailModal({ isOpen, onClose, itemId, onItemUpdate 
                                     {/* Description */}
                                     <div className="mb-6">
                                         <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
-                                        <p className="text-gray-700 whitespace-pre-line">{item.description}</p>
+                                        <p className="text-gray-700 whitespace-pre-line capitalize">{item.description}</p>
                                     </div>
 
                                     {/* Price and Fees */}

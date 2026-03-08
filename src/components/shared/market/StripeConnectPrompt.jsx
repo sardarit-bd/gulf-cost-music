@@ -57,7 +57,7 @@ export default function StripeConnectPrompt({ userType = "studio" }) {
                 <button
                     onClick={handleConnect}
                     disabled={loading}
-                    className="flex items-center gap-2 bg-yellow-600 text-white px-6 py-3 rounded-xl hover:bg-yellow-700 transition-all shadow-md whitespace-nowrap disabled:opacity-50"
+                    className="flex items-center gap-2 bg-yellow-600 text-white px-6 py-3 rounded-xl hover:bg-yellow-700 transition-all shadow-md whitespace-nowrap disabled:opacity-50 cursor-pointer"
                 >
                     {loading ? (
                         <>

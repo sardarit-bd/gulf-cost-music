@@ -9,7 +9,7 @@ import {
   FileText,
   Headphones,
   MapPin,
-  Package
+  Package,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -134,60 +134,6 @@ export default function StudioProfile() {
         </p>
       </div>
 
-      {/* Profile Status Banner */}
-      {/* <div className="mb-8">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                {profileCompletion === 100 ? (
-                  <CheckCircle className="w-6 h-6" />
-                ) : (
-                  <AlertCircle className="w-6 h-6" />
-                )}
-              </div>
-              <div>
-                <h3 className="text-xl font-bold">
-                  {profileCompletion === 100
-                    ? "Profile Complete!"
-                    : "Complete Your Profile"}
-                </h3>
-                <p className="text-blue-100">
-                  {profileCompletion === 100
-                    ? "Your profile is fully optimized for maximum visibility"
-                    : `${100 - profileCompletion}% remaining to complete your profile`}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-6">
-              <div className="text-center">
-                <p className="text-3xl font-bold">{profileCompletion}%</p>
-                <p className="text-sm text-blue-200">Complete</p>
-              </div>
-              {profileCompletion < 100 && (
-                <button
-                  onClick={() => router.push("/dashboard/studios/profile/edit")}
-                  className="px-6 py-3 bg-white text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-colors"
-                >
-                  Complete Profile
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm">Profile Progress</span>
-              <span className="text-sm font-medium">{profileCompletion}%</span>
-            </div>
-            <div className="w-full bg-white/30 rounded-full h-2">
-              <div
-                className={`h-2 rounded-full transition-all duration-500 ${profileCompletion === 100 ? "bg-green-400" : "bg-white"}`}
-                style={{ width: `${profileCompletion}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div> */}
       {/* Profile Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {profileSections.map((section, sectionIndex) => (
@@ -221,7 +167,7 @@ export default function StudioProfile() {
                     <span className="text-sm text-gray-700">{item.label}</span>
                   </div>
                   <span
-                    className={`font-medium ${item.value === "Not set" || item.value === "Not uploaded" ? "text-yellow-600" : "text-gray-900"}`}
+                    className={`capitalize font-medium ${item.value === "Not set" || item.value === "Not uploaded" ? "text-yellow-600" : "text-gray-900"}`}
                   >
                     {item.value}
                   </span>

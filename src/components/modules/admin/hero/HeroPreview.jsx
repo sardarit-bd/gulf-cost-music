@@ -18,63 +18,65 @@ export default function HeroPreview({ heroData }) {
         return () => clearInterval(interval);
     }, [heroData.flashWords, heroData.animationSettings]);
 
+    const flashColor = heroData.animationSettings?.textColor || "#FBBF24";
+    const currentFlashWord = heroData.flashWords?.[currentWord] || heroData.flashWords?.[0] || "Artists";
+
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <h2 className="text-lg font-semibold text-gray-900 mb-3">
                 Live Preview
             </h2>
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-md p-6 border-2 border-dashed border-gray-200 relative min-h-[500px]">
-                {/* Content */}
-                <div className="text-center space-y-4 mb-6 relative z-10">
-                    <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+
+            {/* Hero Section Preview - Same as actual HeroSection */}
+            <div className="relative w-full h-[500px] bg-gradient-to-br from-blue-900 to-purple-900 rounded-md overflow-hidden">
+                {/* Video Preview (if any) */}
+                {heroData.videoUrl && (
+                    <div className="absolute inset-0 w-full h-full">
+                        <VideoPreview videoUrl={heroData.videoUrl} />
+                        <div className="absolute inset-0 bg-black/40"></div>
+                    </div>
+                )}
+
+                {/* Content - Exact copy from HeroSection */}
+                <div className="relative h-full flex flex-col items-center justify-center text-center px-4 z-10">
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
                         {heroData.title || "Welcome to Gulf Coast Music"}
                     </h1>
 
-                    <p className="text-base text-gray-600 leading-relaxed">
+                    <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-3xl leading-relaxed">
                         {heroData.subtitlePrefix || "Experience the best with stunning"}{" "}
                         {heroData.animationSettings?.isEnabled ? (
                             <span
-                                className="font-bold inline-block min-w-[100px] transition-all duration-300"
+                                key={currentWord}
+                                className="inline-block font-bold"
                                 style={{
-                                    color: heroData.animationSettings?.textColor || "#FBBF24",
+                                    color: flashColor,
                                     animation: 'fadeInOut 1.5s ease-in-out',
                                 }}
                             >
-                                {heroData.flashWords?.[currentWord] || "Artists"}
+                                {currentFlashWord}
                             </span>
                         ) : (
-                            <span className="font-bold text-yellow-500">
-                                {heroData.flashWords?.[0] || "Artists"}
+                            <span className="font-bold" style={{ color: flashColor }}>
+                                {currentFlashWord}
                             </span>
                         )}
                     </p>
 
-                    <button className="bg-yellow-500 text-black px-6 py-2 rounded-md font-medium transition-all inline-flex items-center gap-1 text-sm">
+                    <button className="bg-yellow-400 hover:bg-yellow-500 text-black px-8 py-3 rounded-lg font-bold transition text-base shadow-lg">
                         {heroData.buttonText || "Get Started"}
                     </button>
-
-                    {heroData.videoUrl && (
-                        <div className="mt-3 p-2 bg-green-50 rounded-md border border-green-200">
-                            <p className="text-green-700 text-xs flex items-center justify-center gap-1">
-                                <Play className="w-3 h-3" />
-                                Background video is active
-                            </p>
-                        </div>
-                    )}
                 </div>
 
-                {/* Video Preview */}
-                <VideoPreview videoUrl={heroData.videoUrl} />
-
-                {/* Bottom Right Text Box */}
+                {/* Bottom Right Text Box - Exact copy from HeroSection */}
                 {heroData.bottomText?.isVisible && (
                     <div className="absolute bottom-4 right-4 z-20">
-                        <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border-l-4 border-yellow-400 shadow-xl">
+                        <div className="bg-black/60 backdrop-blur-md px-6 py-3 rounded-lg border-l-4 border-yellow-400 shadow-xl">
                             <p className="text-white text-xs md:text-sm font-medium">
                                 <span className="text-yellow-400 font-bold">
                                     {heroData.bottomText?.artistName || "Anna E. Westcoat"}
                                 </span>
-                                <span className="text-gray-300 mx-1">
+                                <span className="text-gray-300 mx-2">
                                     {heroData.bottomText?.separator || "-"}
                                 </span>
                                 <span className="text-white italic">
@@ -85,6 +87,16 @@ export default function HeroPreview({ heroData }) {
                     </div>
                 )}
             </div>
+
+            {/* Video Active Indicator */}
+            {heroData.videoUrl && (
+                <div className="mt-3 p-2 bg-green-50 rounded-md border border-green-200">
+                    <p className="text-green-700 text-xs flex items-center justify-center gap-1">
+                        <Play className="w-3 h-3" />
+                        Background video is active
+                    </p>
+                </div>
+            )}
 
             {/* Animation keyframes */}
             <style jsx>{`

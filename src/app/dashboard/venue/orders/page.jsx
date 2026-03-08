@@ -1,5 +1,10 @@
-import UniversalOrderTracking from "@/components/modules/dashboard/orders/page";
+import OrdersPage from "@/components/shared/order/OrdersPage"
 
-export default function VenueOrders() {
-    return <UniversalOrderTracking />;
+
+const VenueOrderDashboard = () => {
+    return (
+        <OrdersPage />
+    )
 }
+
+export default VenueOrderDashboard

@@ -159,7 +159,7 @@ export default function OverviewTab({
           {/* Profile Image */}
           <div className="relative">
             <div
-              className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 cursor-pointer hover:scale-105 transition-transform duration-300"
+              className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 cursor-pointer"
               onClick={() => firstImage && handleImageClick(0)}
             >
               {firstImage ? (
@@ -167,14 +167,14 @@ export default function OverviewTab({
                   src={firstImage}
                   alt="Profile"
                   fill
-                  className="object-cover"
+                  className="object-cover rounded-full hover:scale-105 transition-transform duration-300"
                   sizes="128px"
                   onError={(e) => {
                     e.target.style.display = "none";
                   }}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center">
+                <div className="w-full h-full flex items-center justify-center rounded-full">
                   <User size={48} className="text-blue-400" />
                 </div>
               )}
@@ -192,7 +192,7 @@ export default function OverviewTab({
           <div className="flex-1">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                <h2 className="text-3xl font-bold text-gray-900 mb-3 capitalize">
                   {artist?.name || "Unnamed Artist"}
                 </h2>
                 <div className="flex flex-wrap gap-3">
@@ -321,7 +321,7 @@ export default function OverviewTab({
               {/* Name */}
               <div>
                 <label className="text-sm text-gray-500 mb-2 block">Name</label>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-lg font-semibold text-gray-900 capitalize">
                   {artist?.name || "Not set"}
                 </p>
               </div>

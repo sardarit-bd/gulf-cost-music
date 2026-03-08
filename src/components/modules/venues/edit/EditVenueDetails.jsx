@@ -149,46 +149,6 @@ export default function EditVenueDetails({
           </div>
         </div>
 
-        {/* Phone */}
-        {/* <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Phone Number
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Phone className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="tel"
-              value={venueData.phone}
-              onChange={(e) => onInputChange("phone", e.target.value)}
-              className="w-full bg-white border border-gray-300 rounded-lg pl-10 pr-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-50 disabled:text-gray-500"
-              placeholder="Enter phone number"
-              disabled={disabled}
-            />
-          </div>
-        </div> */}
-
-        {/* Website */}
-        {/* <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Website
-          </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Globe className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="url"
-              value={venueData.website}
-              onChange={(e) => onInputChange("website", e.target.value)}
-              className="w-full bg-white border border-gray-300 rounded-lg pl-10 pr-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-50 disabled:text-gray-500"
-              placeholder="https://example.com"
-              disabled={disabled}
-            />
-          </div>
-        </div> */}
-
         {/* Seating Capacity */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">

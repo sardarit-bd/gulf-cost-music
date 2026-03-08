@@ -254,7 +254,7 @@ export default function PhotographerDashboard() {
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-gray-900 capitalize">
                 Welcome back, {photographer.name || "Photographer"}!
               </h1>
               <p className="text-gray-600 mt-2">
@@ -294,7 +294,7 @@ export default function PhotographerDashboard() {
                   </div>
                   <div className="flex-1">
                     <div className="flex flex-wrap items-center gap-3 mb-2">
-                      <h2 className="text-2xl font-bold text-gray-900">
+                      <h2 className="text-2xl font-bold text-gray-900 capitalize">
                         {photographer.name || "Unknown Photographer"}
                       </h2>
                       <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">

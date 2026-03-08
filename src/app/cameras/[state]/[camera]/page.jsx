@@ -484,7 +484,7 @@ export default function PhotographerProfile() {
                     </h3>
 
                     <div className="prose prose-invert max-w-none">
-                      <p className="text-gray-300 leading-relaxed text-base sm:text-lg bg-gray-700/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-600/30">
+                      <p className="text-gray-300 leading-relaxed text-base sm:text-lg bg-gray-700/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-600/30 capitalize">
                         {photographer.biography ||
                           "No biography available yet. This photographer prefers to let their work speak for itself."}
                       </p>

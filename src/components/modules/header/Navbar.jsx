@@ -112,12 +112,12 @@ export default function Header() {
   };
 
   // Orders link for different user roles
-  const getOrdersLink = () => {
-    if (!user) return "/signin";
+  // const getOrdersLink = () => {
+  //   if (!user) return "/signin";
 
-    const userRole = getUserRole();
-    return `/dashboard/${userRole}/orders`;
-  };
+  //   const userRole = getUserRole();
+  //   return `/dashboard/${userRole}/orders`;
+  // };
 
   const getDashboardLabel = () => {
     if (!user) return "Dashboard";
@@ -488,7 +488,7 @@ export default function Header() {
                       </Link>
 
                       {/* My Orders Link */}
-                      <Link
+                      {/* <Link
                         href={getOrdersLink()}
                         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 transition-colors duration-200"
                         onClick={closeAllDropdowns}
@@ -507,7 +507,7 @@ export default function Header() {
                           />
                         </svg>
                         My Orders
-                      </Link>
+                      </Link> */}
 
                       {/* Sign Out Button */}
                       <button
@@ -647,13 +647,13 @@ export default function Header() {
                       >
                         Dashboard
                       </Link>
-                      <Link
+                      {/* <Link
                         href={getOrdersLink()}
                         className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold text-center text-sm"
                         onClick={closeMobileMenu}
                       >
                         My Orders
-                      </Link>
+                      </Link> */}
                     </div>
                   </div>
                 )}

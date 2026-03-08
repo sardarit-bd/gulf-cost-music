@@ -1,11 +1,11 @@
 "use client";
 
+import CustomLoader from "@/components/shared/loader/Loader";
 import Select from "@/ui/Select";
 import {
   AlertCircle,
   ArrowLeft,
   Building2,
-  CheckCircle,
   FileText,
   Loader2,
   MapPin,
@@ -15,7 +15,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { api } from "../../lib/api";
-import CustomLoader from "@/components/shared/loader/Loader";
 
 export default function EditStudioProfile() {
   const router = useRouter();
@@ -100,15 +99,6 @@ export default function EditStudioProfile() {
       if (data.state) {
         setCities(cityData[data.state] || []);
       }
-
-      // Calculate profile completion
-      const completedFields = [
-        data.name,
-        data.city,
-        data.state,
-        data.biography,
-      ].filter(Boolean).length;
-      setProfileCompletion(Math.round((completedFields / 4) * 100));
     } catch (error) {
       console.error("Error fetching studio data:", error);
       toast.error("Failed to load profile data");
@@ -210,15 +200,6 @@ export default function EditStudioProfile() {
 
       toast.success("Profile updated successfully!");
 
-      // Update profile completion
-      const completedFields = [
-        studioData.name,
-        studioData.city,
-        studioData.state,
-        studioData.biography,
-      ].filter(Boolean).length;
-      setProfileCompletion(Math.round((completedFields / 4) * 100));
-
       // Redirect back after delay
       setTimeout(() => {
         router.push("/dashboard/studio/profile");
@@ -269,55 +250,7 @@ export default function EditStudioProfile() {
               Update your studio information to attract more clients
             </p>
           </div>
-
-          <div className="flex items-center gap-4">
-            <div
-              className={`px-4 py-2 rounded-full ${profileCompletion === 100 ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"} font-medium flex items-center gap-2`}
-            >
-              {profileCompletion === 100 ? (
-                <CheckCircle className="w-4 h-4" />
-              ) : (
-                <AlertCircle className="w-4 h-4" />
-              )}
-              Profile {profileCompletion}% Complete
-            </div>
-          </div>
         </div>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700">
-            Profile Completion
-          </span>
-          <span className="text-sm font-medium text-gray-900">
-            {profileCompletion}%
-          </span>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
-          <div
-            className={`h-3 rounded-full transition-all duration-500 ${profileCompletion === 100 ? "bg-green-500" : "bg-blue-500"}`}
-            style={{ width: `${profileCompletion}%` }}
-          ></div>
-        </div>
-        <p className="text-xs text-gray-500 mt-2">
-          {profileCompletion === 100 ? (
-            <span className="text-green-600 flex items-center gap-1">
-              <CheckCircle className="w-3 h-3" />
-              Profile is complete! Great job!
-            </span>
-          ) : profileCompletion >= 75 ? (
-            <span className="text-blue-600 flex items-center gap-1">
-              Almost there! Just a few more fields to complete
-            </span>
-          ) : (
-            <span className="text-yellow-600 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" />
-              Complete your profile for better visibility
-            </span>
-          )}
-        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -495,7 +428,7 @@ export default function EditStudioProfile() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Profile Completion Card */}
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+          {/* <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
             <h3 className="text-xl font-bold mb-4">Profile Status</h3>
 
             <div className="space-y-4 mb-6">
@@ -548,7 +481,7 @@ export default function EditStudioProfile() {
                 ></div>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Selected Location Preview */}
           {studioData.state && (
@@ -572,7 +505,7 @@ export default function EditStudioProfile() {
                   <span className="font-bold">
                     {studioData.city
                       ? cities.find((c) => c.value === studioData.city)
-                        ?.label || studioData.city
+                          ?.label || studioData.city
                       : "Not selected"}
                   </span>
                 </div>
@@ -600,83 +533,6 @@ export default function EditStudioProfile() {
               </div>
             </div>
           )}
-
-          {/* Tips Card */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Profile Tips
-            </h3>
-
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-3 h-3" />
-                </div>
-                <span className="text-sm text-gray-600">
-                  Use your actual studio name for brand recognition
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-green-100 text-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-3 h-3" />
-                </div>
-                <span className="text-sm text-gray-600">
-                  Accurate location helps local clients find you
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-3 h-3" />
-                </div>
-                <span className="text-sm text-gray-600">
-                  Detailed bio increases booking rates by 40%
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="w-3 h-3" />
-                </div>
-                <span className="text-sm text-gray-600">
-                  Complete profiles get 3x more views
-                </span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Next Steps Card */}
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
-            <h3 className="text-xl font-bold mb-4">Next Steps</h3>
-
-            <div className="space-y-4">
-              <div className="p-3 bg-white/20 rounded-xl">
-                <p className="font-medium mb-1">Add Services & Pricing</p>
-                <p className="text-sm text-green-100">
-                  List your services with clear pricing
-                </p>
-                <button
-                  onClick={() =>
-                    router.push("/dashboard/studios/profile/services")
-                  }
-                  className="mt-2 w-full py-2 bg-white text-green-600 rounded-lg font-medium hover:bg-green-50 transition-colors"
-                >
-                  Go to Services
-                </button>
-              </div>
-
-              <div className="p-3 bg-white/20 rounded-xl">
-                <p className="font-medium mb-1">Upload Media</p>
-                <p className="text-sm text-green-100">
-                  Add photos and audio samples
-                </p>
-                <button
-                  onClick={() => router.push("/dashboard/studios/media/upload")}
-                  className="mt-2 w-full py-2 bg-white text-green-600 rounded-lg font-medium hover:bg-green-50 transition-colors"
-                >
-                  Go to Media
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

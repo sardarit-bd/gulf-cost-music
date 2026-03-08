@@ -177,7 +177,7 @@ export default function NewsListTab({
                         <Calendar size={14} />
                         {new Date(item.createdAt).toLocaleDateString()}
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 capitalize">
                         <MapPin size={14} />
                         {item.location}
                       </div>
