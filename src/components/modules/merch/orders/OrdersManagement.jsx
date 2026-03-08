@@ -1,11 +1,12 @@
-// OrderManagement.js (Updated with Line Clamp & Tooltip)
-
 "use client";
 
+import DeleteModal from "@/ui/DeleteModal";
 import axios from "axios";
 import {
   Calendar,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   CreditCard,
   DollarSign,
@@ -50,12 +51,12 @@ const Tooltip = ({ content, children, position = "top" }) => {
             {content}
             <div
               className={`absolute w-2 h-2 bg-gray-900 transform rotate-45 ${position === "top"
-                  ? "top-full left-1/2 -translate-x-1/2 -mt-1"
-                  : position === "bottom"
-                    ? "bottom-full left-1/2 -translate-x-1/2 -mb-1"
-                    : position === "left"
-                      ? "left-full top-1/2 -translate-y-1/2 -ml-1"
-                      : "right-full top-1/2 -translate-y-1/2 -mr-1"
+                ? "top-full left-1/2 -translate-x-1/2 -mt-1"
+                : position === "bottom"
+                  ? "bottom-full left-1/2 -translate-x-1/2 -mb-1"
+                  : position === "left"
+                    ? "left-full top-1/2 -translate-y-1/2 -ml-1"
+                    : "right-full top-1/2 -translate-y-1/2 -mr-1"
                 }`}
             />
           </div>
@@ -122,6 +123,16 @@ export default function OrderManagement() {
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(null);
 
+  // Delete Modal States
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
+
+  // Pagination States
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
+
   const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
   // Get token from cookies
@@ -133,10 +144,10 @@ export default function OrderManagement() {
   };
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    fetchOrders(currentPage);
+  }, [currentPage]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (page = 1) => {
     try {
       setLoading(true);
       const token = getTokenFromCookies();
@@ -145,12 +156,17 @@ export default function OrderManagement() {
         return;
       }
 
-      const { data } = await axios.get(`${API_BASE}/api/orders`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await axios.get(
+        `${API_BASE}/api/orders?page=${page}&limit=${itemsPerPage}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       if (data.success) {
         setOrders(data.data || []);
+        setTotalPages(data.pages || 1);
+        setTotalOrders(data.total || 0);
       }
     } catch (error) {
       console.error("Order fetch error:", error);
@@ -180,7 +196,7 @@ export default function OrderManagement() {
 
       if (data.success) {
         toast.success(`Order status updated to ${newStatus}`);
-        fetchOrders();
+        fetchOrders(currentPage);
       }
     } catch (error) {
       const errorMsg =
@@ -212,7 +228,7 @@ export default function OrderManagement() {
 
       if (data.success) {
         toast.success(`Payment status updated to ${newStatus}`);
-        fetchOrders();
+        fetchOrders(currentPage);
       }
     } catch (error) {
       const errorMsg =
@@ -225,9 +241,6 @@ export default function OrderManagement() {
   };
 
   const handleMarkDelivered = async (orderId) => {
-    if (!confirm("Are you sure you want to mark this order as delivered?"))
-      return;
-
     setActionLoading(orderId);
     try {
       const token = getTokenFromCookies();
@@ -246,7 +259,7 @@ export default function OrderManagement() {
 
       if (data.success) {
         toast.success("🎉 Order marked as delivered!");
-        fetchOrders();
+        fetchOrders(currentPage);
       }
     } catch (error) {
       const errorMsg =
@@ -258,15 +271,17 @@ export default function OrderManagement() {
     }
   };
 
-  const handleDeleteOrder = async (orderId) => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this order? This action cannot be undone."
-      )
-    )
-      return;
+  // Delete Order with Modal
+  const openDeleteModal = (orderId) => {
+    setOrderToDelete(orderId);
+    setShowDeleteModal(true);
+    setDropdownOpen(null);
+  };
 
-    setActionLoading(orderId);
+  const handleDeleteOrder = async () => {
+    if (!orderToDelete) return;
+
+    setActionLoading(orderToDelete);
     try {
       const token = getTokenFromCookies();
       if (!token) {
@@ -274,19 +289,21 @@ export default function OrderManagement() {
         return;
       }
 
-      await axios.delete(`${API_BASE}/api/orders/${orderId}`, {
+      await axios.delete(`${API_BASE}/api/orders/${orderToDelete}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       toast.success("🗑️ Order deleted successfully!");
-      fetchOrders();
+      fetchOrders(currentPage);
+      setShowDetailsModal(false);
     } catch (error) {
       const errorMsg =
         error.response?.data?.message || "Failed to delete order";
       toast.error(errorMsg);
     } finally {
       setActionLoading(null);
-      setDropdownOpen(null);
+      setOrderToDelete(null);
+      setShowDeleteModal(false);
     }
   };
 
@@ -298,6 +315,14 @@ export default function OrderManagement() {
 
   const toggleDropdown = (orderId) => {
     setDropdownOpen(dropdownOpen === orderId ? null : orderId);
+  };
+
+  // Handle Page Change
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   // Enhanced status badge with all statuses
@@ -372,13 +397,15 @@ export default function OrderManagement() {
     return (
       <div className="flex flex-col gap-2">
         <span
-          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${statusConfig[status]?.color}`}
+          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${statusConfig[status]?.color
+            }`}
         >
           <StatusIcon className="w-4 h-4" />
           {statusConfig[status]?.text || status}
         </span>
         <span
-          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${PaymentStatus.color}`}
+          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${PaymentStatus.color
+            }`}
         >
           <PaymentStatus.icon className="w-3 h-3" />
           {PaymentStatus.text}
@@ -423,8 +450,8 @@ export default function OrderManagement() {
                 onClick={() => onStatusUpdate("delivery", option.value)}
                 disabled={loading || order.deliveryStatus === option.value}
                 className={`p-2 text-xs font-medium rounded-lg border transition-all duration-200 ${order.deliveryStatus === option.value
-                    ? "bg-blue-100 text-blue-700 border-blue-300"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+                  ? "bg-blue-100 text-blue-700 border-blue-300"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <span className={option.color}>{option.label}</span>
@@ -444,8 +471,8 @@ export default function OrderManagement() {
                 onClick={() => onStatusUpdate("payment", option.value)}
                 disabled={loading || order.paymentStatus === option.value}
                 className={`p-2 text-xs font-medium rounded-lg border transition-all duration-200 ${order.paymentStatus === option.value
-                    ? "bg-green-100 text-green-700 border-green-300"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
+                  ? "bg-green-100 text-green-700 border-green-300"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400"
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <span className={option.color}>{option.label}</span>
@@ -475,7 +502,8 @@ export default function OrderManagement() {
 
     return (
       <span
-        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${methodConfig.color}`}
+        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${methodConfig.color
+          }`}
       >
         <Icon className="w-4 h-4" />
         {methodConfig.text}
@@ -483,6 +511,7 @@ export default function OrderManagement() {
     );
   };
 
+  // Filter orders
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.buyer?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -500,7 +529,7 @@ export default function OrderManagement() {
 
   // Statistics
   const stats = {
-    total: orders.length,
+    total: totalOrders,
     pending: orders.filter((order) => order.deliveryStatus === "pending")
       .length,
     delivered: orders.filter((order) => order.deliveryStatus === "delivered")
@@ -587,7 +616,7 @@ export default function OrderManagement() {
               </div>
             </div>
             <button
-              onClick={fetchOrders}
+              onClick={() => fetchOrders(currentPage)}
               disabled={loading}
               className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed group"
             >
@@ -603,17 +632,7 @@ export default function OrderManagement() {
       </div>
 
       {/* Main Content */}
-      <div className="">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* ... Statistics cards remain the same ... */}
-        </div>
-
-        {/* Search and Filters Section */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 border border-gray-200/60 shadow-sm">
-          {/* ... Search and filters remain the same ... */}
-        </div>
-
+      <div className="py-8">
         {/* Orders Table Section */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-200/60 shadow-sm">
           {/* Table Header */}
@@ -624,7 +643,7 @@ export default function OrderManagement() {
                   All Orders
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  Showing {filteredOrders.length} of {orders.length} orders
+                  Showing {filteredOrders.length} of {totalOrders} orders
                 </p>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -655,13 +674,13 @@ export default function OrderManagement() {
                 No orders found
               </h3>
               <p className="text-gray-600 max-w-md mx-auto">
-                {orders.length === 0
+                {totalOrders === 0
                   ? "No orders have been placed yet. Orders will appear here when customers make purchases."
                   : "No orders match your current filters. Try adjusting your search or filters."}
               </p>
-              {orders.length === 0 && (
+              {totalOrders === 0 && (
                 <button
-                  onClick={fetchOrders}
+                  onClick={() => fetchOrders(currentPage)}
                   className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg"
                 >
                   Check for New Orders
@@ -669,203 +688,244 @@ export default function OrderManagement() {
               )}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50/80">
-                  <tr>
-                    {[
-                      "Order ID",
-                      "Customer",
-                      "Product",
-                      "Qty",
-                      "Total",
-                      "Payment",
-                      "Status",
-                      "Order Date",
-                      "Actions",
-                    ].map((header) => (
-                      <th
-                        key={header}
-                        className="px-6 py-4 text-left text-sm font-semibold text-gray-900 whitespace-nowrap"
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50/80">
+                    <tr>
+                      {[
+                        "Order ID",
+                        "Customer",
+                        "Product",
+                        "Qty",
+                        "Total",
+                        "Payment",
+                        "Status",
+                        "Order Date",
+                        "Actions",
+                      ].map((header) => (
+                        <th
+                          key={header}
+                          className="px-6 py-4 text-left text-sm font-semibold text-gray-900 whitespace-nowrap"
+                        >
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200/60">
+                    {filteredOrders.map((order) => (
+                      <tr
+                        key={order._id}
+                        className="hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-blue-100/30 transition-all duration-200 group"
                       >
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200/60">
-                  {filteredOrders.map((order) => (
-                    <tr
-                      key={order._id}
-                      className="hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-blue-100/30 transition-all duration-200 group"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          <div>
-                            <div className="font-mono text-sm font-semibold text-gray-900">
-                              #{order._id.slice(-8).toUpperCase()}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <div>
+                              <div className="font-mono text-sm font-semibold text-gray-900">
+                                #{order._id.slice(-8).toUpperCase()}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                            <User className="w-5 h-5 text-white" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="font-medium text-gray-900">
-                              <ClampText
-                                text={order.buyer?.username || "N/A"}
-                                lines={1}
-                                className="text-gray-900 font-medium"
-                                showTooltip={true}
-                                tooltipPosition="top"
-                              />
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                              <User className="w-5 h-5 text-white" />
                             </div>
-                            <div className="text-sm text-gray-500 mt-1">
-                              <ClampText
-                                text={order.buyer?.email || "N/A"}
-                                lines={1}
-                                className="text-gray-500 text-sm"
-                                showTooltip={true}
-                                tooltipPosition="top"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={order.merch?.image}
-                            alt={order.merch?.name}
-                            className="w-12 h-12 object-cover rounded-xl border-2 border-gray-200 group-hover:border-blue-300 transition-colors flex-shrink-0"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="font-medium text-gray-900">
-                              <ClampText
-                                text={order.merch?.name || "Product Deleted"}
-                                lines={1}
-                                className="text-gray-900 font-medium"
-                                showTooltip={true}
-                                tooltipPosition="top"
-                              />
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              ${formatPrice(order.merch?.price || 0)}
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium text-gray-900">
+                                <ClampText
+                                  text={order.buyer?.username || "N/A"}
+                                  lines={1}
+                                  className="text-gray-900 font-medium"
+                                  showTooltip={true}
+                                  tooltipPosition="top"
+                                />
+                              </div>
+                              <div className="text-sm text-gray-500 mt-1">
+                                <ClampText
+                                  text={order.buyer?.email || "N/A"}
+                                  lines={1}
+                                  className="text-gray-500 text-sm"
+                                  showTooltip={true}
+                                  tooltipPosition="top"
+                                />
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
-                          {order.quantity}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="w-4 h-4 text-emerald-600" />
-                          <span className="font-bold text-emerald-700 text-lg">
-                            ${formatPrice(order.totalPrice)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={order.merch?.image}
+                              alt={order.merch?.name}
+                              className="w-12 h-12 object-cover rounded-xl border-2 border-gray-200 group-hover:border-blue-300 transition-colors flex-shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium text-gray-900">
+                                <ClampText
+                                  text={order.merch?.name || "Product Deleted"}
+                                  lines={1}
+                                  className="text-gray-900 font-medium"
+                                  showTooltip={true}
+                                  tooltipPosition="top"
+                                />
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                ${formatPrice(order.merch?.price || 0)}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                            {order.quantity}
                           </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        {getPaymentMethodBadge(order.paymentMethod)}
-                      </td>
-                      <td className="px-6 py-4">{getStatusBadge(order)}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1">
-                          <div className="text-sm text-gray-900 font-medium flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            {formatDate(order.createdAt)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="w-4 h-4 text-emerald-600" />
+                            <span className="font-bold text-emerald-700 text-lg">
+                              ${formatPrice(order.totalPrice)}
+                            </span>
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {formatTime(order.createdAt)}
+                        </td>
+                        <td className="px-6 py-4">
+                          {getPaymentMethodBadge(order.paymentMethod)}
+                        </td>
+                        <td className="px-6 py-4">{getStatusBadge(order)}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-1">
+                            <div className="text-sm text-gray-900 font-medium flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-gray-400" />
+                              {formatDate(order.createdAt)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {formatTime(order.createdAt)}
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end">
-                          <div className="relative dropdown-container">
-                            <button
-                              onClick={() => toggleDropdown(order._id)}
-                              className="p-2 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all duration-200 hover:scale-110"
-                              title="Actions"
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-end">
+                            <div className="relative dropdown-container">
+                              <button
+                                onClick={() => toggleDropdown(order._id)}
+                                className="p-2 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all duration-200 hover:scale-110"
+                                title="Actions"
+                              >
+                                <MoreVertical className="w-4 h-4" />
+                              </button>
 
-                            {/* Enhanced Dropdown Menu */}
-                            {dropdownOpen === order._id && (
-                              <div className="absolute right-0 top-10 z-50 w-64 bg-white rounded-xl shadow-2xl border border-gray-200/60 backdrop-blur-sm">
-                                <div className="p-4 space-y-4">
-                                  {/* View Details Button */}
-                                  <button
-                                    onClick={() => handleViewDetails(order)}
-                                    className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-lg transition-all duration-200 group"
-                                  >
-                                    <Eye className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
-                                    <span className="font-medium">
-                                      View Details
-                                    </span>
-                                  </button>
-
-                                  {/* Status Update Section */}
-                                  <div className="border-t border-gray-200 pt-4">
-                                    <StatusDropdown
-                                      order={order}
-                                      onStatusUpdate={(type, status) => {
-                                        if (type === "delivery") {
-                                          handleUpdateDeliveryStatus(
-                                            order._id,
-                                            status
-                                          );
-                                        } else {
-                                          handleUpdatePaymentStatus(
-                                            order._id,
-                                            status
-                                          );
-                                        }
-                                      }}
-                                      loading={
-                                        statusUpdateLoading === order._id
-                                      }
-                                    />
-                                  </div>
-
-                                  {/* Delete Order Button */}
-                                  {order.deliveryStatus !== "delivered" && (
+                              {/* Enhanced Dropdown Menu */}
+                              {dropdownOpen === order._id && (
+                                <div className="absolute right-0 top-10 z-50 w-64 bg-white rounded-xl shadow-2xl border border-gray-200/60 backdrop-blur-sm">
+                                  <div className="p-4 space-y-4">
+                                    {/* View Details Button */}
                                     <button
-                                      onClick={() =>
-                                        handleDeleteOrder(order._id)
-                                      }
-                                      disabled={actionLoading === order._id}
-                                      className="w-full flex items-center gap-3 px-4 py-3 text-rose-700 hover:bg-rose-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
+                                      onClick={() => handleViewDetails(order)}
+                                      className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-lg transition-all duration-200 group"
                                     >
-                                      {actionLoading === order._id ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                      ) : (
-                                        <XCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                      )}
+                                      <Eye className="w-4 h-4 text-blue-600 group-hover:scale-110 transition-transform" />
                                       <span className="font-medium">
-                                        Delete Order
+                                        View Details
                                       </span>
                                     </button>
-                                  )}
+
+                                    {/* Status Update Section */}
+                                    <div className="border-t border-gray-200 pt-4">
+                                      <StatusDropdown
+                                        order={order}
+                                        onStatusUpdate={(type, status) => {
+                                          if (type === "delivery") {
+                                            handleUpdateDeliveryStatus(
+                                              order._id,
+                                              status
+                                            );
+                                          } else {
+                                            handleUpdatePaymentStatus(
+                                              order._id,
+                                              status
+                                            );
+                                          }
+                                        }}
+                                        loading={
+                                          statusUpdateLoading === order._id
+                                        }
+                                      />
+                                    </div>
+
+                                    {/* Delete Order Button */}
+                                    {order.deliveryStatus !== "delivered" && (
+                                      <button
+                                        onClick={() => openDeleteModal(order._id)}
+                                        disabled={actionLoading === order._id}
+                                        className="w-full flex items-center gap-3 px-4 py-3 text-rose-700 hover:bg-rose-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group"
+                                      >
+                                        {actionLoading === order._id ? (
+                                          <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                          <XCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                        )}
+                                        <span className="font-medium">
+                                          Delete Order
+                                        </span>
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="px-6 py-4 border-t border-gray-200/60 bg-gray-50/80">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-700">
+                      Showing page {currentPage} of {totalPages}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="p-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+
+                      {[...Array(totalPages)].map((_, i) => (
+                        <button
+                          key={i + 1}
+                          onClick={() => handlePageChange(i + 1)}
+                          className={`px-4 py-2 rounded-lg font-medium ${currentPage === i + 1
+                            ? "bg-blue-600 text-white"
+                            : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                            }`}
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
+
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="p-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -947,12 +1007,12 @@ export default function OrderManagement() {
                           </p>
                           <span
                             className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold mt-2 ${selectedOrder.paymentStatus === "paid"
-                                ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                                : selectedOrder.paymentStatus === "pending"
-                                  ? "bg-amber-100 text-amber-700 border border-amber-200"
-                                  : selectedOrder.paymentStatus === "failed"
-                                    ? "bg-rose-100 text-rose-700 border border-rose-200"
-                                    : "bg-purple-100 text-purple-700 border border-purple-200"
+                              ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                              : selectedOrder.paymentStatus === "pending"
+                                ? "bg-amber-100 text-amber-700 border border-amber-200"
+                                : selectedOrder.paymentStatus === "failed"
+                                  ? "bg-rose-100 text-rose-700 border border-rose-200"
+                                  : "bg-purple-100 text-purple-700 border border-purple-200"
                               }`}
                           >
                             {selectedOrder.paymentStatus === "paid" && (
@@ -983,19 +1043,19 @@ export default function OrderManagement() {
                       </p>
                       <span
                         className={`inline-flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold ${selectedOrder.deliveryStatus === "delivered"
-                            ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                            : selectedOrder.deliveryStatus === "pending"
-                              ? "bg-amber-100 text-amber-700 border border-amber-200"
-                              : selectedOrder.deliveryStatus === "confirmed"
-                                ? "bg-blue-100 text-blue-700 border border-blue-200"
-                                : selectedOrder.deliveryStatus === "processing"
-                                  ? "bg-indigo-100 text-indigo-700 border border-indigo-200"
-                                  : selectedOrder.deliveryStatus ===
-                                    "ready-for-pickup"
-                                    ? "bg-purple-100 text-purple-700 border border-purple-200"
-                                    : selectedOrder.deliveryStatus === "shipped"
-                                      ? "bg-cyan-100 text-cyan-700 border border-cyan-200"
-                                      : "bg-rose-100 text-rose-700 border border-rose-200"
+                          ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                          : selectedOrder.deliveryStatus === "pending"
+                            ? "bg-amber-100 text-amber-700 border border-amber-200"
+                            : selectedOrder.deliveryStatus === "confirmed"
+                              ? "bg-blue-100 text-blue-700 border border-blue-200"
+                              : selectedOrder.deliveryStatus === "processing"
+                                ? "bg-indigo-100 text-indigo-700 border border-indigo-200"
+                                : selectedOrder.deliveryStatus ===
+                                  "ready-for-pickup"
+                                  ? "bg-purple-100 text-purple-700 border border-purple-200"
+                                  : selectedOrder.deliveryStatus === "shipped"
+                                    ? "bg-cyan-100 text-cyan-700 border border-cyan-200"
+                                    : "bg-rose-100 text-rose-700 border border-rose-200"
                           }`}
                       >
                         {selectedOrder.deliveryStatus === "delivered" && (
@@ -1243,16 +1303,7 @@ export default function OrderManagement() {
 
                       {selectedOrder.deliveryStatus !== "delivered" && (
                         <button
-                          onClick={() => {
-                            if (
-                              confirm(
-                                "Are you sure you want to delete this order? This action cannot be undone."
-                              )
-                            ) {
-                              handleDeleteOrder(selectedOrder._id);
-                              setShowDetailsModal(false);
-                            }
-                          }}
+                          onClick={() => openDeleteModal(selectedOrder._id)}
                           disabled={actionLoading === selectedOrder._id}
                           className="w-full flex items-center justify-center gap-4 px-6 py-4 bg-gradient-to-r from-rose-500 to-rose-600 text-white rounded-xl hover:from-rose-600 hover:to-rose-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed group"
                         >
@@ -1281,6 +1332,23 @@ export default function OrderManagement() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setOrderToDelete(null);
+        }}
+        onConfirm={handleDeleteOrder}
+        title="Delete Order"
+        description="Are you sure you want to delete this order? This action cannot be undone. All associated data will be permanently removed."
+        confirmText="Delete Order"
+        cancelText="Keep Order"
+        loading={actionLoading === orderToDelete}
+        type="danger"
+        itemName={selectedOrder?.merch?.name || "Order"}
+      />
     </div>
   );
 }

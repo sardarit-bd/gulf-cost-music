@@ -1,6 +1,10 @@
-import UniversalOrderTracking from "@/components/modules/dashboard/orders/page";
+import OrdersPage from "@/components/shared/order/OrdersPage"
 
 
-export default function JournalistOrders() {
-    return <UniversalOrderTracking />;
+const JournalistOrderDashboard = () => {
+    return (
+        <OrdersPage />
+    )
 }
+
+export default JournalistOrderDashboard

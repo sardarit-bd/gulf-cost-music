@@ -17,12 +17,13 @@ export default function VideoPreview({ videoUrl }) {
         : `https://res.cloudinary.com/${cloudName}/video/upload/q_auto/${videoUrl}.mp4`;
 
     return (
-        <div className="relative w-full h-64 md:h-72 lg:h-80 bg-gray-900 rounded-md overflow-hidden mb-3">
+        <div className="absolute inset-0 w-full h-full">
             <video
-                controls
+                autoPlay
+                loop
                 muted
-                autoPlay={false}
-                className="w-full h-full object-cover"
+                playsInline
+                className="w-full h-full object-cover opacity-30"
                 poster={posterUrl}
             >
                 <source src={videoSrc} type="video/mp4" />

@@ -14,14 +14,15 @@ export const ROLE_MENUS = {
     { label: "Videos", href: "/dashboard/photographer/videos" },
     { label: "Market", href: "/dashboard/photographer/market" },
     { label: "Billing", href: "/dashboard/billing" },
+    { label: "Orders", href: "/dashboard/photographer/orders" },
   ],
   venue: [
     { label: "Overview", href: "/dashboard/venue" },
     // { label: "Edit Profile", href: "/dashboard/venue/edit" },
     { label: "Add Show", href: "/dashboard/venue/addshow" },
     { label: "Market", href: "/dashboard/venue/marketplace" },
-    { label: "Orders", href: "/dashboard/venue/orders" },
     { label: "Billing", href: "/dashboard/billing" },
+    { label: "Orders", href: "/dashboard/venue/orders" },
   ],
   journalist: [
     { label: "Overview", href: "/dashboard/journalist" },
@@ -30,6 +31,7 @@ export const ROLE_MENUS = {
     { label: "Market", href: "/dashboard/journalist/market" },
     // { label: "Edit Post", href: "/dashboard/journalist/edit-news" },
     { label: "Billing", href: "/dashboard/billing" },
+    { label: "Orders", href: "/dashboard/journalist/orders" },
   ],
 
   studio: [

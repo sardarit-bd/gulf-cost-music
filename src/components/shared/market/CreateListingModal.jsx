@@ -34,7 +34,7 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
     const totalWithFee = price + feeAmount;
 
     const locationOptions = [
-        { value: "", label: "Select location (optional)" },
+        { value: "", label: "Select location" },
         { value: "Louisiana", label: "Louisiana" },
         { value: "Mississippi", label: "Mississippi" },
         { value: "Alabama", label: "Alabama" },
@@ -307,7 +307,7 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                                         options={locationOptions}
                                         onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                         icon={<MapPin className="w-5 h-5" />}
-                                        placeholder="Select location (optional)"
+                                        placeholder="Select location"
                                         className="w-full"
                                     />
                                 </div>
@@ -405,7 +405,7 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                                 {photoPreviews.length < 5 && (
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-yellow-500 hover:bg-yellow-50 transition-colors bg-gray-50"
+                                        className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-yellow-500 hover:bg-yellow-50 transition-colors bg-gray-50 cursor-pointer"
                                     >
                                         <Camera className="w-6 h-6 text-gray-400" />
                                         <span className="text-xs text-gray-500">Add Photo</span>
@@ -447,7 +447,7 @@ export default function CreateListingModal({ isOpen, onClose, userType, onSucces
                             ) : (
                                 <button
                                     onClick={() => videoInputRef.current?.click()}
-                                    className="w-full aspect-video border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-yellow-500 hover:bg-yellow-50 transition-colors bg-gray-50"
+                                    className="w-full aspect-video border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-yellow-500 hover:bg-yellow-50 transition-colors bg-gray-50 cursor-pointer"
                                 >
                                     <Video className="w-8 h-8 text-gray-400" />
                                     <span className="text-gray-600">Click to upload video</span>

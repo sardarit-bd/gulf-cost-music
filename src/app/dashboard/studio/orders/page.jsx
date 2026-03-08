@@ -1,3 +1,10 @@
-import OrdersPage from "../../orders/page";
+import OrdersPage from "@/components/shared/order/OrdersPage"
 
-export default OrdersPage;
+
+const StudioOrderDashboard = () => {
+    return (
+        <OrdersPage />
+    )
+}
+
+export default StudioOrderDashboard

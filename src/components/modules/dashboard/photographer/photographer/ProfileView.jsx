@@ -22,7 +22,7 @@ export default function ProfileView({ photographer, user, formatCityName, getFul
                         <Camera className="w-8 h-8" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold">{photographer.name || "Your Name"}</h1>
+                        <h1 className="text-3xl font-bold capitalize">{photographer.name || "Your Name"}</h1>
                         <div className="flex items-center gap-2 mt-2 text-white/80">
                             <MapPin className="w-4 h-4" />
                             <span>

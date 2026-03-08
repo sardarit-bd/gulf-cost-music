@@ -1,3 +1,10 @@
 import OrdersPage from "@/components/shared/order/OrdersPage";
 
-export default OrdersPage;
+
+const OrdersDashboard = () => {
+    return (
+        <OrdersPage />
+    )
+}
+
+export default OrdersDashboard

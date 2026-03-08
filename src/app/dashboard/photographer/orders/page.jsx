@@ -1,5 +1,9 @@
-import UniversalOrderTracking from "@/components/modules/dashboard/orders/page";
+import OrdersPage from "@/components/shared/order/OrdersPage"
 
-export default function PhotographerOrders() {
-    return <UniversalOrderTracking />;
+const OrdersDashboard = () => {
+    return (
+        <OrdersPage />
+    )
 }
+
+export default OrdersDashboard

@@ -63,7 +63,7 @@ export default function EditListingModal({
   }, [listing]);
 
   const locationOptions = [
-    { value: "", label: "Select location (optional)" },
+    { value: "", label: "Select location" },
     { value: "Louisiana", label: "Louisiana" },
     { value: "Mississippi", label: "Mississippi" },
     { value: "Alabama", label: "Alabama" },

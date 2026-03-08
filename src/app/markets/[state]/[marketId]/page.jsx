@@ -259,11 +259,10 @@ export default function MarketItemPage() {
                       {item.sellerType}
                     </span>
                     <span
-                      className={`capitalize px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${
-                        item.status === "active"
+                      className={`capitalize px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium border ${item.status === "active"
                           ? "bg-green-500/20 text-green-400 border-green-500/30"
                           : "bg-red-500/20 text-red-400 border-red-500/30"
-                      }`}
+                        }`}
                     >
                       {item.status}
                     </span>
@@ -406,21 +405,19 @@ export default function MarketItemPage() {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 md:px-8 py-3 sm:py-4 font-semibold transition-all duration-300 whitespace-nowrap border-b-2 ${
-                          activeTab === tab.id
+                        className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-6 md:px-8 py-3 sm:py-4 font-semibold transition-all duration-300 whitespace-nowrap border-b-2 ${activeTab === tab.id
                             ? "text-yellow-400 border-yellow-400 bg-yellow-400/5"
                             : "text-gray-400 hover:text-white border-transparent hover:bg-white/5"
-                        }`}
+                          }`}
                       >
                         <tab.icon size={18} className="sm:w-5 md:w-6" />
                         {tab.label}
                         {tab.count > 0 && (
                           <span
-                            className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold ${
-                              activeTab === tab.id
+                            className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold ${activeTab === tab.id
                                 ? "bg-yellow-400 text-black"
                                 : "bg-gray-700 text-gray-300"
-                            }`}
+                              }`}
                           >
                             {tab.count}
                           </span>
@@ -438,7 +435,7 @@ export default function MarketItemPage() {
                         Description
                       </h3>
                       <div className="prose prose-invert max-w-none">
-                        <p className="text-gray-300 leading-relaxed text-base sm:text-lg bg-gray-700/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-600/30">
+                        <p className="text-gray-300 leading-relaxed text-base sm:text-lg bg-gray-700/30 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-gray-600/30 capitalize">
                           {item.description}
                         </p>
                       </div>
@@ -606,11 +603,10 @@ export default function MarketItemPage() {
                   <button
                     key={index}
                     onClick={() => setCurrentGalleryIndex(index)}
-                    className={`w-16 h-16 rounded overflow-hidden border-2 transition-all ${
-                      currentGalleryIndex === index
+                    className={`w-16 h-16 rounded overflow-hidden border-2 transition-all ${currentGalleryIndex === index
                         ? "border-yellow-400 scale-110"
                         : "border-transparent hover:border-white/50"
-                    }`}
+                      }`}
                   >
                     <Image
                       src={item.photos[index]}

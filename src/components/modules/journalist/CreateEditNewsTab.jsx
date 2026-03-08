@@ -119,11 +119,17 @@ export default function CreateEditNewsTab({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Credit / Byline
                 </label>
+
                 <input
                   name="credit"
                   value={form.credit}
-                  onChange={onFormChange}
-                  placeholder="Your name or source credit..."
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ""); // remove all non-numbers
+                    onFormChange({
+                      target: { name: "credit", value }
+                    });
+                  }}
+                  placeholder="Enter numbers only..."
                   className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition"
                 />
               </div>

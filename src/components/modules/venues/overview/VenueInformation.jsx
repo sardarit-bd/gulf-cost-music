@@ -1,16 +1,14 @@
 // components/venue/VenueInformation.js
 import {
   Building2,
+  Calendar,
   Clock,
+  Globe,
+  Info,
   MapPin,
   Phone,
-  Users,
-  Globe,
-  Calendar,
-  Info,
-  Star,
+  Users
 } from "lucide-react";
-import Link from "next/link";
 
 const InfoCard = ({ title, icon, children, color = "blue" }) => {
   const colorClasses = {
@@ -94,11 +92,11 @@ export default function VenueInformation({ venue, subscriptionPlan }) {
           <Building2 size={20} className="text-white" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-900">{venue.venueName || venue.name}</h2>
+          <h2 className="text-xl font-bold text-gray-900 capitalize">{venue.venueName || venue.name}</h2>
           <div className="flex items-center gap-2 mt-1">
             <span className={`text-xs px-2 py-0.5 rounded-full ${venue.isActive
-                ? "bg-green-100 text-green-700 border border-green-200"
-                : "bg-yellow-100 text-yellow-700 border border-yellow-200"
+              ? "bg-green-100 text-green-700 border border-green-200"
+              : "bg-yellow-100 text-yellow-700 border border-yellow-200"
               }`}>
               {venue.isActive ? 'Verified' : 'Pending'}
             </span>

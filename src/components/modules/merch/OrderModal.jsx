@@ -152,7 +152,7 @@ const OrderModal = ({
                                 <button
                                     onClick={decrementQuantity}
                                     disabled={orderQuantity <= 1}
-                                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                                 >
                                     <Minus className="w-4 h-4 text-gray-600" />
                                 </button>
@@ -175,7 +175,7 @@ const OrderModal = ({
                                 <button
                                     onClick={incrementQuantity}
                                     disabled={orderQuantity >= selectedItem.stock}
-                                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                                 >
                                     <Plus className="w-4 h-4 text-gray-600" />
                                 </button>
@@ -209,7 +209,7 @@ const OrderModal = ({
                             <div className="grid grid-cols-1 gap-3">
                                 <button
                                     onClick={() => handlePaymentMethodSelect("stripe")}
-                                    className={`p-4 border-2 rounded-lg text-center transition-all duration-200 ${selectedPaymentMethod === "stripe"
+                                    className={`cursor-pointer p-4 border-2 rounded-lg text-center transition-all duration-200 ${selectedPaymentMethod === "stripe"
                                         ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
                                         : "border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:shadow-md"
                                         }`}
@@ -354,7 +354,7 @@ const OrderModal = ({
                             !orderQuantity ||
                             (selectedPaymentMethod === "cod" && !isShippingFormValid())
                         }
-                        className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--primary)]/90 text-gray-700 py-4 px-6 rounded-lg font-semibold hover:from-[var(--primary)]/90 hover:to-[var(--primary)]/80 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl mt-6"
+                        className="w-full bg-gradient-to-r from-[var(--primary)] to-[var(--primary)]/90 text-gray-700 py-4 px-6 rounded-lg font-semibold hover:from-[var(--primary)]/90 hover:to-[var(--primary)]/80 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl mt-6 cursor-pointer"
                     >
                         {orderLoading ? (
                             <>

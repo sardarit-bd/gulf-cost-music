@@ -185,7 +185,7 @@ export default function ArtistDashboardPage() {
             <Toaster />
             {/* Main Content */}
             <div className=" px-4 sm:px-6 lg:px-8 py-8">
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden p-3">
                     <div className="border-b border-gray-100">
                         <div className="px-6 py-4">
                             <h1 className="text-2xl font-bold text-gray-900">Artist Overview</h1>

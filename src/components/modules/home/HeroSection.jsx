@@ -182,26 +182,25 @@ export default function HeroSection() {
           {hero?.title || "Welcome to Gulf Coast Music"}
         </h1>
 
-        {/* Subtitle with Flash Text */}
-        <p className="text-xl md:text-2xl lg:text-2xl text-gray-200 mb-8 max-w-4xl leading-relaxed">
-          {hero?.subtitlePrefix || "Experience the best with stunning"}{" "}
-          {hero?.animationSettings?.isEnabled ? (
-            <span key={currentWord} className="flash-wrapper">
-  <span className="flash-lg">
-    <span
-      className="flash-sl"
-      style={{ backgroundColor: flashColor }}
-    ></span>
-    <span className="flash-text">
-      {currentFlashWord}
-    </span>
-  </span>
-</span>
-          ) : (
-            <span className="font-bold" style={{ color: flashColor }}>
-              {currentFlashWord}
-            </span>
-          )}
+        {/* Subtitle with Flash Text - FIXED VERSION */}
+        <p className="text-xl md:text-2xl lg:text-2xl text-gray-200 mb-8 max-w-4xl leading-relaxed flex items-center justify-center gap-2">
+
+          {/* Fixed Left Text */}
+          <span className="text-gray-200 font-medium">
+            For local:
+          </span>
+
+          {/* Rotating Word Container */}
+          <span
+            className="font-bold text-yellow-400 min-w-[180px] text-left"
+            style={{
+              color: flashColor,
+              animation: "fadeInOut 1.5s ease-in-out"
+            }}
+          >
+            {currentFlashWord}
+          </span>
+
         </p>
 
         <button className="bg-yellow-400 hover:bg-yellow-500 text-black px-8 py-3 rounded-lg font-bold hover:bg-yellow-500/90 transition text-lg shadow-lg">
