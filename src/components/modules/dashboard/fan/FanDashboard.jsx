@@ -110,7 +110,7 @@ export default function FanDashboard() {
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold mb-2">
+            <h1 className="text-2xl font-bold mb-2 capitalize">
               Welcome back, {user?.username || "Fan"}! 👋
             </h1>
             <p className="text-purple-100">
