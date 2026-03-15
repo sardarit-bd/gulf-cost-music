@@ -138,10 +138,10 @@ export default function CreateNewsPage() {
       return;
     }
 
-    if (!form.credit.trim()) {
-      toast.error("Please enter credit/byline");
-      return;
-    }
+    // if (!form.credit.trim()) {
+    //   toast.error("Please enter credit/byline");
+    //   return;
+    // }
 
     if (!form.state) {
       toast.error("Please select a state");

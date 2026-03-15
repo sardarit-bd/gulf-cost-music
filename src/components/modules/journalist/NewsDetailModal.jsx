@@ -28,12 +28,13 @@ export default function NewsDetailModal({ news, isOpen, onClose }) {
           {news.photos?.length > 0 && (
             <div className="p-6 border-b border-gray-200">
               <div
-                className={`grid gap-4 ${news.photos.length === 1
-                  ? "grid-cols-1"
-                  : news.photos.length === 2
-                    ? "grid-cols-2"
-                    : "grid-cols-1 md:grid-cols-2"
-                  }`}
+                className={`grid gap-4 ${
+                  news.photos.length === 1
+                    ? "grid-cols-1"
+                    : news.photos.length === 2
+                      ? "grid-cols-2"
+                      : "grid-cols-1 md:grid-cols-2"
+                }`}
               >
                 {news.photos.map((photo, index) => (
                   <div
@@ -77,7 +78,7 @@ export default function NewsDetailModal({ news, isOpen, onClose }) {
                     minute: "2-digit",
                   })}
                 </div>
-                <div className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-full">
+                <div className="flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-full capitalize">
                   <MapPin size={14} />
                   {news.location}
                 </div>
@@ -139,7 +140,7 @@ export default function NewsDetailModal({ news, isOpen, onClose }) {
         <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition font-medium"
+            className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition font-medium cursor-pointer"
           >
             Close
           </button>

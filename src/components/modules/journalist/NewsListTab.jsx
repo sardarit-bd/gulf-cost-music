@@ -182,7 +182,7 @@ export default function NewsListTab({
                         {item.location}
                       </div>
                       {item.credit && (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 capitalize">
                           <User size={14} />
                           {item.credit}
                         </div>

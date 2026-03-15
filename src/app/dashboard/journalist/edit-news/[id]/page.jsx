@@ -210,8 +210,8 @@ export default function EditNewsPage() {
       return;
     }
 
-    if (form.title.trim().length < 5) {
-      toast.error("Title must be at least 5 characters");
+    if (form.title.trim().length < 1) {
+      toast.error("Title must be at least 1 characters");
       return;
     }
 
@@ -253,10 +253,7 @@ export default function EditNewsPage() {
 
       // ✅ FIXED: backend expects "deletedPhotos"
       if (removedPhotoUrls && removedPhotoUrls.length > 0) {
-        formData.append(
-          "deletedPhotos",
-          JSON.stringify(removedPhotoUrls)
-        );
+        formData.append("deletedPhotos", JSON.stringify(removedPhotoUrls));
       }
 
       // Add new photos
@@ -274,7 +271,7 @@ export default function EditNewsPage() {
             Authorization: `Bearer ${token}`,
           },
           body: formData,
-        }
+        },
       );
 
       const data = await res.json();
@@ -297,7 +294,6 @@ export default function EditNewsPage() {
 
       toast.success("News updated successfully!");
       router.push("/dashboard/journalist/dashboard");
-
     } catch (err) {
       console.error("Error updating news:", err);
       toast.error("Something went wrong while updating news");
