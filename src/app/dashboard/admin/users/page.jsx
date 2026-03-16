@@ -207,7 +207,7 @@ const UserManagement = () => {
       setTimeout(() => {
         setPage(1);
         fetchUsers();
-      }, 500)
+      }, 500),
     );
   };
 
@@ -229,7 +229,7 @@ const UserManagement = () => {
       await axios.put(
         `${USERS_URL}/${id}/verify`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       fetchUsers();
       fetchStats();
@@ -270,7 +270,7 @@ const UserManagement = () => {
       const response = await axios.post(
         `${USERS_URL}/${userId}/promote`,
         { role, permissions: ["manage_users", "manage_content"] },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (response.data.success) {
@@ -386,7 +386,6 @@ const UserManagement = () => {
   }, [searchTimeout]);
 
   const hasActiveFilters = search || userType !== "all" || verified !== "";
-
 
   if (loading) {
     return (
