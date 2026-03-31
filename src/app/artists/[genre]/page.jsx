@@ -10,14 +10,22 @@ export default function GenrePage() {
   const [artists, setArtists] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ✅ Only fix rnb_soul
+  const formatGenre = (genre) => {
+    if (!genre) return "";
+    if (genre.toLowerCase() === "rnb_soul") return "RnB/Soul";
+    return genre;
+  };
 
   useEffect(() => {
     const fetchArtists = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists?genre=${genre.toLowerCase()}`
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists?genre=${genre?.toLowerCase()}`,
         );
+
         const data = await res.json();
+
         if (res.ok && data.data?.artists) {
           setArtists(data.data.artists);
         } else {
@@ -36,17 +44,9 @@ export default function GenrePage() {
   if (loading)
     return (
       <div className="brandBg min-h-screen flex justify-center items-center text-yellow-400">
-        Loading {genre} artists...
+        Loading {formatGenre(genre)} artists...
       </div>
     );
-
-  const formatGenre = (genre) => {
-    if (!genre) return "";
-    if (genre === "rnb_soul") return "RnB/Soul";
-    return genre
-      .replace("_", " ")
-      .replace(/\b\w/g, (l) => l.toUpperCase());
-  };
 
   return (
     <section className="py-14 px-6 mt-20">
@@ -54,8 +54,9 @@ export default function GenrePage() {
         {/* Header */}
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold brandColor capitalize">
-            {genre} Artists
+            {formatGenre(genre)} Artists
           </h1>
+
           <button
             onClick={() => router.push("/artists")}
             className="px-4 py-2 bg-white text-gray-700 rounded-md border hover:bg-yellow-100 transition"
@@ -66,9 +67,7 @@ export default function GenrePage() {
 
         {/* Artist Grid */}
         {artists.length === 0 ? (
-          <p className="text-gray-200">
-            No artists found in this genre.
-          </p>
+          <p className="text-gray-200">No artists found in this genre.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {artists.map((artist) => (
@@ -92,6 +91,7 @@ export default function GenrePage() {
                   <h2 className="text-lg font-bold text-black brandColor mb-1 capitalize">
                     {artist.name}
                   </h2>
+
                   <p className="text-sm text-gray-600 mb-2">
                     {formatGenre(artist.genre)}
                   </p>

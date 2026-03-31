@@ -2,6 +2,7 @@
 
 import MediaGalleryPreview from "@/components/modules/dashboard/studio/MediaGalleryPreview";
 import ServicesPreview from "@/components/modules/dashboard/studio/ServicesPreview";
+import CustomLoader from "@/components/shared/loader/Loader";
 import { useSession } from "@/lib/auth";
 import {
   BarChart3,
@@ -10,11 +11,10 @@ import {
   CheckCircle,
   Package,
   Star,
-  Upload
+  Upload,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "./lib/api";
-import CustomLoader from "@/components/shared/loader/Loader";
 
 export default function StudioDashboard() {
   const { user } = useSession();
@@ -27,7 +27,7 @@ export default function StudioDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [quickStats, setQuickStats] = useState([
-    { label: "Profile Completion", value: "65%", color: "bg-blue-500" },
+    // { label: "Profile Completion", value: "65%", color: "bg-blue-500" },
     // { label: "Verified", value: "Pending", color: "bg-yellow-500" },
     { label: "Services", value: "3", color: "bg-green-500" },
     { label: "Photos", value: "2/5", color: "bg-purple-500" },
@@ -145,7 +145,7 @@ export default function StudioDashboard() {
           <div>
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
               Welcome back,{" "}
-              <span className="text-blue-600">
+              <span className="text-blue-600 capitalize">
                 {studioData?.name || "Studio"}
               </span>
               !
@@ -209,19 +209,6 @@ export default function StudioDashboard() {
                   )}
                 </div>
               </div>
-              {stat.label === "Profile Completion" && (
-                <div className="mt-4">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                      style={{ width: stat.value }}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Complete profile for better visibility
-                  </p>
-                </div>
-              )}
             </div>
           ))}
         </div>
@@ -233,7 +220,6 @@ export default function StudioDashboard() {
           {/* <QuickActions actions={quickActions} /> */}
 
           <ServicesPreview services={studioData?.services || []} />
-
         </div>
 
         <div className="space-y-8">
@@ -242,7 +228,7 @@ export default function StudioDashboard() {
             audioFile={studioData?.audioFile}
           />
 
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+          {/* <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-bold">Profile Status</h3>
               <div className="text-3xl font-bold">
@@ -285,7 +271,7 @@ export default function StudioDashboard() {
             <button className="w-full mt-6 bg-white text-blue-600 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-colors">
               Complete Profile
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

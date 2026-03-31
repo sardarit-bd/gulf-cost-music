@@ -123,13 +123,8 @@ export default function CreateEditNewsTab({
                 <input
                   name="credit"
                   value={form.credit}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, ""); // remove all non-numbers
-                    onFormChange({
-                      target: { name: "credit", value }
-                    });
-                  }}
-                  placeholder="Enter numbers only..."
+                  onChange={onFormChange}
+                  placeholder="Photo credit / Byline (optional)"
                   className="w-full px-4 py-3 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition"
                 />
               </div>
@@ -162,10 +157,11 @@ export default function CreateEditNewsTab({
             </h3>
 
             <label
-              className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg transition ${previewImages.length >= 5
-                ? "border-gray-300 bg-gray-50 text-gray-400 cursor-not-allowed"
-                : "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100"
-                }`}
+              className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg transition ${
+                previewImages.length >= 5
+                  ? "border-gray-300 bg-gray-50 text-gray-400 cursor-not-allowed"
+                  : "border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100"
+              }`}
             >
               <Upload size={24} />
               <span className="text-sm font-medium">
@@ -266,7 +262,7 @@ export default function CreateEditNewsTab({
               <button
                 disabled={saving || !form.state || !form.city}
                 onClick={onSaveNews}
-                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition font-semibold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition font-semibold shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 <Save size={18} />
                 {saving
@@ -278,7 +274,7 @@ export default function CreateEditNewsTab({
 
               <button
                 onClick={onCancel}
-                className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-lg transition font-medium"
+                className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-lg transition font-medium cursor-pointer"
               >
                 Cancel
               </button>
