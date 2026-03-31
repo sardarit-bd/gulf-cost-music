@@ -31,14 +31,14 @@ const LoginRequiredModal = ({
                 <div className="space-y-3">
                     <button
                         onClick={onLogin}
-                        className="w-full bg-[var(--primary)] text-gray-700 py-3 rounded-lg font-semibold hover:bg-[var(--primary)]/90 transition-all duration-200 shadow-lg hover:shadow-xl"
+                        className="w-full bg-[var(--primary)] text-gray-700 py-3 rounded-lg font-semibold hover:bg-[var(--primary)]/90 transition-all duration-200 shadow-lg hover:shadow-xl cursor-pointer"
                     >
                         Go to Login
                     </button>
 
                     <button
                         onClick={onClose}
-                        className="w-full text-gray-600 py-3 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all duration-200 font-medium"
+                        className="w-full text-gray-600 py-3 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all duration-200 font-medium cursor-pointer"
                     >
                         Cancel
                     </button>

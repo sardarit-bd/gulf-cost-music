@@ -1,11 +1,11 @@
 "use client";
+import CustomLoader from "@/components/shared/loader/Loader";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import LoginRequiredModal from "./LoginRequiredModal";
 import OrderModal from "./OrderModal";
-import CustomLoader from "@/components/shared/loader/Loader";
 
 export default function RecentMerchSection() {
   const [merchItems, setMerchItems] = useState([]);
@@ -180,7 +180,7 @@ export default function RecentMerchSection() {
                 <p className="text-gray-600 text-sm mt-1">${item.price}</p>
                 <button
                   onClick={(e) => handleBuyNowClick(item, e)}
-                  className="block bg-[var(--primary)] w-full text-gray-700 mt-5 px-4 py-2 rounded font-bold hover:bg-[var(--primary)]/90 transition text-lg text-center"
+                  className="block bg-[var(--primary)] w-full text-gray-700 mt-5 px-4 py-2 rounded font-bold hover:bg-[var(--primary)]/90 transition text-lg text-center cursor-pointer"
                 >
                   Buy Now
                 </button>
