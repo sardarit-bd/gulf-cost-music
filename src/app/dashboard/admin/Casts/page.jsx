@@ -3,8 +3,8 @@
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
 import CastSectionTextEditor from "@/components/modules/dashboard/casts/CastSectionTextEditor";
 import DeleteConfirmationModal from "@/components/modules/dashboard/casts/DeleteConfirmationModal";
-import PodcastForm from "@/components/modules/dashboard/casts/PodcastForm";
 import PodcastHeader from "@/components/modules/dashboard/casts/PodcastHeader";
+import PodcastModal from "@/components/modules/dashboard/casts/PodcastModal";
 import PodcastTable from "@/components/modules/dashboard/casts/PodcastTable";
 import { handleApiError } from "@/utils/errorHandler";
 import axios from "axios";
@@ -24,7 +24,7 @@ export default function PodcastPage() {
   const [token, setToken] = useState(null);
   const [podcasts, setPodcasts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showForm, setShowForm] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [showSectionTextEditor, setShowSectionTextEditor] = useState(false);
   const [sectionText, setSectionText] = useState({
@@ -131,7 +131,7 @@ export default function PodcastPage() {
 
   // Handle delete confirmation
   const handleDeleteConfirm = async () => {
-    const { podcastId, podcastTitle } = deleteModal;
+    const { podcastId } = deleteModal;
 
     const token = getCookie("token");
 
@@ -176,19 +176,23 @@ export default function PodcastPage() {
   };
 
   const handleFormSubmit = () => {
-    resetForm();
+    closeModal();
     fetchPodcasts();
   };
 
-  const resetForm = () => {
+  const closeModal = () => {
+    setIsModalOpen(false);
     setEditingItem(null);
-    setShowForm(false);
   };
 
   const handleEditClick = (item) => {
     setEditingItem(item);
-    setShowForm(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsModalOpen(true);
+  };
+
+  const handleAddClick = () => {
+    setEditingItem(null);
+    setIsModalOpen(true);
   };
 
   // Handle section text update
@@ -204,63 +208,65 @@ export default function PodcastPage() {
   }, []);
 
   return (
-    <AdminLayout>
-      <div className="min-h-screen bg-gray-50 p-6">
-        <Toaster />
-        <div className="">
-          {/* Section Text Editor Modal */}
-          {showSectionTextEditor && (
-            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <CastSectionTextEditor
-                  onClose={() => setShowSectionTextEditor(false)}
-                  onUpdate={handleSectionTextUpdate}
-                  token={token}
-                  API_BASE={API_BASE}
-                />
+    <>
+      {/* Main Content with Sidebar */}
+      <AdminLayout>
+        <div className="min-h-screen bg-gray-50">
+          <Toaster position="top-right" />
+
+          <div className="p-6">
+            {/* Section Text Editor Modal */}
+            {showSectionTextEditor && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+                <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                  <CastSectionTextEditor
+                    onClose={() => setShowSectionTextEditor(false)}
+                    onUpdate={handleSectionTextUpdate}
+                    token={token}
+                    API_BASE={API_BASE}
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <PodcastHeader
-            loading={loading}
-            showForm={showForm}
-            onRefresh={() => {
-              fetchPodcasts();
-              fetchSectionText();
-            }}
-            onToggleForm={() => setShowForm(!showForm)}
-            onEditSectionText={() => setShowSectionTextEditor(true)}
-            setShowSectionTextEditor={setShowSectionTextEditor}
-          />
-
-          {showForm && (
-            <PodcastForm
-              editingItem={editingItem}
-              token={token}
-              onSubmit={handleFormSubmit}
-              onCancel={resetForm}
-              handleApiError={handleApiError}
+            {/* Header */}
+            <PodcastHeader
+              loading={loading}
+              onRefresh={() => {
+                fetchPodcasts();
+                fetchSectionText();
+              }}
+              onAddClick={handleAddClick}
+              onEditSectionText={() => setShowSectionTextEditor(true)}
             />
-          )}
 
-          <PodcastTable
-            podcasts={podcasts}
-            loading={loading}
-            onEdit={handleEditClick}
-            onDelete={openDeleteModal}
-            onAddNew={() => setShowForm(true)}
-          />
+            {/* Podcast Table */}
+            <PodcastTable
+              podcasts={podcasts}
+              loading={loading}
+              onEdit={handleEditClick}
+              onDelete={openDeleteModal}
+              onAddNew={handleAddClick}
+            />
 
-          {/* Delete Confirmation Modal */}
-          <DeleteConfirmationModal
-            isOpen={deleteModal.isOpen}
-            onClose={closeDeleteModal}
-            onConfirm={handleDeleteConfirm}
-            podcastTitle={deleteModal.podcastTitle}
-          />
+            {/* Delete Confirmation Modal */}
+            <DeleteConfirmationModal
+              isOpen={deleteModal.isOpen}
+              onClose={closeDeleteModal}
+              onConfirm={handleDeleteConfirm}
+              podcastTitle={deleteModal.podcastTitle}
+            />
+          </div>
         </div>
-      </div>
-    </AdminLayout>
+      </AdminLayout>
+
+      <PodcastModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        editingItem={editingItem}
+        token={token}
+        onSubmit={handleFormSubmit}
+      />
+    </>
   );
 }

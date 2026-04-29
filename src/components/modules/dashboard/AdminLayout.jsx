@@ -494,7 +494,7 @@ export default function AdminLayout({ children }) {
           <div className="p-4 border-t border-gray-200 bg-gray-50">
             <div className="flex items-center space-x-3">
               {/* Profile Image */}
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-muted p-1 flex items-center justify-center">
                 {adminProfile?.profilePhoto?.url ? (
                   <Image
                     src={adminProfile.profilePhoto.url}
@@ -524,10 +524,10 @@ export default function AdminLayout({ children }) {
               {/* Logout */}
               <button
                 onClick={handleLogout}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
                 title="Logout"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-4 w-4 text-red-500" />
               </button>
             </div>
           </div>
@@ -578,7 +578,7 @@ export default function AdminLayout({ children }) {
                     setNotificationDropdownOpen(!notificationDropdownOpen);
                     setUserDropdownOpen(false);
                   }}
-                  className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
@@ -587,7 +587,7 @@ export default function AdminLayout({ children }) {
                 </button>
 
                 {notificationDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-300 py-2 z-50">
                     <div className="px-4 py-2 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <h3 className="text-sm font-semibold text-gray-900">
@@ -691,17 +691,17 @@ export default function AdminLayout({ children }) {
                     setUserDropdownOpen(!userDropdownOpen);
                     setNotificationDropdownOpen(false);
                   }}
-                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                 >
                   {/* Profile Image / Avatar */}
-                  <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-muted">
                     {adminProfile?.profilePhoto?.url ? (
                       <Image
                         src={adminProfile.profilePhoto.url}
                         alt={adminProfile.fullName}
                         width={32}
                         height={32}
-                        className="object-cover w-full h-full"
+                        className="object-cover w-full h-full p-1"
                         unoptimized
                       />
                     ) : (
