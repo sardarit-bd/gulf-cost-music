@@ -1,8 +1,9 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function SubscriptionSuccess() {
+function SubscriptionSuccessContent() {
     const params = useSearchParams();
     const sessionId = params.get("session_id");
 
@@ -19,5 +20,13 @@ export default function SubscriptionSuccess() {
                 Go to Dashboard
             </a>
         </div>
+    );
+}
+
+export default function SubscriptionSuccess() {
+    return (
+        <Suspense fallback={<div style={{ padding: "40px", textAlign: "center" }}>Loading...</div>}>
+            <SubscriptionSuccessContent />
+        </Suspense>
     );
 }
