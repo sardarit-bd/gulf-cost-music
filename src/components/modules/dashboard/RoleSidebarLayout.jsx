@@ -193,11 +193,10 @@ export default function RoleSidebarLayout({ role, children }) {
                 href={item.href}
                 onClick={handleMenuItemClick}
                 className={`relative w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-200 font-medium
-                    ${
-                      active
-                        ? "bg-white text-blue-600 shadow-lg"
-                        : "text-white hover:bg-white/10"
-                    }
+                    ${active
+                    ? "bg-white text-blue-600 shadow-lg"
+                    : "text-white hover:bg-white/10"
+                  }
                 `}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
@@ -240,9 +239,8 @@ export default function RoleSidebarLayout({ role, children }) {
 
       {/* Mobile Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-72 bg-gradient-to-b from-blue-600 to-blue-700 text-white transform transition-transform duration-300 ease-in-out lg:hidden ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-40 w-72 bg-gradient-to-b from-blue-600 to-blue-700 text-white transform transition-transform duration-300 ease-in-out lg:hidden ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <div className="flex flex-col h-full p-5">
           {/* Mobile Header */}
@@ -270,11 +268,10 @@ export default function RoleSidebarLayout({ role, children }) {
                   key={item.href}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 font-medium ${
-                    active
+                  className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 font-medium ${active
                       ? "bg-white text-blue-600 shadow-lg"
                       : "text-white hover:bg-white/10"
-                  }`}
+                    }`}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <span className="truncate">{item.label}</span>
