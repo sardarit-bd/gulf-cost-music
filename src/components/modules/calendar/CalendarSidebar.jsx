@@ -17,17 +17,39 @@ export default function CalendarSidebar({
 }) {
     // Calculate stats
     const totalEvents = events.length;
-    const uniqueVenues = new Set(events.map(e => e.venueId)).size;
+    const uniqueVenues = new Set(events.map(e => e.venueKey || e.venueId)).size;
     const upcomingEvents = events.filter(e => new Date(e.date) >= new Date()).length;
     const pastEvents = totalEvents - upcomingEvents;
 
-    // Group venues by color for better visualization
+    // Group venues by color for better visualization (only existing venues)
     const venuesByColor = venues.reduce((acc, venue) => {
         const color = venue.colorCode || "#000000";
         if (!acc[color]) acc[color] = [];
         acc[color].push(venue);
         return acc;
     }, {});
+
+    // Group custom venues from events
+    const customVenues = events
+        .filter(event => event.isCustomVenue && event.customVenueName)
+        .reduce((acc, event) => {
+            const key = event.venueKey;
+            if (!acc[key]) {
+                acc[key] = {
+                    _id: key,
+                    venueName: event.customVenueName,
+                    colorCode: event.color,
+                    verifiedOrder: 0,
+                    isCustom: true
+                };
+            }
+            return acc;
+        }, {});
+
+    const allFilterableVenues = [
+        ...venues,
+        ...Object.values(customVenues)
+    ];
 
     return (
         <div className="lg:w-1/4">
@@ -50,7 +72,7 @@ export default function CalendarSidebar({
                     <div className="flex justify-between items-center mb-3">
                         <h4 className="font-semibold text-gray-700 flex items-center gap-2">
                             <Users className="w-4 h-4" />
-                            VENUES ({venues.length})
+                            VENUES ({allFilterableVenues.length})
                         </h4>
                         {filteredVenueIds.length > 0 && (
                             <button
@@ -72,57 +94,104 @@ export default function CalendarSidebar({
                     )}
 
                     <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                        {venues.length > 0 ? (
-                            // Group by color for better visual organization
-                            Object.entries(venuesByColor).map(([color, colorVenues]) => (
-                                <div key={color} className="space-y-1">
-                                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-                                        <span>{colorVenues.length} venue{colorVenues.length !== 1 ? 's' : ''}</span>
-                                    </div>
-                                    {colorVenues.map((venue) => {
-                                        const isActive = filteredVenueIds.includes(venue._id);
-                                        const venueEventCount = events.filter(e => e.venueId === venue._id).length;
+                        {allFilterableVenues.length > 0 ? (
+                            // Group existing venues by color
+                            <>
+                                {Object.entries(venuesByColor).map(([color, colorVenues]) => (
+                                    <div key={color} className="space-y-1">
+                                        <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+                                            <span>{colorVenues.length} venue{colorVenues.length !== 1 ? 's' : ''}</span>
+                                        </div>
+                                        {colorVenues.map((venue) => {
+                                            const isActive = filteredVenueIds.includes(venue._id);
+                                            const venueEventCount = events.filter(e => (e.venueId === venue._id) || (e.venueKey === venue._id)).length;
 
-                                        return (
-                                            <div
-                                                key={venue._id}
-                                                className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all duration-200 group ${isActive
+                                            return (
+                                                <div
+                                                    key={venue._id}
+                                                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all duration-200 group ${isActive
                                                         ? 'bg-blue-50 border border-blue-200 shadow-sm'
                                                         : 'hover:bg-gray-50 border border-transparent'
-                                                    }`}
-                                                onClick={() => onToggleVenue(venue._id)}
-                                            >
-                                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                    <div
-                                                        className="w-3 h-3 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform"
-                                                        style={{ backgroundColor: venue.colorCode || "#000000" }}
-                                                    />
-                                                    <div className="flex-1 min-w-0">
-                                                        <span className={`text-sm truncate block ${isActive ? 'text-blue-700 font-medium' : 'text-gray-700'
-                                                            }`}>
-                                                            {venue.venueName}
-                                                        </span>
-                                                        {venueEventCount > 0 && (
-                                                            <span className="text-xs text-gray-400">
-                                                                {venueEventCount} event{venueEventCount !== 1 ? 's' : ''}
+                                                        }`}
+                                                    onClick={() => onToggleVenue(venue._id)}
+                                                >
+                                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                        <div
+                                                            className="w-3 h-3 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform"
+                                                            style={{ backgroundColor: venue.colorCode || "#000000" }}
+                                                        />
+                                                        <div className="flex-1 min-w-0">
+                                                            <span className={`text-sm truncate block ${isActive ? 'text-blue-700 font-medium' : 'text-gray-700'}`}>
+                                                                {venue.venueName}
+                                                            </span>
+                                                            {venueEventCount > 0 && (
+                                                                <span className="text-xs text-gray-400">
+                                                                    {venueEventCount} event{venueEventCount !== 1 ? 's' : ''}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        {venue.verifiedOrder > 0 && (
+                                                            <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                                                                ✓
                                                             </span>
                                                         )}
                                                     </div>
-                                                    {venue.verifiedOrder > 0 && (
-                                                        <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full flex-shrink-0">
-                                                            ✓
-                                                        </span>
+                                                    {isActive && (
+                                                        <span className="text-xs text-blue-600 font-medium">✓</span>
                                                     )}
                                                 </div>
-                                                {isActive && (
-                                                    <span className="text-xs text-blue-600 font-medium">✓</span>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            ))
+                                            );
+                                        })}
+                                    </div>
+                                ))}
+
+                                {/* Custom Venues Section */}
+                                {Object.values(customVenues).length > 0 && (
+                                    <div className="mt-3 pt-2 border-t border-gray-200">
+                                        <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                                            <div className="w-2 h-2 rounded-full bg-gray-400" />
+                                            <span>Custom Venues</span>
+                                        </div>
+                                        {Object.values(customVenues).map((venue) => {
+                                            const isActive = filteredVenueIds.includes(venue._id);
+                                            const venueEventCount = events.filter(e => e.venueKey === venue._id).length;
+
+                                            return (
+                                                <div
+                                                    key={venue._id}
+                                                    className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all duration-200 group ${isActive
+                                                        ? 'bg-blue-50 border border-blue-200 shadow-sm'
+                                                        : 'hover:bg-gray-50 border border-transparent'
+                                                        }`}
+                                                    onClick={() => onToggleVenue(venue._id)}
+                                                >
+                                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                        <div
+                                                            className="w-3 h-3 rounded-full flex-shrink-0 group-hover:scale-110 transition-transform"
+                                                            style={{ backgroundColor: venue.colorCode || "#9CA3AF" }}
+                                                        />
+                                                        <div className="flex-1 min-w-0">
+                                                            <span className={`text-sm truncate block ${isActive ? 'text-blue-700 font-medium' : 'text-gray-700'}`}>
+                                                                {venue.venueName}
+                                                                <span className="ml-1 text-xs text-gray-400">(Custom)</span>
+                                                            </span>
+                                                            {venueEventCount > 0 && (
+                                                                <span className="text-xs text-gray-400">
+                                                                    {venueEventCount} event{venueEventCount !== 1 ? 's' : ''}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    {isActive && (
+                                                        <span className="text-xs text-blue-600 font-medium">✓</span>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </>
                         ) : (
                             <div className="text-center py-8">
                                 <p className="text-sm text-gray-500">
@@ -205,7 +274,7 @@ export default function CalendarSidebar({
                 </div>
 
                 {/* Legend */}
-                {venues.length > 0 && (
+                {Object.keys(venuesByColor).length > 0 && (
                     <div className="border-t mt-4 pt-4">
                         <h4 className="font-semibold text-gray-700 mb-2 text-sm">COLOR LEGEND</h4>
                         <div className="space-y-1">
@@ -229,21 +298,21 @@ export default function CalendarSidebar({
 
             {/* Custom Scrollbar Styles */}
             <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #f1f1f1;
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #ccc;
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #999;
-        }
-      `}</style>
+                .custom-scrollbar::-webkit-scrollbar {
+                width: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #ccc;
+                border-radius: 4px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: #999;
+                }
+            `}</style>
         </div>
     );
 }

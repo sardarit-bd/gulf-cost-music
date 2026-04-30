@@ -88,17 +88,25 @@ export default function EventModal({ event, venues, isOpen, onClose }) {
                             </div>
                         </div>
 
-                        {/* Venue */}
+                        {/* Venue - FIXED: Show correct venue name */}
                         <div className="flex items-start gap-3 text-gray-700">
                             <MapPin className="w-5 h-5 flex-shrink-0 text-gray-500 mt-0.5" />
-                            <div className="flex-1 space-x-3">
+                            <div className="flex-1">
                                 <span className="text-sm font-medium text-gray-900">Venue</span>
                                 {event.verified && (
-                                    <span className="inline-block mt-1 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                                    <span className="inline-block ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
                                         Verified
                                     </span>
                                 )}
-                                <p className="text-sm capitalize">{venues[0]?.venueName}</p>
+                                {/* NEW: Custom venue badge */}
+                                {/* {event.isCustomVenue && (
+                                    <span className="inline-block ml-2 text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">
+                                        Custom Venue
+                                    </span>
+                                )} */}
+                                <p className="text-sm capitalize mt-1">
+                                    {event.venue || event.customVenueName || "N/A"}
+                                </p>
                             </div>
                         </div>
                     </div>

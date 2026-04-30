@@ -4,17 +4,11 @@ import CalendarControls from "@/components/modules/calendar/CalendarControls";
 import CalendarHeader from "@/components/modules/calendar/CalendarHeader";
 import CalendarSidebar from "@/components/modules/calendar/CalendarSidebar";
 import EventModal from "@/components/modules/calendar/EventModal";
+import ExploreView from "@/components/modules/calendar/ExploreView";
 import MonthView from "@/components/modules/calendar/MonthView";
 import WeekView from "@/components/modules/calendar/WeekView";
 import CustomLoader from "@/components/shared/loader/Loader";
 import { useEffect, useState } from "react";
-// import AgendaView from "./AgendaView";
-// import CalendarControls from "./CalendarControls";
-// import CalendarHeader from "./CalendarHeader";
-// import CalendarSidebar from "./CalendarSidebar";
-// import EventModal from "./EventModal";
-// import MonthView from "./MonthView";
-// import WeekView from "./WeekView";
 
 // State-City Mapping (same as backend)
 const STATE_CITY_MAPPING = {
@@ -63,7 +57,9 @@ export default function CalendarBoard() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState("month");
   const [events, setEvents] = useState([]);
+  const [exploreEvents, setExploreEvents] = useState([]); // Separate state for Explore view
   const [loading, setLoading] = useState(true);
+  const [exploreLoading, setExploreLoading] = useState(false);
   const [selectedState, setSelectedState] = useState(DEFAULT_STATE);
   const [selectedCity, setSelectedCity] = useState(DEFAULT_CITY);
   const [availableCities, setAvailableCities] = useState(STATE_CITY_MAPPING[DEFAULT_STATE]);
@@ -82,70 +78,139 @@ export default function CalendarBoard() {
     }
   }, [selectedState]);
 
-  // Fetch events when state, city, or date changes
+  // Fetch events for selected state/city (for month, week, agenda views)
   useEffect(() => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    fetchEvents(selectedState, selectedCity, year, month);
-  }, [selectedState, selectedCity, currentDate]);
+    if (view !== "explore") {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      fetchEvents(selectedState, selectedCity, year, month);
+    }
+  }, [selectedState, selectedCity, currentDate, view]);
 
-  // Fetch events from backend API
+  // Fetch all events for Explore view when Explore tab is clicked
+  useEffect(() => {
+    if (view === "explore") {
+      fetchExploreEvents();
+    }
+  }, [view]);
+
   const fetchEvents = async (state, city, year = null, month = null) => {
     setLoading(true);
+
     try {
-      const params = new URLSearchParams({ state, city });
+      const params = new URLSearchParams({
+        state,
+        city,
+      });
+
       if (year !== null && month !== null) {
         const startDate = new Date(year, month, 1);
         const endDate = new Date(year, month + 1, 0);
-        params.append('startDate', startDate.toISOString());
-        params.append('endDate', endDate.toISOString());
+
+        params.append("startDate", startDate.toISOString());
+        params.append("endDate", endDate.toISOString());
       }
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/events/calendar?${params.toString()}`
       );
 
-      if (!response.ok) throw new Error(`Failed to fetch events: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch events: ${response.status}`);
+      }
 
       const data = await response.json();
-      console.log("Calender Data:", data);
 
       if (data.success) {
-        const transformedEvents = data.data.events.map(event => {
-          let eventDate;
-          if (event.date) eventDate = new Date(event.date);
-          else if (event.rawUTC) eventDate = new Date(event.rawUTC);
-          else eventDate = new Date();
-
-          return {
-            id: event.id || event._id,
-            title: event.title || event.artistBandName,
-            date: eventDate,
-            time: event.time || event.eventTime,
-            venue: event.venue,
-            venueId: event.venueId,
-            color: event.color || "#000000",
-            state: event.state,
-            city: event.city,
-            verified: event.verified || false,
-            image: event.image,
-            description: event.description,
-            rawData: event
-          };
-        });
-
+        const transformedEvents = transformEvents(data.data.events);
         setEvents(transformedEvents);
         fetchVenues(state, city);
       } else {
-        console.error('API Error:', data.message);
+        console.error("API Error:", data.message);
         setEvents([]);
       }
     } catch (error) {
-      console.error('Error fetching events:', error);
+      console.error("Error fetching events:", error);
       setEvents([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fetch ALL events for Explore view (no state/city filter)
+  const fetchExploreEvents = async () => {
+    setExploreLoading(true);
+    try {
+      // Fetch events for all states
+      const allEventsPromises = allStates.map(async (state) => {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/events/calendar?state=${state}&city=all`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            return transformEvents(data.data.events);
+          }
+        }
+        return [];
+      });
+
+      const allEventsArrays = await Promise.all(allEventsPromises);
+      const allEvents = allEventsArrays.flat();
+
+      // Remove duplicates by id
+      const uniqueEvents = Array.from(new Map(allEvents.map(e => [e.id, e])).values());
+      setExploreEvents(uniqueEvents);
+    } catch (error) {
+      console.error("Error fetching explore events:", error);
+      setExploreEvents([]);
+    } finally {
+      setExploreLoading(false);
+    }
+  };
+
+  const transformEvents = (eventsData) => {
+    return eventsData.map((event) => {
+      let eventDate;
+      if (event.date) eventDate = new Date(event.date);
+      else if (event.rawUTC) eventDate = new Date(event.rawUTC);
+      else eventDate = new Date();
+
+      const venueName =
+        event.venue ||
+        event.customVenueName ||
+        "Custom Venue";
+
+      const venueId = event.venueId || null;
+
+      const venueKey =
+        venueId ||
+        `custom-${venueName}-${event.city || ""}`
+          .toLowerCase()
+          .replace(/\s+/g, "-");
+
+      return {
+        id: event.id || event._id,
+        title: event.title || event.artistBandName,
+        date: eventDate,
+        time: event.time || event.eventTime,
+
+        venue: venueName,
+        venueId,
+        venueKey,
+
+        isCustomVenue: !venueId,
+        customVenueName: event.customVenueName || "",
+
+        color: event.color || "#000000",
+        state: event.state,
+        city: event.city,
+        verified: event.verified || false,
+        image: event.image,
+        description: event.description,
+        rawData: event,
+      };
+    });
   };
 
   // Fetch venues for the selected city
@@ -156,7 +221,6 @@ export default function CalendarBoard() {
       );
       if (response.ok) {
         const data = await response.json();
-        console.log("venues: ", data)
         if (data.success) {
           const venuesWithColors = data.data.venues.filter(
             venue => venue.colorCode && venue.colorCode !== "#000000" && venue.colorCode !== null
@@ -167,6 +231,13 @@ export default function CalendarBoard() {
     } catch (error) {
       console.error('Error fetching venues:', error);
     }
+  };
+
+  // Handle location selection from Explore view
+  const handleLocationSelect = (state, city) => {
+    setSelectedState(state);
+    setSelectedCity(city);
+    setView("month");
   };
 
   // Calendar grid generation
@@ -210,9 +281,9 @@ export default function CalendarBoard() {
     setShowEventModal(true);
   };
 
-  const toggleVenueFilter = (venueId) => {
+  const toggleVenueFilter = (venueKey) => {
     setFilteredVenueIds(prev =>
-      prev.includes(venueId) ? prev.filter(id => id !== venueId) : [...prev, venueId]
+      prev.includes(venueKey) ? prev.filter(id => id !== venueKey) : [...prev, venueKey]
     );
   };
 
@@ -220,7 +291,7 @@ export default function CalendarBoard() {
 
   const getFilteredEvents = (dayEvents) => {
     if (filteredVenueIds.length === 0) return dayEvents;
-    return dayEvents.filter(event => filteredVenueIds.includes(event.venueId));
+    return dayEvents.filter(event => filteredVenueIds.includes(event.venueKey || event.venueId));
   };
 
   const getWeekDates = (date) => {
@@ -240,6 +311,10 @@ export default function CalendarBoard() {
 
   const calendarDays = generateCalendarGrid();
   const weekDates = getWeekDates(currentDate);
+
+  // Determine which events to show based on view
+  const currentEvents = view === "explore" ? exploreEvents : events;
+  const isLoading = view === "explore" ? exploreLoading : loading;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-6">
@@ -269,7 +344,7 @@ export default function CalendarBoard() {
                 onNextMonth={handleNextMonth}
               />
 
-              {loading ? (
+              {isLoading ? (
                 <div className="flex justify-center items-center min-h-screen py-20 bg-white">
                   <div className="text-center">
                     <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
@@ -281,7 +356,7 @@ export default function CalendarBoard() {
                     <MonthView
                       calendarDays={calendarDays}
                       weekDays={weekDays}
-                      events={events}
+                      events={currentEvents}
                       filteredVenueIds={filteredVenueIds}
                       selectedCity={selectedCity}
                       formatCityDisplay={formatCityDisplay}
@@ -292,7 +367,7 @@ export default function CalendarBoard() {
                   {view === "week" && (
                     <WeekView
                       weekDates={weekDates}
-                      events={events}
+                      events={currentEvents}
                       filteredVenueIds={filteredVenueIds}
                       onEventClick={handleEventClick}
                       getFilteredEvents={getFilteredEvents}
@@ -300,10 +375,16 @@ export default function CalendarBoard() {
                   )}
                   {view === "agenda" && (
                     <AgendaView
-                      events={events}
+                      events={currentEvents}
                       selectedCity={selectedCity}
                       formatCityDisplay={formatCityDisplay}
                       onEventClick={handleEventClick}
+                    />
+                  )}
+                  {view === "explore" && (
+                    <ExploreView
+                      events={currentEvents}
+                      onSelectLocation={handleLocationSelect}
                     />
                   )}
                 </>
@@ -323,7 +404,7 @@ export default function CalendarBoard() {
             selectedState={selectedState}
             selectedCity={selectedCity}
             formatCityDisplay={formatCityDisplay}
-            events={events}
+            events={currentEvents}
             view={view}
           />
         </div>
