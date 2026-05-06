@@ -1,12 +1,12 @@
 "use client";
 
+import CustomLoader from "@/components/shared/loader/Loader";
+import { Camera } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import PhotographerFilters from "./PhotographerFilters";
 import PhotographerStats from "./PhotographerStats";
 import PhotographerTable from "./PhotographerTable";
 import { fetchPhotographersForAdmin } from "./photographer.api";
-import CustomLoader from "@/components/shared/loader/Loader";
 
 export default function PhotographerManagement() {
     const [loading, setLoading] = useState(true);
@@ -21,8 +21,6 @@ export default function PhotographerManagement() {
 
     const [filters, setFilters] = useState({
         search: "",
-        status: "all",
-        plan: "all",
         page: 1,
         limit: 10,
     });
@@ -36,7 +34,6 @@ export default function PhotographerManagement() {
             setPagination(res.pagination);
         } catch (err) {
             toast.error(err.message || "Failed to load photographers");
-            // Set empty data on error
             setPhotographers([]);
             setStats({
                 total: 0,
@@ -62,7 +59,7 @@ export default function PhotographerManagement() {
         setFilters((prev) => ({ ...prev, page }));
     };
 
-    if (loading) {
+    if (loading && photographers.length === 0) {
         return (
             <div className="flex justify-center items-center min-h-screen py-20 bg-white">
                 <div className="text-center">
@@ -73,22 +70,26 @@ export default function PhotographerManagement() {
     }
 
     return (
-        <div className="p-6 space-y-6">
-            {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">Photographer Management</h1>
-                <p className="text-gray-600 mt-1">
-                    Manage photographer profiles, plans & activation
-                </p>
+        <div className="min-h-screen bg-gray-50 p-4">
+            {/* Header - Matching Events Page */}
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                        <div className="p-1.5 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg">
+                            <Camera className="w-5 h-5 text-white" />
+                        </div>
+                        Photographer Management
+                    </h1>
+                    <p className="text-gray-500 text-sm mt-1">
+                        Manage photographer profiles, subscription plans, and activation status
+                    </p>
+                </div>
             </div>
 
-            {/* Stats */}
+            {/* Stats Cards */}
             <PhotographerStats stats={stats} loading={loading} />
 
-            {/* Filters */}
-            <PhotographerFilters filters={filters} onChange={onFilterChange} />
-
-            {/* Table */}
+            {/* Table with integrated search */}
             <PhotographerTable
                 photographers={photographers}
                 pagination={pagination}

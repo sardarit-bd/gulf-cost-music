@@ -5,7 +5,6 @@ import ArtistDetailModal from "@/components/modules/dashboard/artists/ArtistDeta
 import ArtistTable from "@/components/modules/dashboard/artists/ArtistTable";
 import DeactivatedUsers from "@/components/modules/dashboard/artists/DeactivatedUsers";
 import DeactivateModal from "@/components/modules/dashboard/artists/DeactivateModal";
-import Filters from "@/components/modules/dashboard/artists/Filters";
 import StatCard from "@/components/modules/dashboard/artists/StatCard";
 import CustomLoader from "@/components/shared/loader/Loader";
 import { useAuth } from "@/context/AuthContext";
@@ -30,6 +29,7 @@ const ArtistManagement = () => {
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [deactivatedSearch, setDeactivatedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState("all");
@@ -89,7 +89,6 @@ const ArtistManagement = () => {
         ...(planFilter !== "all" && { plan: planFilter }),
       });
 
-      // Correct API endpoint
       const { data } = await axios.get(`${API_URL}?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: "include",
@@ -129,17 +128,14 @@ const ArtistManagement = () => {
 
   const handleViewProfile = (artist) => setViewingArtist(artist);
 
-  // Open Deactivate Modal
   const openDeactivateModal = (artist) => {
     setDeactivateModal({ isOpen: true, artist });
   };
 
-  // Open Activate Modal
   const openActivateModal = (artist) => {
     setActivateModal({ isOpen: true, artist });
   };
 
-  // Open Plan Change Modal
   const openPlanChangeModal = (artist, newPlan) => {
     setPlanChangeModal({
       isOpen: true,
@@ -148,13 +144,7 @@ const ArtistManagement = () => {
     });
   };
 
-  // Handle Deactivate Confirmation
-  const handleDeactivateConfirm = async (
-    id,
-    currentStatus,
-    reason,
-    notifyUser
-  ) => {
+  const handleDeactivateConfirm = async (id, currentStatus, reason, notifyUser) => {
     setModalLoading(true);
     try {
       const token = getCookie("token");
@@ -183,9 +173,9 @@ const ArtistManagement = () => {
       setActionMenu(null);
       showToast("Artist deactivated successfully!");
 
-      if (notifyUser) {
-        showToast("Notification email sent to artist");
-      }
+      // if (notifyUser) {
+      //   showToast("Notification email sent to artist");
+      // }
     } catch (err) {
       console.error("Deactivate artist error:", err);
       if (err.response?.status === 401) {
@@ -198,7 +188,6 @@ const ArtistManagement = () => {
     }
   };
 
-  // Handle Activate Confirmation
   const handleActivateConfirm = async (id, notifyUser) => {
     setModalLoading(true);
     try {
@@ -241,7 +230,6 @@ const ArtistManagement = () => {
     }
   };
 
-  // Handle Plan Change Confirmation
   const handlePlanChangeConfirm = async (id, newPlan, notifyUser) => {
     setModalLoading(true);
     try {
@@ -253,8 +241,6 @@ const ArtistManagement = () => {
         return;
       }
 
-
-      // Correct API endpoint
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/${id}/plan`,
         {
@@ -298,44 +284,23 @@ const ArtistManagement = () => {
       }
     } catch (err) {
       console.error("Change plan error:", err);
-
-      // Detailed error logging
-      if (err.response) {
-        console.error("Error response:", err.response.data);
-        console.error("Error status:", err.response.status);
-        showToast(
-          err.response.data?.message ||
-          `Server error: ${err.response.status}`,
-          "error"
-        );
-      } else if (err.request) {
-        console.error("No response received:", err.request);
-        showToast(
-          "No response from server. Please check your connection.",
-          "error"
-        );
-      } else {
-        console.error("Error setting up request:", err.message);
-        showToast("Request setup error: " + err.message, "error");
-      }
-
       if (err.response?.status === 401) {
         handleUnauthorized();
       }
+      showToast(
+        err.response?.data?.message || "Failed to change plan",
+        "error"
+      );
     } finally {
       setModalLoading(false);
     }
   };
 
-
-  // Simple toggle for table (without modal)
   const toggleActive = async (id, currentStatus) => {
     if (currentStatus) {
-      // For deactivation, open modal
       const artist = artists.find((a) => a._id === id);
       openDeactivateModal(artist);
     } else {
-      // For activation, do simple toggle
       try {
         const token = getCookie("token");
 
@@ -472,8 +437,26 @@ const ArtistManagement = () => {
 
   const clearFilters = () => {
     setSearch("");
+    setSearchInput("");
     setStatusFilter("all");
     setPlanFilter("all");
+    setPage(1);
+  };
+
+  const handleSearch = () => {
+    setSearch(searchInput);
+    setPage(1);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setSearch("");
     setPage(1);
   };
 
@@ -482,7 +465,6 @@ const ArtistManagement = () => {
 
   const handlePageChange = (newPage) => setPage(newPage);
 
-  // Plan statistics
   const planStats = {
     pro: artists.filter(a => a.user?.subscriptionPlan === "pro").length,
     free: artists.filter(a => a.user?.subscriptionPlan === "free").length,
@@ -491,7 +473,7 @@ const ArtistManagement = () => {
 
   useEffect(() => {
     fetchArtists();
-  }, [page, statusFilter, planFilter]);
+  }, [page, statusFilter, planFilter, search]);
 
   const activeArtists = artists.filter((a) => a.isActive);
   const deactivatedArtists = artists.filter((a) => !a.isActive);
@@ -503,7 +485,9 @@ const ArtistManagement = () => {
     thisMonth: Math.floor(artists.length * 0.15),
   };
 
-  if (loading) {
+  const hasActiveFilters = search || statusFilter !== "all" || planFilter !== "all";
+
+  if (loading && artists.length === 0) {
     return (
       <AdminLayout>
         <div className="flex justify-center items-center min-h-screen py-20 bg-white">
@@ -517,28 +501,28 @@ const ArtistManagement = () => {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gray-50 p-4">
         <div className="">
           <Toaster />
 
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
+          {/* Header - Matching Events Page */}
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl">
-                  <Music className="w-6 h-6 text-white" />
+              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <div className="p-1.5 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg">
+                  <Music className="w-5 h-5 text-white" />
                 </div>
                 Artist Management
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-500 text-sm mt-1">
                 Manage artist profiles, subscription plans, activate/deactivate accounts
               </p>
             </div>
-            <div className="flex items-center space-x-3 mt-4 lg:mt-0">
+            <div className="flex items-center gap-2 mt-3 lg:mt-0">
               {/* Tabs for All Artists and Deactivated Artists */}
               <div className="flex bg-gray-200 rounded-lg p-1">
                 <button
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "all"
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all cursor-pointer ${activeTab === "all"
                     ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
                     }`}
@@ -547,7 +531,7 @@ const ArtistManagement = () => {
                   All Artists
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "deactivated"
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all cursor-pointer ${activeTab === "deactivated"
                     ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-600 hover:text-gray-900"
                     }`}
@@ -559,34 +543,30 @@ const ArtistManagement = () => {
             </div>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
+          {/* Stats Cards - Matching Events Page Style */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
             <StatCard
               icon={User}
               label="Total Artists"
               value={stats.total}
-              change={12}
               color="purple"
             />
             <StatCard
               icon={Play}
               label="Active Artists"
               value={stats.active}
-              change={8}
               color="green"
             />
             <StatCard
               icon={Pause}
               label="Inactive Artists"
               value={stats.inactive}
-              change={-4}
               color="orange"
             />
             <StatCard
               icon={Crown}
               label="Pro Plan"
               value={planStats.pro}
-              change={5}
               color="yellow"
               plan="pro"
             />
@@ -594,7 +574,6 @@ const ArtistManagement = () => {
               icon={Users}
               label="Free Plan"
               value={planStats.free}
-              change={-2}
               color="blue"
               plan="free"
             />
@@ -602,24 +581,12 @@ const ArtistManagement = () => {
               icon={TrendingUp}
               label="This Month"
               value={stats.thisMonth}
-              change={15}
               color="indigo"
             />
           </div>
 
           {activeTab === "all" ? (
             <>
-              <Filters
-                search={search}
-                statusFilter={statusFilter}
-                planFilter={planFilter}
-                onSearchChange={setSearch}
-                onStatusFilterChange={setStatusFilter}
-                onPlanFilterChange={setPlanFilter}
-                onApply={fetchArtists}
-                onClear={clearFilters}
-              />
-
               <ArtistTable
                 artists={artists}
                 loading={loading}
@@ -640,7 +607,18 @@ const ArtistManagement = () => {
                 onInputChange={handleInputChange}
                 onDeleteArtist={deleteArtist}
                 onActionMenuToggle={handleActionMenuToggle}
+                // New props for search
+                searchInput={searchInput}
+                onSearchInputChange={setSearchInput}
+                onSearch={handleSearch}
+                onKeyPress={handleKeyPress}
+                onClearFilters={clearFilters}
+                hasActiveFilters={hasActiveFilters}
+                activeSearchTerm={search}
+                statusFilter={statusFilter}
+                planFilter={planFilter}
               />
+
             </>
           ) : (
             <DeactivatedUsers
@@ -692,16 +670,16 @@ const ArtistManagement = () => {
                 </p>
 
                 <div className="mb-4">
-                  <label className="flex items-center mb-2">
-                    <input type="checkbox" className="mr-2" />
-                    <span className="text-sm text-gray-700">Notify user via email</span>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" className="rounded border-gray-300 cursor-pointer" />
+                    <span className="text-sm text-gray-700 cursor-pointer">Notify user via email</span>
                   </label>
                 </div>
 
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => setPlanChangeModal({ isOpen: false, artist: null, newPlan: "" })}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors"
                   >
                     Cancel
                   </button>
@@ -712,10 +690,10 @@ const ArtistManagement = () => {
                       true
                     )}
                     disabled={modalLoading}
-                    className={`px-4 py-2 text-sm font-medium text-white rounded-lg ${planChangeModal.newPlan === "pro"
+                    className={`px-4 py-2 text-sm font-medium text-white rounded-lg cursor-pointer transition-colors ${planChangeModal.newPlan === "pro"
                       ? "bg-yellow-500 hover:bg-yellow-600"
                       : "bg-blue-500 hover:bg-blue-600"
-                      }`}
+                      } ${modalLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     {modalLoading ? "Changing..." : `Change to ${planChangeModal.newPlan.toUpperCase()}`}
                   </button>

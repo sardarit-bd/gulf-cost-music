@@ -2,7 +2,7 @@
 
 import { Calendar, ChevronRight, MapPin, Music, Sparkles } from "lucide-react";
 
-export default function ExploreView({ events, onSelectLocation }) {
+export default function ExploreView({ events, onSelectLocation, onNavigateToEvent }) {
     // Group events by state and city (for overview)
     const groupedByLocation = {};
 
@@ -32,6 +32,7 @@ export default function ExploreView({ events, onSelectLocation }) {
                 count: 0,
                 upcomingCount: 0,
                 latestEvents: [],
+                earliestUpcomingEvent: null, // Track earliest upcoming event
                 events: []
             };
         }
@@ -43,12 +44,21 @@ export default function ExploreView({ events, onSelectLocation }) {
         if (isUpcoming) {
             groupedByLocation[state].cities[city].upcomingCount++;
             groupedByLocation[state].upcomingEvents++;
+
+            // Track the earliest upcoming event
+            const currentEarliest = groupedByLocation[state].cities[city].earliestUpcomingEvent;
+            if (!currentEarliest || eventDate < new Date(currentEarliest.date)) {
+                groupedByLocation[state].cities[city].earliestUpcomingEvent = event;
+            }
         }
 
         // Store latest events (up to 3)
         if (groupedByLocation[state].cities[city].latestEvents.length < 3) {
             groupedByLocation[state].cities[city].latestEvents.push(event);
         }
+
+        // Sort latest events by date
+        groupedByLocation[state].cities[city].latestEvents.sort((a, b) => a.date - b.date);
     });
 
     // Sort states alphabetically
@@ -61,6 +71,23 @@ export default function ExploreView({ events, onSelectLocation }) {
     const totalCities = Object.values(groupedByLocation).reduce((acc, state) => {
         return acc + Object.keys(state.cities).length;
     }, 0);
+
+    // Handle city click - navigate to earliest upcoming event
+    const handleCityClick = (state, city, cityData) => {
+        // First, update the location filter
+        onSelectLocation(state, city);
+
+        // Then, navigate to the earliest upcoming event date if exists
+        if (cityData.earliestUpcomingEvent) {
+            const eventDate = new Date(cityData.earliestUpcomingEvent.date);
+            onNavigateToEvent(eventDate);
+        } else if (cityData.latestEvents.length > 0) {
+            // If no upcoming events, navigate to the most recent event
+            const lastEvent = cityData.latestEvents[cityData.latestEvents.length - 1];
+            const eventDate = new Date(lastEvent.date);
+            onNavigateToEvent(eventDate);
+        }
+    };
 
     return (
         <div className="p-6">
@@ -89,10 +116,6 @@ export default function ExploreView({ events, onSelectLocation }) {
                     <p className="text-2xl font-bold text-green-600">{totalUpcoming}</p>
                     <p className="text-xs text-gray-500">Upcoming</p>
                 </div>
-                {/* <div className="bg-white rounded-xl border border-gray-200 p-3 text-center shadow-sm">
-                    <p className="text-2xl font-bold text-blue-600">{totalCities}</p>
-                    <p className="text-xs text-gray-500">Cities</p>
-                </div> */}
             </div>
 
             {/* States and Cities Grid */}
@@ -134,12 +157,21 @@ export default function ExploreView({ events, onSelectLocation }) {
                                                 .join(' ');
 
                                             const hasUpcoming = cityData.upcomingCount > 0;
-                                            const latestEvent = cityData.latestEvents[0];
+                                            const earliestEvent = cityData.earliestUpcomingEvent;
+                                            const nextEventDate = earliestEvent ? new Date(earliestEvent.date) : null;
+
+                                            // Format date for display
+                                            const formattedDate = nextEventDate
+                                                ? nextEventDate.toLocaleDateString('en-US', {
+                                                    month: 'short',
+                                                    day: 'numeric'
+                                                })
+                                                : null;
 
                                             return (
                                                 <div
                                                     key={`${state}-${city}`}
-                                                    onClick={() => onSelectLocation(state, city)}
+                                                    onClick={() => handleCityClick(state, city, cityData)}
                                                     className="group cursor-pointer p-3 rounded-xl border border-gray-100 bg-white hover:border-yellow-300 hover:shadow-md transition-all duration-200"
                                                 >
                                                     <div className="flex items-start justify-between">
@@ -161,16 +193,26 @@ export default function ExploreView({ events, onSelectLocation }) {
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            {/* Latest event preview */}
-                                                            {latestEvent && (
+                                                            {/* Show next event date and title */}
+                                                            {earliestEvent && (
                                                                 <div className="mt-2 pt-1 border-t border-gray-100">
-                                                                    <p className="text-[10px] text-gray-400 truncate">
-                                                                        Next: {latestEvent.title}
+                                                                    <p className="text-[10px] text-gray-500 font-medium">
+                                                                        Next: {formattedDate}
+                                                                    </p>
+                                                                    <p className="text-[10px] text-gray-400 truncate mt-0.5">
+                                                                        {earliestEvent.title}
+                                                                    </p>
+                                                                </div>
+                                                            )}
+                                                            {!earliestEvent && cityData.latestEvents.length > 0 && (
+                                                                <div className="mt-2 pt-1 border-t border-gray-100">
+                                                                    <p className="text-[10px] text-gray-400 italic">
+                                                                        No upcoming events
                                                                     </p>
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-yellow-500 group-hover:translate-x-0.5 transition-all" />
+                                                        <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-yellow-500 group-hover:translate-x-0.5 transition-all flex-shrink-0 ml-2" />
                                                     </div>
                                                 </div>
                                             );
@@ -199,7 +241,7 @@ export default function ExploreView({ events, onSelectLocation }) {
             {sortedStates.length > 0 && (
                 <div className="mt-6 text-center">
                     <p className="text-xs text-gray-400">
-                        Click on any city to view all events in that location
+                        Click on any city to view all events and jump to the next show date
                     </p>
                 </div>
             )}
