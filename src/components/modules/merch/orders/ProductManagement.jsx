@@ -15,7 +15,7 @@ import {
   Trash2,
   Upload,
   XCircle,
-  X
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -61,7 +61,7 @@ export default function ProductManagement() {
         return;
       }
 
-      const { data } = await axios.get(`${API_BASE}/api/merch`, {
+      const { data } = await axios.get(`${API_BASE}/api/merch?showAll=true`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -133,21 +133,25 @@ export default function ProductManagement() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       if (response.data.success) {
-        toast.success(`Product ${item.isActive ? "deactivated" : "activated"} successfully!`);
+        toast.success(
+          `Product ${item.isActive ? "deactivated" : "activated"} successfully!`,
+        );
         setMerchItems((prevItems) =>
           prevItems.map((prevItem) =>
             prevItem._id === item._id
               ? { ...prevItem, isActive: !item.isActive }
-              : prevItem
-          )
+              : prevItem,
+          ),
         );
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update product status");
+      toast.error(
+        error.response?.data?.message || "Failed to update product status",
+      );
       fetchMerch();
     } finally {
       setActionLoading(null);

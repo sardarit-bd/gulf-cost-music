@@ -1,16 +1,16 @@
 "use client";
 import {
+  DollarSign,
+  Edit,
+  Eye,
   Package,
   Search,
-  X,
-  Eye,
-  Edit,
-  Trash2,
-  ToggleRight,
   ToggleLeft,
-  DollarSign,
+  ToggleRight,
+  Trash2,
+  X,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useRef, useState } from "react";
 
 const ProductTable = ({
   products,
