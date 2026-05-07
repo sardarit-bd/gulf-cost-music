@@ -215,7 +215,7 @@ export default function ProductManagement() {
               setEditingItem(null);
               setShowForm(true);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-sm font-medium transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Product</span>

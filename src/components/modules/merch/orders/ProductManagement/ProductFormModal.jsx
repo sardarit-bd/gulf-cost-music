@@ -140,7 +140,7 @@ const ProductFormModal = ({ editingItem, onClose, onSuccess, API_BASE, getTokenF
                                 type="text"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className={`text-gray-700 w-full border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none`}
+                                className={`text-gray-700 w-full border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 outline-none`}
                             />
                             {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                         </div>
@@ -156,7 +156,7 @@ const ProductFormModal = ({ editingItem, onClose, onSuccess, API_BASE, getTokenF
                                 min="0"
                                 value={formData.price}
                                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                className={`text-gray-700 w-full border ${errors.price ? 'border-red-500' : 'border-gray-300'} rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none`}
+                                className={`text-gray-700 w-full border ${errors.price ? 'border-red-500' : 'border-gray-300'} rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 outline-none`}
                             />
                             {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
                         </div>
@@ -171,7 +171,7 @@ const ProductFormModal = ({ editingItem, onClose, onSuccess, API_BASE, getTokenF
                                 min="0"
                                 value={formData.stock}
                                 onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                                className={`text-gray-700 w-full border ${errors.stock ? 'border-red-500' : 'border-gray-300'} rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none`}
+                                className={`text-gray-700 w-full border ${errors.stock ? 'border-red-500' : 'border-gray-300'} rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 outline-none`}
                             />
                             {errors.stock && <p className="text-red-500 text-xs mt-1">{errors.stock}</p>}
                         </div>
@@ -198,7 +198,7 @@ const ProductFormModal = ({ editingItem, onClose, onSuccess, API_BASE, getTokenF
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Product Image {!editingItem && <span className="text-red-500">*</span>}
                             </label>
-                            <div className={`border-2 border-dashed ${errors.image ? 'border-red-500' : 'border-gray-300'} rounded-lg p-4 text-center hover:border-purple-400 transition-colors cursor-pointer`}>
+                            <div className={`border-2 border-dashed ${errors.image ? 'border-red-500' : 'border-gray-300'} rounded-lg p-4 text-center hover:border-yellow-400 transition-colors cursor-pointer`}>
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -237,7 +237,7 @@ const ProductFormModal = ({ editingItem, onClose, onSuccess, API_BASE, getTokenF
                                 rows="4"
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                className="text-gray-700 w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none"
+                                className="text-gray-700 w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 outline-none"
                                 placeholder="Product description..."
                             />
                         </div>
@@ -254,7 +254,7 @@ const ProductFormModal = ({ editingItem, onClose, onSuccess, API_BASE, getTokenF
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                            className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
                         >
                             {loading && <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>}
                             {editingItem ? "Update Product" : "Create Product"}
