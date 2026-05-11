@@ -1,6 +1,17 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
-import { MoreVertical, Eye, Truck, Clock, CheckCircle, XCircle, RefreshCw, Package, CreditCard, Wallet, DollarSign, User } from "lucide-react";
+import {
+  CheckCircle,
+  Clock,
+  CreditCard,
+  Eye,
+  MoreVertical,
+  RefreshCw,
+  Truck,
+  User,
+  Wallet,
+  XCircle,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 const OrderRow = ({
   order,
@@ -51,7 +62,9 @@ const OrderRow = ({
     };
     const { color, icon: Icon } = config[status] || config.pending;
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color}`}>
+      <span
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${color}`}
+      >
         <Icon className="w-2.5 h-2.5" />
         {status}
       </span>
@@ -64,17 +77,19 @@ const OrderRow = ({
       cod: { icon: Wallet, text: "COD" },
     };
     const { icon: Icon, text } = methodConfig[method] || methodConfig.cod;
-    
+
     const statusConfig = {
       paid: "bg-green-100 text-green-700",
       pending: "bg-yellow-100 text-yellow-700",
       failed: "bg-red-100 text-red-700",
       refunded: "bg-purple-100 text-purple-700",
     };
-    
+
     return (
       <div className="flex flex-col gap-0.5">
-        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium ${statusConfig[status] || statusConfig.pending}`}>
+        <span
+          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs font-medium ${statusConfig[status] || statusConfig.pending}`}
+        >
           <Icon className="w-2.5 h-2.5" />
           {text}
         </span>
@@ -94,17 +109,29 @@ const OrderRow = ({
             <User className="w-3 h-3 text-white" />
           </div>
           <div>
-            <div className="font-medium text-gray-900 text-xs">{order.buyer?.username || "N/A"}</div>
-            <div className="text-gray-500 text-xs truncate max-w-[120px]">{order.buyer?.email || "N/A"}</div>
+            <div className="font-medium text-gray-900 text-xs">
+              {order.buyer?.username || "N/A"}
+            </div>
+            <div className="text-gray-500 text-xs truncate max-w-[120px]">
+              {order.buyer?.email || "N/A"}
+            </div>
           </div>
         </div>
       </td>
       <td className="px-3 py-2">
         <div className="flex items-center gap-2">
-          <img src={order.merch?.image} alt="" className="w-8 h-8 object-cover rounded border border-gray-200" />
+          <img
+            src={order.merch?.image}
+            alt=""
+            className="w-8 h-8 object-cover rounded border border-gray-200"
+          />
           <div>
-            <div className="font-medium text-gray-900 text-xs truncate max-w-[150px]">{order.merch?.name || "Deleted"}</div>
-            <div className="text-gray-500 text-xs">${order.merch?.price?.toFixed(2) || "0"}</div>
+            <div className="font-medium text-gray-900 text-xs truncate max-w-[150px]">
+              {order.merch?.name || "Deleted"}
+            </div>
+            <div className="text-gray-500 text-xs">
+              ${order.merch?.price?.toFixed(2) || "0"}
+            </div>
           </div>
         </div>
       </td>
@@ -114,11 +141,15 @@ const OrderRow = ({
         </span>
       </td>
       <td className="px-3 py-2">
-        <span className="font-bold text-emerald-600 text-sm">${order.totalPrice?.toFixed(2)}</span>
+        <span className="font-bold text-emerald-600 text-sm">
+          ${order.totalPrice?.toFixed(2)}
+        </span>
       </td>
-      <td className="px-3 py-2">{getPaymentBadge(order.paymentMethod, order.paymentStatus)}</td>
+      <td className="px-3 py-2">{getPaymentBadge(order.paymentMethod)}</td>
       <td className="px-3 py-2">{getStatusBadge(order.deliveryStatus)}</td>
-      <td className="px-3 py-2 text-gray-500 text-xs">{formatDate(order.createdAt)}</td>
+      <td className="px-3 py-2 text-gray-500 text-xs">
+        {formatDate(order.createdAt)}
+      </td>
       <td className="px-3 py-2 text-right">
         <div className="relative" ref={menuRef}>
           <button
@@ -139,37 +170,39 @@ const OrderRow = ({
               >
                 <Eye className="w-3 h-3" /> View Details
               </button>
-              
-              {order.deliveryStatus !== "delivered" && order.deliveryStatus !== "cancelled" && (
-                <button
-                  onClick={() => {
-                    onUpdateDeliveryStatus(order._id, "delivered");
-                    onToggleDropdown(order._id);
-                  }}
-                  disabled={statusUpdateLoading === order._id}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs text-green-700 hover:bg-green-50 w-full text-left cursor-pointer"
-                >
-                  {statusUpdateLoading === order._id ? (
-                    <div className="w-3 h-3 animate-spin rounded-full border-2 border-green-600 border-t-transparent"></div>
-                  ) : (
-                    <CheckCircle className="w-3 h-3" />
-                  )}
-                  Mark Delivered
-                </button>
-              )}
 
-              {order.deliveryStatus !== "delivered" && order.deliveryStatus !== "cancelled" && (
-                <button
-                  onClick={() => {
-                    onDeleteOrder(order._id);
-                    onToggleDropdown(order._id);
-                  }}
-                  disabled={actionLoading === order._id}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs text-red-700 hover:bg-red-50 w-full text-left cursor-pointer"
-                >
-                  <XCircle className="w-3 h-3" /> Delete Order
-                </button>
-              )}
+              {order.deliveryStatus !== "delivered" &&
+                order.deliveryStatus !== "cancelled" && (
+                  <button
+                    onClick={() => {
+                      onUpdateDeliveryStatus(order._id, "delivered");
+                      onToggleDropdown(order._id);
+                    }}
+                    disabled={statusUpdateLoading === order._id}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs text-green-700 hover:bg-green-50 w-full text-left cursor-pointer"
+                  >
+                    {statusUpdateLoading === order._id ? (
+                      <div className="w-3 h-3 animate-spin rounded-full border-2 border-green-600 border-t-transparent"></div>
+                    ) : (
+                      <CheckCircle className="w-3 h-3" />
+                    )}
+                    Mark Delivered
+                  </button>
+                )}
+
+              {order.deliveryStatus !== "delivered" &&
+                order.deliveryStatus !== "cancelled" && (
+                  <button
+                    onClick={() => {
+                      onDeleteOrder(order._id);
+                      onToggleDropdown(order._id);
+                    }}
+                    disabled={actionLoading === order._id}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs text-red-700 hover:bg-red-50 w-full text-left cursor-pointer"
+                  >
+                    <XCircle className="w-3 h-3" /> Delete Order
+                  </button>
+                )}
             </div>
           )}
         </div>
