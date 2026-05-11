@@ -1,6 +1,6 @@
 import { Crown, DollarSign, Sparkles } from "lucide-react";
 
-const StatCard = ({ icon: Icon, label, value, change, color }) => {
+const StatCard = ({ icon: Icon, label, value, color }) => {
     const colorClasses = {
         blue: "from-blue-500 to-cyan-600",
         green: "from-green-500 to-emerald-600",
@@ -12,26 +12,25 @@ const StatCard = ({ icon: Icon, label, value, change, color }) => {
         cyan: "from-cyan-500 to-teal-600",
     };
 
-    const changeColor = change >= 0 ? "text-green-600" : "text-red-600";
-    const changeIcon = change >= 0 ? "↗" : "↘";
-
     // Special icons for specific labels
     const renderIcon = () => {
-        if (label === "Pro Plan") return <Crown className="w-6 h-6 text-white" />;
-        if (label === "Free Plan") return <DollarSign className="w-6 h-6 text-white" />;
-        if (label === "Colors Assigned") return <Sparkles className="w-6 h-6 text-white" />;
-        return <Icon className="w-6 h-6 text-white" />;
+        if (label === "Pro Plan") return <Crown className="w-5 h-5 text-white" />;
+        if (label === "Free Plan") return <DollarSign className="w-5 h-5 text-white" />;
+        if (label === "Colors Assigned") return <Sparkles className="w-5 h-5 text-white" />;
+        return <Icon className="w-5 h-5 text-white" />;
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-xl bg-gradient-to-r ${colorClasses[color]}`}>
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+                <div>
+                    <p className="text-gray-500 text-xs font-medium mb-1">{label}</p>
+                    <h3 className="text-2xl font-bold text-gray-900">{value || 0}</h3>
+                </div>
+                <div className={`p-2 rounded-lg bg-gradient-to-r ${colorClasses[color] || "from-gray-500 to-gray-600"}`}>
                     {renderIcon()}
                 </div>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">{value || 0}</h3>
-            <p className="text-gray-600 text-sm">{label}</p>
         </div>
     );
 };

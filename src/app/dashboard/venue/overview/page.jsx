@@ -106,7 +106,7 @@ export default function OverviewPage() {
       <div className="">
         {/* Header with Back Button */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-4">=
+          <div className="flex items-center gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 Venue Overview

@@ -1,7 +1,6 @@
 "use client";
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
 import DeleteConfirmationModal from "@/components/modules/dashboard/users/DeleteConfirmationModal";
-import Filters from "@/components/modules/dashboard/users/Filters";
 import PromoteModal from "@/components/modules/dashboard/users/PromoteModal";
 import StatCard from "@/components/modules/dashboard/users/StatCard";
 import UserDetailModal from "@/components/modules/dashboard/users/UserDetailModal";
@@ -13,16 +12,14 @@ import {
   CheckCircle,
   FileText,
   Music,
-  RefreshCw,
   Shield,
-  User,
+  User
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 // Function to get cookie value by name
 const getCookie = (name) => {
   if (typeof document === "undefined") return null;
-
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
   if (parts.length === 2) return parts.pop().split(";").shift();
@@ -32,12 +29,10 @@ const getCookie = (name) => {
 // Function to get user data from cookies
 const getUserFromCookies = () => {
   if (typeof document === "undefined") return null;
-
   try {
     const userCookie = document.cookie
       .split("; ")
       .find((row) => row.startsWith("user="));
-
     if (userCookie) {
       const userData = decodeURIComponent(userCookie.split("=")[1]);
       return JSON.parse(userData);
@@ -72,7 +67,6 @@ const UserManagement = () => {
   });
   const [promoteModal, setPromoteModal] = useState(null);
   const [deleteModal, setDeleteModal] = useState(null);
-  const [searchTimeout, setSearchTimeout] = useState(null);
 
   const API_URL = `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin`;
   const USERS_URL = `${API_URL}/users`;
@@ -144,7 +138,7 @@ const UserManagement = () => {
     }
   };
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const token = getCookie("token");
@@ -164,19 +158,12 @@ const UserManagement = () => {
 
       setUsers(data.data.users);
       setPages(data.data.pagination.pages);
-
-      if (verified === "true") {
-        setStats((prev) => ({
-          ...prev,
-          verifiedUsers: data.data.pagination?.total || prev.verifiedUsers,
-        }));
-      }
     } catch (err) {
       console.error("Fetch users error:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, search, userType, verified]);
 
   const calculateRealTimeStats = () => {
     return {
@@ -185,8 +172,7 @@ const UserManagement = () => {
       artists: users.filter((user) => user.userType === "artist").length,
       venues: users.filter((user) => user.userType === "venue").length,
       admins: users.filter((user) => user.userType === "admin").length,
-      journalists: users.filter((user) => user.userType === "journalist")
-        .length,
+      journalists: users.filter((user) => user.userType === "journalist").length,
       totalAdmins: users.filter((user) => user.userType === "admin").length,
     };
   };
@@ -195,28 +181,6 @@ const UserManagement = () => {
     search || userType !== "all" || verified !== ""
       ? calculateRealTimeStats()
       : stats;
-
-  const handleSearchChange = (value) => {
-    setSearch(value);
-
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
-
-    setSearchTimeout(
-      setTimeout(() => {
-        setPage(1);
-        fetchUsers();
-      }, 500),
-    );
-  };
-
-  const clearFilters = () => {
-    setSearch("");
-    setUserType("all");
-    setVerified("");
-    setPage(1);
-  };
 
   const handleVerify = async (id) => {
     try {
@@ -370,24 +334,25 @@ const UserManagement = () => {
     setActionMenu(actionMenu === userId ? null : userId);
   };
 
+  const handleSearch = (searchTerm) => {
+    setSearch(searchTerm);
+    setPage(1);
+
+  };
+
   const handlePageChange = (newPage) => setPage(newPage);
 
   useEffect(() => {
     fetchUsers();
-    fetchStats();
-  }, [page, userType, verified]);
+  }, [fetchUsers]);
 
   useEffect(() => {
-    return () => {
-      if (searchTimeout) {
-        clearTimeout(searchTimeout);
-      }
-    };
-  }, [searchTimeout]);
+    fetchStats();
+  }, []);
 
   const hasActiveFilters = search || userType !== "all" || verified !== "";
 
-  if (loading) {
+  if (loading && users.length === 0) {
     return (
       <AdminLayout>
         <div className="flex justify-center items-center min-h-screen py-20 bg-white">
@@ -398,6 +363,7 @@ const UserManagement = () => {
       </AdminLayout>
     );
   }
+
   return (
     <AdminLayout>
       <div className="min-h-screen bg-gray-50 p-6">
@@ -413,22 +379,10 @@ const UserManagement = () => {
                 {hasActiveFilters && " (Showing filtered results)"}
               </p>
             </div>
-            <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-              <button
-                onClick={() => {
-                  fetchUsers();
-                  fetchStats();
-                }}
-                className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] text-black rounded-lg hover:bg-primary/80 text-sm font-medium"
-              >
-                <RefreshCw className="w-4 h-4" />
-                <span>Refresh</span>
-              </button>
-            </div>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
             <StatCard
               icon={User}
               label="Total Users"
@@ -457,10 +411,6 @@ const UserManagement = () => {
               color="red"
               description="Administrative users"
             />
-          </div>
-
-          {/* Additional Stats Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <StatCard
               icon={Building2}
               label="Venues"
@@ -475,27 +425,7 @@ const UserManagement = () => {
               color="blue"
               description="Content creators"
             />
-            <StatCard
-              icon={User}
-              label="Filtered Users"
-              value={users.length}
-              color="orange"
-              description="Currently showing"
-            />
           </div>
-
-          {/* Filters */}
-          <Filters
-            search={search}
-            userType={userType}
-            verified={verified}
-            onSearchChange={handleSearchChange}
-            onUserTypeChange={setUserType}
-            onVerifiedChange={setVerified}
-            onApply={fetchUsers}
-            onClear={clearFilters}
-            hasActiveFilters={hasActiveFilters}
-          />
 
           {/* Users Table */}
           <UserTable
@@ -519,6 +449,8 @@ const UserManagement = () => {
             onActionMenuToggle={handleActionMenuToggle}
             hasActiveFilters={hasActiveFilters}
             totalUsers={stats.totalUsers}
+            onSearch={handleSearch}
+            searchValue={search}
           />
 
           {/* Modals */}
