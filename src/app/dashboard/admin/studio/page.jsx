@@ -1,11 +1,10 @@
-// app/dashboard/admin/studios/page.js
 "use client";
 
 import StudioDetail from "@/components/modules/admin/studio/StudioDetail";
 import StudioTable from "@/components/modules/admin/studio/StudioTable";
 import AdminLayout from "@/components/modules/dashboard/AdminLayout";
 import CustomLoader from "@/components/shared/loader/Loader";
-import { Building2, RefreshCw } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -195,14 +194,14 @@ export default function StudiosPage() {
                 </div>
               </div>
             </div>
-            <button
+            {/* <button
               onClick={() => fetchStudios(true)}
               disabled={refreshing}
               className="px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
               Refresh
-            </button>
+            </button> */}
           </div>
         </div>
 

@@ -1,70 +1,26 @@
-// components/modules/admin/stats/StatsCard.js
 "use client";
 
-const StatsCard = ({ title, value, icon: Icon, color = "blue", description, trend }) => {
+const StatsCard = ({ title, value, icon: Icon, color = "blue" }) => {
   const colorClasses = {
-    blue: {
-      bg: "bg-blue-50",
-      text: "text-blue-700",
-      border: "border-blue-200",
-      iconBg: "bg-blue-100",
-    },
-    green: {
-      bg: "bg-green-50",
-      text: "text-green-700",
-      border: "border-green-200",
-      iconBg: "bg-green-100",
-    },
-    yellow: {
-      bg: "bg-yellow-50",
-      text: "text-yellow-700",
-      border: "border-yellow-200",
-      iconBg: "bg-yellow-100",
-    },
-    purple: {
-      bg: "bg-purple-50",
-      text: "text-purple-700",
-      border: "border-purple-200",
-      iconBg: "bg-purple-100",
-    },
-    red: {
-      bg: "bg-red-50",
-      text: "text-red-700",
-      border: "border-red-200",
-      iconBg: "bg-red-100",
-    },
-    gray: {
-      bg: "bg-gray-50",
-      text: "text-gray-700",
-      border: "border-gray-200",
-      iconBg: "bg-gray-100",
-    },
+    blue: "from-blue-500 to-cyan-600",
+    green: "from-green-500 to-emerald-600",
+    yellow: "from-yellow-500 to-amber-600",
+    purple: "from-purple-500 to-pink-600",
+    red: "from-red-500 to-rose-600",
+    gray: "from-gray-500 to-gray-600",
   };
 
-  const classes = colorClasses[color] || colorClasses.blue;
-
   return (
-    <div className={`bg-white rounded-xl border ${classes.border} p-6 hover:shadow-lg transition-shadow`}>
-      <div className="flex items-start justify-between">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-          <p className={`text-3xl font-bold ${classes.text}`}>{value.toLocaleString()}</p>
-          {description && (
-            <p className="text-xs text-gray-500 mt-2">{description}</p>
-          )}
+          <p className="text-gray-500 text-xs font-medium mb-1">{title}</p>
+          <h3 className="text-2xl font-bold text-gray-900">{value.toLocaleString()}</h3>
         </div>
-        <div className={`${classes.iconBg} p-3 rounded-lg`}>
-          <Icon className={`h-5 w-5 ${classes.text}`} />
+        <div className={`p-2 rounded-lg bg-gradient-to-r ${colorClasses[color] || colorClasses.gray}`}>
+          <Icon className="w-5 h-5 text-white" />
         </div>
       </div>
-      {trend && (
-        <div className="mt-4 pt-4 border-t border-gray-100">
-          <span className={`text-sm font-medium ${trend.type === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-            {trend.value}
-          </span>
-          <span className="text-sm text-gray-500 ml-1">vs last month</span>
-        </div>
-      )}
     </div>
   );
 };

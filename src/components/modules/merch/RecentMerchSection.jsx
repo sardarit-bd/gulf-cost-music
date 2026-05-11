@@ -111,7 +111,7 @@ export default function RecentMerchSection() {
           window.location.href = data.data.stripeSession.url;
         } else {
           toast.success(
-            "Order placed successfully! For COD, you'll pay when delivered."
+            "Order placed successfully! For COD, you'll pay when delivered.",
           );
           setShowOrderModal(false);
         }

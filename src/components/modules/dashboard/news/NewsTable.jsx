@@ -1,13 +1,11 @@
 "use client";
 import {
-    CheckSquare,
     Newspaper,
-    Square
+    Search,
+    X
 } from "lucide-react";
-import { NewsGrid } from "./NewsGrid";
-import { NewsRow } from "./NewsRow";
-import Pagination from "./Pagination";
-import CustomLoader from "@/components/shared/loader/Loader";
+import { useEffect, useRef } from "react";
+import NewsRow from "./NewsRow";
 
 const NewsTable = ({
     newsList,
@@ -18,10 +16,6 @@ const NewsTable = ({
     formData,
     saveLoading,
     actionMenu,
-    viewMode = "table",
-    selectedNews = [],
-    onSelectAll,
-    onSelectNews,
     onPageChange,
     onViewNews,
     onToggleStatus,
@@ -30,8 +24,33 @@ const NewsTable = ({
     onCancel,
     onInputChange,
     onDeleteNews,
-    onActionMenuToggle
+    onActionMenuToggle,
+    // Search props
+    searchInput,
+    onSearchInputChange,
+    onSearch,
+    onKeyPress,
+    onClearFilters,
+    hasActiveFilters,
+    activeSearchTerm
 }) => {
+    const tableRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (tableRef.current && !tableRef.current.contains(event.target)) {
+                if (actionMenu !== null) {
+                    onActionMenuToggle(null);
+                }
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [actionMenu, onActionMenuToggle]);
+
     const getLocationColor = (location) => {
         const colors = {
             'new orleans': 'bg-purple-100 text-purple-800 border-purple-200',
@@ -51,149 +70,179 @@ const NewsTable = ({
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center min-h-screen py-20 bg-white">
-                <div className="text-center">
-                    <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
-                </div>
+            <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
             </div>
         );
     }
 
     return (
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50/50">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center">
-                            {viewMode === "table" && (
-                                <button
-                                    onClick={onSelectAll}
-                                    className="mr-2 text-gray-400 hover:text-orange-600 transition-colors"
-                                >
-                                    {selectedNews.length === newsList.length && newsList.length > 0 ? (
-                                        <CheckSquare className="w-5 h-5 text-orange-600" />
-                                    ) : (
-                                        <Square className="w-5 h-5" />
-                                    )}
-                                </button>
-                            )}
-                            <h3 className="text-lg font-semibold text-gray-900">
-                                {viewMode === "table" ? "News Articles" : "News Grid"}
-                            </h3>
+        <div ref={tableRef} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            {/* Search Header - Inside Table Container */}
+            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <h3 className="text-sm font-semibold text-gray-700">
+                            News Articles ({newsList.length})
+                        </h3>
+                    </div>
+
+                    <div className="flex gap-2">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+                            <input
+                                type="text"
+                                placeholder="Search news..."
+                                className="text-gray-700 w-64 pl-8 pr-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-orange-400 focus:border-orange-400 outline-none transition-colors"
+                                value={searchInput || ""}
+                                onChange={(e) => onSearchInputChange(e.target.value)}
+                                onKeyPress={onKeyPress}
+                            />
                         </div>
-                        <span className="px-2.5 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
-                            {newsList.length} {newsList.length === 1 ? 'item' : 'items'}
+                        <button
+                            onClick={onSearch}
+                            className="px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                            <Search className="w-3.5 h-3.5" />
+                            Search
+                        </button>
+                        {searchInput && (
+                            <button
+                                onClick={onClearFilters}
+                                className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 text-sm font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                                Clear
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Active Search Badge */}
+                {activeSearchTerm && (
+                    <div className="mt-2 flex items-center gap-2">
+                        <span className="text-xs text-gray-500">Searching for:</span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-800 text-xs rounded-full">
+                            <Search className="w-3 h-3" />
+                            {activeSearchTerm}
                         </span>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                        <div className="text-sm text-gray-500">
-                            Page {page} of {pages}
-                        </div>
-                    </div>
-                </div>
+                )}
             </div>
 
-            {/* Content */}
-            {newsList.length > 0 ? (
-                <>
-                    {viewMode === "table" ? (
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            <div className="flex items-center gap-2">
-                                                Article
-                                            </div>
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Author & Location
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Date
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Status
-                                        </th>
-                                        <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-200">
-                                    {newsList.map((news) => (
-                                        <NewsRow
-                                            key={news._id}
-                                            news={news}
-                                            editingNews={editingNews}
-                                            formData={formData}
-                                            saveLoading={saveLoading}
-                                            actionMenu={actionMenu}
-                                            getLocationColor={getLocationColor}
-                                            truncateText={truncateText}
-                                            isSelected={selectedNews.includes(news._id)}
-                                            onSelect={() => onSelectNews(news._id)}
-                                            onViewNews={onViewNews}
-                                            onToggleStatus={onToggleStatus}
-                                            onEdit={onEdit}
-                                            onSave={onSave}
-                                            onCancel={onCancel}
-                                            onInputChange={onInputChange}
-                                            onDeleteNews={onDeleteNews}
-                                            onActionMenuToggle={onActionMenuToggle}
-                                        />
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <NewsGrid
-                            newsList={newsList}
-                            editingNews={editingNews}
-                            formData={formData}
-                            saveLoading={saveLoading}
-                            actionMenu={actionMenu}
-                            selectedNews={selectedNews}
-                            onSelectNews={onSelectNews}
-                            onViewNews={onViewNews}
-                            onToggleStatus={onToggleStatus}
-                            onEdit={onEdit}
-                            onSave={onSave}
-                            onCancel={onCancel}
-                            onInputChange={onInputChange}
-                            onDeleteNews={onDeleteNews}
-                            onActionMenuToggle={onActionMenuToggle}
-                        />
-                    )}
-                </>
-            ) : (
-                <div className="py-16 text-center">
-                    <div className="inline-flex p-4 bg-orange-50 rounded-full mb-4">
-                        <Newspaper className="w-12 h-12 text-orange-300" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No news articles found</h3>
-                    <p className="text-gray-500 mb-6">Get started by creating your first news article</p>
-                    <button className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl hover:shadow-lg transition-all font-medium">
-                        Create New Article
-                    </button>
-                </div>
-            )}
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Article
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Author & Location
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Date
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Status
+                            </th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {newsList.length > 0 ? (
+                            newsList.map((news) => (
+                                <NewsRow
+                                    key={news._id}
+                                    news={news}
+                                    editingNews={editingNews}
+                                    formData={formData}
+                                    saveLoading={saveLoading}
+                                    actionMenu={actionMenu}
+                                    getLocationColor={getLocationColor}
+                                    truncateText={truncateText}
+                                    onViewNews={onViewNews}
+                                    onToggleStatus={onToggleStatus}
+                                    onEdit={onEdit}
+                                    onSave={onSave}
+                                    onCancel={onCancel}
+                                    onInputChange={onInputChange}
+                                    onDeleteNews={onDeleteNews}
+                                    onActionMenuToggle={onActionMenuToggle}
+                                />
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="5" className="px-6 py-12 text-center">
+                                    <div className="text-gray-500">
+                                        <Newspaper className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                                        <p className="text-lg font-medium text-gray-900 mb-1">No news found</p>
+                                        <p className="text-sm">
+                                            {activeSearchTerm ? `No results found for "${activeSearchTerm}"` : "No news articles have been created yet"}
+                                        </p>
+                                        {activeSearchTerm && (
+                                            <button
+                                                onClick={onClearFilters}
+                                                className="mt-3 px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm font-medium transition-colors cursor-pointer"
+                                            >
+                                                Clear Search
+                                            </button>
+                                        )}
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
 
             {/* Pagination */}
             {pages > 1 && (
-                <div className="px-6 py-4 border-t border-gray-200 bg-gray-50/50">
-                    <Pagination
-                        page={page}
-                        pages={pages}
-                        newsCount={newsList.length}
-                        onPageChange={onPageChange}
-                    />
+                <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                    <div className="flex items-center justify-between">
+                        <p className="text-sm text-gray-700">
+                            Showing page <span className="font-medium">{page}</span> of{" "}
+                            <span className="font-medium">{pages}</span>
+                        </p>
+                        <div className="flex gap-1">
+                            <button
+                                onClick={() => onPageChange(Math.max(1, page - 1))}
+                                disabled={page === 1}
+                                className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 cursor-pointer"
+                            >
+                                Previous
+                            </button>
+                            {Array.from({ length: Math.min(5, pages) }, (_, i) => {
+                                const pageNumber = i + 1;
+                                return (
+                                    <button
+                                        key={pageNumber}
+                                        onClick={() => onPageChange(pageNumber)}
+                                        className={`px-3 py-1 rounded text-sm font-medium cursor-pointer ${page === pageNumber
+                                            ? "bg-orange-600 text-white"
+                                            : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                                            }`}
+                                    >
+                                        {pageNumber}
+                                    </button>
+                                );
+                            })}
+                            <button
+                                onClick={() => onPageChange(Math.min(pages, page + 1))}
+                                disabled={page === pages}
+                                className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 cursor-pointer"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
     );
 };
+
 
 export default NewsTable;

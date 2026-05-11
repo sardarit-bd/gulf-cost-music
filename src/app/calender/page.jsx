@@ -240,6 +240,14 @@ export default function CalendarBoard() {
     setView("month");
   };
 
+  // Handle navigation to specific event date from Explore view
+  const handleNavigateToEvent = (eventDate) => {
+    // Switch to month view
+    setView("month");
+    // Update current date to the event's date
+    setCurrentDate(new Date(eventDate));
+  };
+
   // Calendar grid generation
   const generateCalendarGrid = () => {
     const year = currentDate.getFullYear();
@@ -385,6 +393,7 @@ export default function CalendarBoard() {
                     <ExploreView
                       events={currentEvents}
                       onSelectLocation={handleLocationSelect}
+                      onNavigateToEvent={handleNavigateToEvent}
                     />
                   )}
                 </>

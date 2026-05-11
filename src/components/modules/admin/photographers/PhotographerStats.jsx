@@ -3,29 +3,34 @@ import { Ban, Camera, CheckCircle, Crown, Users } from "lucide-react";
 export default function PhotographerStats({ stats, loading }) {
     if (!stats && !loading) return null;
 
+    const colorClasses = {
+        blue: "from-blue-500 to-cyan-600",
+        green: "from-green-500 to-emerald-600",
+        orange: "from-orange-500 to-red-600",
+        purple: "from-purple-500 to-pink-600",
+        yellow: "from-yellow-500 to-amber-600",
+        gray: "from-gray-500 to-gray-600",
+        red: "from-red-500 to-rose-600",
+    };
+
+    const getIconColor = (color) => colorClasses[color] || colorClasses.gray;
+
     const Card = ({ icon: Icon, label, value, color = "gray" }) => (
-        <div className={`bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3 transition-all hover:shadow-md ${loading ? 'animate-pulse' : ''}`}>
-            <div className={`p-3 rounded-lg ${color === 'blue' ? 'bg-blue-50 text-blue-600' : color === 'green' ? 'bg-green-50 text-green-600' : color === 'red' ? 'bg-red-50 text-red-600' : color === 'yellow' ? 'bg-yellow-50 text-yellow-600' : 'bg-gray-50 text-gray-600'}`}>
-                <Icon className="w-5 h-5" />
-            </div>
-            <div>
-                {loading ? (
-                    <>
-                        <div className="h-7 bg-gray-200 rounded w-16 mb-1"></div>
-                        <div className="h-3 bg-gray-200 rounded w-20"></div>
-                    </>
-                ) : (
-                    <>
-                        <p className="text-gray-500 text-2xl font-bold">{value}</p>
-                        <p className="text-sm text-gray-600">{label}</p>
-                    </>
-                )}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+                <div>
+                    <p className="text-gray-500 text-xs font-medium mb-1">{label}</p>
+                    <h3 className="text-2xl font-bold text-gray-900">{value || 0}</h3>
+                </div>
+                <div className={`p-2 rounded-lg bg-gradient-to-r ${getIconColor(color)}`}>
+                    <Icon className="w-5 h-5 text-white" />
+                </div>
             </div>
         </div>
     );
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
             <Card
                 icon={Camera}
                 label="Total Photographers"

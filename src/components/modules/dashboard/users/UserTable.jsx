@@ -2,22 +2,16 @@
 import CustomLoader from "@/components/shared/loader/Loader";
 import {
     Building2,
-    Calendar,
-    CheckCircle,
-    Crown,
-    Edit,
-    Eye,
     FileText,
-    Mail,
-    MoreVertical,
     Music,
-    Save,
+    Search,
     Shield,
-    Trash2,
     User as UserIcon,
-    UserPlus,
     X
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import UserPagination from "./UserPagination";
+import UserRow from "./UserRow";
 
 const UserTable = ({
     users,
@@ -39,8 +33,30 @@ const UserTable = ({
     onDelete,
     onActionMenuToggle,
     hasActiveFilters,
-    totalUsers
+    totalUsers,
+    onSearch,
+    searchValue
 }) => {
+    const [localSearch, setLocalSearch] = useState(searchValue || "");
+    const tableRef = useRef(null);
+
+    // Global click outside handler
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            // Check if click is outside the table completely
+            if (tableRef.current && !tableRef.current.contains(event.target)) {
+                if (actionMenu !== null) {
+                    onActionMenuToggle(null);
+                }
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [actionMenu, onActionMenuToggle]);
+
     const getUserTypeIcon = (type) => {
         switch (type) {
             case "artist":
@@ -71,6 +87,25 @@ const UserTable = ({
         }
     };
 
+    const handleSearch = () => {
+        if (onSearch) {
+            onSearch(localSearch);
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter") {
+            handleSearch();
+        }
+    };
+
+    const handleClearSearch = () => {
+        setLocalSearch("");
+        if (onSearch) {
+            onSearch("");
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen py-20 bg-white">
@@ -82,19 +117,65 @@ const UserTable = ({
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-900">
-                    Users ({totalUsers})
-                    {hasActiveFilters && (
-                        <span className="text-sm text-gray-500 ml-2">
-                            (Filtered from {totalUsers} total users)
-                        </span>
-                    )}
-                </h3>
-                <div className="text-sm text-gray-500">
-                    Page {page} of {pages}
+        <div ref={tableRef} className="bg-white rounded-xl shadow-sm border border-gray-300 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                        Users ({totalUsers})
+                        {hasActiveFilters && (
+                            <span className="text-sm text-gray-500 ml-2">
+                                (Filtered from {totalUsers} total users)
+                            </span>
+                        )}
+                    </h3>
+                    <div className="text-sm text-gray-500">
+                        Page {page} of {pages}
+                    </div>
                 </div>
+
+                {/* Search UI */}
+                <div className="flex gap-2">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+                        <input
+                            type="text"
+                            placeholder="Search users..."
+                            className="text-gray-700 w-64 pl-8 pr-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-blue-400 focus:border-blue-400 outline-none transition-colors"
+                            value={localSearch}
+                            onChange={(e) => setLocalSearch(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                        />
+                    </div>
+
+                    <button
+                        onClick={handleSearch}
+                        className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                        <Search className="w-3.5 h-3.5" />
+                        Search
+                    </button>
+
+                    {localSearch && (
+                        <button
+                            onClick={handleClearSearch}
+                            className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 text-sm font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                            <X className="w-3.5 h-3.5" />
+                            Clear
+                        </button>
+                    )}
+                </div>
+
+                {/* Active search term display */}
+                {searchValue && (
+                    <div className="mt-3 flex items-center gap-2">
+                        <span className="text-xs text-gray-500">Searching for:</span>
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                            <Search className="w-3 h-3" />
+                            {searchValue}
+                        </span>
+                    </div>
+                )}
             </div>
 
             <div className="overflow-x-auto">
@@ -161,7 +242,7 @@ const UserTable = ({
             </div>
 
             {pages > 1 && (
-                <Pagination
+                <UserPagination
                     page={page}
                     pages={pages}
                     onPageChange={onPageChange}
@@ -171,256 +252,6 @@ const UserTable = ({
     );
 };
 
-const UserRow = ({
-    user,
-    editingUser,
-    formData,
-    saveLoading,
-    actionMenu,
-    getUserTypeIcon,
-    getUserTypeColor,
-    onView,
-    onVerify,
-    onEdit,
-    onSave,
-    onCancel,
-    onInputChange,
-    onPromote,
-    onDelete,
-    onActionMenuToggle
-}) => {
-    const isEditing = editingUser === user._id;
 
-    return (
-        <tr className="hover:bg-gray-50 transition-colors">
-            <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                        {user.username?.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="ml-4">
-                        {isEditing ? (
-                            <div className="space-y-2">
-                                <input
-                                    type="text"
-                                    value={formData.username || ""}
-                                    onChange={(e) => onInputChange("username", e.target.value)}
-                                    className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-32"
-                                    placeholder="Username"
-                                />
-                                <input
-                                    type="email"
-                                    value={formData.email || ""}
-                                    onChange={(e) => onInputChange("email", e.target.value)}
-                                    className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-40"
-                                    placeholder="Email"
-                                />
-                            </div>
-                        ) : (
-                            <>
-                                <div className="text-sm font-medium text-gray-900">
-                                    {user.username}
-                                </div>
-                                <div className="text-sm text-gray-500 flex items-center">
-                                    <Mail className="text-gray-500 w-3 h-3 mr-1" />
-                                    {user.email}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-                {isEditing ? (
-                    <select
-                        value={formData.userType || ""}
-                        onChange={(e) => onInputChange("userType", e.target.value)}
-                        className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                        <option value="user">User</option>
-                        <option value="artist">Artist</option>
-                        <option value="venue">Venue</option>
-                        <option value="admin">Admin</option>
-                        <option value="journalist">Journalist</option>
-                    </select>
-                ) : (
-                    <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getUserTypeColor(
-                            user.userType
-                        )}`}
-                    >
-                        {getUserTypeIcon(user.userType)}
-                        <span className="ml-1 capitalize">{user.userType}</span>
-                    </span>
-                )}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap">
-                {isEditing ? (
-                    <select
-                        value={formData.isVerified?.toString() || "false"}
-                        onChange={(e) => onInputChange("isVerified", e.target.value === "true")}
-                        className="text-gray-500 text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                        <option value="true">Verified</option>
-                        <option value="false">Pending</option>
-                    </select>
-                ) : user.isVerified ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Verified
-                    </span>
-                ) : (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Pending
-                    </span>
-                )}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                <div className="flex items-center">
-                    <Calendar className="w-3 h-3 mr-1 text-gray-400" />
-                    {new Date(user.createdAt).toLocaleDateString()}
-                </div>
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div className="flex justify-end items-center space-x-2">
-                    {isEditing ? (
-                        <>
-                            <button
-                                onClick={() => onSave(user._id)}
-                                disabled={saveLoading}
-                                className="inline-flex items-center px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50"
-                            >
-                                {saveLoading ? (
-                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                                ) : (
-                                    <Save className="w-3 h-3 mr-1" />
-                                )}
-                                {saveLoading ? "Saving..." : "Save"}
-                            </button>
-                            <button
-                                onClick={onCancel}
-                                disabled={saveLoading}
-                                className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-                            >
-                                <X className="w-3 h-3 mr-1" />
-                                Cancel
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            {user.userType !== "admin" && (
-                                <button
-                                    onClick={() => onPromote(user)}
-                                    className="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-sm font-medium cursor-pointer"
-                                    title="Promote to Admin"
-                                >
-                                    <Crown className="w-3 h-3 mr-1" />
-                                    Promote
-                                </button>
-                            )}
-                            {!user.isVerified && (
-                                <button
-                                    onClick={() => onVerify(user._id)}
-                                    className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium cursor-pointer"
-                                >
-                                    <CheckCircle className="w-3 h-3 mr-1" />
-                                    Verify
-                                </button>
-                            )}
-                            <button
-                                onClick={() => onView(user)}
-                                className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium cursor-pointer"
-                            >
-                                <Eye className="w-3 h-3 mr-1" />
-                                View
-                            </button>
-                            <div className="relative">
-                                <button
-                                    onClick={() => onActionMenuToggle(user._id)}
-                                    className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                                >
-                                    <MoreVertical className="w-4 h-4" />
-                                </button>
-
-                                {actionMenu === user._id && (
-                                    <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border py-1 z-10">
-                                        <button
-                                            onClick={() => onEdit(user)}
-                                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left cursor-pointer"
-                                        >
-                                            <Edit className="w-4 h-4 mr-2" />
-                                            Edit User
-                                        </button>
-                                        {user.userType !== "admin" && (
-                                            <button
-                                                onClick={() => onPromote(user)}
-                                                className="flex items-center px-4 py-2 text-sm text-yellow-600 hover:bg-yellow-50 w-full text-left cursor-pointer"
-                                            >
-                                                <UserPlus className="w-4 h-4 mr-2" />
-                                                Promote to Admin
-                                            </button>
-                                        )}
-                                        <button
-                                            onClick={() => onDelete(user)}
-                                            className="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left cursor-pointer"
-                                        >
-                                            <Trash2 className="w-4 h-4 mr-2" />
-                                            Delete User
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        </>
-                    )}
-                </div>
-            </td>
-        </tr>
-    );
-};
-
-const Pagination = ({ page, pages, onPageChange }) => {
-    return (
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-            <div className="flex items-center justify-between">
-                <p className="text-sm text-gray-700">
-                    Showing page <span className="font-medium">{page}</span> of{" "}
-                    <span className="font-medium">{pages}</span>
-                </p>
-                <div className="flex space-x-1">
-                    <button
-                        onClick={() => onPageChange(Math.max(1, page - 1))}
-                        disabled={page === 1}
-                        className="text-gray-500 px-3 py-1 rounded-lg border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                    >
-                        Previous
-                    </button>
-                    {Array.from({ length: Math.min(5, pages) }, (_, i) => {
-                        const pageNumber = i + 1;
-                        return (
-                            <button
-                                key={pageNumber}
-                                onClick={() => onPageChange(pageNumber)}
-                                className={`px-3 py-1 rounded-lg text-sm font-medium ${page === pageNumber
-                                    ? "bg-blue-600 text-white"
-                                    : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                                    }`}
-                            >
-                                {pageNumber}
-                            </button>
-                        );
-                    })}
-                    <button
-                        onClick={() => onPageChange(Math.min(pages, page + 1))}
-                        disabled={page === pages}
-                        className="text-gray-500 px-3 py-1 rounded-lg border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                    >
-                        Next
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 export default UserTable;

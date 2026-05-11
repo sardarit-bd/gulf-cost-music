@@ -110,7 +110,7 @@ export default function RoleSidebarLayout({ role, children }) {
 
     return menu.map((item) => ({
       ...item,
-      icon: iconMap[item.label] || LayoutDashboard,
+      icon: item.icon || iconMap[item.label] || LayoutDashboard,
     }));
   }, [menu]);
 
@@ -269,8 +269,8 @@ export default function RoleSidebarLayout({ role, children }) {
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-200 font-medium ${active
-                      ? "bg-white text-blue-600 shadow-lg"
-                      : "text-white hover:bg-white/10"
+                    ? "bg-white text-blue-600 shadow-lg"
+                    : "text-white hover:bg-white/10"
                     }`}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />

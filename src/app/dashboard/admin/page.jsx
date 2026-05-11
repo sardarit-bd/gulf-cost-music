@@ -97,22 +97,22 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <div className="w-full mx-auto p-8">
+      <div className="w-full mx-auto p-6">
         <Toaster />
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900">
               Dashboard Overview
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-gray-600 mt-1 text-sm">
               Welcome back! Here's what's happening with your platform today.
             </p>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Stats Grid - Resized */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <StatCard
             icon={Users}
             label="Total Users"
@@ -143,14 +143,14 @@ export default function AdminDashboard() {
           />
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* Main Content Grid - Resized gap */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Left Column */}
-          <div className="xl:col-span-2 space-y-8">
-            {/* Recent Users */}
-            <div className="bg-white rounded-xl shadow-sm border-gray-300 border p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
+          <div className="xl:col-span-2 space-y-6">
+            {/* Recent Users - Upgraded & Resized */}
+            <div className="bg-white rounded-lg shadow-sm border-gray-200 border overflow-hidden">
+              <div className="flex justify-between items-center px-5 py-3 border-b border-gray-100">
+                <h2 className="text-base font-semibold text-gray-900">
                   Recent Users
                 </h2>
                 <Link
@@ -165,13 +165,17 @@ export default function AdminDashboard() {
           </div>
 
           {/* Right Column */}
-          <div className="space-y-8">
-            {/* User Distribution */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                User Distribution
-              </h2>
-              <UserDistributionChart userStats={userStats} />
+          <div className="space-y-6">
+            {/* User Distribution - Upgraded & Resized */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-5 py-3 border-b border-gray-100">
+                <h2 className="text-base font-semibold text-gray-900">
+                  User Distribution
+                </h2>
+              </div>
+              <div className="p-5">
+                <UserDistributionChart userStats={userStats} />
+              </div>
             </div>
 
             {/* Upcoming Events */}
@@ -193,6 +197,7 @@ export default function AdminDashboard() {
 
 /* ========== COMPONENTS ========== */
 
+// StatCard - Resized (smaller)
 const StatCard = ({ icon: Icon, label, value, change, color }) => {
   const colorClasses = {
     blue: "from-blue-500 to-blue-600",
@@ -205,22 +210,22 @@ const StatCard = ({ icon: Icon, label, value, change, color }) => {
   const changeIcon = change >= 0 ? "↗" : "↘";
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-300 p-6 hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start mb-4">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start mb-3">
         <div
-          className={`p-3 rounded-xl bg-gradient-to-r ${colorClasses[color]}`}
+          className={`p-2 rounded-lg bg-gradient-to-r ${colorClasses[color]}`}
         >
-          <Icon className="w-6 h-6 text-white" />
+          <Icon className="w-4 h-4 text-white" />
         </div>
         {/* <div
-          className={`flex items-center space-x-1 text-sm font-medium ${changeColor}`}
+          className={`flex items-center space-x-1 text-xs font-medium ${changeColor}`}
         >
           <span>{changeIcon}</span>
           <span>{Math.abs(change)}%</span>
         </div> */}
       </div>
-      <h3 className="text-2xl font-bold text-gray-900 mb-1">{value || 0}</h3>
-      <p className="text-gray-600 text-sm">{label}</p>
+      <h3 className="text-xl font-bold text-gray-900 mb-0.5">{value || 0}</h3>
+      <p className="text-gray-600 text-xs">{label}</p>
     </div>
   );
 };
@@ -261,8 +266,8 @@ const RecentUsersTable = ({ users }) => {
   if (!users || users.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
-        <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-        <p>No recent users found</p>
+        <Users className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+        <p className="text-sm">No recent users found</p>
       </div>
     );
   }
@@ -271,66 +276,70 @@ const RecentUsersTable = ({ users }) => {
     <div className="overflow-hidden">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-gray-200">
-            <th className="text-left py-3 text-sm font-medium text-gray-600">
+          <tr className="border-b border-gray-200 bg-gray-50">
+            <th className="text-left py-2.5 px-5 text-xs font-medium text-gray-500">
               User
             </th>
-            <th className="text-left py-3 text-sm font-medium text-gray-600">
+            <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-500">
               Type
             </th>
-            <th className="text-left py-3 text-sm font-medium text-gray-600">
+            <th className="text-left py-2.5 px-3 text-xs font-medium text-gray-500">
               Status
             </th>
-            <th className="text-left py-3 text-sm font-medium text-gray-600">
+            <th className="text-left py-2.5 px-5 text-xs font-medium text-gray-500">
               Action
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200">
-          {users.slice(0, 5).map((user) => (
-            <tr key={user._id} className="hover:bg-gray-50">
-              <td className="py-3">
+        <tbody>
+          {users.slice(0, 5).map((user, idx) => (
+            <tr
+              key={user._id}
+              className={`hover:bg-gray-50 transition-colors ${idx !== users.slice(0, 5).length - 1 ? 'border-b border-gray-100' : ''
+                }`}
+            >
+              <td className="py-2.5 px-5">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                  <div className="w-7 h-7 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs">
                     {user.username?.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{user.username}</p>
-                    <p className="text-sm text-gray-500">{user.email}</p>
+                    <p className="font-medium text-gray-900 text-sm">{user.username}</p>
+                    <p className="text-xs text-gray-400">{user.email}</p>
                   </div>
                 </div>
               </td>
-              <td className="py-3">
+              <td className="py-2.5 px-3">
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${user.userType === "admin"
-                    ? "bg-red-100 text-red-800"
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${user.userType === "admin"
+                    ? "bg-red-50 text-red-700"
                     : user.userType === "artist"
-                      ? "bg-purple-100 text-purple-800"
+                      ? "bg-purple-50 text-purple-700"
                       : user.userType === "venue"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-blue-100 text-blue-800"
+                        ? "bg-green-50 text-green-700"
+                        : "bg-blue-50 text-blue-700"
                     }`}
                 >
                   {user.userType}
                 </span>
               </td>
-              <td className="py-3">
+              <td className="py-2.5 px-3">
                 {user.isVerified ? (
-                  <span className="inline-flex items-center text-green-600 text-sm">
-                    <CheckCircle className="w-4 h-4 mr-1" />
+                  <span className="inline-flex items-center text-green-600 text-xs">
+                    <CheckCircle className="w-3.5 h-3.5 mr-1" />
                     Verified
                   </span>
                 ) : (
-                  <span className="inline-flex items-center text-orange-600 text-sm">
-                    <AlertCircle className="w-4 h-4 mr-1" />
+                  <span className="inline-flex items-center text-orange-500 text-xs">
+                    <AlertCircle className="w-3.5 h-3.5 mr-1" />
                     Pending
                   </span>
                 )}
               </td>
-              <td className="py-3">
+              <td className="py-2.5 px-5">
                 <Link
                   href="/dashboard/admin/users"
-                  className="rounded-2xl bg-gray-100 px-3 py-1 text-yellow-500 hover:text-yellow-600 text-sm"
+                  className="inline-flex items-center px-2.5 py-1 rounded-md bg-gray-100 text-yellow-600 hover:text-yellow-700 hover:bg-gray-200 text-xs font-medium transition-colors"
                 >
                   Manage
                 </Link>
@@ -343,35 +352,52 @@ const RecentUsersTable = ({ users }) => {
   );
 };
 
+// UserDistributionChart - Upgraded & Resized
 const UserDistributionChart = ({ userStats }) => {
   const total = userStats.reduce((sum, stat) => sum + stat.count, 0);
 
+  const getColor = (type, index) => {
+    const colorMap = {
+      fan: "bg-blue-500",
+      artist: "bg-purple-500",
+      venue: "bg-green-500",
+      admin: "bg-red-500"
+    };
+    return colorMap[type] || ["bg-blue-500", "bg-green-500", "bg-purple-500", "bg-orange-500", "bg-pink-500"][index % 5];
+  };
+
+  const getLabel = (type) => {
+    if (type === "fan") return "Fans";
+    if (type === "artist") return "Artists";
+    if (type === "venue") return "Venues";
+    if (type === "admin") return "Admins";
+    return type;
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3.5">
       {userStats.map((stat, index) => {
         const percentage = total > 0 ? (stat.count / total) * 100 : 0;
-        const colors = [
-          "bg-blue-500",
-          "bg-green-500",
-          "bg-purple-500",
-          "bg-orange-500",
-          "bg-pink-500",
-        ];
+        const barColor = getColor(stat._id, index);
 
         return (
-          <div key={stat._id} className="space-y-2">
-            <div className="flex justify-between text-sm">
+          <div key={stat._id} className="space-y-1.5">
+            <div className="flex justify-between items-center text-xs">
               <span className="font-medium text-gray-700 capitalize">
-                {stat._id === "fan" ? "Fans" : stat._id}s
+                {getLabel(stat._id)}
               </span>
-              <span className="text-gray-500">
-                {stat.count} ({percentage.toFixed(1)}%)
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-900 font-semibold text-sm">
+                  {stat.count}
+                </span>
+                <span className="text-gray-400 text-xs">
+                  ({percentage.toFixed(1)}%)
+                </span>
+              </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
               <div
-                className={`h-2 rounded-full ${colors[index % colors.length]
-                  } transition-all duration-500`}
+                className={`h-full rounded-full ${barColor} transition-all duration-500`}
                 style={{ width: `${percentage}%` }}
               ></div>
             </div>
@@ -380,9 +406,9 @@ const UserDistributionChart = ({ userStats }) => {
       })}
 
       {userStats.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <p>No user data available</p>
+        <div className="text-center py-6 text-gray-500">
+          <Users className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+          <p className="text-sm">No user data available</p>
         </div>
       )}
     </div>

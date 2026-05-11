@@ -24,13 +24,16 @@ export default function PodcastPage() {
   const [token, setToken] = useState(null);
   const [podcasts, setPodcasts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [showSectionTextEditor, setShowSectionTextEditor] = useState(false);
   const [sectionText, setSectionText] = useState({
     sectionTitle: "Cast",
-    sectionSubtitle: "Tune into engaging podcast episodes featuring your favorite personalities",
-    yourCastsTitle: "Your Favorites"
+    sectionSubtitle:
+      "Tune into engaging podcast episodes featuring your favorite personalities",
+    yourCastsTitle: "Your Favorites",
   });
 
   // Delete modal state
@@ -102,8 +105,10 @@ export default function PodcastPage() {
       if (data.success) {
         setSectionText({
           sectionTitle: data.data.sectionTitle || "Cast",
-          sectionSubtitle: data.data.sectionSubtitle || "Tune into engaging podcast episodes featuring your favorite personalities",
-          yourCastsTitle: data.data.yourCastsTitle || "Your Favorites"
+          sectionSubtitle:
+            data.data.sectionSubtitle ||
+            "Tune into engaging podcast episodes featuring your favorite personalities",
+          yourCastsTitle: data.data.yourCastsTitle || "Your Favorites",
         });
       }
     } catch (error) {
@@ -111,7 +116,21 @@ export default function PodcastPage() {
     }
   };
 
-  // Open delete confirmation modal
+  const handleSearch = () => {
+    setSearchTerm(searchInput);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchInput("");
+    setSearchTerm("");
+  };
+
   const openDeleteModal = (id, title) => {
     setDeleteModal({
       isOpen: true,
@@ -120,7 +139,6 @@ export default function PodcastPage() {
     });
   };
 
-  // Close delete confirmation modal
   const closeDeleteModal = () => {
     setDeleteModal({
       isOpen: false,
@@ -129,10 +147,8 @@ export default function PodcastPage() {
     });
   };
 
-  // Handle delete confirmation
   const handleDeleteConfirm = async () => {
     const { podcastId } = deleteModal;
-
     const token = getCookie("token");
 
     if (!token) {
@@ -144,11 +160,8 @@ export default function PodcastPage() {
 
     const deletePromise = new Promise(async (resolve, reject) => {
       try {
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        };
         await axios.delete(`${API_BASE}/api/casts/${podcastId}`, {
-          headers,
+          headers: { Authorization: `Bearer ${token}` },
           withCredentials: true,
         });
         resolve();
@@ -195,12 +208,22 @@ export default function PodcastPage() {
     setIsModalOpen(true);
   };
 
-  // Handle section text update
   const handleSectionTextUpdate = () => {
     fetchSectionText();
     toast.success("Section text updated successfully!");
     setShowSectionTextEditor(false);
   };
+
+  // Filter podcasts by search term
+  const filteredPodcasts = podcasts.filter((podcast) => {
+    const matchesSearch =
+      searchTerm === "" ||
+      podcast.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      podcast.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
+  });
+
+  const hasActiveFilters = searchTerm !== "";
 
   useEffect(() => {
     fetchPodcasts();
@@ -208,65 +231,68 @@ export default function PodcastPage() {
   }, []);
 
   return (
-    <>
-      {/* Main Content with Sidebar */}
-      <AdminLayout>
-        <div className="min-h-screen bg-gray-50">
-          <Toaster position="top-right" />
+    <AdminLayout>
+      <div className="min-h-screen bg-gray-50 p-4">
+        <Toaster position="top-right" />
 
-          <div className="p-6">
-            {/* Section Text Editor Modal */}
-            {showSectionTextEditor && (
-              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-                <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                  <CastSectionTextEditor
-                    onClose={() => setShowSectionTextEditor(false)}
-                    onUpdate={handleSectionTextUpdate}
-                    token={token}
-                    API_BASE={API_BASE}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Header */}
-            <PodcastHeader
-              loading={loading}
-              onRefresh={() => {
-                fetchPodcasts();
-                fetchSectionText();
-              }}
-              onAddClick={handleAddClick}
-              onEditSectionText={() => setShowSectionTextEditor(true)}
-            />
-
-            {/* Podcast Table */}
-            <PodcastTable
-              podcasts={podcasts}
-              loading={loading}
-              onEdit={handleEditClick}
-              onDelete={openDeleteModal}
-              onAddNew={handleAddClick}
-            />
-
-            {/* Delete Confirmation Modal */}
-            <DeleteConfirmationModal
-              isOpen={deleteModal.isOpen}
-              onClose={closeDeleteModal}
-              onConfirm={handleDeleteConfirm}
-              podcastTitle={deleteModal.podcastTitle}
-            />
+        {/* Section Text Editor Modal */}
+        {showSectionTextEditor && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <CastSectionTextEditor
+                onClose={() => setShowSectionTextEditor(false)}
+                onUpdate={handleSectionTextUpdate}
+                token={token}
+                API_BASE={API_BASE}
+              />
+            </div>
           </div>
-        </div>
-      </AdminLayout>
+        )}
 
-      <PodcastModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        editingItem={editingItem}
-        token={token}
-        onSubmit={handleFormSubmit}
-      />
-    </>
+        {/* Header */}
+        <PodcastHeader
+          loading={loading}
+          onRefresh={() => {
+            fetchPodcasts();
+            fetchSectionText();
+          }}
+          onAddClick={handleAddClick}
+          onEditSectionText={() => setShowSectionTextEditor(true)}
+        />
+
+        {/* Podcast Table */}
+        <PodcastTable
+          podcasts={filteredPodcasts}
+          loading={loading}
+          searchInput={searchInput}
+          onSearchInputChange={setSearchInput}
+          onSearch={handleSearch}
+          onKeyPress={handleKeyPress}
+          onClearSearch={clearSearch}
+          hasActiveFilters={hasActiveFilters}
+          activeSearchTerm={searchTerm}
+          onEdit={handleEditClick}
+          onDelete={openDeleteModal}
+          onAddNew={handleAddClick}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmationModal
+          isOpen={deleteModal.isOpen}
+          onClose={closeDeleteModal}
+          onConfirm={handleDeleteConfirm}
+          podcastTitle={deleteModal.podcastTitle}
+        />
+
+        {/* Podcast Modal */}
+        <PodcastModal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          editingItem={editingItem}
+          token={token}
+          onSubmit={handleFormSubmit}
+        />
+      </div>
+    </AdminLayout>
   );
 }
