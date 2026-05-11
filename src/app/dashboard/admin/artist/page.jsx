@@ -3,16 +3,19 @@ import AdminLayout from "@/components/modules/dashboard/AdminLayout";
 import ActivateModal from "@/components/modules/dashboard/artists/ActivateModal";
 import ArtistDetailModal from "@/components/modules/dashboard/artists/ArtistDetailModal";
 import ArtistTable from "@/components/modules/dashboard/artists/ArtistTable";
-import DeactivatedUsers from "@/components/modules/dashboard/artists/DeactivatedUsers";
 import DeactivateModal from "@/components/modules/dashboard/artists/DeactivateModal";
-import Filters from "@/components/modules/dashboard/artists/Filters";
-import StatCard from "@/components/modules/dashboard/artists/StatCard";
 import CustomLoader from "@/components/shared/loader/Loader";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
-import { Crown, Music, Pause, Play, TrendingUp, User, Users } from "lucide-react";
+import { Music } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+
+import ArtistDeleteConfirmModal from "@/components/modules/dashboard/artists/ArtistDeleteConfirmModal";
+import ArtistHeader from "@/components/modules/dashboard/artists/ArtistHeader";
+import ArtistStats from "@/components/modules/dashboard/artists/ArtistStats";
+import EditArtistModal from "@/components/modules/dashboard/artists/EditArtistModal";
+import PlanChangeModal from "@/components/modules/admin/photographers/PlanChangeModal";
 
 // Utility function for getting cookies
 const getCookie = (name) => {
@@ -30,20 +33,38 @@ const ArtistManagement = () => {
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [search, setSearch] = useState("");
-  const [deactivatedSearch, setDeactivatedSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [planFilter, setPlanFilter] = useState("all");
-  const [activeTab, setActiveTab] = useState("all");
   const [actionMenu, setActionMenu] = useState(null);
-  const [editingArtist, setEditingArtist] = useState(null);
-  const [formData, setFormData] = useState({});
-  const [saveLoading, setSaveLoading] = useState(false);
   const [viewingArtist, setViewingArtist] = useState(null);
   const [planChangeModal, setPlanChangeModal] = useState({
     isOpen: false,
     artist: null,
     newPlan: "",
   });
+
+  // Delete Modal State
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    artist: null,
+  });
+
+  // Edit Modal State
+  const [editModal, setEditModal] = useState({
+    isOpen: false,
+    artist: null,
+  });
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    genre: "",
+    city: "",
+    biography: "",
+    website: "",
+    phone: "",
+    subscriptionPlan: "free",
+  });
+  const [editLoading, setEditLoading] = useState(false);
 
   // Modal states
   const [deactivateModal, setDeactivateModal] = useState({
@@ -89,7 +110,6 @@ const ArtistManagement = () => {
         ...(planFilter !== "all" && { plan: planFilter }),
       });
 
-      // Correct API endpoint
       const { data } = await axios.get(`${API_URL}?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
         credentials: "include",
@@ -107,39 +127,25 @@ const ArtistManagement = () => {
         handleUnauthorized();
         return;
       }
-      showToast(err.response?.data?.message || "Failed to fetch artists", "error");
+      showToast(
+        err.response?.data?.message || "Failed to fetch artists",
+        "error",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Filter deactivated artists
-  const filteredDeactivatedArtists = artists
-    .filter((artist) => !artist.isActive)
-    .filter(
-      (artist) =>
-        deactivatedSearch === "" ||
-        artist.name?.toLowerCase().includes(deactivatedSearch.toLowerCase()) ||
-        artist.user?.email
-          ?.toLowerCase()
-          .includes(deactivatedSearch.toLowerCase()) ||
-        artist.genre?.toLowerCase().includes(deactivatedSearch.toLowerCase()) ||
-        artist.city?.toLowerCase().includes(deactivatedSearch.toLowerCase())
-    );
-
   const handleViewProfile = (artist) => setViewingArtist(artist);
 
-  // Open Deactivate Modal
   const openDeactivateModal = (artist) => {
     setDeactivateModal({ isOpen: true, artist });
   };
 
-  // Open Activate Modal
   const openActivateModal = (artist) => {
     setActivateModal({ isOpen: true, artist });
   };
 
-  // Open Plan Change Modal
   const openPlanChangeModal = (artist, newPlan) => {
     setPlanChangeModal({
       isOpen: true,
@@ -148,13 +154,107 @@ const ArtistManagement = () => {
     });
   };
 
-  // Handle Deactivate Confirmation
-  const handleDeactivateConfirm = async (
-    id,
-    currentStatus,
-    reason,
-    notifyUser
-  ) => {
+  // Open Delete Modal
+  const openDeleteModal = (artist) => {
+    setDeleteModal({ isOpen: true, artist });
+  };
+
+  // Open Edit Modal
+  const openEditModal = (artist) => {
+    setEditFormData({
+      name: artist.name || "",
+      genre: artist.genre || "",
+      city: artist.city || "",
+      biography: artist.biography || "",
+      website: artist.website || "",
+      phone: artist.phone || "",
+      subscriptionPlan: artist.user?.subscriptionPlan || "free",
+    });
+    setEditModal({ isOpen: true, artist });
+    setActionMenu(null);
+  };
+
+  // Handle Delete Confirm
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.artist) return;
+
+    setModalLoading(true);
+    try {
+      const token = getCookie("token");
+      if (!token) {
+        showToast("No authentication token found", "error");
+        handleUnauthorized();
+        return;
+      }
+
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/${deleteModal.artist._id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
+        },
+      );
+      fetchArtists();
+      setDeleteModal({ isOpen: false, artist: null });
+      showToast("Artist profile deleted successfully!");
+    } catch (err) {
+      console.error("Delete artist error:", err);
+      if (err.response?.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+      showToast("Failed to delete artist profile", "error");
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  // Handle Edit Save
+  const handleEditSave = async () => {
+    if (!editModal.artist) return;
+
+    setEditLoading(true);
+    try {
+      const token = getCookie("token");
+      if (!token) {
+        showToast("No authentication token found", "error");
+        handleUnauthorized();
+        return;
+      }
+
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/${editModal.artist._id}`,
+        editFormData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        },
+      );
+
+      if (response.data.success) {
+        fetchArtists();
+        setEditModal({ isOpen: false, artist: null });
+        showToast("Artist profile updated successfully!");
+      }
+    } catch (err) {
+      console.error("Update artist error:", err);
+      if (err.response?.status === 401) {
+        handleUnauthorized();
+        return;
+      }
+      showToast(
+        err.response?.data?.message || "Error updating artist profile",
+        "error",
+      );
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleDeactivateConfirm = async (id, currentStatus, reason) => {
     setModalLoading(true);
     try {
       const token = getCookie("token");
@@ -170,22 +270,17 @@ const ArtistManagement = () => {
         {
           isActive: false,
           deactivationReason: reason,
-          notifyUser,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
           credentials: "include",
-        }
+        },
       );
 
       fetchArtists();
       setDeactivateModal({ isOpen: false, artist: null });
       setActionMenu(null);
       showToast("Artist deactivated successfully!");
-
-      if (notifyUser) {
-        showToast("Notification email sent to artist");
-      }
     } catch (err) {
       console.error("Deactivate artist error:", err);
       if (err.response?.status === 401) {
@@ -198,8 +293,7 @@ const ArtistManagement = () => {
     }
   };
 
-  // Handle Activate Confirmation
-  const handleActivateConfirm = async (id, notifyUser) => {
+  const handleActivateConfirm = async (id) => {
     setModalLoading(true);
     try {
       const token = getCookie("token");
@@ -214,21 +308,16 @@ const ArtistManagement = () => {
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/${id}`,
         {
           isActive: true,
-          notifyUser,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
           credentials: "include",
-        }
+        },
       );
 
       fetchArtists();
       setActivateModal({ isOpen: false, artist: null });
       showToast("Artist activated successfully!");
-
-      if (notifyUser) {
-        showToast("Notification email sent to artist");
-      }
     } catch (err) {
       console.error("Activate artist error:", err);
       if (err.response?.status === 401) {
@@ -241,8 +330,7 @@ const ArtistManagement = () => {
     }
   };
 
-  // Handle Plan Change Confirmation
-  const handlePlanChangeConfirm = async (id, newPlan, notifyUser) => {
+  const handlePlanChangeConfirm = async (id, newPlan) => {
     setModalLoading(true);
     try {
       const token = getCookie("token");
@@ -253,13 +341,10 @@ const ArtistManagement = () => {
         return;
       }
 
-
-      // Correct API endpoint
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/${id}/plan`,
         {
           subscriptionPlan: newPlan,
-          notifyUser: notifyUser || false,
         },
         {
           headers: {
@@ -267,7 +352,7 @@ const ArtistManagement = () => {
             "Content-Type": "application/json",
           },
           credentials: "include",
-        }
+        },
       );
 
       if (response.data.success) {
@@ -276,12 +361,8 @@ const ArtistManagement = () => {
         setActionMenu(null);
         showToast(
           response.data.message ||
-          `Plan changed to ${newPlan.toUpperCase()} successfully!`
+            `Plan changed to ${newPlan.toUpperCase()} successfully!`,
         );
-
-        if (notifyUser) {
-          showToast("Notification email sent to artist");
-        }
 
         const updatedArtistUser = response.data?.data?.artist?.user;
         if (updatedArtistUser && updatedArtistUser._id === user?._id) {
@@ -291,51 +372,27 @@ const ArtistManagement = () => {
           });
         }
       } else {
-        showToast(
-          response.data.message || "Failed to change plan",
-          "error"
-        );
+        showToast(response.data.message || "Failed to change plan", "error");
       }
     } catch (err) {
       console.error("Change plan error:", err);
-
-      // Detailed error logging
-      if (err.response) {
-        console.error("Error response:", err.response.data);
-        console.error("Error status:", err.response.status);
-        showToast(
-          err.response.data?.message ||
-          `Server error: ${err.response.status}`,
-          "error"
-        );
-      } else if (err.request) {
-        console.error("No response received:", err.request);
-        showToast(
-          "No response from server. Please check your connection.",
-          "error"
-        );
-      } else {
-        console.error("Error setting up request:", err.message);
-        showToast("Request setup error: " + err.message, "error");
-      }
-
       if (err.response?.status === 401) {
         handleUnauthorized();
       }
+      showToast(
+        err.response?.data?.message || "Failed to change plan",
+        "error",
+      );
     } finally {
       setModalLoading(false);
     }
   };
 
-
-  // Simple toggle for table (without modal)
   const toggleActive = async (id, currentStatus) => {
     if (currentStatus) {
-      // For deactivation, open modal
       const artist = artists.find((a) => a._id === id);
       openDeactivateModal(artist);
     } else {
-      // For activation, do simple toggle
       try {
         const token = getCookie("token");
 
@@ -351,7 +408,7 @@ const ArtistManagement = () => {
           {
             headers: { Authorization: `Bearer ${token}` },
             credentials: "include",
-          }
+          },
         );
         fetchArtists();
         setActionMenu(null);
@@ -367,114 +424,37 @@ const ArtistManagement = () => {
     }
   };
 
-  const handleEdit = (artist) => {
-    setEditingArtist(artist._id);
-    setFormData({
-      name: artist.name || "",
-      genre: artist.genre || "",
-      city: artist.city || "",
-      biography: artist.biography || "",
-      website: artist.website || "",
-      phone: artist.phone || "",
-      isActive: artist.isActive || false,
-      subscriptionPlan: artist.user?.subscriptionPlan || "free",
-    });
-    setActionMenu(null);
-  };
-
-  const handleSave = async (id) => {
-    setSaveLoading(true);
-    try {
-      const token = getCookie("token");
-
-      if (!token) {
-        showToast("No authentication token found", "error");
-        handleUnauthorized();
-        return;
-      }
-
-      const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/${id}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
-
-      if (response.data.success) {
-        setEditingArtist(null);
-        setFormData({});
-        fetchArtists();
-        showToast("Artist profile updated successfully!");
-      }
-    } catch (err) {
-      console.error("Update artist error:", err);
-      if (err.response?.status === 401) {
-        handleUnauthorized();
-        return;
-      }
-      showToast(
-        err.response?.data?.message || "Error updating artist profile",
-        "error"
-      );
-    } finally {
-      setSaveLoading(false);
+  const deleteArtist = async (id) => {
+    const artist = artists.find((a) => a._id === id);
+    if (artist) {
+      openDeleteModal(artist);
     }
   };
 
-  const handleCancel = () => {
-    setEditingArtist(null);
-    setFormData({});
+  const handleEdit = (artist) => {
+    openEditModal(artist);
   };
 
   const handleInputChange = (field, value) =>
-    setFormData((prev) => ({ ...prev, [field]: value }));
-
-  const deleteArtist = async (id) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this artist profile? This action cannot be undone."
-      )
-    )
-      return;
-    try {
-      const token = getCookie("token");
-
-      if (!token) {
-        showToast("No authentication token found", "error");
-        handleUnauthorized();
-        return;
-      }
-
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/artists/admin/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          credentials: "include",
-        }
-      );
-      fetchArtists();
-      setActionMenu(null);
-      showToast("Artist profile deleted successfully!");
-    } catch (err) {
-      console.error("Delete artist error:", err);
-      if (err.response?.status === 401) {
-        handleUnauthorized();
-        return;
-      }
-      showToast("Failed to delete artist profile", "error");
-    }
-  };
+    setEditFormData((prev) => ({ ...prev, [field]: value }));
 
   const clearFilters = () => {
     setSearch("");
+    setSearchInput("");
     setStatusFilter("all");
     setPlanFilter("all");
     setPage(1);
+  };
+
+  const handleSearch = () => {
+    setSearch(searchInput);
+    setPage(1);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
   const handleActionMenuToggle = (artistId) =>
@@ -482,16 +462,15 @@ const ArtistManagement = () => {
 
   const handlePageChange = (newPage) => setPage(newPage);
 
-  // Plan statistics
   const planStats = {
-    pro: artists.filter(a => a.user?.subscriptionPlan === "pro").length,
-    free: artists.filter(a => a.user?.subscriptionPlan === "free").length,
+    pro: artists.filter((a) => a.user?.subscriptionPlan === "pro").length,
+    free: artists.filter((a) => a.user?.subscriptionPlan === "free").length,
     total: artists.length,
   };
 
   useEffect(() => {
     fetchArtists();
-  }, [page, statusFilter, planFilter]);
+  }, [page, statusFilter, planFilter, search]);
 
   const activeArtists = artists.filter((a) => a.isActive);
   const deactivatedArtists = artists.filter((a) => !a.isActive);
@@ -503,7 +482,10 @@ const ArtistManagement = () => {
     thisMonth: Math.floor(artists.length * 0.15),
   };
 
-  if (loading) {
+  const hasActiveFilters =
+    search || statusFilter !== "all" || planFilter !== "all";
+
+  if (loading && artists.length === 0) {
     return (
       <AdminLayout>
         <div className="flex justify-center items-center min-h-screen py-20 bg-white">
@@ -517,222 +499,106 @@ const ArtistManagement = () => {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="">
-          <Toaster />
+      <div className="min-h-screen bg-gray-50 p-4">
+        <Toaster />
 
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl">
-                  <Music className="w-6 h-6 text-white" />
-                </div>
-                Artist Management
-              </h1>
-              <p className="text-gray-600 mt-2">
-                Manage artist profiles, subscription plans, activate/deactivate accounts
-              </p>
-            </div>
-            <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-              {/* Tabs for All Artists and Deactivated Artists */}
-              <div className="flex bg-gray-200 rounded-lg p-1">
-                <button
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "all"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  onClick={() => setActiveTab("all")}
-                >
-                  All Artists
-                </button>
-                <button
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "deactivated"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  onClick={() => setActiveTab("deactivated")}
-                >
-                  Deactivated ({deactivatedArtists.length})
-                </button>
-              </div>
-            </div>
-          </div>
+        {/* Header */}
+        <ArtistHeader />
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
-            <StatCard
-              icon={User}
-              label="Total Artists"
-              value={stats.total}
-              change={12}
-              color="purple"
-            />
-            <StatCard
-              icon={Play}
-              label="Active Artists"
-              value={stats.active}
-              change={8}
-              color="green"
-            />
-            <StatCard
-              icon={Pause}
-              label="Inactive Artists"
-              value={stats.inactive}
-              change={-4}
-              color="orange"
-            />
-            <StatCard
-              icon={Crown}
-              label="Pro Plan"
-              value={planStats.pro}
-              change={5}
-              color="yellow"
-              plan="pro"
-            />
-            <StatCard
-              icon={Users}
-              label="Free Plan"
-              value={planStats.free}
-              change={-2}
-              color="blue"
-              plan="free"
-            />
-            <StatCard
-              icon={TrendingUp}
-              label="This Month"
-              value={stats.thisMonth}
-              change={15}
-              color="indigo"
-            />
-          </div>
+        {/* Stats Cards */}
+        <ArtistStats stats={stats} planStats={planStats} />
 
-          {activeTab === "all" ? (
-            <>
-              <Filters
-                search={search}
-                statusFilter={statusFilter}
-                planFilter={planFilter}
-                onSearchChange={setSearch}
-                onStatusFilterChange={setStatusFilter}
-                onPlanFilterChange={setPlanFilter}
-                onApply={fetchArtists}
-                onClear={clearFilters}
-              />
+        {/* Artist Table */}
+        <ArtistTable
+          artists={artists}
+          loading={loading}
+          page={page}
+          pages={pages}
+          editingArtist={null}
+          formData={{}}
+          saveLoading={false}
+          actionMenu={actionMenu}
+          onPageChange={handlePageChange}
+          onViewProfile={handleViewProfile}
+          onToggleActive={toggleActive}
+          onOpenDeactivateModal={openDeactivateModal}
+          onOpenPlanChangeModal={openPlanChangeModal}
+          onEdit={handleEdit}
+          onSave={() => {}}
+          onCancel={() => {}}
+          onInputChange={() => {}}
+          onDeleteArtist={deleteArtist}
+          onActionMenuToggle={handleActionMenuToggle}
+          searchInput={searchInput}
+          onSearchInputChange={setSearchInput}
+          onSearch={handleSearch}
+          onKeyPress={handleKeyPress}
+          onClearFilters={clearFilters}
+          hasActiveFilters={hasActiveFilters}
+          activeSearchTerm={search}
+          statusFilter={statusFilter}
+          planFilter={planFilter}
+        />
 
-              <ArtistTable
-                artists={artists}
-                loading={loading}
-                page={page}
-                pages={pages}
-                editingArtist={editingArtist}
-                formData={formData}
-                saveLoading={saveLoading}
-                actionMenu={actionMenu}
-                onPageChange={handlePageChange}
-                onViewProfile={handleViewProfile}
-                onToggleActive={toggleActive}
-                onOpenDeactivateModal={openDeactivateModal}
-                onOpenPlanChangeModal={openPlanChangeModal}
-                onEdit={handleEdit}
-                onSave={handleSave}
-                onCancel={handleCancel}
-                onInputChange={handleInputChange}
-                onDeleteArtist={deleteArtist}
-                onActionMenuToggle={handleActionMenuToggle}
-              />
-            </>
-          ) : (
-            <DeactivatedUsers
-              deactivatedArtists={filteredDeactivatedArtists}
-              loading={loading}
-              onActivateUser={openActivateModal}
-              onOpenPlanChangeModal={openPlanChangeModal}
-              onViewProfile={handleViewProfile}
-              onEdit={handleEdit}
-              onDeleteArtist={deleteArtist}
-              search={deactivatedSearch}
-              onSearchChange={setDeactivatedSearch}
-              onRefresh={fetchArtists}
-            />
-          )}
+        {/* Delete Confirmation Modal */}
+        <ArtistDeleteConfirmModal
+          isOpen={deleteModal.isOpen}
+          artist={deleteModal.artist}
+          onClose={() => setDeleteModal({ isOpen: false, artist: null })}
+          onConfirm={handleDeleteConfirm}
+          loading={modalLoading}
+        />
 
-          {/* Modals */}
-          <DeactivateModal
-            artist={deactivateModal.artist}
-            isOpen={deactivateModal.isOpen}
-            onClose={() => setDeactivateModal({ isOpen: false, artist: null })}
-            onConfirm={handleDeactivateConfirm}
-            loading={modalLoading}
+        {/* Edit Profile Modal */}
+        <EditArtistModal
+          isOpen={editModal.isOpen}
+          artist={editModal.artist}
+          formData={editFormData}
+          loading={editLoading}
+          onClose={() => setEditModal({ isOpen: false, artist: null })}
+          onSave={handleEditSave}
+          onInputChange={handleInputChange}
+        />
+
+        {/* Deactivate Modal */}
+        <DeactivateModal
+          artist={deactivateModal.artist}
+          isOpen={deactivateModal.isOpen}
+          onClose={() => setDeactivateModal({ isOpen: false, artist: null })}
+          onConfirm={handleDeactivateConfirm}
+          loading={modalLoading}
+        />
+
+        {/* Activate Modal */}
+        <ActivateModal
+          artist={activateModal.artist}
+          isOpen={activateModal.isOpen}
+          onClose={() => setActivateModal({ isOpen: false, artist: null })}
+          onConfirm={handleActivateConfirm}
+          loading={modalLoading}
+        />
+
+        {/* Plan Change Modal */}
+        <PlanChangeModal
+          isOpen={planChangeModal.isOpen}
+          artist={planChangeModal.artist}
+          newPlan={planChangeModal.newPlan}
+          loading={modalLoading}
+          onClose={() =>
+            setPlanChangeModal({ isOpen: false, artist: null, newPlan: "" })
+          }
+          onConfirm={handlePlanChangeConfirm}
+        />
+
+        {/* Artist Detail Modal */}
+        {viewingArtist && (
+          <ArtistDetailModal
+            artist={viewingArtist}
+            onClose={() => setViewingArtist(null)}
+            onEdit={handleEdit}
+            onPlanChange={openPlanChangeModal}
           />
-
-          <ActivateModal
-            artist={activateModal.artist}
-            isOpen={activateModal.isOpen}
-            onClose={() => setActivateModal({ isOpen: false, artist: null })}
-            onConfirm={handleActivateConfirm}
-            loading={modalLoading}
-          />
-
-          {/* Plan Change Modal */}
-          {planChangeModal.isOpen && planChangeModal.artist && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Change Subscription Plan
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Change <span className="font-semibold">{planChangeModal.artist.name}</span>'s plan from{" "}
-                  <span className={`font-semibold ${planChangeModal.artist.user?.subscriptionPlan === "pro" ? "text-yellow-600" : "text-blue-600"}`}>
-                    {planChangeModal.artist.user?.subscriptionPlan?.toUpperCase() || "FREE"}
-                  </span> to{" "}
-                  <span className={`font-semibold ${planChangeModal.newPlan === "pro" ? "text-yellow-600" : "text-blue-600"}`}>
-                    {planChangeModal.newPlan.toUpperCase()}
-                  </span>
-                </p>
-
-                <div className="mb-4">
-                  <label className="flex items-center mb-2">
-                    <input type="checkbox" className="mr-2" />
-                    <span className="text-sm text-gray-700">Notify user via email</span>
-                  </label>
-                </div>
-
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => setPlanChangeModal({ isOpen: false, artist: null, newPlan: "" })}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => handlePlanChangeConfirm(
-                      planChangeModal.artist._id,
-                      planChangeModal.newPlan,
-                      true
-                    )}
-                    disabled={modalLoading}
-                    className={`px-4 py-2 text-sm font-medium text-white rounded-lg ${planChangeModal.newPlan === "pro"
-                      ? "bg-yellow-500 hover:bg-yellow-600"
-                      : "bg-blue-500 hover:bg-blue-600"
-                      }`}
-                  >
-                    {modalLoading ? "Changing..." : `Change to ${planChangeModal.newPlan.toUpperCase()}`}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {viewingArtist && (
-            <ArtistDetailModal
-              artist={viewingArtist}
-              onClose={() => setViewingArtist(null)}
-              onEdit={handleEdit}
-              onPlanChange={openPlanChangeModal}
-            />
-          )}
-        </div>
+        )}
       </div>
     </AdminLayout>
   );

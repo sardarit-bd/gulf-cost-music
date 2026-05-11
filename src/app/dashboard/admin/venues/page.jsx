@@ -4,7 +4,7 @@ import ConfirmationModal from "@/components/modules/dashboard/venues/Confirmatio
 import Filters from "@/components/modules/dashboard/venues/Filters";
 import StatCard from "@/components/modules/dashboard/venues/StatCard";
 import VenueDetailModal from "@/components/modules/dashboard/venues/VenueDetailModal";
-import VenueEditModal from "@/components/modules/dashboard/venues/VenueEditModal"; // ✅ NEW IMPORT
+import VenueEditModal from "@/components/modules/dashboard/venues/VenueEditModal";
 import VenueTable from "@/components/modules/dashboard/venues/VenueTable";
 import CustomLoader from "@/components/shared/loader/Loader";
 import axios from "axios";
@@ -14,9 +14,11 @@ import {
   Crown,
   DollarSign,
   RefreshCw,
+  Search,
   Sparkles,
   TrendingUp,
-  Users
+  Users,
+  X
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
@@ -36,12 +38,13 @@ const VenueManagement = () => {
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("");
   const [planFilter, setPlanFilter] = useState("all");
   const [actionMenu, setActionMenu] = useState(null);
 
-  // Edit Modal State - NEW
+  // Edit Modal State
   const [editingVenue, setEditingVenue] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
 
@@ -167,7 +170,6 @@ const VenueManagement = () => {
     setViewingVenue(venue);
   };
 
-  // NEW: Handle Edit Modal
   const handleEditVenue = (venue) => {
     setEditingVenue(venue);
     setShowEditModal(true);
@@ -238,7 +240,7 @@ const VenueManagement = () => {
 
           const response = await axios.put(
             `${API_BASE}/api/venues/admin/${id}`,
-            { isActive: true }, // This will trigger auto verification in backend
+            { isActive: true },
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -281,7 +283,6 @@ const VenueManagement = () => {
             return;
           }
 
-          // Note: You need this endpoint in backend
           const response = await axios.put(
             `${API_BASE}/api/venues/admin/${id}/plan`,
             { subscriptionPlan: newPlan, notifyUser: true },
@@ -345,10 +346,22 @@ const VenueManagement = () => {
   // Clear all filters
   const clearFilters = () => {
     setSearch("");
+    setSearchInput("");
     setStatusFilter("all");
     setCityFilter("");
     setPlanFilter("all");
     setPage(1);
+  };
+
+  const handleSearch = () => {
+    setSearch(searchInput);
+    setPage(1);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
   };
 
   const handleActionMenuToggle = (venueId) =>
@@ -359,23 +372,25 @@ const VenueManagement = () => {
   // Debounced search
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      fetchVenues();
-    }, 300);
-
+      if (search !== searchInput) {
+        fetchVenues();
+      }
+    }, 500);
     return () => clearTimeout(timeoutId);
-  }, [search, statusFilter, cityFilter, planFilter]);
+  }, [search, searchInput]);
 
   useEffect(() => {
     fetchVenues();
-  }, [page]);
+  }, [page, statusFilter, cityFilter, planFilter]);
 
   // Get unique cities for filter
   const cities = [
     ...new Set(venues.map((venue) => venue.city).filter(Boolean)),
   ].sort();
 
+  const hasActiveFilters = search || statusFilter !== "all" || cityFilter !== "" || planFilter !== "all";
 
-  if (loading) {
+  if (loading && venues.length === 0) {
     return (
       <AdminLayout>
         <div className="flex justify-center items-center min-h-screen py-20 bg-white">
@@ -389,9 +404,9 @@ const VenueManagement = () => {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-gray-50 p-4">
         <div className="">
-          <Toaster />
+          <Toaster position="top-right" />
 
           {/* Confirmation Modal */}
           <ConfirmationModal
@@ -404,100 +419,78 @@ const VenueManagement = () => {
             type={confirmationModal.type}
           />
 
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
+          {/* Header - Matching Events Page */}
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl">
-                  <Building2 className="w-6 h-6 text-white" />
+              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <div className="p-1.5 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg">
+                  <Building2 className="w-5 h-5 text-white" />
                 </div>
                 Venue Management
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-500 text-sm mt-1">
                 Manage venue profiles, subscription plans, verification, and color assignments
               </p>
             </div>
-            <div className="flex items-center space-x-3 mt-4 lg:mt-0">
+            <div className="flex items-center gap-2 mt-3 lg:mt-0">
               <button
                 onClick={fetchVenues}
                 disabled={loading}
-                className="flex items-center space-x-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-primary/80 text-sm font-medium disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 text-sm font-medium transition-all cursor-pointer"
               >
-                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
                 <span>Refresh</span>
               </button>
             </div>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 mb-8">
+          {/* Stats Cards - Matching Events Page Style */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
             <StatCard
               icon={Building2}
               label="Total Venues"
               value={stats.total}
-              change={8}
               color="blue"
             />
             <StatCard
               icon={Users}
               label="Active"
               value={stats.active}
-              change={12}
               color="green"
             />
             <StatCard
               icon={CheckCircle}
               label="Verified"
               value={stats.verified}
-              change={15}
               color="purple"
             />
             <StatCard
               icon={Crown}
               label="Pro Plan"
               value={stats.pro}
-              change={20}
               color="yellow"
             />
             <StatCard
               icon={DollarSign}
               label="Free Plan"
               value={stats.free}
-              change={-5}
               color="gray"
             />
             <StatCard
               icon={Sparkles}
               label="Colors Assigned"
               value={stats.verified}
-              change={10}
               color="pink"
             />
             <StatCard
               icon={TrendingUp}
               label="This Month"
               value={stats.thisMonth}
-              change={18}
               color="cyan"
             />
           </div>
 
-          {/* Filters */}
-          <Filters
-            search={search}
-            statusFilter={statusFilter}
-            cityFilter={cityFilter}
-            planFilter={planFilter}
-            cities={cities}
-            onSearchChange={setSearch}
-            onStatusFilterChange={setStatusFilter}
-            onCityFilterChange={setCityFilter}
-            onPlanFilterChange={setPlanFilter}
-            onApply={fetchVenues}
-            onClear={clearFilters}
-          />
-
-          {/* Venues Table */}
+          {/* Venues Table with Search inside */}
           <VenueTable
             venues={venues}
             loading={loading}
@@ -510,14 +503,29 @@ const VenueManagement = () => {
             onPageChange={handlePageChange}
             onViewVenue={handleViewVenue}
             onToggleActive={toggleActive}
-            onEdit={handleEditVenue}        // ✅ This now opens the modal
-            onSave={() => { }}                // Keep for compatibility
+            onEdit={handleEditVenue}
+            onSave={() => { }}
             onCancel={() => setEditingVenueId(null)}
             onInputChange={() => { }}
             onDeleteVenue={deleteVenue}
             onActionMenuToggle={handleActionMenuToggle}
             onVerifyVenue={verifyVenue}
             onChangePlan={changePlan}
+            // Search props
+            searchInput={searchInput}
+            onSearchInputChange={setSearchInput}
+            onSearch={handleSearch}
+            onKeyPress={handleKeyPress}
+            onClearFilters={clearFilters}
+            hasActiveFilters={hasActiveFilters}
+            activeSearchTerm={search}
+            statusFilter={statusFilter}
+            planFilter={planFilter}
+            cityFilter={cityFilter}
+            cities={cities}
+            onStatusFilterChange={setStatusFilter}
+            onPlanFilterChange={setPlanFilter}
+            onCityFilterChange={setCityFilter}
           />
 
           {/* Venue Detail Modal */}
@@ -531,7 +539,7 @@ const VenueManagement = () => {
             />
           )}
 
-          {/* Venue Edit Modal - NEW */}
+          {/* Venue Edit Modal */}
           {showEditModal && editingVenue && (
             <VenueEditModal
               venue={editingVenue}
