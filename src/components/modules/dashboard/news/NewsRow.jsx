@@ -1,4 +1,4 @@
-import { Edit, Eye, MapPin, Newspaper, Power, Save, Trash2, X } from "lucide-react";
+import { Edit, Eye, MapPin, MoreVertical, Newspaper, Power, Save, Trash2, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 const NewsRow = ({
