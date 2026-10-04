@@ -110,7 +110,7 @@ const SystemSettingsPage = () => {
       <AdminLayout>
         <div className="flex justify-center items-center min-h-screen py-20 bg-white">
           <div className="text-center">
-            <CustomLoader className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
+            <Loader2 className="w-12 h-12 animate-spin text-yellow-500 mx-auto mb-4" />
           </div>
         </div>
       </AdminLayout>
