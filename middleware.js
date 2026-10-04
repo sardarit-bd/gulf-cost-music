@@ -19,6 +19,8 @@ export function middleware(req) {
     venue: "/dashboard/venue",
     journalist: "/dashboard/journalist",
     photographer: "/dashboard/photographer",
+    studio: "/dashboard/studio",
+    fan: "/dashboard/fan",
   };
 
   for (const [key, route] of Object.entries(rolePaths)) {

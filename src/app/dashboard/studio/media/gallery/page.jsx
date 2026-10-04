@@ -15,9 +15,9 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-// import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import EmptyState from "@/components/modules/dashboard/studio/EmptyState";
+import MediaGallery from "@/components/modules/dashboard/studio/MediaGallery";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-// import EmptyState from "@/components/ui/EmptyState";
 import { api } from "../../lib/api";
 import CustomLoader from "@/components/shared/loader/Loader";
 
@@ -326,23 +326,13 @@ export default function GalleryPage() {
                 </div>
             ) : (
                 <>
-                    {viewMode === "grid" ? (
-                        <ImageGrid
-                            photos={filteredPhotos}
-                            selectedPhotos={selectedPhotos}
-                            onSelect={handlePhotoSelect}
-                            onDelete={handleDeletePhoto}
-                            onView={openLightbox}
-                        />
-                    ) : (
-                        <ImageList
-                            photos={filteredPhotos}
-                            selectedPhotos={selectedPhotos}
-                            onSelect={handlePhotoSelect}
-                            onDelete={handleDeletePhoto}
-                            onView={openLightbox}
-                        />
-                    )}
+                    <MediaGallery
+                        photos={filteredPhotos}
+                        viewMode={viewMode}
+                        selectedPhotos={selectedPhotos}
+                        onSelect={handlePhotoSelect}
+                        onDelete={handleDeletePhoto}
+                    />
 
                     {/* Info Bar */}
                     <div className="mt-8 p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
@@ -367,24 +357,6 @@ export default function GalleryPage() {
                     </div>
                 </>
             )}
-
-            {/* Lightbox */}
-            <Lightbox
-                isOpen={lightboxOpen}
-                onClose={() => setLightboxOpen(false)}
-                photos={filteredPhotos}
-                currentIndex={currentImageIndex}
-                onNext={() => setCurrentImageIndex(prev =>
-                    prev < filteredPhotos.length - 1 ? prev + 1 : 0
-                )}
-                onPrev={() => setCurrentImageIndex(prev =>
-                    prev > 0 ? prev - 1 : filteredPhotos.length - 1
-                )}
-                onDelete={() => {
-                    handleDeletePhoto(filteredPhotos[currentImageIndex]._id);
-                    setLightboxOpen(false);
-                }}
-            />
         </div>
     );
 }
