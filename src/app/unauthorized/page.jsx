@@ -1,4 +1,7 @@
 "use client";
+
+import Link from "next/link";
+
 export default function Unauthorized() {
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 px-4">
@@ -41,12 +44,12 @@ export default function Unauthorized() {
                     >
                         Go Back
                     </button>
-                    <a
+                    <Link
                         href="/"
                         className="px-6 py-3 bg-yellow-500 text-gray-900 rounded-lg font-medium hover:bg-yellow-600 transition duration-200 text-center"
                     >
                         Go Home
-                    </a>
+                    </Link>
                 </div>
 
                 {/* Additional Help */}
