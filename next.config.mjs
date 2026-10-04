@@ -5,23 +5,26 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
-        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "api.gulfcoastmusic.live",
+        pathname: "/**",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
         pathname: "/**",
       },
       {
         protocol: "https",
         hostname: "images.unsplash.com",
-        port: "",
         pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "example.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "yourcdn.com",
+        hostname: "cdn.pixabay.com",
         pathname: "/**",
       },
       {
@@ -31,26 +34,11 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "cdn.yoursite.com",
-      },
-      {
-        protocol: "https",
-        hostname: "example.com",
-      },
-      {
-        protocol: "https",
-        hostname: "yourcdn.com",
-      },
-      {
-        protocol: "https",
-        hostname: "cdn.pixabay.com",
-      },
-      {
-        protocol: "https",
         hostname: "img.youtube.com",
         pathname: "/vi/**",
       },
     ],
+    // Set to false if using Next.js image optimization service on Vercel
     unoptimized: true,
   },
 };

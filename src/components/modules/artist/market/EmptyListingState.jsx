@@ -1,3 +1,5 @@
+import { ArrowRight, Plus, ShoppingBag, Sparkles } from "lucide-react";
+
 export function EmptyListingState({ onStart }) {
     return (
         <div className="text-center py-16 bg-gradient-to-b from-gray-50 to-transparent rounded-3xl border-2 border-dashed border-gray-300">
