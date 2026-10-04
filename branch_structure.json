@@ -1,0 +1,45 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "dev-v8",
+    "dev-v9",
+    "main",
+    "new-workspace",
+    "origin",
+    "vercel/react-server-components-cve-vu-lafkxr",
+    "workspace-v-2",
+    "workspace-v3",
+    "workspace-v4",
+    "workspace-v5",
+    "workspace-v6",
+    "workspace-v7"
+  ],
+  "parent": {
+    "dev-v8": "main",
+    "dev-v9": "main",
+    "main": null,
+    "new-workspace": "main",
+    "origin": "main",
+    "vercel/react-server-components-cve-vu-lafkxr": "main",
+    "workspace-v-2": "main",
+    "workspace-v3": "main",
+    "workspace-v4": "main",
+    "workspace-v5": "main",
+    "workspace-v6": "main",
+    "workspace-v7": "main"
+  },
+  "order": [
+    "main",
+    "dev-v8",
+    "dev-v9",
+    "new-workspace",
+    "origin",
+    "vercel/react-server-components-cve-vu-lafkxr",
+    "workspace-v-2",
+    "workspace-v3",
+    "workspace-v4",
+    "workspace-v5",
+    "workspace-v6",
+    "workspace-v7"
+  ]
+}
